@@ -441,10 +441,10 @@ OrderStatus status = new OrderStatus.Pending();
 
 // Match - exhaustive pattern matching
 string label = status.Match(
-    pending:   _ => "대기 중",
-    confirmed: c => $"확인됨 ({c.ConfirmedAt:d})",
-    shipped:   s => $"배송됨 ({s.TrackingNumber})",
-    cancelled: c => $"취소됨 ({c.Reason})");
+    pending:   _ => "Pending",
+    confirmed: c => $"Confirmed ({c.ConfirmedAt:d})",
+    shipped:   s => $"Shipped ({s.TrackingNumber})",
+    cancelled: c => $"Cancelled ({c.Reason})");
 
 // Is property
 bool isPending = status.IsPending; // true

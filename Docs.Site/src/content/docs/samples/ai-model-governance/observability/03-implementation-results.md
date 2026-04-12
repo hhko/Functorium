@@ -9,7 +9,7 @@ description: "Observable Port, CtxEnricher, observability pipeline, and IO patte
 
 ### Repository Observable (InMemory)
 
-| 원본 클래스 | Observable 래퍼 | 포트 |
+| 원본 클래스 | Observable 래퍼 | Port |
 |-----------|----------------|------|
 | AIModelRepositoryInMemory | AIModelRepositoryInMemoryObservable | IAIModelRepository |
 | DeploymentRepositoryInMemory | DeploymentRepositoryInMemoryObservable | IDeploymentRepository |
@@ -19,7 +19,7 @@ description: "Observable Port, CtxEnricher, observability pipeline, and IO patte
 
 ### Repository Observable (EfCore)
 
-| 원본 클래스 | Observable 래퍼 | 포트 |
+| 원본 클래스 | Observable 래퍼 | Port |
 |-----------|----------------|------|
 | AIModelRepositoryEfCore | AIModelRepositoryEfCoreObservable | IAIModelRepository |
 | DeploymentRepositoryEfCore | DeploymentRepositoryEfCoreObservable | IDeploymentRepository |
@@ -29,7 +29,7 @@ description: "Observable Port, CtxEnricher, observability pipeline, and IO patte
 
 ### Query Observable (InMemory)
 
-| 원본 클래스 | Observable 래퍼 | 포트 |
+| 원본 클래스 | Observable 래퍼 | Port |
 |-----------|----------------|------|
 | AIModelQueryInMemory | AIModelQueryInMemoryObservable | IAIModelQuery |
 | AIModelDetailQueryInMemory | AIModelDetailQueryInMemoryObservable | IModelDetailQuery |
@@ -39,7 +39,7 @@ description: "Observable Port, CtxEnricher, observability pipeline, and IO patte
 
 ### External Service Observable
 
-| 원본 클래스 | IO 패턴 | 포트 |
+| 원본 클래스 | IO 패턴 | Port |
 |-----------|---------|------|
 | ModelHealthCheckService | Timeout + Catch | IModelHealthCheckService |
 | ModelMonitoringService | Retry + Schedule | IModelMonitoringService |
@@ -166,9 +166,9 @@ acquireSession.Bracket(Use: lookupModel, Fin: releaseSession) → .Catch(Excepti
 
 ---
 
-## 수치 요약
+## Numerical Summary
 
-| 항목 | 수량 |
+| Item | Count |
 |------|------|
 | Observable Port (InMemory Repository) | 5 |
 | Observable Port (EfCore Repository) | 5 |

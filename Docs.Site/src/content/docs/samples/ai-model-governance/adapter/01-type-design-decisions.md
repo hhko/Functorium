@@ -3,7 +3,7 @@ title: "Adapter Type Design Decisions"
 description: "Rationale for selecting LanguageExt IO advanced features (Retry, Timeout, Fork, Bracket)"
 ---
 
-## 개요
+## Overview
 
 [기술 요구사항](../00-business-requirements/)에서 정의한 4가지 외부 서비스 시나리오에 대해, 어떤 LanguageExt IO 고급 기능을 적용할지와 그 근거를 정리합니다.
 
@@ -92,7 +92,7 @@ Fin(Release): 세션 해제 (성공/실패 무관 보장)
 - Release가 IO 효과를 가질 수 있음 (비동기 해제)
 - FinT LINQ 체인에 투명하게 합성 가능
 
-## 네이밍 규칙: `{Subject}{Role}{Variant}`
+## Naming Conventions: `{Subject}{Role}{Variant}`
 
 Adapter 레이어의 파일명은 3차원 네이밍 규칙을 따릅니다:
 

@@ -20,7 +20,7 @@ description: "Summary of application layer implementation results for the AI Mod
 
 ### Queries (7종)
 
-| Query | 포트 | 필터/옵션 |
+| Query | Port | 필터/옵션 |
 |-------|------|----------|
 | GetModelByIdQuery | IModelDetailQuery | 배포/평가/인시던트 집계 포함 |
 | SearchModelsQuery | IAIModelQuery | 위험 등급 필터, 페이지네이션 |
@@ -41,7 +41,7 @@ description: "Summary of application layer implementation results for the AI Mod
 
 ### Command 포트 (Repository 4종)
 
-| 포트 | 기본 CRUD | 커스텀 메서드 |
+| Port | 기본 CRUD | 커스텀 메서드 |
 |------|-----------|-------------|
 | IAIModelRepository | GetById, Create, Update, Delete | Exists(spec), GetByIdIncludingDeleted(id) |
 | IDeploymentRepository | GetById, Create, Update, Delete | Exists(spec), Find(spec) |
@@ -50,7 +50,7 @@ description: "Summary of application layer implementation results for the AI Mod
 
 ### Query 포트 (Read Adapter 5종)
 
-| 포트 | 역할 |
+| Port | 역할 |
 |------|------|
 | IAIModelQuery | 모델 목록 검색 |
 | IModelDetailQuery | 모델 상세 (집계 데이터 포함) |
@@ -60,14 +60,14 @@ description: "Summary of application layer implementation results for the AI Mod
 
 ### 외부 서비스 포트 (4종)
 
-| 포트 | 반환 타입 | IO 패턴 |
+| Port | 반환 타입 | IO 패턴 |
 |------|----------|---------|
 | IModelHealthCheckService | `FinT<IO, HealthCheckResult>` | Timeout + Catch |
 | IModelMonitoringService | `FinT<IO, DriftReport>` | Retry + Schedule |
 | IParallelComplianceCheckService | `FinT<IO, ComplianceCheckReport>` | Fork + awaitAll |
 | IModelRegistryService | `FinT<IO, ModelRegistryEntry>` | Bracket |
 
-## 애플리케이션 레이어 구조
+## Application layer 구조
 
 ```
 AiGovernance.Application/
@@ -114,7 +114,7 @@ AiGovernance.Application/
             └── QuarantineDeploymentOnCriticalIncidentHandler.cs
 ```
 
-## 적용 패턴 요약
+## Applied Patterns Summary
 
 | 패턴 | 적용 수 | 예시 |
 |------|--------|------|

@@ -10,29 +10,29 @@ This specification defines the public API for Functorium's CQRS request interfac
 
 | Type | Namespace | Description |
 |------|-------------|------|
-| `ICommandRequest<TSuccess>` | `Functorium.Applications.Usecases` | Command 요청 마커 인터페이스 |
-| `ICommandUsecase<TCommand, TSuccess>` | `Functorium.Applications.Usecases` | Command Handler 인터페이스 |
-| `IQueryRequest<TSuccess>` | `Functorium.Applications.Usecases` | Query 요청 마커 인터페이스 |
-| `IQueryUsecase<TQuery, TSuccess>` | `Functorium.Applications.Usecases` | Query Handler 인터페이스 |
-| `FinResponse<A>` | `Functorium.Applications.Usecases` | Succ/Fail 판별 공용체 (Match, Map, Bind, LINQ 지원) |
-| `FinResponse` | `Functorium.Applications.Usecases` | 정적 팩토리 클래스 (`Succ`, `Fail`) |
-| `IFinResponse` | `Functorium.Applications.Usecases` | 비제네릭 기본 인터페이스 (`IsSucc`/`IsFail`) |
-| `IFinResponse<out A>` | `Functorium.Applications.Usecases` | 공변성 지원 제네릭 인터페이스 |
-| `IFinResponseFactory<TSelf>` | `Functorium.Applications.Usecases` | CRTP 기반 Fail 생성 인터페이스 |
-| `IFinResponseWithError` | `Functorium.Applications.Usecases` | Error 접근 인터페이스 (Pipeline용) |
-| `FinToFinResponse` | `Functorium.Applications.Usecases` | `Fin<A>` → `FinResponse<A>` 변환 확장 메서드 |
-| `FinTLinqExtensions` | `Functorium.Applications.Linq` | FinT 모나드 트랜스포머 LINQ 확장 메서드 |
-| `ICacheable` | `Functorium.Applications.Usecases` | 캐싱 계약 인터페이스 |
-| `IUnitOfWork` | `Functorium.Applications.Persistence` | 영속성 트랜잭션 계약 |
-| `IUnitOfWorkTransaction` | `Functorium.Applications.Persistence` | 명시적 트랜잭션 스코프 |
-| `CtxIgnoreAttribute` | `Functorium.Applications.Usecases` | CtxEnricher 자동 생성 제외 속성 |
+| `ICommandRequest<TSuccess>` | `Functorium.Applications.Usecases` | Command request marker interface |
+| `ICommandUsecase<TCommand, TSuccess>` | `Functorium.Applications.Usecases` | Command Handler interface |
+| `IQueryRequest<TSuccess>` | `Functorium.Applications.Usecases` | Query request marker interface |
+| `IQueryUsecase<TQuery, TSuccess>` | `Functorium.Applications.Usecases` | Query Handler interface |
+| `FinResponse<A>` | `Functorium.Applications.Usecases` | Succ/Fail discriminated union (supports Match, Map, Bind, LINQ) |
+| `FinResponse` | `Functorium.Applications.Usecases` | Static factory class (`Succ`, `Fail`) |
+| `IFinResponse` | `Functorium.Applications.Usecases` | Non-generic base interface (`IsSucc`/`IsFail`) |
+| `IFinResponse<out A>` | `Functorium.Applications.Usecases` | Covariant generic interface |
+| `IFinResponseFactory<TSelf>` | `Functorium.Applications.Usecases` | CRTP-based Fail creation interface |
+| `IFinResponseWithError` | `Functorium.Applications.Usecases` | Error access interface (for Pipeline) |
+| `FinToFinResponse` | `Functorium.Applications.Usecases` | `Fin<A>` to `FinResponse<A>` conversion extension methods |
+| `FinTLinqExtensions` | `Functorium.Applications.Linq` | FinT monad transformer LINQ extension methods |
+| `ICacheable` | `Functorium.Applications.Usecases` | Caching contract interface |
+| `IUnitOfWork` | `Functorium.Applications.Persistence` | Persistence transaction contract |
+| `IUnitOfWorkTransaction` | `Functorium.Applications.Persistence` | Explicit transaction scope |
+| `CtxIgnoreAttribute` | `Functorium.Applications.Usecases` | CtxEnricher auto-generation exclusion attribute |
 
 ### Core Rules
 
-- **`FinResponse<A>`는** `IsSucc`/`IsFail`을 사용합니다 (`IsSuccess`가 아님)
-- 성공 값 접근은 `ThrowIfFail()` 또는 `Match()`를 통해서만 가능합니다
-- **정적 팩토리는** `FinResponse.Succ(value)`와 `FinResponse.Fail<T>(error)`입니다 (`FinResponse<T>.Succ()`가 아님)
-- Command/Query 모두 `FinResponse<TSuccess>`를 반환 타입으로 사용합니다
+- **`FinResponse<A>`** uses `IsSucc`/`IsFail` (not `IsSuccess`)
+- Success values can only be accessed via `ThrowIfFail()` or `Match()`
+- **Static factories** are `FinResponse.Succ(value)` and `FinResponse.Fail<T>(error)` (not `FinResponse<T>.Succ()`)
+- Both Command and Query use `FinResponse<TSuccess>` as the return type
 
 Having reviewed the key types and core rules in the summary, the following sections detail each type's API.
 
@@ -42,15 +42,15 @@ Having reviewed the key types and core rules in the summary, the following secti
 
 Functorium's CQRS interfaces are based on [Mediator](https://github.com/martinothamar/Mediator) the [Mediator](https://github.com/martinothamar/Mediator) library's `ICommand<T>`/`IQuery<T>`, fixing the return type to `FinResponse<TSuccess>` to enforce the Result pattern.
 
-### Command 인터페이스
+### Command Interface
 
 ```csharp
-// 요청 인터페이스 — record로 구현
+// Request interface — implemented as record
 public interface ICommandRequest<TSuccess> : ICommand<FinResponse<TSuccess>>
 {
 }
 
-// Handler 인터페이스 — Usecase 클래스로 구현
+// Handler interface — implemented as Usecase class
 public interface ICommandUsecase<in TCommand, TSuccess>
     : ICommandHandler<TCommand, FinResponse<TSuccess>>
     where TCommand : ICommandRequest<TSuccess>
@@ -60,18 +60,18 @@ public interface ICommandUsecase<in TCommand, TSuccess>
 
 | Type Parameter | Constraint | Description |
 |--------------|------|------|
-| `TSuccess` | 없음 | 성공 시 반환할 데이터 타입 |
-| `TCommand` | `ICommandRequest<TSuccess>` | Command 요청 타입 (반공변) |
+| `TSuccess` | None | Data type to return on success |
+| `TCommand` | `ICommandRequest<TSuccess>` | Command request type (contravariant) |
 
-### Query 인터페이스
+### Query Interface
 
 ```csharp
-// 요청 인터페이스 — record로 구현
+// Request interface — implemented as record
 public interface IQueryRequest<TSuccess> : IQuery<FinResponse<TSuccess>>
 {
 }
 
-// Handler 인터페이스 — Usecase 클래스로 구현
+// Handler interface — implemented as Usecase class
 public interface IQueryUsecase<in TQuery, TSuccess>
     : IQueryHandler<TQuery, FinResponse<TSuccess>>
     where TQuery : IQueryRequest<TSuccess>
@@ -81,8 +81,8 @@ public interface IQueryUsecase<in TQuery, TSuccess>
 
 | Type Parameter | Constraint | Description |
 |--------------|------|------|
-| `TSuccess` | 없음 | 성공 시 반환할 데이터 타입 |
-| `TQuery` | `IQueryRequest<TSuccess>` | Query 요청 타입 (반공변) |
+| `TSuccess` | None | Data type to return on success |
+| `TQuery` | `IQueryRequest<TSuccess>` | Query request type (contravariant) |
 
 ### Inheritance Hierarchy
 
@@ -104,9 +104,9 @@ Mediator.IQueryHandler<TQuery, FinResponse<TSuccess>>
 
 ## FinResponse\<A\> API
 
-`FinResponse<A>`는 is a discriminated union representing success (`Succ`) and failure (`Fail`). `Match`, `Map`, `Bind`, LINQ 쿼리 표현식을 지원합니다.
+`FinResponse<A>` is a discriminated union representing success (`Succ`) and failure (`Fail`). It supports `Match`, `Map`, `Bind`, and LINQ query expressions.
 
-### 타입 정의
+### Type Definition
 
 ```csharp
 public abstract record FinResponse<A> : IFinResponse<A>, IFinResponseFactory<FinResponse<A>>
@@ -118,10 +118,10 @@ public abstract record FinResponse<A> : IFinResponse<A>, IFinResponseFactory<Fin
 
 ### Nested Types
 
-| 타입 | 프로퍼티 | `IsSucc` | `IsFail` | 설명 |
+| Type | Properties | `IsSucc` | `IsFail` | Description |
 |------|---------|----------|----------|------|
-| `FinResponse<A>.Succ` | `A Value` | `true` | `false` | 성공 케이스 |
-| `FinResponse<A>.Fail` | `Error Error` | `false` | `true` | 실패 케이스 |
+| `FinResponse<A>.Succ` | `A Value` | `true` | `false` | Success case |
+| `FinResponse<A>.Fail` | `Error Error` | `false` | `true` | Failure case |
 
 ### Properties
 
@@ -147,8 +147,8 @@ public abstract record FinResponse<A> : IFinResponse<A>, IFinResponseFactory<Fin
 | `IfFail` | `void IfFail(Action<Error> Fail)` | Executes action on failure |
 | `IfSucc` | `void IfSucc(Action<A> Succ)` | Executes action on success |
 | `ThrowIfFail` | `A ThrowIfFail()` | Throws on failure, returns value on success |
-| `Select<B>` | `FinResponse<B> Select<B>(Func<A, B> f)` | LINQ `select` 지원 (`Map`과 동일) |
-| `SelectMany<B,C>` | `FinResponse<C> SelectMany<B, C>(Func<A, FinResponse<B>> bind, Func<A, B, C> project)` | LINQ `from ... from ... select` 지원 |
+| `Select<B>` | `FinResponse<B> Select<B>(Func<A, B> f)` | LINQ `select` support (same as `Map`) |
+| `SelectMany<B,C>` | `FinResponse<C> SelectMany<B, C>(Func<A, FinResponse<B>> bind, Func<A, B, C> project)` | LINQ `from ... from ... select` support |
 
 ### Static Factory Methods (`FinResponse` class)
 
@@ -164,27 +164,27 @@ public static class FinResponse
 | Method | Description |
 |--------|------|
 | `Succ<A>(A value)` | Creates `FinResponse` from success value |
-| `Succ<A>()` | `new A()`로 Creates default success `FinResponse` (`A : new()` 제약) |
+| `Succ<A>()` | Creates default success `FinResponse` via `new A()` (`A : new()` constraint) |
 | `Fail<A>(Error error)` | Creates failure `FinResponse` |
 
 ### IFinResponseFactory Static Methods
 
 ```csharp
-// FinResponse<A>에 구현된 정적 팩토리 (Pipeline 내부 사용)
+// Static factory implemented on FinResponse<A> (used internally by Pipeline)
 public static FinResponse<A> CreateFail(Error error);
 ```
 
-> Pipeline에서 `TResponse.CreateFail(error)`를 호출할 때 사용됩니다. `static abstract` 메서드이므로 구체 타입에서만 호출 가능합니다.
+> Used when Pipeline calls `TResponse.CreateFail(error)`. Since it is a `static abstract` method, it can only be called on concrete types.
 
 ### Implicit Conversion Operators
 
 | Operator | Description |
 |--------|------|
 | `implicit operator FinResponse<A>(A value)` | Value to `Succ` auto-conversion |
-| `implicit operator FinResponse<A>(Error error)` | `Error` → `Fail` 자동 변환 |
-| `operator true` | `IsSucc`이면 `true` |
-| `operator false` | `IsFail`이면 `true` |
-| `operator \|` | Choice 연산자: 좌항이 `Succ`이면 좌항, 아니면 우항 반환 |
+| `implicit operator FinResponse<A>(Error error)` | `Error` to `Fail` auto-conversion |
+| `operator true` | `true` when `IsSucc` |
+| `operator false` | `true` when `IsFail` |
+| `operator \|` | Choice operator: returns left if `Succ`, otherwise returns right |
 
 ---
 
@@ -195,12 +195,12 @@ is an interface hierarchy for handling `FinResponse<A>` in a type-safe manner in
 ### Hierarchy
 
 ```
-IFinResponse                          비제네릭 (IsSucc/IsFail 접근)
-  └─ IFinResponse<out A>             공변성 지원 제네릭
+IFinResponse                          Non-generic (IsSucc/IsFail access)
+  └─ IFinResponse<out A>             Covariant generic
 
-IFinResponseFactory<TSelf>            CRTP 기반 Fail 생성 (Pipeline용)
+IFinResponseFactory<TSelf>            CRTP-based Fail creation (for Pipeline)
 
-IFinResponseWithError                 Error 접근 (Logger/Trace Pipeline용)
+IFinResponseWithError                 Error access (for Logger/Trace Pipeline)
 
 FinResponse<A>
   ├─ implements IFinResponse<A>
@@ -240,7 +240,7 @@ public interface IFinResponseFactory<TSelf>
 }
 ```
 
-Uses CRTP (Curiously Recurring Template Pattern) to support type-safe `Fail` creation. Pipeline의 `UsecaseValidationPipeline`과 `UsecaseExceptionPipeline`에서 `TResponse.CreateFail(error)`를 호출합니다.
+Uses CRTP (Curiously Recurring Template Pattern) to support type-safe `Fail` creation. Called as `TResponse.CreateFail(error)` in Pipeline's `UsecaseValidationPipeline` and `UsecaseExceptionPipeline`.
 
 ### IFinResponseWithError
 
@@ -251,7 +251,7 @@ public interface IFinResponseWithError
 }
 ```
 
-is an interface for accessing `Error` information on failure. Logger Pipeline과 Trace Pipeline에서 사용됩니다. `FinResponse<A>.Fail`만 이 인터페이스를 구현합니다.
+is an interface for accessing `Error` information on failure. Used in Logger Pipeline and Trace Pipeline. Only `FinResponse<A>.Fail` implements this interface.
 
 ---
 
@@ -269,13 +269,13 @@ The `FinToFinResponse` extension method class is used for cross-layer conversion
 | `ToFinResponse<A,B>` (onSucc/onFail) | `Fin<A> → Func<A, FinResponse<B>> → Func<Error, FinResponse<B>> → FinResponse<B>` | Custom handling for both success/failure |
 
 ```csharp
-// 기본 변환
+// Basic conversion
 FinResponse<Product> response = fin.ToFinResponse();
 
-// 매핑 변환
+// Mapping conversion
 FinResponse<ProductDto> response = fin.ToFinResponse(product => new ProductDto(product));
 
-// Factory 변환 (Delete 등 원본 값이 필요 없는 경우)
+// Factory conversion (when original value is not needed, e.g., Delete)
 Fin<Unit> result = await repository.DeleteAsync(id);
 return result.ToFinResponse(() => new DeleteResponse(id));
 ```
@@ -284,29 +284,29 @@ return result.ToFinResponse(() => new DeleteResponse(id));
 
 ## FinT LINQ Extensions
 
-`FinTLinqExtensions`는 `Fin<A>`, `IO<A>`, `Validation<Error, A>` 타입을 `FinT<M, A>` 모나드 트랜스포머로 통합하여 LINQ 쿼리 표현식을 지원하는 partial 클래스입니다.
+`FinTLinqExtensions` is a partial class that unifies `Fin<A>`, `IO<A>`, and `Validation<Error, A>` types into the `FinT<M, A>` monad transformer, enabling LINQ query expression support.
 
 ### SelectMany Extension Methods
 
-| 파일 | Source 타입 | Selector 반환 타입 | 결과 타입 | 설명 |
+| File | Source Type | Selector Return Type | Result Type | Description |
 |------|-----------|-------------------|----------|------|
-| `.Fin.cs` | `Fin<A>` | `FinT<M, B>` | `FinT<M, C>` | Fin → FinT 승격 후 체이닝 |
-| `.Fin.cs` | `FinT<M, A>` | `Fin<B>` | `FinT<M, C>` | FinT 체인 중간에 Fin 사용 |
-| `.IO.cs` | `IO<A>` | `B` (Map) | `FinT<IO, B>` | IO → FinT 단순 변환 |
-| `.IO.cs` | `IO<A>` | `FinT<IO, B>` | `FinT<IO, C>` | IO → FinT 승격 후 체이닝 |
-| `.IO.cs` | `FinT<IO, A>` | `IO<B>` | `FinT<IO, C>` | FinT 체인 중간에 IO 사용 |
-| `.Validation.cs` | `Validation<Error, A>` | `FinT<M, B>` | `FinT<M, C>` | Validation → FinT (제네릭) |
-| `.Validation.cs` | `Validation<Error, A>` | `B` (Map) | `FinT<M, B>` | Validation → FinT 단순 변환 |
-| `.Validation.cs` | `Validation<Error, A>` | `FinT<IO, B>` | `FinT<IO, C>` | Validation → FinT (IO 특화) |
-| `.Validation.cs` | `FinT<M, A>` | `Validation<Error, B>` | `FinT<M, C>` | FinT 체인 중간에 Validation 사용 |
-| `.Validation.cs` | `FinT<IO, A>` | `Validation<Error, B>` | `FinT<IO, C>` | FinT 체인 중간에 Validation (IO) |
+| `.Fin.cs` | `Fin<A>` | `FinT<M, B>` | `FinT<M, C>` | Lifts Fin to FinT then chains |
+| `.Fin.cs` | `FinT<M, A>` | `Fin<B>` | `FinT<M, C>` | Uses Fin in the middle of FinT chain |
+| `.IO.cs` | `IO<A>` | `B` (Map) | `FinT<IO, B>` | Simple IO to FinT conversion |
+| `.IO.cs` | `IO<A>` | `FinT<IO, B>` | `FinT<IO, C>` | Lifts IO to FinT then chains |
+| `.IO.cs` | `FinT<IO, A>` | `IO<B>` | `FinT<IO, C>` | Uses IO in the middle of FinT chain |
+| `.Validation.cs` | `Validation<Error, A>` | `FinT<M, B>` | `FinT<M, C>` | Validation to FinT (generic) |
+| `.Validation.cs` | `Validation<Error, A>` | `B` (Map) | `FinT<M, B>` | Simple Validation to FinT conversion |
+| `.Validation.cs` | `Validation<Error, A>` | `FinT<IO, B>` | `FinT<IO, C>` | Validation to FinT (IO specialized) |
+| `.Validation.cs` | `FinT<M, A>` | `Validation<Error, B>` | `FinT<M, C>` | Uses Validation in the middle of FinT chain |
+| `.Validation.cs` | `FinT<IO, A>` | `Validation<Error, B>` | `FinT<IO, C>` | Uses Validation in FinT chain (IO) |
 
 ### Filter Extension Methods
 
-| 파일 | 대상 타입 | 반환 타입 | 설명 |
+| File | Target Type | Return Type | Description |
 |------|----------|----------|------|
-| `.Fin.cs` | `Fin<A>` | `Fin<A>` | 조건 불만족 시 `Fail` 반환 |
-| `.FinT.cs` | `FinT<M, A>` | `FinT<M, A>` | 조건 불만족 시 `Fail` 반환 |
+| `.Fin.cs` | `Fin<A>` | `Fin<A>` | Returns `Fail` when condition is not satisfied |
+| `.FinT.cs` | `FinT<M, A>` | `FinT<M, A>` | Returns `Fail` when condition is not satisfied |
 
 ```csharp
 // Fin Filter
@@ -325,17 +325,17 @@ public static FinT<M, Seq<B>> TraverseSerial<M, A, B>(
     where M : Monad<M>;
 ```
 
-`Seq<A>`를 순차적으로 순회하며 각 요소를 `FinT<M, B>`로 변환합니다. `fold`를 사용하여 각 작업이 완전히 끝난 후 다음 작업을 시작하도록 보장합니다.
+Sequentially traverses `Seq<A>`, transforming each element into `FinT<M, B>`. Uses `fold` to ensure each operation completes fully before the next one starts.
 
 | Parameter | Type | Description |
 |---------|------|------|
-| `seq` | `Seq<A>` | 처리할 시퀀스 |
-| `f` | `Func<A, FinT<M, B>>` | 각 요소를 FinT로 변환하는 함수 |
+| `seq` | `Seq<A>` | Sequence to process |
+| `f` | `Func<A, FinT<M, B>>` | Function that transforms each element into FinT |
 
-> **사용 시나리오:** DbContext 등 동시성을 지원하지 않는 리소스를 순차적으로 안전하게 사용해야 하는 경우에 적합합니다. 각 항목이 독립적이고 리소스 공유가 없다면 `Traverse`를 사용하십시오.
+> **Use case:** Suitable when you need to safely use resources that do not support concurrency, such as DbContext, in sequential order. If each item is independent and there is no resource sharing, use `Traverse` instead.
 
 ```csharp
-// LINQ 쿼리 표현식에서 사용
+// Usage in LINQ query expressions
 FinT<IO, Response> response =
     from infos in GetFtpInfos()
     from results in infos.TraverseSerial(info => Process(info))
@@ -344,29 +344,29 @@ FinT<IO, Response> response =
 
 ### Difference in IO and Validation Method Counts
 
-| 방향 | IO.cs | Validation.cs |
+| Direction | IO.cs | Validation.cs |
 |------|-------|---------------|
-| Source → FinT (Map) | IO 전용 | 제네릭 M |
-| Source → FinT\<M, B\> | IO 전용 | 제네릭 M + IO |
-| FinT\<M, A\> → Source | IO 전용 | 제네릭 M + IO |
+| Source → FinT (Map) | IO only | Generic M |
+| Source → FinT\<M, B\> | IO only | Generic M + IO |
+| FinT\<M, A\> → Source | IO only | Generic M + IO |
 
-`IO`는 그 자체가 특정 모나드이므로 제네릭 `M` 버전이 불필요합니다. `Validation`은 모나드가 아닌 데이터 타입이므로 어떤 모나드 `M`과도 조합 가능하여 제네릭 `M` 버전과 IO 특화 버전 모두 제공합니다.
+`IO` is itself a specific monad, so a generic `M` version is unnecessary. `Validation` is a data type rather than a monad, so it can be combined with any monad `M`, providing both a generic `M` version and an IO-specialized version.
 
 ### File Structure
 
 | File | Content |
 |------|------|
-| `FinTLinqExtensions.cs` | 클래스 정의 및 문서 |
-| `FinTLinqExtensions.Fin.cs` | `Fin<A>` 확장 (SelectMany, Filter) |
-| `FinTLinqExtensions.IO.cs` | `IO<A>` 확장 (SelectMany) |
-| `FinTLinqExtensions.Validation.cs` | `Validation<Error, A>` 확장 (SelectMany) |
-| `FinTLinqExtensions.FinT.cs` | `FinT<M, A>` 확장 (Filter, TraverseSerial) |
+| `FinTLinqExtensions.cs` | Class definition and documentation |
+| `FinTLinqExtensions.Fin.cs` | `Fin<A>` extensions (SelectMany, Filter) |
+| `FinTLinqExtensions.IO.cs` | `IO<A>` extensions (SelectMany) |
+| `FinTLinqExtensions.Validation.cs` | `Validation<Error, A>` extensions (SelectMany) |
+| `FinTLinqExtensions.FinT.cs` | `FinT<M, A>` extensions (Filter, TraverseSerial) |
 
 ---
 
 ## ICacheable Caching Contract
 
-Interface for applying caching to Query requests. `IQueryRequest<TSuccess>`를 구현하는 record가 `ICacheable`도 함께 구현하면 Pipeline이 자동으로 캐싱을 처리합니다.
+Interface for applying caching to Query requests. When a record implementing `IQueryRequest<TSuccess>` also implements `ICacheable`, the Pipeline automatically handles caching.
 
 ### Interface Definition
 
@@ -382,11 +382,11 @@ public interface ICacheable
 
 | Property | Type | Description |
 |---------|------|------|
-| `CacheKey` | `string` | 캐시 항목의 고유 키 |
-| `Duration` | `TimeSpan?` | 캐시 유효 기간 (`null`이면 기본 정책 적용) |
+| `CacheKey` | `string` | Unique key for the cache entry |
+| `Duration` | `TimeSpan?` | Cache validity period (`null` applies default policy) |
 
 ```csharp
-// 사용 예: Query 요청에 캐싱 적용
+// Usage example: Applying caching to a Query request
 public sealed record GetProductByIdQuery(ProductId Id)
     : IQueryRequest<ProductDto>, ICacheable
 {
@@ -399,7 +399,7 @@ public sealed record GetProductByIdQuery(ProductId Id)
 
 ## IUnitOfWork Persistence Contract
 
-Contract for persisting changes in Command Usecases. `UsecaseTransactionPipeline`이 Handler 실행 후 자동으로 `SaveChanges`를 호출합니다.
+Contract for persisting changes in Command Usecases. The `UsecaseTransactionPipeline` automatically calls `SaveChanges` after Handler execution.
 
 ### Interface Definition
 
@@ -418,7 +418,7 @@ public interface IUnitOfWork : IObservablePort
 | `SaveChanges` | `FinT<IO, Unit>` | Persists changes |
 | `BeginTransactionAsync` | `Task<IUnitOfWorkTransaction>` | Starts an explicit transaction |
 
-> `IUnitOfWork`는 `IObservablePort`를 상속합니다. `IObservablePort`는 `string RequestCategory { get; }` 프로퍼티를 정의하여, 관측성 Pipeline에서 레이어와 카테고리를 자동으로 식별합니다.
+> `IUnitOfWork` inherits from `IObservablePort`. `IObservablePort` defines a `string RequestCategory { get; }` property, enabling the observability Pipeline to automatically identify the layer and category.
 
 ### IUnitOfWorkTransaction
 
@@ -434,14 +434,14 @@ public interface IUnitOfWorkTransaction : IAsyncDisposable
 | `CommitAsync` | `Task` | Commits the transaction |
 | `DisposeAsync` | `ValueTask` | Uncommitted transactions are automatically rolled back (IAsyncDisposable) |
 
-> **명시적 트랜잭션은** `ExecuteDeleteAsync`/`ExecuteUpdateAsync` 등 즉시 실행 SQL과 `SaveChanges`를 동일 트랜잭션으로 묶어야 할 때 사용합니다.
+> **Explicit transactions** are used when you need to wrap immediately-executed SQL like `ExecuteDeleteAsync`/`ExecuteUpdateAsync` and `SaveChanges` in the same transaction.
 
 ```csharp
-// 명시적 트랜잭션 사용 예
+// Explicit transaction usage example
 await using var tx = await unitOfWork.BeginTransactionAsync(ct);
-// ... ExecuteDeleteAsync, SaveChanges 등
+// ... ExecuteDeleteAsync, SaveChanges, etc.
 await tx.CommitAsync(ct);
-// Dispose 시 미커밋이면 자동 롤백
+// Auto-rollback on Dispose if not committed
 ```
 
 ---
@@ -470,9 +470,9 @@ Request records, properties, or record constructor parameters with this attribut
 
 | Document | Description |
 |------|------|
-| [Use Case와 CQRS 가이드](../guides/application/11-usecases-and-cqrs) | CQRS 패턴 설계 의도와 구현 가이드 |
-| [검증 시스템 사양](./03-validation) | `TypedValidation`, FluentValidation 통합 |
-| [에러 시스템 사양](./04-error-system) | `DomainErrorType`, `ApplicationErrorType` 등 |
-| [포트와 어댑터 사양](./06-port-adapter) | `IRepository`, `IQueryPort` 등 |
-| [파이프라인 사양](./07-pipeline) | Pipeline 동작, `UsecaseTransactionPipeline` 등 |
-| [관측 가능성 사양](./08-observability) | Field/Tag 사양, Meter 정의 |
+| [Use Case and CQRS Guide](../guides/application/11-usecases-and-cqrs) | CQRS pattern design intent and implementation guide |
+| [Validation System Specification](./03-validation) | `TypedValidation`, FluentValidation integration |
+| [Error System Specification](./04-error-system) | `DomainErrorType`, `ApplicationErrorType`, etc. |
+| [Port and Adapter Specification](./06-port-adapter) | `IRepository`, `IQueryPort`, etc. |
+| [Pipeline Specification](./07-pipeline) | Pipeline behavior, `UsecaseTransactionPipeline`, etc. |
+| [Observability Specification](./08-observability) | Field/Tag specification, Meter definitions |

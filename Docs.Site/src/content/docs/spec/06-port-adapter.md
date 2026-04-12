@@ -41,7 +41,7 @@ This is the API specification for Port interfaces, Adapter implementation base c
 
 ## IObservablePort Interface
 
-모든 Port와 Adapter가 구현하는 기반 인터페이스입니다. `RequestCategory` 속성을 통해 관측성(Observability) 레이어에서 요청 카테고리를 식별합니다.
+The base interface implemented by all Ports and Adapters. Identifies the request category in the Observability layer through the `RequestCategory` property.
 
 ```csharp
 namespace Functorium.Abstractions.Observabilities;
@@ -54,25 +54,25 @@ public interface IObservablePort
 
 | Property | Type | Description |
 |------|------|------|
-| `RequestCategory` | `string` | 관측성 로그/메트릭에서 사용할 카테고리 (예: `"Repository"`, `"ExternalApi"`, `"Messaging"`) |
+| `RequestCategory` | `string` | Category used in observability logs/metrics (e.g., `"Repository"`, `"ExternalApi"`, `"Messaging"`) |
 
 ### Interface Hierarchy
 
 ```
 IObservablePort
 ├── IRepository<TAggregate, TId>    — Aggregate Root CRUD (Domain Layer)
-├── IQueryPort                      — 비제네릭 마커 (Application Layer)
+├── IQueryPort                      — Non-generic marker (Application Layer)
 │   └── IQueryPort<TEntity, TDto>   — Specification 기반 조회 (Application Layer)
-└── (사용자 정의 Port)               — External API, Messaging 등
+└── (User-defined Port)               — External API, Messaging, etc.
 ```
 
-`IObservablePort`를 상속하면 `[GenerateObservablePort]` 소스 생성기가 Tracing, Logging, Metrics를 자동 생성할 수 있습니다.
+Inheriting `IObservablePort` enables the `[GenerateObservablePort]` source generator to auto-generate Tracing, Logging, and Metrics.
 
 ---
 
 ## Repository Contract (IRepository\<TAggregate, TId\>)
 
-Aggregate Root 단위의 영속화 계약입니다. 제네릭 제약을 통해 Aggregate Root 단위 영속화를 컴파일 타임에 강제합니다.
+A persistence contract at the Aggregate Root level. Generic constraints enforce Aggregate Root-level persistence at compile time.
 
 ```csharp
 namespace Functorium.Domains.Repositories;
@@ -97,31 +97,31 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 
 | Type Parameter | Constraint | Description |
 |---------------|------|------|
-| `TAggregate` | `AggregateRoot<TId>` | Aggregate Root만 Repository 대상 (Entity 직접 영속화 방지) |
-| `TId` | `struct, IEntityId<TId>` | Ulid 기반 EntityId 구현 타입 |
+| `TAggregate` | `AggregateRoot<TId>` | Only Aggregate Roots can be Repository targets (prevents direct Entity persistence) |
+| `TId` | `struct, IEntityId<TId>` | Ulid-based EntityId implementation type |
 
 ### Methods
 
 | Method | Return Type | Description |
 |--------|-----------|------|
-| `Create(aggregate)` | `FinT<IO, TAggregate>` | 단일 Aggregate 생성 |
-| `GetById(id)` | `FinT<IO, TAggregate>` | ID로 Aggregate 조회 (없으면 `NotFound` 에러) |
-| `Update(aggregate)` | `FinT<IO, TAggregate>` | 단일 Aggregate 업데이트 |
-| `Delete(id)` | `FinT<IO, int>` | ID로 Aggregate 삭제 (삭제된 건수 반환) |
-| `CreateRange(aggregates)` | `FinT<IO, Seq<TAggregate>>` | 일괄 생성 |
-| `GetByIds(ids)` | `FinT<IO, Seq<TAggregate>>` | 일괄 조회 (일부 누락 시 `PartialNotFound` 에러) |
-| `UpdateRange(aggregates)` | `FinT<IO, Seq<TAggregate>>` | 일괄 업데이트 |
-| `DeleteRange(ids)` | `FinT<IO, int>` | 일괄 삭제 (삭제된 건수 반환) |
+| `Create(aggregate)` | `FinT<IO, TAggregate>` | Creates a single Aggregate |
+| `GetById(id)` | `FinT<IO, TAggregate>` | Retrieves an Aggregate by ID (`NotFound` error if absent) |
+| `Update(aggregate)` | `FinT<IO, TAggregate>` | Updates a single Aggregate |
+| `Delete(id)` | `FinT<IO, int>` | Deletes an Aggregate by ID (returns deleted count) |
+| `CreateRange(aggregates)` | `FinT<IO, Seq<TAggregate>>` | Batch creation |
+| `GetByIds(ids)` | `FinT<IO, Seq<TAggregate>>` | Batch retrieval (`PartialNotFound` error if some are missing) |
+| `UpdateRange(aggregates)` | `FinT<IO, Seq<TAggregate>>` | Batch update |
+| `DeleteRange(ids)` | `FinT<IO, int>` | Batch deletion (returns deleted count) |
 
-> 모든 메서드는 `FinT<IO, T>`를 반환합니다. 성공은 `Fin.Succ(value)`, 실패는 도메인/어댑터 에러로 표현됩니다.
+> All methods return `FinT<IO, T>`. Success is expressed as `Fin.Succ(value)`, and failure is expressed as domain/adapter errors.
 
 ---
 
 ## QueryPort Contract (IQueryPort\<TEntity, TDto\>)
 
-Specification 기반 조회와 DTO 직접 반환을 위한 읽기 전용 포트입니다. CQRS의 Read 모델에 해당합니다.
+A read-only port for Specification-based queries and direct DTO returns. Corresponds to the Read model in CQRS.
 
-### IQueryPort (비제네릭 마커)
+### IQueryPort (Non-generic Marker)
 
 ```csharp
 namespace Functorium.Applications.Queries;
@@ -129,7 +129,7 @@ namespace Functorium.Applications.Queries;
 public interface IQueryPort : IObservablePort { }
 ```
 
-런타임 타입 체크, DI 스캐닝, 제네릭 제약에 활용하는 비제네릭 마커 인터페이스입니다.
+A non-generic marker interface used for runtime type checking, DI scanning, and generic constraints.
 
 ### IQueryPort\<TEntity, TDto\>
 
@@ -155,16 +155,16 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
 
 | Method | Return Type | Description |
 |--------|-----------|------|
-| `Search(spec, page, sort)` | `FinT<IO, PagedResult<TDto>>` | Offset 기반 페이지네이션 검색 |
-| `SearchByCursor(spec, cursor, sort)` | `FinT<IO, CursorPagedResult<TDto>>` | Keyset(Cursor) 기반 페이지네이션 검색. deep page에서 O(1) 성능 |
-| `Stream(spec, sort, ct)` | `IAsyncEnumerable<TDto>` | 대량 데이터 스트리밍 조회. 메모리에 전체 적재하지 않고 yield |
+| `Search(spec, page, sort)` | `FinT<IO, PagedResult<TDto>>` | Offset-based pagination search |
+| `SearchByCursor(spec, cursor, sort)` | `FinT<IO, CursorPagedResult<TDto>>` | Keyset(Cursor)-based pagination search. O(1) performance for deep pages |
+| `Stream(spec, sort, ct)` | `IAsyncEnumerable<TDto>` | Streaming query for large data. Yields without loading everything into memory |
 
 ### Generic Parameters
 
 | Type Parameter | Description |
 |---------------|------|
-| `TEntity` | 도메인 엔터티 타입 (Specification 대상) |
-| `TDto` | 반환 DTO 타입 (프레젠테이션 계층에 직접 반환) |
+| `TEntity` | Domain entity type (Specification target) |
+| `TDto` | Return DTO type (directly returned to presentation layer) |
 
 ---
 
@@ -172,7 +172,7 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
 
 ### PageRequest
 
-Offset 기반 페이지네이션 요청입니다. Application 레벨 쿼리 관심사로 도메인 불변식이 아닙니다.
+An offset-based pagination request. This is an Application-level query concern, not a domain invariant.
 
 ```csharp
 namespace Functorium.Applications.Queries;
@@ -192,15 +192,15 @@ public sealed record PageRequest
 
 | Property/Constant | Type | Description |
 |-----------|------|------|
-| `DefaultPageSize` | `int` | 기본 페이지 크기 (`20`) |
-| `MaxPageSize` | `int` | 최대 페이지 크기 (`10,000`) |
-| `Page` | `int` | 현재 페이지 번호 (1 미만이면 `1`로 보정) |
-| `PageSize` | `int` | 페이지 크기 (1 미만이면 `DefaultPageSize`, 초과 시 `MaxPageSize`로 보정) |
-| `Skip` | `int` | 건너뛸 항목 수 (계산 속성: `(Page - 1) * PageSize`) |
+| `DefaultPageSize` | `int` | Default page size (`20`) |
+| `MaxPageSize` | `int` | Maximum page size (`10,000`) |
+| `Page` | `int` | Current page number (corrected to `1` if less than 1) |
+| `PageSize` | `int` | Page size (corrected to `DefaultPageSize` if less than 1, capped at `MaxPageSize`) |
+| `Skip` | `int` | Number of items to skip (computed property: `(Page - 1) * PageSize`) |
 
 ### PagedResult\<T\>
 
-Offset 기반 페이지네이션 결과 컨테이너입니다.
+An offset-based pagination result container.
 
 ```csharp
 public sealed record PagedResult<T>(
@@ -217,17 +217,17 @@ public sealed record PagedResult<T>(
 
 | Property | Type | Description |
 |------|------|------|
-| `Items` | `IReadOnlyList<T>` | 현재 페이지의 항목 목록 |
-| `TotalCount` | `int` | 전체 항목 수 |
-| `Page` | `int` | 현재 페이지 번호 |
-| `PageSize` | `int` | 페이지 크기 |
-| `TotalPages` | `int` | 전체 페이지 수 (계산 속성) |
-| `HasPreviousPage` | `bool` | 이전 페이지 존재 여부 |
-| `HasNextPage` | `bool` | 다음 페이지 존재 여부 |
+| `Items` | `IReadOnlyList<T>` | List of items for the current page |
+| `TotalCount` | `int` | Total number of items |
+| `Page` | `int` | Current page number |
+| `PageSize` | `int` | Page size |
+| `TotalPages` | `int` | Total number of pages (computed property) |
+| `HasPreviousPage` | `bool` | Whether a previous page exists |
+| `HasNextPage` | `bool` | Whether a next page exists |
 
 ### CursorPageRequest
 
-Keyset(Cursor) 기반 페이지네이션 요청입니다. Offset 기반 대비 deep page에서 O(1) 성능을 제공합니다.
+A keyset(cursor)-based pagination request. Provides O(1) performance for deep pages compared to offset-based pagination.
 
 ```csharp
 public sealed record CursorPageRequest
@@ -248,15 +248,15 @@ public sealed record CursorPageRequest
 
 | Property/Constant | Type | Description |
 |-----------|------|------|
-| `DefaultPageSize` | `int` | 기본 페이지 크기 (`20`) |
-| `MaxPageSize` | `int` | 최대 페이지 크기 (`10,000`) |
-| `After` | `string?` | 이 커서 이후의 항목을 조회 (forward pagination) |
-| `Before` | `string?` | 이 커서 이전의 항목을 조회 (backward pagination) |
-| `PageSize` | `int` | 페이지 크기 (1 미만이면 `DefaultPageSize`, 초과 시 `MaxPageSize`로 보정) |
+| `DefaultPageSize` | `int` | Default page size (`20`) |
+| `MaxPageSize` | `int` | Maximum page size (`10,000`) |
+| `After` | `string?` | Retrieve items after this cursor (forward pagination) |
+| `Before` | `string?` | Retrieve items before this cursor (backward pagination) |
+| `PageSize` | `int` | Page size (corrected to `DefaultPageSize` if less than 1, capped at `MaxPageSize`) |
 
 ### CursorPagedResult\<T\>
 
-Keyset(Cursor) 기반 페이지네이션 결과 컨테이너입니다.
+A keyset(cursor)-based pagination result container.
 
 ```csharp
 public sealed record CursorPagedResult<T>(
@@ -268,14 +268,14 @@ public sealed record CursorPagedResult<T>(
 
 | Property | Type | Description |
 |------|------|------|
-| `Items` | `IReadOnlyList<T>` | 현재 페이지의 항목 목록 |
-| `NextCursor` | `string?` | 다음 페이지 커서 (더 이상 항목이 없으면 `null`) |
-| `PrevCursor` | `string?` | 이전 페이지 커서 |
-| `HasMore` | `bool` | 다음 페이지 존재 여부 |
+| `Items` | `IReadOnlyList<T>` | List of items for the current page |
+| `NextCursor` | `string?` | Next page cursor (`null` if no more items) |
+| `PrevCursor` | `string?` | Previous page cursor |
+| `HasMore` | `bool` | Whether more pages exist |
 
 ### SortExpression
 
-다중 필드 정렬 표현입니다. Fluent API로 정렬 조건을 조합합니다.
+A multi-field sort expression. Combines sort conditions via Fluent API.
 
 ```csharp
 public sealed class SortExpression
@@ -293,17 +293,17 @@ public sealed class SortExpression
 
 | Member | Type | Description |
 |------|------|------|
-| `Fields` | `Seq<SortField>` | 정렬 필드 목록 (순서대로 적용) |
-| `IsEmpty` | `bool` | 정렬 조건이 비어있는지 여부 |
-| `Empty` | `SortExpression` | 정렬 없음 (정적 속성) |
-| `By(fieldName)` | `SortExpression` | 단일 필드 오름차순 정렬 생성 (정적 팩토리) |
-| `By(fieldName, direction)` | `SortExpression` | 단일 필드 + 방향 정렬 생성 (정적 팩토리) |
-| `ThenBy(fieldName)` | `SortExpression` | 추가 정렬 필드 연결 (오름차순) |
-| `ThenBy(fieldName, direction)` | `SortExpression` | 추가 정렬 필드 + 방향 연결 |
+| `Fields` | `Seq<SortField>` | List of sort fields (applied in order) |
+| `IsEmpty` | `bool` | Whether sort conditions are empty |
+| `Empty` | `SortExpression` | No sorting (static property) |
+| `By(fieldName)` | `SortExpression` | Creates single field ascending sort (static factory) |
+| `By(fieldName, direction)` | `SortExpression` | Creates single field + direction sort (static factory) |
+| `ThenBy(fieldName)` | `SortExpression` | Chains additional sort field (ascending) |
+| `ThenBy(fieldName, direction)` | `SortExpression` | Chains additional sort field + direction |
 
 ### SortField
 
-정렬 필드와 방향의 쌍입니다.
+A pair of sort field and direction.
 
 ```csharp
 public sealed record SortField(string FieldName, SortDirection Direction);
@@ -311,12 +311,12 @@ public sealed record SortField(string FieldName, SortDirection Direction);
 
 | Property | Type | Description |
 |------|------|------|
-| `FieldName` | `string` | 정렬 대상 필드명 |
-| `Direction` | `SortDirection` | 정렬 방향 |
+| `FieldName` | `string` | Field name to sort by |
+| `Direction` | `SortDirection` | Sort direction |
 
 ### SortDirection
 
-정렬 방향을 나타내는 SmartEnum입니다.
+A SmartEnum representing sort direction.
 
 ```csharp
 public sealed class SortDirection : SmartEnum<SortDirection, string>
@@ -328,19 +328,19 @@ public sealed class SortDirection : SmartEnum<SortDirection, string>
 }
 ```
 
-| 멤버 | Value | 설명 |
+| Member | Value | Description |
 |------|-------|------|
-| `Ascending` | `"asc"` | 오름차순 |
-| `Descending` | `"desc"` | 내림차순 |
-| `Parse(value)` | - | 대소문자 무시하여 `"asc"`/`"desc"` 파싱. `null`/빈 문자열이면 `Ascending` 반환 |
+| `Ascending` | `"asc"` | Ascending order |
+| `Descending` | `"desc"` | Descending order |
+| `Parse(value)` | - | Parses `"asc"`/`"desc"` case-insensitively. Returns `Ascending` for `null`/empty string |
 
 ---
 
 ## Specification Pattern
 
-### Specification\<T\> (추상 기반 클래스)
+### Specification\<T\> (Abstract Base Class)
 
-도메인 조건을 캡슐화하고 And/Or/Not 조합을 지원하는 추상 기반 클래스입니다.
+An abstract base class that encapsulates domain conditions and supports And/Or/Not composition.
 
 ```csharp
 namespace Functorium.Domains.Specifications;
@@ -364,24 +364,24 @@ public abstract class Specification<T>
 
 | Member | Type | Description |
 |------|------|------|
-| `All` | `Specification<T>` | 모든 엔터티를 만족하는 Specification (Null Object). `All & X = X` |
-| `IsAll` | `bool` | 이 Specification이 항등원(`All`)인지 여부 |
-| `IsSatisfiedBy(entity)` | `bool` | 엔터티가 조건을 만족하는지 확인 |
-| `And(other)` | `Specification<T>` | AND 조합 |
-| `Or(other)` | `Specification<T>` | OR 조합 |
-| `Not()` | `Specification<T>` | NOT 부정 |
+| `All` | `Specification<T>` | Specification satisfied by all entities (Null Object). `All & X = X` |
+| `IsAll` | `bool` | Whether this Specification is the identity element (`All`) |
+| `IsSatisfiedBy(entity)` | `bool` | Checks whether the entity satisfies the condition |
+| `And(other)` | `Specification<T>` | AND composition |
+| `Or(other)` | `Specification<T>` | OR composition |
+| `Not()` | `Specification<T>` | NOT negation |
 
-**연산자 오버로드:**
+**Operator overloading:**
 
-| 연산자 | 동등 메서드 | 설명 |
+| Operator | Equivalent Method | Description |
 |--------|-----------|------|
-| `&` | `And()` | AND 조합. `All` 항등원 최적화 포함 (`All & X = X`) |
-| `\|` | `Or()` | OR 조합 |
-| `!` | `Not()` | NOT 부정 |
+| `&` | `And()` | AND composition. Includes `All` identity optimization (`All & X = X`) |
+| `\|` | `Or()` | OR composition |
+| `!` | `Not()` | NOT negation |
 
 ### ExpressionSpecification\<T\>
 
-Expression Tree 기반 Specification 추상 클래스입니다. `ToExpression()`을 구현하면 `IsSatisfiedBy()`가 자동으로 제공됩니다.
+An Expression Tree-based Specification abstract class. Implementing `ToExpression()` automatically provides `IsSatisfiedBy()`.
 
 ```csharp
 public abstract class ExpressionSpecification<T> : Specification<T>, IExpressionSpec<T>
@@ -393,12 +393,12 @@ public abstract class ExpressionSpecification<T> : Specification<T>, IExpression
 
 | Member | Description |
 |------|------|
-| `ToExpression()` | 조건을 `Expression<Func<T, bool>>`로 반환 (서브클래스 필수 구현) |
-| `IsSatisfiedBy(entity)` | Expression을 컴파일하여 평가. 컴파일된 delegate는 캐싱됨 (`sealed`) |
+| `ToExpression()` | Returns the condition as `Expression<Func<T, bool>>` (must be implemented by subclass) |
+| `IsSatisfiedBy(entity)` | Compiles and evaluates the Expression. Compiled delegate is cached (`sealed`) |
 
 ### IExpressionSpec\<T\>
 
-Specification이 Expression Tree를 제공할 수 있음을 나타내는 인터페이스입니다. EF Core 등의 LINQ 프로바이더에서 자동 SQL 번역에 사용됩니다.
+An interface indicating that a Specification can provide an Expression Tree. Used by LINQ providers such as EF Core for automatic SQL translation.
 
 ```csharp
 namespace Functorium.Domains.Specifications;
@@ -411,7 +411,7 @@ public interface IExpressionSpec<T>
 
 ### PropertyMap\<TEntity, TModel\>
 
-Entity Expression을 Model Expression으로 자동 변환하기 위한 프로퍼티 매핑입니다. `EfCoreRepositoryBase`의 `BuildQuery()` 메서드에서 Specification → SQL 변환에 사용됩니다.
+Property mapping for auto-converting Entity Expression to Model Expression. Used in `EfCoreRepositoryBase`'s `BuildQuery()` method for Specification to SQL conversion.
 
 ```csharp
 namespace Functorium.Domains.Specifications.Expressions;
@@ -429,21 +429,21 @@ public sealed class PropertyMap<TEntity, TModel>
 
 | Method | Return Type | Description |
 |--------|-----------|------|
-| `Map(entityProp, modelProp)` | `PropertyMap<TEntity, TModel>` | Entity-Model 프로퍼티 매핑 등록. Fluent API |
-| `TranslateFieldName(name)` | `string?` | Entity 필드명을 Model 필드명으로 번역 (매핑 없으면 `null`) |
-| `Translate(expression)` | `Expression<Func<TModel, bool>>` | Entity Expression을 Model Expression으로 변환 |
+| `Map(entityProp, modelProp)` | `PropertyMap<TEntity, TModel>` | Registers Entity-Model property mapping. Fluent API |
+| `TranslateFieldName(name)` | `string?` | Translates Entity field name to Model field name (`null` if no mapping) |
+| `Translate(expression)` | `Expression<Func<TModel, bool>>` | Converts Entity Expression to Model Expression |
 
-**지원하는 Entity 프로퍼티 표현식:**
+**Supported Entity property expressions:**
 
-| 형태 | 예시 |
+| Form | Example |
 |------|------|
-| 직접 멤버 접근 | `p => p.Name` |
-| 타입 변환 | `p => (decimal)p.Price` |
-| `ToString()` 호출 | `p => p.Id.ToString()` |
+| Direct member access | `p => p.Name` |
+| Type conversion | `p => (decimal)p.Price` |
+| `ToString()` call | `p => p.Id.ToString()` |
 
 ### SpecificationExpressionResolver
 
-Specification에서 Expression Tree를 추출하고 And/Or/Not 조합도 재귀적으로 합성하는 유틸리티입니다.
+A utility that extracts Expression Trees from Specifications and recursively composes And/Or/Not combinations.
 
 ```csharp
 namespace Functorium.Domains.Specifications.Expressions;
@@ -456,7 +456,7 @@ public static class SpecificationExpressionResolver
 
 | Method | Return Type | Description |
 |--------|-----------|------|
-| `TryResolve(spec)` | `Expression<Func<T, bool>>?` | Specification에서 Expression 추출. `IExpressionSpec` 구현 시 직접 추출, And/Or/Not 조합 시 재귀 합성. 지원 불가 시 `null` 반환 |
+| `TryResolve(spec)` | `Expression<Func<T, bool>>?` | Extracts Expression from Specification. Direct extraction for `IExpressionSpec` implementations, recursive composition for And/Or/Not combinations. Returns `null` if unsupported |
 
 ---
 
@@ -641,7 +641,7 @@ public abstract class InMemoryQueryBase<TEntity, TDto>
 
 | Method | Return Type | Description |
 |--------|-----------|------|
-| `Search(spec, page, sort)` | `FinT<IO, PagedResult<TDto>>` | Offset 기반 페이지네이션 검색 |
+| `Search(spec, page, sort)` | `FinT<IO, PagedResult<TDto>>` | Offset-based pagination search |
 | `SearchByCursor(spec, cursor, sort)` | `FinT<IO, CursorPagedResult<TDto>>` | Keyset 기반 검색 |
 | `Stream(spec, sort, ct)` | `IAsyncEnumerable<TDto>` | 메모리 내 스트리밍 조회 |
 

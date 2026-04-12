@@ -3,13 +3,13 @@ title: "Application Business Requirements"
 description: "CQRS use case requirements for the AI Model Governance Platform"
 ---
 
-## 배경
+## Background
 
 [도메인 비즈니스 요구사항](../domain/00-business-requirements/)에서 정의한 비즈니스 규칙은 '무엇이 허용되고 무엇이 거부되는가'에 집중합니다. 이제 사용자 요청이 들어왔을 때 **어떤 순서로 처리하고, 어디서 검증하며, 누구에게 위임하는가를** 정의해야 합니다.
 
 Application 레이어는 도메인 로직을 직접 수행하지 않습니다. 사용자의 요청을 받아 입력을 검증하고, 도메인 객체에 작업을 위임하며, 결과를 반환하는 얇은 조율 계층입니다.
 
-## 워크플로우 전체 구조
+## Overall Workflow Structure
 
 Application 레이어의 워크플로우는 두 가지 트리거로 시작됩니다. 외부 요청(Command/Query)에 의한 흐름과 도메인 이벤트에 의한 내부 반응형 흐름입니다.
 
@@ -53,7 +53,7 @@ flowchart TB
     H2 --> Assessment
 ```
 
-## 워크플로우 규칙
+## Workflow Rules
 
 ### 1. AI 모델 관리
 
@@ -159,9 +159,9 @@ sequenceDiagram
 - 도메인 검증: 도메인 규칙에 따른 의미적 문제를 검증한다
 - 여러 필드를 동시에 검증하여 모든 오류를 한번에 반환한다
 
-## 시나리오
+## Scenarios
 
-### 정상 시나리오
+### Normal Scenarios
 
 1. **모델 등록** -- 3개 입력 값을 동시에 검증한 뒤, 위험 등급을 자동 분류하고 모델을 생성한다.
 2. **위험 등급 재분류** -- 모델을 조회하고 위험 등급을 재분류한다. High로 상향되면 평가가 자동 개시된다.
@@ -170,7 +170,7 @@ sequenceDiagram
 5. **배포 활성화** -- 평가 통과를 확인한 뒤 배포를 활성화한다.
 6. **인시던트 보고 + 자동 격리** -- 인시던트를 생성하면 Critical/High 심각도 시 배포가 자동 격리된다.
 
-### 거부 시나리오
+### Rejection Scenarios
 
 7. **다중 검증 실패** -- 여러 입력 값이 동시에 잘못되면 모든 오류를 한번에 반환한다.
 8. **금지 모델 배포** -- Unacceptable 위험 등급의 모델은 배포 검토 제출이 거부된다.
@@ -178,7 +178,7 @@ sequenceDiagram
 10. **미해결 인시던트** -- 미해결 인시던트가 있는 모델은 배포 검토 제출이 거부된다.
 11. **잘못된 상태 전이** -- Draft에서 Active로 직접 전이를 시도하면 거부된다.
 
-### 핵심 수락 기준
+### Key Acceptance Criteria
 
 #### 모델 등록 (RegisterModelCommand)
 
@@ -215,7 +215,7 @@ Then:  인시던트가 Reported 상태로 생성되고, QuarantineDeploymentOnCr
        배포를 자동 격리하여 Quarantined 상태로 전이한다
 ```
 
-## 존재해서는 안 되는 상태
+## States That Must Not Exist
 
 - 도메인 검증을 거치지 않고 생성된 도메인 객체
 - 형식 검증 없이 워크플로우에 진입한 요청

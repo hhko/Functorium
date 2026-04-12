@@ -639,19 +639,19 @@ public static class DomainError
 using static Functorium.Domains.Errors.DomainErrorType;
 
 // Basic usage
-DomainError.For<Email>(new Empty(), "", "이메일은 비어있을 수 없습니다");
+DomainError.For<Email>(new Empty(), "", "Email cannot be empty");
 // Error code: DomainErrors.Email.Empty
 
 // Error type with properties
-DomainError.For<Password>(new TooShort(MinLength: 8), value, "비밀번호가 너무 짧습니다");
+DomainError.For<Password>(new TooShort(MinLength: 8), value, "Password is too short");
 // Error code: DomainErrors.Password.TooShort
 
 // State transition error
-DomainError.For<Order>(new InvalidTransition(FromState: "Paid", ToState: "Active"), orderId, "유효하지 않은 상태 전이");
+DomainError.For<Order>(new InvalidTransition(FromState: "Paid", ToState: "Active"), orderId, "Invalid state transition");
 // Error code: DomainErrors.Order.InvalidTransition
 
 // Custom error
-DomainError.For<Currency>(new Unsupported(), value, "지원되지 않는 통화입니다");
+DomainError.For<Currency>(new Unsupported(), value, "Unsupported currency");
 // Error code: DomainErrors.Currency.Unsupported
 ```
 
@@ -679,10 +679,10 @@ public static class ApplicationError
 ```csharp
 using static Functorium.Applications.Errors.ApplicationErrorType;
 
-ApplicationError.For<CreateProductCommand>(new AlreadyExists(), productId, "이미 존재합니다");
+ApplicationError.For<CreateProductCommand>(new AlreadyExists(), productId, "Already exists");
 // Error code: ApplicationErrors.CreateProductCommand.AlreadyExists
 
-ApplicationError.For<UpdateOrderCommand>(new ValidationFailed("Quantity"), value, "수량은 양수여야 합니다");
+ApplicationError.For<UpdateOrderCommand>(new ValidationFailed("Quantity"), value, "Quantity must be positive");
 // Error code: ApplicationErrors.UpdateOrderCommand.ValidationFailed
 ```
 
@@ -717,7 +717,7 @@ public static class EventError
 ```csharp
 using static Functorium.Applications.Errors.EventErrorType;
 
-EventError.For<DomainEventPublisher>(new PublishFailed(), eventType, "이벤트 발행에 실패했습니다");
+EventError.For<DomainEventPublisher>(new PublishFailed(), eventType, "Event publishing failed");
 // Error code: ApplicationErrors.DomainEventPublisher.PublishFailed
 
 EventError.FromException<DomainEventPublisher>(exception);
@@ -760,11 +760,11 @@ public static class AdapterError
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
 // Expected error
-AdapterError.For<ProductRepository>(new NotFound(), id, "제품을 찾을 수 없습니다");
+AdapterError.For<ProductRepository>(new NotFound(), id, "Product not found");
 // Error code: AdapterErrors.ProductRepository.NotFound
 
 // Pipeline error
-AdapterError.For<UsecaseValidationPipeline>(new PipelineValidation("PropertyName"), value, "검증에 실패했습니다");
+AdapterError.For<UsecaseValidationPipeline>(new PipelineValidation("PropertyName"), value, "Validation failed");
 // Error code: AdapterErrors.UsecaseValidationPipeline.PipelineValidation
 
 // Exception wrapping
@@ -772,7 +772,7 @@ AdapterError.FromException<UsecaseExceptionPipeline>(new PipelineException(), ex
 // Error code: AdapterErrors.UsecaseExceptionPipeline.PipelineException (Exceptional)
 
 // Runtime Type usage
-AdapterError.For(GetType(), new ConnectionFailed("DB"), connectionString, "연결에 실패했습니다");
+AdapterError.For(GetType(), new ConnectionFailed("DB"), connectionString, "Connection failed");
 // Error code: AdapterErrors.{ActualTypeName}.ConnectionFailed
 ```
 

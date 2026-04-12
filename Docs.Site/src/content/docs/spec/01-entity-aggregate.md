@@ -416,7 +416,7 @@ public sealed class PricingService : IDomainService
         DiscountRate rate,
         CustomerGrade grade)
     {
-        // 여러 Aggregate의 값을 참조하는 순수 함수 로직
+        // Pure function logic that references values from multiple Aggregates
         var discount = originalPrice.Value * rate.Value * grade.Multiplier;
         return Money.Create(originalPrice.Value - discount);
     }

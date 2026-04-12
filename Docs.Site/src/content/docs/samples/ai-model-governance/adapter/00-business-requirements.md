@@ -3,7 +3,7 @@ title: "Adapter Technical Requirements"
 description: "Persistence, external service, HTTP API, and observability technical requirements for the AI Model Governance Platform"
 ---
 
-## 배경
+## Background
 
 [애플리케이션 비즈니스 요구사항](../application/00-business-requirements/)에서 정의한 포트(Port)를 실제 기술 구현으로 연결하는 Adapter 레이어의 기술 요구사항을 정의합니다. 이 레이어는 도메인/애플리케이션 레이어가 정의한 인터페이스를 구현하며, 외부 시스템과의 통합을 담당합니다.
 
@@ -18,7 +18,7 @@ description: "Persistence, external service, HTTP API, and observability technic
 | **Fork + awaitAll** | 독립적인 N개 작업의 순차 실행 병목 | 병렬 실행으로 최악 소요 시간 = max(개별 시간) | `forks.Map(io => io.Fork())` -> `awaitAll(forks)` |
 | **Bracket** | 예외 시 리소스(세션, 연결) 누수 | Acquire-Use-Release 수명 보장 | `acquire.Bracket(Use: ..., Fin: ...)` |
 
-## 기술 영역
+## Technical Areas
 
 ### 1. 영속성 (Persistence)
 
@@ -84,7 +84,7 @@ OpenTelemetry 3-Pillar 관측성을 제공합니다.
 
 ## IO 고급 기능 시나리오
 
-### 정상 시나리오
+### Normal Scenarios
 
 1. **헬스 체크 성공** -- 10초 이내에 응답을 받아 Healthy/Degraded 결과를 반환한다.
 2. **헬스 체크 타임아웃** -- 10초 초과 시 TimedOut 폴백 결과를 반환한다 (오류가 아님).
@@ -93,7 +93,7 @@ OpenTelemetry 3-Pillar 관측성을 제공합니다.
 5. **레지스트리 세션 정상 해제** -- 조회 성공 후 세션이 정상 해제된다.
 6. **레지스트리 세션 오류 후 해제** -- 조회 실패해도 세션이 해제된다 (Bracket 보장).
 
-### 거부 시나리오
+### Rejection Scenarios
 
 7. **모니터링 최종 실패** -- 3회 재시도 후에도 실패하면 MonitoringFailed 오류를 반환한다.
 8. **병렬 체크 부분 실패** -- 일부 기준 체크가 실패하면 ComplianceCheckFailed 오류를 반환한다.

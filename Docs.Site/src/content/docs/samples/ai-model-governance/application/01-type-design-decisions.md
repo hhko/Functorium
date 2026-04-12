@@ -3,7 +3,7 @@ title: "Application Type Design Decisions"
 description: "Port design, ApplyT pattern, and FinT<IO> composition for the AI Model Governance Platform"
 ---
 
-## 개요
+## Overview
 
 [애플리케이션 비즈니스 요구사항](../00-business-requirements/)에서 정의한 워크플로우 규칙을 분석하여, Use Case(Command/Query)와 포트(Port)를 식별합니다. 각 Use Case가 어떤 포트를 사용하고, 어떤 순서로 조율하는지 결정합니다.
 
@@ -22,7 +22,7 @@ description: "Port design, ApplyT pattern, and FinT<IO> composition for the AI M
 
 ## Query 식별
 
-| Query | 입력 | 결과 | 포트 |
+| Query | 입력 | 결과 | Port |
 |-------|------|------|------|
 | GetModelByIdQuery | ModelId | 모델 상세 (배포/평가/인시던트 포함) | IModelDetailQuery |
 | SearchModelsQuery | RiskTier?, Page, Size | 모델 목록 | IAIModelQuery |
@@ -47,7 +47,7 @@ description: "Port design, ApplyT pattern, and FinT<IO> composition for the AI M
 
 ### Command 포트 (Repository)
 
-| 포트 | 기본 CRUD | 커스텀 메서드 |
+| Port | 기본 CRUD | 커스텀 메서드 |
 |------|-----------|-------------|
 | IAIModelRepository | IRepository 기본 | Exists(spec), GetByIdIncludingDeleted(id) |
 | IDeploymentRepository | IRepository 기본 | Exists(spec), Find(spec) |
@@ -56,7 +56,7 @@ description: "Port design, ApplyT pattern, and FinT<IO> composition for the AI M
 
 ### Query 포트 (Read Adapter)
 
-| 포트 | 역할 |
+| Port | 역할 |
 |------|------|
 | IAIModelQuery | 모델 목록 검색 (필터, 페이지네이션) |
 | IModelDetailQuery | 모델 상세 조회 (배포/평가/인시던트 집계) |
@@ -66,7 +66,7 @@ description: "Port design, ApplyT pattern, and FinT<IO> composition for the AI M
 
 ### 외부 서비스 포트
 
-| 포트 | 역할 | IO 패턴 |
+| Port | 역할 | IO 패턴 |
 |------|------|---------|
 | IModelHealthCheckService | 모델 헬스 체크 | Timeout + Catch |
 | IModelMonitoringService | 모델 드리프트 모니터링 | Retry + Schedule |
