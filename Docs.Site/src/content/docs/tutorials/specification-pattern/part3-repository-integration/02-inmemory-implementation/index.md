@@ -1,41 +1,41 @@
 ---
-title: "인메모리 구현"
+title: "InMemory Implementation"
 ---
-## 개요
+## Overview
 
-앞 장에서 설계한 Repository 인터페이스가 얼마나 간단하게 구현되는지 확인해보겠습니다. InMemory 어댑터는 테스트 환경에서 유용할 뿐 아니라, Repository 패턴의 핵심 동작을 가장 명확하게 보여주는 구현입니다.
+Let's see how simply the Repository interface designed in the previous chapter can be implemented. The InMemory adapter is not only useful in test environments but is also the implementation that most clearly demonstrates the core behavior of the Repository pattern.
 
-LINQ의 `Where`와 `Any`에 메서드 참조(`spec.IsSatisfiedBy`)를 전달하는 것만으로 구현이 완성됩니다.
+The implementation is complete just by passing method references (`spec.IsSatisfiedBy`) to LINQ's `Where` and `Any`.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **IsSatisfiedBy 직접 활용** - `Where(spec.IsSatisfiedBy)` 패턴 이해
-2. **메서드 참조 구문** - 람다 `p => spec.IsSatisfiedBy(p)` 대신 메서드 참조 `spec.IsSatisfiedBy` 사용
-3. **Repository 구현의 단순성** - Specification 덕분에 Repository 구현이 극도로 간결해짐
+### Key Learning Objectives
+1. **Direct use of IsSatisfiedBy** - Understanding the `Where(spec.IsSatisfiedBy)` pattern
+2. **Method reference syntax** - Using method reference `spec.IsSatisfiedBy` instead of lambda `p => spec.IsSatisfiedBy(p)`
+3. **Simplicity of Repository implementation** - Thanks to Specification, the Repository implementation becomes extremely concise
 
-### 실습을 통해 확인할 내용
-- InMemoryProductRepository의 FindAll/Exists 동작
-- 다양한 Specification 조합으로 조회
-- 존재 여부 확인 (Exists)
+### What You Will Verify Through Practice
+- FindAll/Exists behavior of InMemoryProductRepository
+- Querying with various Specification combinations
+- Existence checking (Exists)
 
-## 핵심 개념
+## Key Concepts
 
-### IsSatisfiedBy 메서드 참조
+### IsSatisfiedBy Method Reference
 
-`Specification<T>.IsSatisfiedBy`는 `Func<T, bool>` 시그니처와 호환됩니다. 따라서 LINQ의 `Where`에 직접 전달할 수 있습니다.
+`Specification<T>.IsSatisfiedBy` is compatible with the `Func<T, bool>` signature. Therefore, it can be passed directly to LINQ's `Where`.
 
 ```csharp
-// 람다 방식 (장황)
+// Lambda approach (verbose)
 _products.Where(p => spec.IsSatisfiedBy(p));
 
-// 메서드 참조 방식 (간결)
+// Method reference approach (concise)
 _products.Where(spec.IsSatisfiedBy);
 ```
 
-두 방식은 동일한 결과를 반환하지만, 메서드 참조 방식이 더 간결하고 의도가 명확합니다.
+Both approaches return identical results, but the method reference approach is more concise and intent is clearer.
 
-### InMemory 구현의 핵심
+### Core of InMemory Implementation
 
 ```csharp
 public class InMemoryProductRepository : IProductRepository
@@ -53,56 +53,56 @@ public class InMemoryProductRepository : IProductRepository
 }
 ```
 
-Repository는 **어떤 조건으로 필터링하는지 전혀 모릅니다**. `IsSatisfiedBy`에 위임할 뿐입니다. 새로운 Specification이 추가되어도 Repository 코드는 변경할 필요가 없습니다.
+The Repository **has no knowledge of what conditions are being filtered**. It simply delegates to `IsSatisfiedBy`. Even when new Specifications are added, the Repository code does not need to change.
 
-## 프로젝트 설명
+## Project Description
 
-### 프로젝트 구조
+### Project Structure
 ```
-InMemoryImpl/                            # 메인 프로젝트
-├── Product.cs                           # 도메인 모델
-├── IProductRepository.cs                # Repository 인터페이스
-├── InMemoryProductRepository.cs         # InMemory 구현
-├── SampleProducts.cs                    # 예제 데이터 (8개 상품)
+InMemoryImpl/                            # Main project
+├── Product.cs                           # Domain model
+├── IProductRepository.cs                # Repository interface
+├── InMemoryProductRepository.cs         # InMemory implementation
+├── SampleProducts.cs                    # Sample data (8 products)
 ├── Specifications/
-│   ├── ProductInStockSpec.cs                   # 재고 있는 상품
-│   ├── ProductPriceRangeSpec.cs                # 가격 범위 상품
-│   └── ProductCategorySpec.cs                  # 카테고리별 상품
-├── Program.cs                           # FindAll/Exists 데모
+│   ├── ProductInStockSpec.cs                   # In-stock products
+│   ├── ProductPriceRangeSpec.cs                # Price range products
+│   └── ProductCategorySpec.cs                  # Products by category
+├── Program.cs                           # FindAll/Exists demo
 └── InMemoryImpl.csproj
-InMemoryImpl.Tests.Unit/                 # 테스트 프로젝트
-├── InMemoryRepositoryTests.cs           # Repository 동작 테스트
+InMemoryImpl.Tests.Unit/                 # Test project
+├── InMemoryRepositoryTests.cs           # Repository behavior tests
 └── ...
 ```
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-### InMemory 구현 핵심
-| 메서드 | LINQ 메서드 | 설명 |
+### InMemory Implementation Core
+| Method | LINQ Method | Description |
 |--------|------------|------|
-| `FindAll(spec)` | `Where(spec.IsSatisfiedBy)` | 조건을 만족하는 모든 항목 반환 |
-| `Exists(spec)` | `Any(spec.IsSatisfiedBy)` | 조건을 만족하는 항목 존재 여부 |
+| `FindAll(spec)` | `Where(spec.IsSatisfiedBy)` | Returns all items satisfying the condition |
+| `Exists(spec)` | `Any(spec.IsSatisfiedBy)` | Whether an item satisfying the condition exists |
 
-### InMemory의 특징
-| 특징 | 설명 |
+### InMemory Characteristics
+| Characteristic | Description |
 |------|------|
-| **장점** | 구현이 극도로 단순, 테스트에 적합, 외부 의존성 없음 |
-| **한계** | 메모리에 모든 데이터를 로드해야 함, 대용량 데이터에 부적합 |
-| **용도** | 단위 테스트, 프로토타이핑, 소규모 데이터 |
+| **Pros** | Extremely simple implementation, suitable for testing, no external dependencies |
+| **Limitations** | Must load all data into memory, not suitable for large datasets |
+| **Use Cases** | Unit tests, prototyping, small datasets |
 
 ## FAQ
 
-### Q1: InMemory 구현은 실제 프로젝트에서 쓸모가 있나요?
-**A**: 네. 단위 테스트에서 실제 DB 대신 InMemory 구현을 사용하면 테스트가 빠르고 격리됩니다. Repository 인터페이스 덕분에 테스트와 프로덕션에서 다른 구현을 사용할 수 있습니다.
+### Q1: Is the InMemory implementation useful in real projects?
+**A**: Yes. Using the InMemory implementation instead of a real DB in unit tests makes tests fast and isolated. Thanks to the Repository interface, different implementations can be used in testing and production.
 
-### Q2: `Where(spec.IsSatisfiedBy)` 대신 `Where(p => spec.IsSatisfiedBy(p))`를 써야 하는 경우가 있나요?
-**A**: 기능적으로 동일합니다. 메서드 참조가 더 간결하므로 일반적으로 `spec.IsSatisfiedBy` 형태를 선호합니다.
+### Q2: Are there cases where `Where(p => spec.IsSatisfiedBy(p))` should be used instead of `Where(spec.IsSatisfiedBy)`?
+**A**: They are functionally identical. Since method references are more concise, the `spec.IsSatisfiedBy` form is generally preferred.
 
-### Q3: 대용량 데이터에서는 어떻게 해야 하나요?
-**A**: 3장(PropertyMap)과 4장(EF Core 구현)에서 Expression Tree를 활용하여 DB 수준에서 필터링하는 방법을 학습합니다. InMemory 방식은 모든 데이터를 메모리에 로드한 후 필터링하므로 대용량에는 적합하지 않습니다.
+### Q3: What should be done for large datasets?
+**A**: In Chapter 3 (PropertyMap) and Chapter 4 (EF Core Implementation), you will learn how to filter at the DB level using Expression Trees. The InMemory approach loads all data into memory before filtering, so it is not suitable for large volumes.
 
 ---
 
-InMemory 구현은 `IsSatisfiedBy`를 직접 호출하므로 도메인 모델만으로 충분했습니다. 하지만 EF Core처럼 Expression Tree를 SQL로 변환하는 환경에서는, 도메인 모델과 DB 모델의 프로퍼티 이름이 다를 때 문제가 발생합니다. 다음 장에서는 이 간극을 메우는 PropertyMap을 다룹니다.
+The InMemory implementation calls `IsSatisfiedBy` directly, so the domain model alone was sufficient. However, in environments like EF Core that convert Expression Trees to SQL, problems arise when domain model and DB model property names differ. The next chapter covers PropertyMap, which bridges this gap.
 
-→ [3장: PropertyMap](../03-PropertyMap/)
+-> [Chapter 3: PropertyMap](../03-PropertyMap/)

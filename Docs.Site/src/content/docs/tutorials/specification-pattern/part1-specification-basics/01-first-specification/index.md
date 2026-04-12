@@ -1,35 +1,35 @@
 ---
 title: "First Specification"
 ---
-## 개요
+## Overview
 
-Specification 패턴의 핵심은 **비즈니스 조건을 독립적인 객체로 캡슐화**하는 것입니다. 이 장에서는 `Specification<T>` 추상 클래스를 상속하여 첫 번째 Specification을 직접 만들어봅니다.
+The core of the Specification pattern is **encapsulating business conditions as independent objects**. In this chapter, you will inherit from the `Specification<T>` abstract class and create your first Specification.
 
-> **"재고가 있는가?", "가격이 범위 안에 있는가?" — 이런 질문 하나하나가 Specification 객체가 됩니다.**
+> **"Is it in stock?", "Is the price within range?" -- Each of these questions becomes a Specification object.**
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **Specification\<T\> 추상 클래스의 구조 이해**
-   - `IsSatisfiedBy(T entity)` 메서드의 역할과 구현 방법
-   - 추상 클래스를 상속하여 구체적인 조건을 정의하는 패턴
+### Key Learning Objectives
+1. **Understanding the structure of Specification\<T\> abstract class**
+   - The role and implementation of the `IsSatisfiedBy(T entity)` method
+   - The pattern of inheriting from the abstract class to define concrete conditions
 
-2. **도메인 조건의 객체화**
-   - 조건문(`if`)을 Specification 객체로 분리하는 이유
-   - 재사용 가능하고 테스트 가능한 조건 표현
+2. **Objectifying domain conditions**
+   - Why separate conditional statements (`if`) into Specification objects
+   - Reusable and testable condition expressions
 
-3. **경계값 테스트의 중요성**
-   - Specification의 정확한 동작을 경계값으로 검증
+3. **Importance of boundary value testing**
+   - Verifying the exact behavior of Specifications using boundary values
 
-### 실습을 통해 확인할 내용
-- **ProductInStockSpec**: 재고가 0보다 큰 상품 필터링
-- **ProductPriceRangeSpec**: 최솟값/최댓값 범위 내 상품 필터링
+### What You Will Verify Through Practice
+- **ProductInStockSpec**: Filtering products with stock greater than 0
+- **ProductPriceRangeSpec**: Filtering products within min/max price range
 
-## 핵심 개념
+## Key Concepts
 
-### Specification\<T\> 추상 클래스
+### Specification\<T\> Abstract Class
 
-Functorium의 `Specification<T>`는 도메인 조건을 캡슐화하는 추상 기반 클래스입니다. 핵심은 단 하나의 메서드입니다:
+Functorium's `Specification<T>` is an abstract base class that encapsulates domain conditions. The core is a single method:
 
 ```csharp
 public abstract class Specification<T>
@@ -38,48 +38,48 @@ public abstract class Specification<T>
 }
 ```
 
-이 설계가 인터페이스가 아닌 **추상 클래스**인 이유는, `And()`, `Or()`, `Not()` 같은 조합 메서드와 연산자 오버로딩을 기반 클래스에서 제공하기 위함입니다. 이를 통해 모든 Specification이 조합 기능을 자동으로 갖게 됩니다.
+The reason this design uses an **abstract class** rather than an interface is to provide composition methods like `And()`, `Or()`, `Not()` and operator overloading from the base class. This ensures all Specifications automatically have composition capabilities.
 
-### 조건을 객체로 분리하는 이유
+### Why Separate Conditions into Objects
 
-일반적인 코드에서는 조건을 `if`문이나 람다로 직접 작성합니다:
+In typical code, conditions are written directly as `if` statements or lambdas:
 
 ```csharp
-// 인라인 조건 - 재사용 불가, 테스트 어려움
+// Inline condition - not reusable, hard to test
 var inStock = products.Where(p => p.Stock > 0);
 ```
 
-Specification으로 분리하면:
+When separated into a Specification:
 
 ```csharp
-// Specification 객체 - 재사용 가능, 단위 테스트 가능
+// Specification object - reusable, unit testable
 var spec = new ProductInStockSpec();
 var inStock = products.Where(p => spec.IsSatisfiedBy(p));
 ```
 
-조건이 복잡해질수록 이 분리의 가치가 커집니다.
+The value of this separation grows as conditions become more complex.
 
-## 프로젝트 설명
+## Project Description
 
-### 프로젝트 구조
+### Project Structure
 ```
 FirstSpecification/
-├── Program.cs                          # 데모 실행
-├── Product.cs                          # 도메인 모델
+├── Program.cs                          # Demo execution
+├── Product.cs                          # Domain model
 ├── Specifications/
-│   ├── ProductInStockSpec.cs                  # 재고 확인 Specification
-│   └── ProductPriceRangeSpec.cs               # 가격 범위 Specification
+│   ├── ProductInStockSpec.cs                  # Stock check Specification
+│   └── ProductPriceRangeSpec.cs               # Price range Specification
 └── FirstSpecification.csproj
 
 FirstSpecification.Tests.Unit/
-├── ProductInStockSpecTests.cs                 # 재고 경계값 테스트
-├── ProductPriceRangeSpecTests.cs              # 가격 범위 경계값 테스트
+├── ProductInStockSpecTests.cs                 # Stock boundary value tests
+├── ProductPriceRangeSpecTests.cs              # Price range boundary value tests
 ├── Using.cs
 ├── xunit.runner.json
 └── FirstSpecification.Tests.Unit.csproj
 ```
 
-### 핵심 코드
+### Core Code
 
 #### Product.cs
 ```csharp
@@ -103,44 +103,44 @@ public sealed class ProductPriceRangeSpec(decimal min, decimal max) : Specificat
 }
 ```
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-다음 표는 `Specification<T>`의 설계를 요약합니다.
+The following table summarizes the design of `Specification<T>`.
 
-### Specification\<T\> 설계 요약
-| 구분 | 설명 |
+### Specification\<T\> Design Summary
+| Aspect | Description |
 |------|------|
-| **기반 타입** | `abstract class Specification<T>` |
-| **핵심 메서드** | `IsSatisfiedBy(T entity)` — 조건 충족 여부 반환 |
-| **왜 추상 클래스인가** | 조합 메서드(`And`, `Or`, `Not`)와 연산자 오버로딩을 기반에서 제공 |
-| **구현 방법** | 상속 후 `IsSatisfiedBy` 오버라이드 |
+| **Base Type** | `abstract class Specification<T>` |
+| **Core Method** | `IsSatisfiedBy(T entity)` -- returns whether the condition is satisfied |
+| **Why Abstract Class** | Provides composition methods (`And`, `Or`, `Not`) and operator overloading from the base |
+| **Implementation** | Inherit and override `IsSatisfiedBy` |
 
-다음 표는 인라인 조건과 Specification 방식을 비교합니다.
+The following table compares inline conditions with the Specification approach.
 
-### 인라인 조건 vs Specification
-| 구분 | 인라인 조건 | Specification |
+### Inline Conditions vs Specification
+| Aspect | Inline Conditions | Specification |
 |------|-------------|---------------|
-| **재사용성** | 낮음 (복사/붙여넣기) | 높음 (객체 공유) |
-| **테스트 용이성** | 어려움 | 쉬움 (단위 테스트) |
-| **가독성** | 복잡해지면 저하 | 이름으로 의도 전달 |
-| **조합** | 수동 (`&&`, `\|\|`) | 자동 (`And`, `Or`, `Not`) |
+| **Reusability** | Low (copy/paste) | High (shared objects) |
+| **Testability** | Difficult | Easy (unit tests) |
+| **Readability** | Degrades with complexity | Conveys intent through names |
+| **Composition** | Manual (`&&`, `\|\|`) | Automatic (`And`, `Or`, `Not`) |
 
 ## FAQ
 
-### Q1: 왜 인터페이스가 아닌 추상 클래스인가요?
-**A**: `Specification<T>`는 `And()`, `Or()`, `Not()` 조합 메서드와 `&`, `|`, `!` 연산자 오버로딩을 기반 클래스에서 구현합니다. 인터페이스에서는 연산자 오버로딩을 제공할 수 없고, 조합 로직이 매번 중복될 수 있습니다. 추상 클래스를 사용하면 모든 Specification이 조합 기능을 자동으로 상속받습니다.
+### Q1: Why an abstract class instead of an interface?
+**A**: `Specification<T>` implements `And()`, `Or()`, `Not()` composition methods and `&`, `|`, `!` operator overloading in the base class. Interfaces cannot provide operator overloading, and composition logic would be duplicated each time. Using an abstract class ensures all Specifications automatically inherit composition capabilities.
 
-### Q2: `sealed` 키워드를 사용하는 이유가 있나요?
-**A**: 구체적인 Specification 클래스(`ProductInStockSpec`, `ProductPriceRangeSpec`)는 더 이상 상속할 필요가 없는 최종 구현입니다. `sealed`를 붙이면 의도하지 않은 상속을 방지하고, JIT 컴파일러가 가상 호출을 최적화할 수 있습니다.
+### Q2: Is there a reason for using the `sealed` keyword?
+**A**: Concrete Specification classes (`ProductInStockSpec`, `ProductPriceRangeSpec`) are final implementations that do not need further inheritance. Adding `sealed` prevents unintended inheritance and allows the JIT compiler to optimize virtual calls.
 
-### Q3: Specification에 상태(생성자 매개변수)를 전달해도 되나요?
-**A**: 네, `ProductPriceRangeSpec(min, max)`처럼 생성 시점에 조건 매개변수를 받는 것은 자연스러운 패턴입니다. Specification은 생성 후 불변(immutable)이어야 하며, `IsSatisfiedBy` 호출 시 외부 상태에 의존하지 않아야 합니다.
+### Q3: Is it okay to pass state (constructor parameters) to a Specification?
+**A**: Yes, receiving condition parameters at construction time like `ProductPriceRangeSpec(min, max)` is a natural pattern. A Specification should be immutable after creation and should not depend on external state when `IsSatisfiedBy` is called.
 
-### Q4: 경계값 테스트가 왜 중요한가요?
-**A**: `ProductPriceRangeSpec(100, 500)`에서 가격이 정확히 100이거나 500일 때의 동작은 `>=`인지 `>`인지에 따라 달라집니다. 경계값 테스트는 이런 미묘한 차이를 명확히 검증하여 Specification의 정확한 의미를 보장합니다.
+### Q4: Why are boundary value tests important?
+**A**: For `ProductPriceRangeSpec(100, 500)`, the behavior when the price is exactly 100 or 500 differs depending on whether `>=` or `>` is used. Boundary value tests clearly verify these subtle differences to guarantee the exact semantics of the Specification.
 
 ---
 
-다음 장에서는 여러 Specification을 `And`, `Or`, `Not`으로 조합하여 복합 비즈니스 규칙을 만드는 방법을 배웁니다.
+In the next chapter, you will learn how to compose multiple Specifications with `And`, `Or`, `Not` to create complex business rules.
 
-→ [2장: 조합](../02-Composition/)
+-> [Chapter 2: Composition](../02-Composition/)

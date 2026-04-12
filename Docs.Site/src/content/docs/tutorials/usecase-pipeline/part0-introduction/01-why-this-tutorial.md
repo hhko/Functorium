@@ -1,80 +1,79 @@
 ---
-title: "왜 타입 안전 파이프라인인가"
+title: "Why Type-Safe Pipelines"
 ---
 
-## Mediator Pipeline의 딜레마
+## The Mediator Pipeline Dilemma
 
-Mediator 패턴에서 Pipeline은 모든 요청/응답을 가로채는 **교차 관심사(Cross-Cutting Concern)** 처리기입니다. Logging, Validation, Exception Handling, Transaction 관리 등을 Usecase 코드와 분리하여 일관되게 적용할 수 있습니다.
+In the Mediator pattern, a Pipeline is a **cross-cutting concern** handler that intercepts all requests/responses. It enables consistently applying Logging, Validation, Exception Handling, Transaction management, etc., separately from Usecase code.
 
 ```csharp
-// Pipeline이 모든 요청/응답을 가로챔
+// Pipeline intercepts all requests/responses
 Request → [Validation] → [Logging] → [Transaction] → Handler → [Logging] → Response
 ```
 
-그런데 Pipeline은 **모든 타입의 응답**을 처리해야 합니다. Logging Pipeline은 응답이 성공인지 실패인지 알아야 하고, Validation Pipeline은 검증 실패 시 응답 객체를 **직접 생성**해야 합니다.
+However, a Pipeline must handle **all types of responses**. The Logging Pipeline needs to know whether a response is success or failure, and the Validation Pipeline must **directly create** a response object when validation fails.
 
-## 핵심 문제: sealed struct는 제약이 불가능하다
+## Core Problem: sealed struct Cannot Be Used as a Constraint
 
-LanguageExt의 `Fin<T>`는 성공/실패를 표현하는 모나드입니다. 하지만 `Fin<T>`는 **sealed struct**이기 때문에:
+LanguageExt's `Fin<T>` is a monad that represents success/failure. However, because `Fin<T>` is a **sealed struct**:
 
 ```csharp
-// 이것은 불가능합니다
-where TResponse : Fin<T>  // 컴파일 에러! sealed struct는 제약 조건이 될 수 없음
+// This is not possible
+where TResponse : Fin<T>  // Compile error! sealed struct cannot be a constraint
 ```
 
-이 한 줄의 제약 때문에 Pipeline에서 `Fin<T>`를 직접 다룰 수 없습니다. 결과적으로 **리플렉션에 의존**하게 됩니다.
+Due to this single constraint limitation, `Fin<T>` cannot be directly handled in Pipelines. This ultimately leads to **reliance on reflection**.
 
-## 리플렉션의 3가지 비용
+## The 3 Costs of Reflection
 
-리플렉션으로 `Fin<T>`를 다루면:
+When handling `Fin<T>` through reflection:
 
-1. **런타임 성능 저하**: 매 요청마다 타입 정보를 동적으로 조회
-2. **컴파일 타임 안전성 상실**: 오타나 타입 불일치가 런타임에야 발견됨
-3. **유지보수 복잡성**: 타입 변경 시 리플렉션 코드를 수동으로 동기화해야 함
+1. **Runtime performance degradation**: Dynamically inspecting type information on every request
+2. **Loss of compile-time safety**: Typos and type mismatches are only discovered at runtime
+3. **Maintenance complexity**: Reflection code must be manually synchronized when types change
 
-## 이 튜토리얼이 제시하는 해결책
+## The Solution This Tutorial Presents
 
-이 튜토리얼은 **인터페이스 계층 설계**와 **C# 11 static abstract 멤버**를 활용하여 리플렉션을 완전히 제거하는 과정을 다룹니다.
+This tutorial covers the process of completely eliminating reflection through **interface hierarchy design** and **C# 11 static abstract members**.
 
 ```
-리플렉션 3곳 → 인터페이스 계층 → 리플렉션 0곳
+3 reflection sites → Interface hierarchy → 0 reflection sites
 ```
 
-구체적으로:
+Specifically:
 
-| 문제 | 해결 |
+| Problem | Solution |
 |------|------|
-| 성공/실패 읽기 | `IFinResponse` 비제네릭 마커 인터페이스 |
-| 공변적 접근 | `IFinResponse<out A>` 공변 인터페이스 |
-| 실패 응답 생성 | `IFinResponseFactory<TSelf>` CRTP 팩토리 |
-| 에러 정보 접근 | `IFinResponseWithError` 에러 접근 인터페이스 |
-| 전체 통합 | `FinResponse<A>` Discriminated Union record |
+| Reading success/failure | `IFinResponse` non-generic marker interface |
+| Covariant access | `IFinResponse<out A>` covariant interface |
+| Creating failure responses | `IFinResponseFactory<TSelf>` CRTP factory |
+| Accessing error information | `IFinResponseWithError` error access interface |
+| Complete integration | `FinResponse<A>` Discriminated Union record |
 
-## 이 튜토리얼의 여정
+## The Journey of This Tutorial
 
-1. **Part 1**: C# 제네릭 변성의 기초를 다집니다
-2. **Part 2**: `Fin<T>`와 Mediator Pipeline의 충돌 문제를 정확히 정의합니다
-3. **Part 3**: IFinResponse 인터페이스 계층을 하나씩 설계합니다
-4. **Part 4**: 각 Pipeline에 최소 제약 조건을 적용합니다
-5. **Part 5**: 실전 Command/Query Usecase에서 전체 흐름을 통합합니다
+1. **Part 1**: Establishes the foundations of C# generic variance
+2. **Part 2**: Precisely defines the conflict between `Fin<T>` and Mediator Pipelines
+3. **Part 3**: Designs the IFinResponse interface hierarchy step by step
+4. **Part 4**: Applies minimal constraints to each Pipeline
+5. **Part 5**: Integrates the complete flow in practical Command/Query Usecases
 
 ## FAQ
 
-### Q1: `Fin<T>`가 sealed struct라서 제약이 안 되는 것이 왜 문제인가요?
-**A**: Pipeline은 `where TResponse : SomeType` 형태의 제네릭 제약을 통해 응답 타입의 멤버에 접근합니다. `Fin<T>`가 sealed struct이면 이 제약 조건으로 사용할 수 없어, `IsSucc`이나 `Error` 같은 멤버에 컴파일 타임에 접근할 방법이 없습니다. 결국 리플렉션에 의존하게 되어 성능, 안전성, 유지보수성 모두 저하됩니다.
+### Q1: Why is it a problem that `Fin<T>` is a sealed struct and cannot be used as a constraint?
+**A**: Pipelines access members of the response type through generic constraints in the form `where TResponse : SomeType`. If `Fin<T>` is a sealed struct, it cannot be used as this constraint, which means there is no way to access members like `IsSucc` or `Error` at compile time. This ultimately leads to reliance on reflection, degrading performance, safety, and maintainability.
 
-### Q2: 리플렉션을 캐싱하면 성능 문제를 해결할 수 있지 않나요?
-**A**: 리플렉션 캐싱으로 성능은 개선할 수 있지만, **컴파일 타임 안전성 상실과** **유지보수 복잡성은** 해결되지 않습니다. 프로퍼티 이름 오타나 LanguageExt 버전 변경 시 런타임에야 오류를 발견하게 됩니다. 이 튜토리얼이 제시하는 인터페이스 계층 설계는 세 가지 문제를 모두 해결합니다.
+### Q2: Can't caching reflection solve the performance problem?
+**A**: Reflection caching can improve performance, but it does not solve the **loss of compile-time safety** or **maintenance complexity**. Property name typos or LanguageExt version changes will only be caught as errors at runtime. The interface hierarchy design presented in this tutorial solves all three problems.
 
-### Q3: 이 튜토리얼의 해결책은 LanguageExt에만 적용되나요?
-**A**: 아닙니다. sealed struct를 인터페이스 계층으로 감싸는 패턴은 **모든 sealed 타입에** 적용 가능합니다. 예를 들어 `Result<T>`, `Option<T>` 같은 다른 라이브러리의 타입도 동일한 전략으로 Pipeline 제약에 활용할 수 있습니다.
+### Q3: Is the solution in this tutorial only applicable to LanguageExt?
+**A**: No. The pattern of wrapping a sealed struct with an interface hierarchy is applicable to **all sealed types**. For example, types from other libraries like `Result<T>` or `Option<T>` can also be leveraged for Pipeline constraints using the same strategy.
 
-### Q4: Part 1~5 전체를 순서대로 학습해야 하나요?
-**A**: Part 1~3은 순서대로 학습하는 것을 권장합니다. 제네릭 변성 기초(Part 1) 위에 문제 정의(Part 2)와 인터페이스 설계(Part 3)가 쌓이기 때문입니다. Part 4~5는 Part 3 완료 후 관심 있는 장부터 선택적으로 학습할 수 있습니다.
+### Q4: Do I need to study Parts 1-5 in order?
+**A**: It is recommended to study Parts 1-3 in order. Generic variance fundamentals (Part 1) build toward the problem definition (Part 2) and interface design (Part 3). Parts 4-5 can be studied selectively after completing Part 3.
 
 ---
 
-튜토리얼을 시작하기 전에 필요한 도구, 사전 지식, 프로젝트 빌드 방법을 확인합니다.
+Before starting the tutorial, verify the required tools, prerequisite knowledge, and project build methods.
 
-→ [0.2장: 환경 설정](02-prerequisites-and-setup.md)
-
+→ [Section 0.2: Prerequisites and Setup](02-prerequisites-and-setup.md)

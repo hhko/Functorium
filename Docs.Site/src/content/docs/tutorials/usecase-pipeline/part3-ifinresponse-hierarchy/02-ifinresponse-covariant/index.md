@@ -2,29 +2,29 @@
 title: "IFinResponse Covariant Interface"
 ---
 
-## 개요
+## Overview
 
-1장에서 만든 비제네릭 `IFinResponse` 마커는 성공/실패를 확인할 수 있지만, **값의 타입 정보**는 제공하지 않습니다. Part 1에서 학습한 공변성을 적용하여, 이 장에서는 `out A` 키워드를 사용한 **공변 인터페이스** `IFinResponse<out A>`를 추가합니다. 파생 타입에서 기본 타입으로의 안전한 대입을 가능하게 합니다.
+The non-generic `IFinResponse` marker created in Section 1 can check success/failure, but does not provide **type information for the value**. Applying the covariance learned in Part 1, this section adds a **covariant interface** `IFinResponse<out A>` using the `out A` keyword. This enables safe assignment from derived types to base types.
 
 ```
-IFinResponse                    ← 비제네릭 마커 (1장)
-└── IFinResponse<out A>         ← 공변 인터페이스 (이번 장)
+IFinResponse                    ← Non-generic marker (Section 1)
+└── IFinResponse<out A>         ← Covariant interface (this section)
 ```
 
-## 학습 목표
+## Learning Objectives
 
-이 장을 완료하면 다음을 할 수 있습니다:
+After completing this section, you will be able to:
 
-1. `out A` 키워드를 사용하여 공변 인터페이스를 선언할 수 있습니다
-2. 공변성에 의해 `IFinResponse<string>`을 `IFinResponse<object>`에 대입할 수 있는 이유를 설명할 수 있습니다
-3. 비제네릭 마커와 제네릭 공변 인터페이스의 상속 관계를 이해할 수 있습니다
-4. Pipeline에서 공변성이 제공하는 유연성을 설명할 수 있습니다
+1. Declare a covariant interface using the `out A` keyword
+2. Explain why `IFinResponse<string>` can be assigned to `IFinResponse<object>` due to covariance
+3. Understand the inheritance relationship between the non-generic marker and the generic covariant interface
+4. Explain the flexibility that covariance provides in Pipelines
 
-## 핵심 개념
+## Key Concepts
 
-### 1. 공변 인터페이스: `out A`
+### 1. Covariant Interface: `out A`
 
-`out` 키워드는 타입 파라미터 `A`가 **출력 위치에서만** 사용됨을 선언합니다. 이를 통해 `IFinResponse<string>`을 `IFinResponse<object>`에 대입할 수 있습니다.
+The `out` keyword declares that the type parameter `A` is used only in **output positions**. This allows `IFinResponse<string>` to be assigned to `IFinResponse<object>`.
 
 ```csharp
 public interface IFinResponse<out A> : IFinResponse
@@ -32,34 +32,34 @@ public interface IFinResponse<out A> : IFinResponse
 }
 ```
 
-`IFinResponse<out A>`의 본문이 비어 있는 것은 의도적입니다. 이 인터페이스의 역할은 값 멤버를 노출하는 것이 아니라, **제네릭 타입 파라미터 `A`의 공변성을 선언하는 것**입니다. Pipeline에서 필요한 `IsSucc`/`IsFail`은 부모 인터페이스 `IFinResponse`가 이미 제공하고, 값 접근 멤버(`Value`, `Match`, `Map` 등)는 구현체인 `FinResponse<A>`에서 제공됩니다. 인터페이스를 역할별로 분리하여 각 계층이 하나의 책임만 갖도록 설계한 결과입니다.
+The empty body of `IFinResponse<out A>` is intentional. The role of this interface is not to expose value members, but to **declare covariance for the generic type parameter `A`**. The `IsSucc`/`IsFail` needed by Pipelines are already provided by the parent interface `IFinResponse`, and value access members (`Value`, `Match`, `Map`, etc.) are provided by the implementation `FinResponse<A>`. This is the result of separating interfaces by responsibility so that each level has a single concern.
 
-### 2. 공변 대입
+### 2. Covariant Assignment
 
-`string`은 `object`의 하위 타입이므로, 공변성에 의해 다음 대입이 가능합니다:
+Since `string` is a subtype of `object`, covariance enables the following assignment:
 
 ```csharp
 IFinResponse<string> stringResponse = CovariantResponse<string>.Succ("Hello");
 
-// 공변성: IFinResponse<string> → IFinResponse<object> 대입 가능
+// Covariance: IFinResponse<string> → IFinResponse<object> assignable
 IFinResponse<object> objectResponse = stringResponse;
 ```
 
-### 3. 비제네릭 마커로도 대입 가능
+### 3. Also Assignable to Non-Generic Marker
 
-`IFinResponse<out A>`는 `IFinResponse`를 상속하므로, 비제네릭 마커 타입으로도 대입할 수 있습니다:
+Since `IFinResponse<out A>` inherits from `IFinResponse`, it can also be assigned to the non-generic marker type:
 
 ```csharp
 IFinResponse<string> stringResponse = CovariantResponse<string>.Succ("Hello");
 
-// IFinResponse<string> → IFinResponse 대입 가능 (상속)
+// IFinResponse<string> → IFinResponse assignable (inheritance)
 IFinResponse nonGeneric = stringResponse;
 nonGeneric.IsSucc; // true
 ```
 
-### 4. Pipeline에서의 활용
+### 4. Usage in Pipelines
 
-공변성을 활용하면 Pipeline에서 응답을 더 유연하게 처리할 수 있습니다. 예를 들어, `IFinResponse<object>`를 받는 로깅 Pipeline은 모든 `IFinResponse<T>` 응답을 처리할 수 있습니다.
+Leveraging covariance allows Pipelines to handle responses more flexibly. For example, a logging Pipeline that accepts `IFinResponse<object>` can process all `IFinResponse<T>` responses.
 
 ```csharp
 public void LogAnyResponse(IFinResponse<object> response)
@@ -70,16 +70,16 @@ public void LogAnyResponse(IFinResponse<object> response)
 
 ## FAQ
 
-### Q1: `IFinResponse<out A>`에 값을 반환하는 멤버가 없는데, 공변 인터페이스의 의미가 있나요?
-**A**: 현재 `IFinResponse<out A>`에는 값 접근 멤버가 명시적으로 없지만, 타입 파라미터 `A`를 통해 **타입 정보를 전달**합니다. 공변 선언(`out`)은 `IFinResponse<string>`을 `IFinResponse<object>`에 대입할 수 있게 하여, Pipeline에서 다양한 응답 타입을 일반적으로 처리할 수 있는 기반을 제공합니다.
+### Q1: `IFinResponse<out A>` has no value-returning members -- does the covariant interface have any meaning?
+**A**: While `IFinResponse<out A>` currently has no explicit value access members, it **conveys type information** through the type parameter `A`. The covariant declaration (`out`) enables assigning `IFinResponse<string>` to `IFinResponse<object>`, providing the foundation for Pipelines to handle various response types generically.
 
-### Q2: `IFinResponse`(비제네릭)와 `IFinResponse<out A>`(공변)를 왜 분리하나요?
-**A**: Pipeline에서 **성공/실패 상태만** 필요한 경우 비제네릭 `IFinResponse`로 충분합니다. 타입 파라미터 `A`를 도입하면 불필요한 제네릭 전파가 발생합니다. 분리함으로써 각 Pipeline이 자신에게 필요한 **최소한의 타입 정보만** 요구할 수 있습니다.
+### Q2: Why are `IFinResponse` (non-generic) and `IFinResponse<out A>` (covariant) separated?
+**A**: When a Pipeline only needs the **success/failure status**, the non-generic `IFinResponse` is sufficient. Introducing the type parameter `A` would cause unnecessary generic propagation. Separation allows each Pipeline to require only the **minimum type information** it needs.
 
-### Q3: 공변성이 실제 Pipeline 코드에서 어떤 차이를 만드나요?
-**A**: `IFinResponse<out A>`의 공변성 덕분에, `IFinResponse<ProductDto>`를 반환하는 Handler의 응답을 `IFinResponse<object>`를 받는 로깅 유틸리티에서 그대로 사용할 수 있습니다. 공변성이 없으면 매번 명시적 캐스팅이 필요하여 코드가 복잡해집니다.
+### Q3: What practical difference does covariance make in Pipeline code?
+**A**: Thanks to `IFinResponse<out A>`'s covariance, a Handler response returning `IFinResponse<ProductDto>` can be used directly in a logging utility that accepts `IFinResponse<object>`. Without covariance, explicit casting would be required each time, complicating the code.
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 02-IFinResponse-Covariant/
@@ -95,19 +95,18 @@ public void LogAnyResponse(IFinResponse<object> response)
 └── README.md
 ```
 
-## 실행 방법
+## How to Run
 
 ```bash
-# 프로그램 실행
+# Run the program
 dotnet run --project FinResponseCovariant
 
-# 테스트 실행
+# Run tests
 dotnet test --project FinResponseCovariant.Tests.Unit
 ```
 
 ---
 
-Pipeline이 응답을 읽을 수 있게 되었으니, 이제 요구사항 R2에 도전합니다. CRTP와 `static abstract`를 사용하여 리플렉션 없이 실패 응답을 생성하는 팩토리 인터페이스를 설계합니다.
+Now that Pipelines can read responses, it's time to tackle requirement R2. Using CRTP and `static abstract`, we design a factory interface that creates failure responses without reflection.
 
-→ [3.3장: IFinResponseFactory CRTP 팩토리](../03-IFinResponseFactory-CRTP/)
-
+→ [Section 3.3: IFinResponseFactory CRTP Factory](../03-IFinResponseFactory-CRTP/)

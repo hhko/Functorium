@@ -1,64 +1,64 @@
 ---
-title: "프리미티브 변환"
+title: "Primitive Conversion"
 ---
-## 개요
+## Overview
 
-도메인 모델에서 가격을 `decimal`이 아닌 `Money` Value Object로 표현한다고 가정해보겠습니다. Expression Tree에서 `product.Price.Value > 1000`과 같은 표현은 EF Core가 SQL로 변환할 수 없습니다 — EF Core는 Value Object의 내부 구조를 모르기 때문입니다. 이 장에서는 Value Object를 primitive 타입으로 변환하는 패턴을 학습합니다.
+Suppose the domain model represents prices as a `Money` Value Object rather than `decimal`. In an Expression Tree, expressions like `product.Price.Value > 1000` cannot be converted to SQL by EF Core -- because EF Core does not know the internal structure of Value Objects. In this chapter, you will learn the pattern of converting Value Objects to primitive types.
 
-> **Expression Tree에서 Value Object를 사용하려면 primitive 타입으로 변환해야 합니다.**
+> **To use Value Objects in Expression Trees, they must be converted to primitive types.**
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **Value Object가 Expression Tree에서 문제가 되는 이유 이해**
-   - 클로저가 Value Object를 직접 캡처하면 Expression Tree에 VO 타입이 포함됨
-   - ORM은 VO 타입을 SQL 컬럼으로 매핑할 수 없음
-   - Expression Tree 내부에 VO가 있으면 SQL 변환 실패
+### Key Learning Objectives
+1. **Understanding why Value Objects are problematic in Expression Trees**
+   - If the closure directly captures a Value Object, the VO type is included in the Expression Tree
+   - ORMs cannot map VO types to SQL columns
+   - If VOs are inside the Expression Tree, SQL conversion fails
 
-2. **로컬 변수 추출 패턴 학습**
-   - VO를 메서드 내에서 primitive 로컬 변수로 변환
-   - Expression 람다에서는 primitive 로컬 변수만 참조
-   - 엔터티의 VO 속성은 명시적 캐스트로 primitive 변환
+2. **Learning the local variable extraction pattern**
+   - Convert VO to primitive local variable within the method
+   - Expression lambda only references primitive local variables
+   - Entity VO properties are converted to primitives via explicit casts
 
-3. **캐스트 패턴 `(string)product.Name` 이해**
-   - implicit 연산자를 통해 VO를 primitive로 변환
-   - Expression Tree에서 Convert 노드로 표현됨
-   - ORM의 PropertyMap이 이를 실제 DB 컬럼으로 매핑
+3. **Understanding the cast pattern `(string)product.Name`**
+   - Convert VO to primitive through implicit operator
+   - Represented as a Convert node in the Expression Tree
+   - ORM's PropertyMap maps this to the actual DB column
 
-### 실습을 통해 확인할 내용
-- Value Object 속성을 가진 Product에 대한 Specification 정의
-- 각 Specification이 IsSatisfiedBy로 올바르게 동작
-- ToExpression 결과로 AsQueryable 필터링 가능
+### What You Will Verify Through Practice
+- Defining Specifications for Product with Value Object properties
+- Each Specification works correctly via IsSatisfiedBy
+- ToExpression results can be used for AsQueryable filtering
 
-## 핵심 개념
+## Key Concepts
 
-### 문제: Value Object를 직접 캡처하면
+### Problem: When Value Objects Are Directly Captured
 
 ```csharp
-// 문제가 되는 코드 (VO가 Expression Tree에 직접 포함됨)
+// Problematic code (VO is directly included in the Expression Tree)
 public override Expression<Func<Product, bool>> ToExpression()
-    => product => product.Name == Name;  // Name은 ProductName 타입
-    // ORM이 ProductName 타입을 SQL로 변환할 수 없음!
+    => product => product.Name == Name;  // Name is of type ProductName
+    // ORM cannot convert ProductName type to SQL!
 ```
 
-### 해결: 로컬 변수 추출 + 캐스트 패턴
+### Solution: Local Variable Extraction + Cast Pattern
 
 ```csharp
 public override Expression<Func<Product, bool>> ToExpression()
 {
-    // 1. Value Object를 로컬 변수로 추출하여 primitive로 변환
-    string nameStr = Name;  // implicit operator 호출
+    // 1. Extract Value Object to local variable, converting to primitive
+    string nameStr = Name;  // implicit operator invoked
 
-    // 2. Expression 람다에서는 primitive만 참조 + 엔터티 속성도 캐스트
+    // 2. Expression lambda only references primitives + entity properties also cast
     return product => (string)product.Name == nameStr;
 }
 ```
 
-이 패턴이 필요한 이유:
-1. **`string nameStr = Name`**: 클로저가 캡처하는 값이 string이 됨 (VO가 아님)
-2. **`(string)product.Name`**: Expression Tree에 Convert 노드가 생성되어 ORM이 해석 가능
+Why this pattern is needed:
+1. **`string nameStr = Name`**: The value captured by the closure becomes string (not VO)
+2. **`(string)product.Name`**: A Convert node is created in the Expression Tree that the ORM can interpret
 
-### Value Object 정의
+### Value Object Definitions
 
 ```csharp
 public sealed record ProductName(string Value)
@@ -77,29 +77,29 @@ public sealed record Quantity(int Value)
 }
 ```
 
-`implicit operator`를 통해 VO에서 primitive로의 암묵적 변환을 지원합니다.
+The `implicit operator` supports implicit conversion from VO to primitive.
 
-## 프로젝트 설명
+## Project Description
 
-### 프로젝트 구조
+### Project Structure
 ```
-ValueObjectConversion/                           # 메인 프로젝트
-├── Program.cs                                   # Value Object Spec 데모
-├── Product.cs                                   # VO 기반 상품 레코드
+ValueObjectConversion/                           # Main project
+├── Program.cs                                   # Value Object Spec demo
+├── Product.cs                                   # VO-based product record
 ├── Specifications/
-│   ├── ProductNameSpec.cs                       # 이름 Specification
-│   ├── ProductPriceRangeSpec.cs                 # 가격 범위 Specification
-│   └── ProductLowStockSpec.cs                   # 재고 부족 Specification
-├── ValueObjectConversion.csproj                 # 프로젝트 파일
-ValueObjectConversion.Tests.Unit/                # 테스트 프로젝트
-├── ValueObjectConversionTests.cs                # VO 변환 테스트
-├── Using.cs                                     # 글로벌 using
-├── xunit.runner.json                            # xUnit 설정
-├── ValueObjectConversion.Tests.Unit.csproj      # 테스트 프로젝트 파일
-index.md                                         # 이 문서
+│   ├── ProductNameSpec.cs                       # Name Specification
+│   ├── ProductPriceRangeSpec.cs                 # Price range Specification
+│   └── ProductLowStockSpec.cs                   # Low stock Specification
+├── ValueObjectConversion.csproj                 # Project file
+ValueObjectConversion.Tests.Unit/                # Test project
+├── ValueObjectConversionTests.cs                # VO conversion tests
+├── Using.cs                                     # Global using
+├── xunit.runner.json                            # xUnit configuration
+├── ValueObjectConversion.Tests.Unit.csproj      # Test project file
+index.md                                         # This document
 ```
 
-### 핵심 코드
+### Core Code
 
 #### ProductPriceRangeSpec.cs
 ```csharp
@@ -112,24 +112,24 @@ public sealed class ProductPriceRangeSpec : ExpressionSpecification<Product>
 
     public override Expression<Func<Product, bool>> ToExpression()
     {
-        decimal min = MinPrice;  // Money → decimal
-        decimal max = MaxPrice;  // Money → decimal
+        decimal min = MinPrice;  // Money -> decimal
+        decimal max = MaxPrice;  // Money -> decimal
         return product => (decimal)product.Price >= min && (decimal)product.Price <= max;
     }
 }
 ```
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-### 변환 패턴 요약
-| 단계 | 코드 | 설명 |
+### Conversion Pattern Summary
+| Step | Code | Description |
 |------|------|------|
-| **파라미터 변환** | `string nameStr = Name;` | VO를 primitive 로컬 변수로 변환 |
-| **속성 캐스트** | `(string)product.Name` | 엔터티의 VO 속성을 primitive로 캐스트 |
-| **Expression 생성** | `product => (string)product.Name == nameStr` | primitive만 포함된 Expression |
+| **Parameter Conversion** | `string nameStr = Name;` | Convert VO to primitive local variable |
+| **Property Cast** | `(string)product.Name` | Cast entity VO property to primitive |
+| **Expression Generation** | `product => (string)product.Name == nameStr` | Expression containing only primitives |
 
-### VO 타입별 변환 예시
-| Value Object | Primitive | 파라미터 변환 | 속성 캐스트 |
+### Conversion Examples by VO Type
+| Value Object | Primitive | Parameter Conversion | Property Cast |
 |-------------|-----------|--------------|------------|
 | `ProductName` | `string` | `string nameStr = Name;` | `(string)product.Name` |
 | `Money` | `decimal` | `decimal min = MinPrice;` | `(decimal)product.Price` |
@@ -137,20 +137,20 @@ public sealed class ProductPriceRangeSpec : ExpressionSpecification<Product>
 
 ## FAQ
 
-### Q1: 왜 implicit operator만으로는 충분하지 않나요?
-**A**: C# 컴파일러는 Expression 람다 내에서 implicit 변환을 자동으로 삽입하지만, 클로저가 캡처하는 객체의 타입까지 변환하지는 않습니다. 파라미터를 로컬 변수로 추출하지 않으면, 클로저가 VO 인스턴스를 직접 캡처하여 Expression Tree에 VO 타입이 남게 됩니다.
+### Q1: Why isn't the implicit operator alone sufficient?
+**A**: The C# compiler automatically inserts implicit conversions within Expression lambdas, but it does not convert the type of the object captured by the closure. Without extracting parameters to local variables, the closure directly captures the VO instance, leaving the VO type in the Expression Tree.
 
-### Q2: EF Core에서 이 패턴이 실제로 동작하나요?
-**A**: 네, EF Core의 ValueConverter와 함께 사용하면 동작합니다. EF Core는 Expression Tree의 Convert 노드를 인식하여 해당 DB 컬럼으로 매핑합니다. Functorium의 PropertyMap 어댑터가 이 변환을 자동으로 처리합니다.
+### Q2: Does this pattern actually work with EF Core?
+**A**: Yes, it works when used with EF Core's ValueConverter. EF Core recognizes Convert nodes in the Expression Tree and maps them to the corresponding DB columns. Functorium's PropertyMap adapter handles this conversion automatically.
 
-### Q3: 모든 Value Object에 implicit operator가 필요한가요?
-**A**: Expression Tree에서 사용할 VO에만 필요합니다. 메모리에서만 사용되는 VO는 explicit cast나 `.Value` 속성 접근으로 충분합니다. implicit operator는 코드의 가독성을 위한 편의 기능입니다.
+### Q3: Do all Value Objects need an implicit operator?
+**A**: Only VOs used in Expression Trees need it. VOs used only in memory are fine with explicit casts or `.Value` property access. The implicit operator is a convenience for code readability.
 
-### Q4: record 대신 class로 VO를 정의해도 되나요?
-**A**: 네, 가능합니다. 이 예제에서는 간결함을 위해 record를 사용했지만, 실제 프로젝트에서는 Functorium의 ValueObject 기반 클래스를 사용하여 유효성 검증과 동등성을 자동으로 처리합니다.
+### Q4: Can VOs be defined as classes instead of records?
+**A**: Yes, that is possible. This example uses records for brevity, but in real projects, Functorium's ValueObject base class is used to automatically handle validation and equality.
 
 ---
 
-개별 ExpressionSpecification에서 Expression을 추출하는 방법을 배웠습니다. 하지만 `inStock & affordable` 같은 조합된 Specification에서는 어떻게 하나의 Expression을 얻을 수 있을까요? 다음 장에서는 이 문제를 해결하는 Expression Resolver를 다룹니다.
+You have learned how to extract Expressions from individual ExpressionSpecifications. But how can you get a single Expression from composed Specifications like `inStock & affordable`? The next chapter covers the Expression Resolver that solves this problem.
 
-→ [4장: Expression Resolver](../04-Expression-Resolver/)
+-> [Chapter 4: Expression Resolver](../04-Expression-Resolver/)

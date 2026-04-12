@@ -1,17 +1,17 @@
 ---
 title: "References"
 ---
-더 깊이 학습하기 위한 참고 자료입니다.
+Reference materials for deeper learning.
 
-## 공식 문서
+## Official Documentation
 
 ### Functorium
 - **GitHub**: https://github.com/hhko/Functorium
-- **Specification 타입**: `Src/Functorium/Domains/Specifications/`
+- **Specification Types**: `Src/Functorium/Domains/Specifications/`
 
 ### .NET Expression Trees
-- **공식 문서**: https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/expression-trees/
-- **Expression Trees 심화**: https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/expression-trees/expression-trees-building
+- **Official Docs**: https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/expression-trees/
+- **Expression Trees Advanced**: https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/expression-trees/expression-trees-building
 
 ### ArchUnitNET
 - **GitHub**: https://github.com/TNG/ArchUnitNET
@@ -19,135 +19,135 @@ title: "References"
 
 ---
 
-## 참고 자료
+## References
 
 ### Domain-Driven Design
-- **제목**: Domain-Driven Design: Tackling Complexity in the Heart of Software
-- **저자**: Eric Evans
-- **출판**: Addison-Wesley, 2003
-- **핵심 내용**: Specification 패턴의 원론적 정의, Repository 패턴
+- **Title**: Domain-Driven Design: Tackling Complexity in the Heart of Software
+- **Author**: Eric Evans
+- **Publisher**: Addison-Wesley, 2003
+- **Key Content**: Foundational definition of the Specification pattern, Repository pattern
 
 ### Implementing Domain-Driven Design
-- **제목**: Implementing Domain-Driven Design
-- **저자**: Vaughn Vernon
-- **출판**: Addison-Wesley, 2013
-- **핵심 내용**: DDD 실전 구현 패턴, Specification 활용 예제
+- **Title**: Implementing Domain-Driven Design
+- **Author**: Vaughn Vernon
+- **Publisher**: Addison-Wesley, 2013
+- **Key Content**: Practical DDD implementation patterns, Specification usage examples
 
 ### Patterns of Enterprise Application Architecture
-- **제목**: Patterns of Enterprise Application Architecture
-- **저자**: Martin Fowler
-- **출판**: Addison-Wesley, 2002
-- **핵심 내용**: Specification 패턴, Repository 패턴의 체계적 정의
+- **Title**: Patterns of Enterprise Application Architecture
+- **Author**: Martin Fowler
+- **Publisher**: Addison-Wesley, 2002
+- **Key Content**: Systematic definition of Specification pattern and Repository pattern
 
 ### Functional Programming in C#
-- **제목**: Functional Programming in C#: How to write better C# code
-- **저자**: Enrico Buonanno
-- **출판**: Manning, 2022 (2nd Edition)
-- **핵심 내용**: Expression Tree, 함수형 조합 패턴
+- **Title**: Functional Programming in C#: How to write better C# code
+- **Author**: Enrico Buonanno
+- **Publisher**: Manning, 2022 (2nd Edition)
+- **Key Content**: Expression Trees, functional composition patterns
 
 ---
 
-## 온라인 리소스
+## Online Resources
 
-### 블로그 & 아티클
+### Blogs & Articles
 
 **Specification Pattern**
 - https://www.martinfowler.com/apsupp/spec.pdf
-- Eric Evans와 Martin Fowler의 Specification 패턴 원본 논문
+- Original Specification pattern paper by Eric Evans and Martin Fowler
 
 **Specification Pattern in DDD**
 - https://enterprisecraftsmanship.com/posts/specification-pattern-always-valid-domain-model/
-- Vladimir Khorikov의 Specification 패턴과 항상 유효한 도메인 모델
+- Vladimir Khorikov on the Specification pattern and always-valid domain models
 
 **Expression Trees in C#**
 - https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/expression-trees/
-- .NET 공식 Expression Tree 가이드
+- Official .NET Expression Tree guide
 
 ---
 
-## 관련 라이브러리
+## Related Libraries
 
-### Specification 패턴
+### Specification Pattern
 
-| 라이브러리 | 설명 | NuGet |
+| Library | Description | NuGet |
 |-----------|------|-------|
-| Functorium | 본 튜토리얼의 Specification 프레임워크 | ✅ |
-| Ardalis.Specification | Steve Smith의 Specification 라이브러리 | ✅ |
+| Functorium | Specification framework used in this tutorial | ✅ |
+| Ardalis.Specification | Specification library by Steve Smith | ✅ |
 
 ### DDD & Clean Architecture
 
-| 라이브러리 | 설명 | NuGet |
+| Library | Description | NuGet |
 |-----------|------|-------|
-| MediatR | CQRS/Mediator 패턴 | ✅ |
-| FluentValidation | 검증 라이브러리 | ✅ |
-| LanguageExt.Core | 함수형 프로그래밍 타입 | ✅ |
+| MediatR | CQRS/Mediator pattern | ✅ |
+| FluentValidation | Validation library | ✅ |
+| LanguageExt.Core | Functional programming types | ✅ |
 
 ### ORM
 
-| 라이브러리 | 설명 | NuGet |
+| Library | Description | NuGet |
 |-----------|------|-------|
 | Microsoft.EntityFrameworkCore | EF Core ORM | ✅ |
-| Microsoft.EntityFrameworkCore.InMemory | InMemory 테스트용 | ✅ |
+| Microsoft.EntityFrameworkCore.InMemory | InMemory for testing | ✅ |
 
-### 테스트
+### Testing
 
-| 라이브러리 | 설명 | NuGet |
+| Library | Description | NuGet |
 |-----------|------|-------|
-| ArchUnitNET | 아키텍처 테스트 | ✅ |
-| Shouldly | 단언문 라이브러리 | ✅ |
-| xUnit | 테스트 프레임워크 | ✅ |
-| NSubstitute | 목 라이브러리 | ✅ |
+| ArchUnitNET | Architecture testing | ✅ |
+| Shouldly | Assertion library | ✅ |
+| xUnit | Testing framework | ✅ |
+| NSubstitute | Mocking library | ✅ |
 
 ---
 
-## Functorium 프로젝트 참조
+## Functorium Project Reference
 
-### 소스 코드 위치
+### Source Code Location
 
 ```
 Src/Functorium/Domains/Specifications/
-├── Specification.cs                       # 추상 기반 클래스
-├── IExpressionSpec.cs                     # Expression 인터페이스
-├── ExpressionSpecification.cs             # Expression Tree 지원
-├── AllSpecification.cs                    # 항등원 (internal sealed)
-├── AndSpecification.cs                    # AND 조합 (internal sealed)
-├── OrSpecification.cs                     # OR 조합 (internal sealed)
-├── NotSpecification.cs                    # NOT 부정 (internal sealed)
+├── Specification.cs                       # Abstract base class
+├── IExpressionSpec.cs                     # Expression interface
+├── ExpressionSpecification.cs             # Expression Tree support
+├── AllSpecification.cs                    # Identity element (internal sealed)
+├── AndSpecification.cs                    # AND composition (internal sealed)
+├── OrSpecification.cs                     # OR composition (internal sealed)
+├── NotSpecification.cs                    # NOT negation (internal sealed)
 └── Expressions/
-    ├── SpecificationExpressionResolver.cs # Expression 합성 유틸리티
-    └── PropertyMap.cs                     # Entity→Model 변환
+    ├── SpecificationExpressionResolver.cs # Expression synthesis utility
+    └── PropertyMap.cs                     # Entity->Model conversion
 ```
 
-### 튜토리얼 프로젝트
+### Tutorial Projects
 
 ```
 Docs.Site/src/content/docs/tutorials/specification-pattern/
-├── Part1-Specification-Basics/            # 기초 (4개)
-├── Part2-Expression-Specification/        # Expression (4개)
-├── Part3-Repository-Integration/          # Repository 통합 (4개)
-├── Part4-Real-World-Patterns/             # 실전 패턴 (4개)
-└── Part5-Domain-Examples/                 # 도메인 예제 (2개)
+├── Part1-Specification-Basics/            # Basics (4 chapters)
+├── Part2-Expression-Specification/        # Expression (4 chapters)
+├── Part3-Repository-Integration/          # Repository Integration (4 chapters)
+├── Part4-Real-World-Patterns/             # Real-World Patterns (4 chapters)
+└── Part5-Domain-Examples/                 # Domain Examples (2 chapters)
 ```
 
 ---
 
-## 추가 학습 권장 순서
+## Recommended Learning Path
 
-### 초급자 (패턴 입문)
-1. Eric Evans DDD 책의 Specification 챕터
-2. 본 튜토리얼 Part 1 (1~4장)
-3. Functorium Specification 소스 코드 읽기
+### Beginner (Pattern Introduction)
+1. Specification chapter in Eric Evans' DDD book
+2. This tutorial Part 1 (Chapters 1-4)
+3. Read the Functorium Specification source code
 
-### 중급자 (실전 적용)
-1. .NET Expression Trees 공식 문서
-2. 본 튜토리얼 Part 2~3
-3. Ardalis.Specification 비교 분석
+### Intermediate (Practical Application)
+1. .NET Expression Trees official documentation
+2. This tutorial Parts 2-3
+3. Comparative analysis with Ardalis.Specification
 
-### 고급자 (아키텍처 설계)
-1. "Implementing Domain-Driven Design" 책
-2. 본 튜토리얼 Part 4~5
-3. ArchUnitNET으로 아키텍처 테스트 작성
+### Advanced (Architecture Design)
+1. "Implementing Domain-Driven Design" book
+2. This tutorial Parts 4-5
+3. Writing architecture tests with ArchUnitNET
 
 ---
 
-이 튜토리얼은 Functorium 프로젝트의 실제 Specification 프레임워크 개발 경험을 바탕으로 작성되었습니다.
+This tutorial was written based on the actual development experience of the Functorium project's Specification framework.

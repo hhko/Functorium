@@ -2,42 +2,42 @@
 title: "Create-Only Constraint"
 ---
 
-## 개요
+## Overview
 
-Part 3에서 설계한 IFinResponse 계층을 이제 실전 Pipeline에 적용합니다. Validation Pipeline과 Exception Pipeline은 요청 처리 중 실패가 발생했을 때 **실패 응답을 생성만** 하면 됩니다. 기존 응답을 읽거나 검사할 필요가 없습니다. 이 장에서는 이러한 "생성만 하면 되는" Pipeline에 최소 제약 조건인 `IFinResponseFactory<TResponse>`만 적용하는 패턴을 학습합니다.
+Now we apply the IFinResponse hierarchy designed in Part 3 to real Pipelines. The Validation Pipeline and Exception Pipeline only need to **create failure responses** when failures occur during request processing. They don't need to read or inspect existing responses. This section covers the pattern of applying only the minimal constraint `IFinResponseFactory<TResponse>` to these "create-only" Pipelines.
 
 ```
-Pipeline 동작 흐름:
+Pipeline operation flow:
 
 Validation Pipeline:
-  isValid? ──No──→ TResponse.CreateFail(error)  ← 생성만 필요
+  isValid? ──No──→ TResponse.CreateFail(error)  ← Only creation needed
            │
-           Yes──→ next() 호출
+           Yes──→ next() call
 
 Exception Pipeline:
-  try { next() } catch (ex) → TResponse.CreateFail(error)  ← 생성만 필요
+  try { next() } catch (ex) → TResponse.CreateFail(error)  ← Only creation needed
 ```
 
-## 학습 목표
+## Learning Objectives
 
-이 장을 완료하면 다음을 할 수 있습니다:
+After completing this section, you will be able to:
 
-1. Create-Only 제약(`IFinResponseFactory<TResponse>`)이 적용되는 Pipeline을 식별할 수 있습니다
-2. `TResponse.CreateFail(error)`가 static abstract 호출임을 이해하고, 리플렉션이 불필요한 이유를 설명할 수 있습니다
-3. Validation Pipeline과 Exception Pipeline이 응답 읽기(IFinResponse)를 필요로 하지 않는 이유를 설명할 수 있습니다
+1. Identify Pipelines that use the Create-Only constraint (`IFinResponseFactory<TResponse>`)
+2. Understand that `TResponse.CreateFail(error)` is a static abstract call and explain why reflection is unnecessary
+3. Explain why the Validation Pipeline and Exception Pipeline don't need response reading (IFinResponse)
 
-## 핵심 개념
+## Key Concepts
 
-### 1. Create-Only 제약이란?
+### 1. What Is the Create-Only Constraint?
 
-Pipeline이 응답 객체의 `IsSucc`/`IsFail`을 읽지 않고, **실패 시 새로운 응답을 생성하기만** 하는 경우에 해당합니다.
+This applies when a Pipeline does not read `IsSucc`/`IsFail` on the response object, but **only creates new responses on failure**.
 
 ```csharp
-// 필요한 능력: CreateFail만
+// Required capability: CreateFail only
 where TResponse : IFinResponseFactory<TResponse>
 ```
 
-이 제약 하나로 Pipeline 내부에서 다음을 호출할 수 있습니다:
+With this single constraint, the following can be called inside the Pipeline:
 
 ```csharp
 TResponse.CreateFail(Error.New("Validation failed"));
@@ -45,9 +45,9 @@ TResponse.CreateFail(Error.New("Validation failed"));
 
 ### 2. Validation Pipeline
 
-Validation Pipeline은 요청의 유효성을 검사한 후:
-- **유효**: 다음 Pipeline(또는 Handler)에 요청을 전달합니다.
-- **무효**: `TResponse.CreateFail(error)`로 실패 응답을 생성하여 즉시 반환합니다.
+The Validation Pipeline checks the validity of the request, then:
+- **Valid**: Forwards the request to the next Pipeline (or Handler).
+- **Invalid**: Creates a failure response with `TResponse.CreateFail(error)` and returns immediately.
 
 ```csharp
 public sealed class SimpleValidationPipeline<TResponse>
@@ -63,11 +63,11 @@ public sealed class SimpleValidationPipeline<TResponse>
 }
 ```
 
-`TResponse.CreateFail()`은 `IFinResponseFactory<TSelf>`의 **static abstract** 메서드입니다. 리플렉션 없이 컴파일 타임에 해석됩니다.
+`TResponse.CreateFail()` is a **static abstract** method of `IFinResponseFactory<TSelf>`. It is resolved at compile time without reflection.
 
 ### 3. Exception Pipeline
 
-Exception Pipeline은 try-catch로 예외를 잡아 실패 응답으로 변환합니다:
+The Exception Pipeline catches exceptions with try-catch and converts them to failure responses:
 
 ```csharp
 public sealed class SimpleExceptionPipeline<TResponse>
@@ -87,30 +87,30 @@ public sealed class SimpleExceptionPipeline<TResponse>
 }
 ```
 
-### 4. 왜 IFinResponse(Read)가 필요 없는가?
+### 4. Why Is IFinResponse (Read) Not Needed?
 
-두 Pipeline이 실제로 어떤 능력을 사용하는지 정리하면 다음과 같습니다.
+The following summarizes which capabilities each Pipeline actually uses.
 
-| 동작 | 필요한 인터페이스 | Validation | Exception |
+| Operation | Required Interface | Validation | Exception |
 |------|-------------------|:----------:|:---------:|
-| IsSucc/IsFail 읽기 | IFinResponse | - | - |
-| CreateFail 생성 | IFinResponseFactory | O | O |
-| Error 접근 | IFinResponseWithError | - | - |
+| IsSucc/IsFail reading | IFinResponse | - | - |
+| CreateFail creation | IFinResponseFactory | O | O |
+| Error access | IFinResponseWithError | - | - |
 
-Validation/Exception Pipeline은 기존 응답을 **검사하지 않습니다**. 실패 조건(유효성 검사 실패, 예외 발생)을 직접 판단하고, 실패 시 새로운 응답을 **생성만** 합니다.
+The Validation/Exception Pipelines do **not inspect** existing responses. They determine failure conditions directly (validation failure, exception occurrence) and **only create** new responses on failure.
 
 ## FAQ
 
-### Q1: Validation Pipeline이 응답을 읽지 않아도 되는 이유는 무엇인가요?
-**A**: Validation Pipeline은 **Handler 실행 전에** 요청의 유효성을 검사합니다. 아직 응답이 생성되지 않았으므로 읽을 응답이 없습니다. 유효하지 않으면 `TResponse.CreateFail(error)`로 실패 응답을 직접 생성하여 반환하고, 유효하면 `next()`로 다음 단계에 위임합니다.
+### Q1: Why doesn't the Validation Pipeline need to read responses?
+**A**: The Validation Pipeline checks request validity **before the Handler executes**. Since no response has been created yet, there is nothing to read. If invalid, it directly creates a failure response with `TResponse.CreateFail(error)` and returns; if valid, it delegates to the next step via `next()`.
 
-### Q2: `TResponse.CreateFail(error)` 호출이 `new TResponse(error)` 생성자 호출과 다른 점은 무엇인가요?
-**A**: 생성자 호출(`new TResponse()`)은 제네릭 제약에서 `new()` 제약만 가능하며, 파라미터가 있는 생성자를 호출할 수 없습니다. `static abstract` 메서드인 `CreateFail`은 `Error` 파라미터를 받아 정확한 타입의 실패 인스턴스를 생성할 수 있습니다.
+### Q2: How does `TResponse.CreateFail(error)` differ from a `new TResponse(error)` constructor call?
+**A**: Constructor calls (`new TResponse()`) only support the `new()` constraint in generics, which cannot call constructors with parameters. The `static abstract` method `CreateFail` can accept an `Error` parameter and create a failure instance of the exact type.
 
-### Q3: Exception Pipeline에서 예외를 `Error`로 변환하는 이유는 무엇인가요?
-**A**: 예외(Exception)를 `Error.New(ex)` 형태로 변환하면, Pipeline 외부에서는 예외가 아닌 `FinResponse.Fail`로 일관되게 처리됩니다. 이를 통해 상위 레이어에서 try-catch 없이 `IsSucc`/`IsFail`로 모든 실패를 **동일한 방식으로** 처리할 수 있습니다.
+### Q3: Why does the Exception Pipeline convert exceptions to `Error`?
+**A**: By converting exceptions to `Error.New(ex)`, everything outside the Pipeline is handled consistently as `FinResponse.Fail` rather than exceptions. This allows the upper layers to handle all failures **in a uniform manner** using `IsSucc`/`IsFail` without try-catch.
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 01-Create-Only-Constraint/
@@ -125,19 +125,18 @@ Validation/Exception Pipeline은 기존 응답을 **검사하지 않습니다**.
 └── README.md
 ```
 
-## 실행 방법
+## How to Run
 
 ```bash
-# 프로그램 실행
+# Run the program
 dotnet run --project CreateOnlyConstraint
 
-# 테스트 실행
+# Run tests
 dotnet test --project CreateOnlyConstraint.Tests.Unit
 ```
 
 ---
 
-응답의 성공/실패 상태를 읽으면서 실패 응답도 생성해야 하는 Logging, Tracing, Metrics Pipeline에 Read+Create 이중 제약을 적용합니다.
+The next section applies the Read+Create dual constraint to Logging, Tracing, and Metrics Pipelines, which need to read the response's success/failure status while also creating failure responses.
 
-→ [4.2장: Read+Create 제약](../02-Read-Create-Constraint/)
-
+→ [Section 4.2: Read+Create Constraint](../02-Read-Create-Constraint/)

@@ -1,55 +1,55 @@
 ---
-title: "환경 설정"
+title: "Prerequisites and Setup"
 ---
 
-튜토리얼을 시작하기 전에 다음 항목을 확인하세요.
+Please verify the following items before starting the tutorial.
 
-## 필수 도구
+## Required Tools
 
-| 도구 | 버전 | 용도 |
+| Tool | Version | Purpose |
 |------|------|------|
-| .NET SDK | 10.0 이상 | 빌드 및 실행 |
-| VS Code | 최신 | 코드 편집 |
-| C# Dev Kit | 최신 | C# 개발 지원 |
+| .NET SDK | 10.0 or higher | Build and run |
+| VS Code | Latest | Code editing |
+| C# Dev Kit | Latest | C# development support |
 
-## 사전 지식
+## Prerequisite Knowledge
 
-이 튜토리얼을 학습하기 위해 다음 개념을 알고 있어야 합니다:
+You should be familiar with the following concepts to study this tutorial:
 
-| 개념 | 수준 | 설명 |
+| Concept | Level | Description |
 |------|------|------|
-| C# 제네릭 | 기초 | `List<T>`, `where T : class` 등 기본 제네릭 문법 |
-| 인터페이스 | 기초 | 인터페이스 정의, 구현, 다형성 |
-| Record 타입 | 기초 | `record class`, sealed record, positional record |
-| Mediator 패턴 | 선택 | Part 2부터 필요 (Part 1은 불필요) |
+| C# Generics | Basic | Basic generic syntax like `List<T>`, `where T : class` |
+| Interfaces | Basic | Interface definition, implementation, polymorphism |
+| Record types | Basic | `record class`, sealed record, positional record |
+| Mediator pattern | Optional | Needed from Part 2 onward (not required for Part 1) |
 
-## 프로젝트 빌드
+## Project Build
 
 ```bash
-# 저장소 클론
+# Clone the repository
 git clone https://github.com/hhko/Functorium.git
 cd Functorium
 
-# 튜토리얼 빌드
+# Build the tutorial
 dotnet build Docs.Site/src/content/docs/tutorials/usecase-pipeline/usecase-pipeline.slnx
 
-# 튜토리얼 테스트
+# Run tutorial tests
 dotnet test --solution Docs.Site/src/content/docs/tutorials/usecase-pipeline/usecase-pipeline.slnx
 
-# 전체 솔루션 빌드
+# Build the entire solution
 dotnet build Functorium.slnx
 ```
 
-## 프로젝트 구분
+## Project Types
 
-이 튜토리얼의 프로젝트는 두 가지 유형으로 나뉩니다:
+The projects in this tutorial are divided into two types:
 
-| 유형 | Part | 참조 | 설명 |
+| Type | Part | References | Description |
 |------|------|------|------|
-| Standalone | Part 1, 2(2~3장), 3 | LanguageExt.Core만 | 개념 학습용, 독립 실행 가능 |
-| Functorium 참조 | Part 2(1장), 4, 5 | Functorium.csproj | 실전 적용, Pipeline/Usecase 사용 |
+| Standalone | Part 1, 2 (Sections 2-3), 3 | LanguageExt.Core only | For concept learning, independently runnable |
+| Functorium Reference | Part 2 (Section 1), 4, 5 | Functorium.csproj | Practical application, uses Pipeline/Usecase |
 
-### Standalone 프로젝트
+### Standalone Projects
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -62,7 +62,7 @@ dotnet build Functorium.slnx
 </Project>
 ```
 
-### Functorium 참조 프로젝트
+### Functorium Reference Projects
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -75,24 +75,23 @@ dotnet build Functorium.slnx
 </Project>
 ```
 
-## 학습 순서 권장
+## Recommended Study Order
 
-Part 1~3은 순서대로 학습하는 것을 권장합니다. Part 4~5는 Part 3 완료 후 자유롭게 선택하여 학습할 수 있습니다.
+It is recommended to study Parts 1-3 in order. Parts 4-5 can be studied freely after completing Part 3.
 
 ## FAQ
 
-### Q1: Part 1은 Mediator 패턴 지식 없이도 학습 가능한가요?
-**A**: 네. Part 1은 C# 제네릭 변성(공변/반공변/불변)만 다루므로 Mediator 패턴 지식이 필요하지 않습니다. Part 2부터 `IPipelineBehavior`가 등장하므로, 그때까지 Mediator 패턴의 기본 개념을 알아두면 충분합니다.
+### Q1: Can Part 1 be studied without Mediator pattern knowledge?
+**A**: Yes. Part 1 covers only C# generic variance (covariance/contravariance/invariance), so Mediator pattern knowledge is not needed. `IPipelineBehavior` first appears in Part 2, so understanding the basics of the Mediator pattern by then is sufficient.
 
-### Q2: Standalone 프로젝트와 Functorium 참조 프로젝트의 차이는 무엇인가요?
-**A**: Standalone 프로젝트는 `LanguageExt.Core`만 참조하며, 개념 학습용으로 독립 실행이 가능합니다. Functorium 참조 프로젝트는 `Functorium.csproj`를 참조하며, 실전 Pipeline과 Usecase 구현에 사용됩니다. Part 1~3은 주로 Standalone, Part 4~5는 Functorium 참조 프로젝트입니다.
+### Q2: What is the difference between Standalone and Functorium Reference projects?
+**A**: Standalone projects reference only `LanguageExt.Core` and are independently runnable for concept learning. Functorium Reference projects reference `Functorium.csproj` and are used for practical Pipeline and Usecase implementation. Parts 1-3 primarily use Standalone, while Parts 4-5 use Functorium Reference projects.
 
-### Q3: .NET SDK 10.0 이전 버전으로도 튜토리얼을 따라갈 수 있나요?
-**A**: 이 튜토리얼은 C# 11의 `static abstract` 멤버와 최신 record 구문을 사용합니다. .NET 7 이상이면 `static abstract`를 지원하지만, 프로젝트 빌드 설정이 .NET 10을 기준으로 되어 있으므로 .NET SDK 10.0 이상을 권장합니다.
+### Q3: Can I follow the tutorial with a .NET SDK version earlier than 10.0?
+**A**: This tutorial uses C# 11's `static abstract` members and modern record syntax. `static abstract` is supported from .NET 7 onward, but since the project build settings target .NET 10, .NET SDK 10.0 or higher is recommended.
 
 ---
 
-Mediator Pipeline의 전체 구조와, 각 Pipeline이 응답 타입에 대해 필요로 하는 능력을 살펴봅니다.
+The following section examines the overall structure of Mediator Pipelines and the capabilities each Pipeline requires from the response type.
 
-→ [0.3장: Usecase Pipeline 아키텍처 개요](03-usecase-pipeline-overview.md)
-
+→ [Section 0.3: Usecase Pipeline Architecture Overview](03-usecase-pipeline-overview.md)

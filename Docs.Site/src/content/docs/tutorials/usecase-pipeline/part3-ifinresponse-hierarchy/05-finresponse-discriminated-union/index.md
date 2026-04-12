@@ -2,39 +2,39 @@
 title: "FinResponse DU"
 ---
 
-## 개요
+## Overview
 
-마지막 **요구사항 R4**를 포함하여, 1장부터 4장까지 설계한 모든 인터페이스를 **하나의 타입**으로 통합합니다. `FinResponse<A>`는 `Succ`/`Fail` sealed record로 구성된 **Discriminated Union**이며, `IFinResponse<A>`, `IFinResponseFactory<FinResponse<A>>`를 모두 구현합니다. Match, Map, Bind 메서드와 값 추출(ThrowIfFail, IfFail), 에러 트랙 연산(MapFail, BiMap, BiBind, BindFail), Boolean/Choice 연산자, 암시적 변환, LINQ 지원까지 포함한 완전한 응답 타입입니다.
+Including the final **requirement R4**, this section integrates all interfaces designed from Sections 1 through 4 into **a single type**. `FinResponse<A>` is a **Discriminated Union** composed of `Succ`/`Fail` sealed records, implementing both `IFinResponse<A>` and `IFinResponseFactory<FinResponse<A>>`. It is a complete response type that includes Match, Map, Bind methods, value extraction (ThrowIfFail, IfFail), error track operations (MapFail, BiMap, BiBind, BindFail), Boolean/Choice operators, implicit conversions, and LINQ support.
 
 ```
 FinResponse<A>                            Discriminated Union
-├── : IFinResponse<A>                     공변 인터페이스 구현
-├── : IFinResponseFactory<FinResponse<A>> CRTP 팩토리 구현
+├── : IFinResponse<A>                     Covariant interface implementation
+├── : IFinResponseFactory<FinResponse<A>> CRTP factory implementation
 │
-├── sealed record Succ(A Value)           성공 케이스
+├── sealed record Succ(A Value)           Success case
 │
-└── sealed record Fail(Error Error)       실패 케이스
-    └── : IFinResponseWithError           Fail에서만 에러 접근
+└── sealed record Fail(Error Error)       Failure case
+    └── : IFinResponseWithError           Error access only in Fail
 ```
 
-## 학습 목표
+## Learning Objectives
 
-이 장을 완료하면 다음을 할 수 있습니다:
+After completing this section, you will be able to:
 
-1. Discriminated Union을 abstract record + sealed record로 구현할 수 있습니다
-2. Match, Map, Bind 메서드의 동작 원리를 설명할 수 있습니다
-3. LINQ 지원을 위한 Select, SelectMany를 구현할 수 있습니다
-4. 암시적 변환으로 간결한 API를 제공하는 방법을 이해할 수 있습니다
-5. 1장~4장의 모든 인터페이스가 하나의 타입으로 통합되는 과정을 설명할 수 있습니다
-6. ThrowIfFail, IfFail, IfSucc로 값을 추출하고 사이드 이펙트를 실행할 수 있습니다
-7. MapFail, BiMap, BiBind, BindFail로 에러 트랙을 조작할 수 있습니다
-8. Boolean 및 Choice 연산자를 활용하여 간결한 조건 분기를 작성할 수 있습니다
+1. Implement a Discriminated Union with abstract record + sealed record
+2. Explain how Match, Map, and Bind methods work
+3. Implement Select and SelectMany for LINQ support
+4. Understand how to provide concise APIs through implicit conversions
+5. Explain the process of unifying all interfaces from Sections 1-4 into a single type
+6. Extract values and execute side effects using ThrowIfFail, IfFail, and IfSucc
+7. Manipulate the error track using MapFail, BiMap, BiBind, and BindFail
+8. Write concise conditional branching using Boolean and Choice operators
 
-## 핵심 개념
+## Key Concepts
 
 ### 1. Discriminated Union
 
-`FinResponse<A>`는 `abstract record`이며, `Succ`와 `Fail` 두 가지 `sealed record`만 존재합니다. 새로운 케이스를 추가할 수 없으므로, 패턴 매칭이 **완전(exhaustive)합니다**.
+`FinResponse<A>` is an `abstract record` with only two `sealed record` variants: `Succ` and `Fail`. Since new cases cannot be added, pattern matching is **exhaustive**.
 
 ```csharp
 public abstract record FinResponse<A> : IFinResponse<A>, IFinResponseFactory<FinResponse<A>>
@@ -44,35 +44,35 @@ public abstract record FinResponse<A> : IFinResponse<A>, IFinResponseFactory<Fin
 }
 ```
 
-### 2. Match 메서드
+### 2. Match Method
 
-`Match`는 Succ/Fail 각 케이스에 대한 함수를 받아 결과를 반환합니다. 모든 케이스를 처리해야 하므로 **컴파일 타임에 안전성**이 보장됩니다.
+`Match` receives a function for each Succ/Fail case and returns a result. Since all cases must be handled, **compile-time safety** is guaranteed.
 
 ```csharp
 FinResponse<int> response = FinResponse.Succ(42);
 
 var result = response.Match(
-    Succ: value => $"값: {value}",
-    Fail: error => $"에러: {error}");
-// result = "값: 42"
+    Succ: value => $"Value: {value}",
+    Fail: error => $"Error: {error}");
+// result = "Value: 42"
 ```
 
-### 3. Map과 Bind
+### 3. Map and Bind
 
-`Map`은 Succ의 값을 변환하고, `Bind`는 값을 변환하면서 새로운 FinResponse를 반환합니다. Fail인 경우 두 메서드 모두 에러를 전파합니다.
+`Map` transforms the Succ value, while `Bind` transforms the value and returns a new FinResponse. Both methods propagate the error when in the Fail state.
 
 ```csharp
-// Map: A → B (값만 변환)
+// Map: A → B (transforms only the value)
 FinResponse<string> mapped = response.Map(v => v.ToString());
 
-// Bind: A → FinResponse<B> (체이닝)
+// Bind: A → FinResponse<B> (chaining)
 FinResponse<int> bound = response.Bind(v =>
     v > 0 ? FinResponse.Succ(v * 2) : FinResponse.Fail<int>(Error.New("negative")));
 ```
 
-### 4. LINQ 지원
+### 4. LINQ Support
 
-`Select`와 `SelectMany`를 구현하여 LINQ `from ... select` 구문을 지원합니다.
+By implementing `Select` and `SelectMany`, the LINQ `from ... select` syntax is supported.
 
 ```csharp
 var result = from x in FinResponse.Succ(3)
@@ -81,145 +81,145 @@ var result = from x in FinResponse.Succ(3)
 // result = Succ(7)
 ```
 
-### 5. 암시적 변환
+### 5. Implicit Conversions
 
-값이나 에러를 `FinResponse<A>`에 직접 대입할 수 있습니다.
+Values or errors can be directly assigned to `FinResponse<A>`.
 
 ```csharp
-FinResponse<string> succ = "Hello";               // 암시적 변환: string → Succ
-FinResponse<string> fail = Error.New("error");     // 암시적 변환: Error → Fail
+FinResponse<string> succ = "Hello";               // Implicit conversion: string → Succ
+FinResponse<string> fail = Error.New("error");     // Implicit conversion: Error → Fail
 ```
 
-### 6. 모든 인터페이스 통합
+### 6. All Interfaces Unified
 
-다음 표는 1장~4장의 각 요구사항이 `FinResponse<A>` 하나로 어떻게 통합되었는지 보여줍니다.
+The following table shows how each requirement from Sections 1-4 is unified into a single `FinResponse<A>`.
 
-`FinResponse<A>`는 1장~4장의 모든 인터페이스를 구현합니다:
+`FinResponse<A>` implements all interfaces from Sections 1-4:
 
-| 인터페이스 | 역할 | 구현 |
+| Interface | Role | Implementation |
 |-----------|------|------|
-| `IFinResponse` | 성공/실패 읽기 | `IsSucc`, `IsFail` |
-| `IFinResponse<out A>` | 공변 접근 | 상속 |
-| `IFinResponse<TSelf>` | 실패 생성 | `CreateFail` |
-| `IFinResponseWithError` | 에러 접근 | `Fail`에서만 구현 |
+| `IFinResponse` | Read success/failure | `IsSucc`, `IsFail` |
+| `IFinResponse<out A>` | Covariant access | Inheritance |
+| `IFinResponse<TSelf>` | Create failure | `CreateFail` |
+| `IFinResponseWithError` | Error access | Implemented only in `Fail` |
 
-`FinResponse<A>`의 전체 API를 그룹별로 정리하면 다음과 같습니다:
+The full API of `FinResponse<A>` organized by group:
 
-| 그룹 | 멤버 | 역할 |
+| Group | Member | Role |
 |------|------|------|
-| **패턴 매칭** | `Match<B>(Func, Func)` | 값/에러 → B 변환 |
-| | `Match(Action, Action)` | 사이드 이펙트 실행 |
-| **값 추출** | `ThrowIfFail()` | 성공 값 추출 (실패 시 throw) |
-| | `IfFail(Func<Error, A>)` | 에러 → 폴백 값 |
-| | `IfFail(A)` | 기본값 제공 |
-| | `IfFail(Action<Error>)` | 실패 시 사이드 이펙트 |
-| | `IfSucc(Action<A>)` | 성공 시 사이드 이펙트 |
-| **성공 트랙** | `Map<B>(Func<A, B>)` | 값 변환 |
-| | `Bind<B>(Func<A, FinResponse<B>>)` | 모나드 바인드 |
-| **에러 트랙** | `MapFail(Func<Error, Error>)` | 에러 변환 |
-| | `BindFail(Func<Error, FinResponse<A>>)` | 에러 복구 |
-| **양방향** | `BiMap<B>(Func, Func)` | 성공/에러 동시 변환 |
-| | `BiBind<B>(Func, Func)` | 성공/에러 동시 바인드 |
-| **LINQ** | `Select`, `SelectMany` | `from ... select` 구문 |
-| **연산자** | `implicit A →`, `implicit Error →` | 암시적 변환 |
-| | `operator true/false` | `if (response)` 패턴 |
+| **Pattern Matching** | `Match<B>(Func, Func)` | Value/error → B transformation |
+| | `Match(Action, Action)` | Side effect execution |
+| **Value Extraction** | `ThrowIfFail()` | Extract success value (throws on failure) |
+| | `IfFail(Func<Error, A>)` | Error → fallback value |
+| | `IfFail(A)` | Provide default value |
+| | `IfFail(Action<Error>)` | Side effect on failure |
+| | `IfSucc(Action<A>)` | Side effect on success |
+| **Success Track** | `Map<B>(Func<A, B>)` | Value transformation |
+| | `Bind<B>(Func<A, FinResponse<B>>)` | Monadic bind |
+| **Error Track** | `MapFail(Func<Error, Error>)` | Error transformation |
+| | `BindFail(Func<Error, FinResponse<A>>)` | Error recovery |
+| **Bidirectional** | `BiMap<B>(Func, Func)` | Simultaneous success/error transformation |
+| | `BiBind<B>(Func, Func)` | Simultaneous success/error bind |
+| **LINQ** | `Select`, `SelectMany` | `from ... select` syntax |
+| **Operators** | `implicit A →`, `implicit Error →` | Implicit conversions |
+| | `operator true/false` | `if (response)` pattern |
 | | `operator \|` | choice (`fail \| fallback`) |
 
-### 7. 값 추출 패턴 — ThrowIfFail, IfFail, IfSucc
+### 7. Value Extraction Patterns -- ThrowIfFail, IfFail, IfSucc
 
-`Match`는 항상 두 갈래를 다뤄야 합니다. 성공 값만 꺼내고 싶다면?
+`Match` always requires handling both branches. What if you just want to extract the success value?
 
-**ThrowIfFail** — 테스트 코드에서 가장 자주 사용하는 패턴입니다:
-
-```csharp
-var value = response.ThrowIfFail();  // 실패 시 ErrorException throw
-```
-
-**IfFail** — 안전한 폴백:
+**ThrowIfFail** -- the most commonly used pattern in test code:
 
 ```csharp
-var value = response.IfFail(-1);              // 기본값 제공
-var value = response.IfFail(err => 0);        // 에러 기반 폴백
-response.IfFail(err => logger.Error(err));    // 사이드 이펙트
+var value = response.ThrowIfFail();  // Throws ErrorException on failure
 ```
 
-**IfSucc** — 성공 시 사이드 이펙트:
+**IfFail** -- safe fallback:
+
+```csharp
+var value = response.IfFail(-1);              // Provide default value
+var value = response.IfFail(err => 0);        // Error-based fallback
+response.IfFail(err => logger.Error(err));    // Side effect
+```
+
+**IfSucc** -- side effect on success:
 
 ```csharp
 response.IfSucc(value => logger.Info($"Got: {value}"));
 ```
 
-> **FAQ: `ThrowIfFail()`은 프로덕션에서 안전한가요?**
-> 테스트와 최상위 API 바운더리(Controller 등)에서만 사용하세요. 비즈니스 로직 내부에서는 `Match`나 `Bind`로 에러를 전파하는 것이 안전합니다.
+> **FAQ: Is `ThrowIfFail()` safe for production?**
+> Use it only in tests and top-level API boundaries (Controllers, etc.). Within business logic, propagating errors via `Match` or `Bind` is safer.
 
-### 8. 에러 트랙 연산 — MapFail, BiMap, BiBind, BindFail
+### 8. Error Track Operations -- MapFail, BiMap, BiBind, BindFail
 
-Railway의 에러 트랙에서도 변환이 필요할 때 사용합니다.
+Used when transformations are needed on the Railway's error track.
 
-**MapFail** — 도메인 에러를 애플리케이션 에러로 변환:
+**MapFail** -- transform domain errors to application errors:
 
 ```csharp
 var result = response.MapFail(e => Error.New($"Application error: {e.Message}"));
 ```
 
-**BindFail** — 에러 복구 시도 (fallback 조회):
+**BindFail** -- error recovery attempt (fallback lookup):
 
 ```csharp
 var result = response.BindFail(err => TryFallback());
-// TryFallback()이 Succ를 반환하면 복구, Fail이면 새 에러 전파
+// If TryFallback() returns Succ, recovery succeeds; if Fail, new error propagates
 ```
 
-**BiMap, BiBind** — 양방향 변환:
+**BiMap, BiBind** -- bidirectional transformation:
 
 ```csharp
-// BiMap: 성공 값과 에러를 동시에 변환
+// BiMap: transform both success value and error simultaneously
 var result = response.BiMap(
     value => value.ToString(),
     error => Error.New($"Wrapped: {error.Message}"));
 
-// BiBind: 성공/에러 모두에서 새 FinResponse 반환 가능
+// BiBind: return new FinResponse for both success/error
 var result = response.BiBind(
     value => FinResponse.Succ(value.ToString()),
     error => FinResponse.Succ("recovered"));
 ```
 
-> 부록 C "Railway Oriented Programming"에서 에러 트랙 연산의 실전 활용 패턴을 더 자세히 다룹니다.
+> Appendix C "Railway Oriented Programming" covers practical usage patterns for error track operations in more detail.
 
-### 9. Boolean 및 Choice 연산자
+### 9. Boolean and Choice Operators
 
-`if/else` 분기를 더 간결하게 표현할 수 있습니다.
+`if/else` branching can be expressed more concisely.
 
-**`operator true/false`** — `if (response)` 패턴:
+**`operator true/false`** -- `if (response)` pattern:
 
 ```csharp
 if (response)
-    Console.WriteLine("성공!");
+    Console.WriteLine("Success!");
 else
-    Console.WriteLine("실패!");
+    Console.WriteLine("Failure!");
 ```
 
-**`operator |`** — choice 연산자:
+**`operator |`** -- choice operator:
 
 ```csharp
-// 실패 시 대안 사용
+// Use alternative on failure
 var result = primaryLookup | fallbackLookup;
 ```
 
 ## FAQ
 
-### Q1: `abstract record`로 Discriminated Union을 구현하면 `switch` 패턴 매칭의 완전성(exhaustiveness)이 보장되나요?
-**A**: C# 컴파일러는 현재 sealed hierarchy에 대한 완전성 검사를 **경고 수준**에서 지원합니다. `Succ`와 `Fail`이 모두 `sealed record`이므로 새로운 케이스를 추가할 수 없고, `Match` 메서드를 사용하면 두 케이스를 모두 처리하도록 **컴파일 타임에 강제**됩니다.
+### Q1: Does implementing a Discriminated Union with `abstract record` guarantee exhaustiveness of `switch` pattern matching?
+**A**: The C# compiler currently supports exhaustiveness checking for sealed hierarchies at the **warning level**. Since both `Succ` and `Fail` are `sealed record`, no new cases can be added, and the `Match` method **enforces handling of both cases at compile time**.
 
-### Q2: 암시적 변환(`implicit operator`)이 코드 가독성을 해칠 수 있지 않나요?
-**A**: 타입이 명확한 경우에 한해 암시적 변환은 **보일러플레이트를 줄여** 오히려 가독성을 높입니다. `return new Response(...)` 대신 `return response`로 작성할 수 있습니다. 하지만 타입이 모호한 상황에서는 `FinResponse.Succ(value)` 같은 명시적 팩토리 메서드를 사용하는 것이 좋습니다.
+### Q2: Can't implicit conversions (`implicit operator`) harm code readability?
+**A**: When types are clear, implicit conversions **reduce boilerplate** and actually improve readability. Instead of `return new Response(...)`, you can write `return response`. However, in ambiguous type situations, it's better to use explicit factory methods like `FinResponse.Succ(value)`.
 
-### Q3: `Map`과 `Bind`의 차이는 무엇인가요?
-**A**: `Map`은 값을 변환하되 결과가 항상 성공(`A → B`)입니다. `Bind`는 값을 변환하면서 새로운 `FinResponse`를 반환하므로(`A → FinResponse<B>`), 변환 중 실패가 발생할 수 있습니다. Railway-Oriented Programming에서 `Map`은 직선 경로, `Bind`는 분기 가능한 경로에 해당합니다.
+### Q3: What is the difference between `Map` and `Bind`?
+**A**: `Map` transforms the value where the result is always a success (`A → B`). `Bind` transforms the value while returning a new `FinResponse` (`A → FinResponse<B>`), so failure can occur during the transformation. In Railway-Oriented Programming, `Map` corresponds to a straight path, while `Bind` corresponds to a path with possible branching.
 
-### Q4: LINQ `from ... select` 구문은 실전에서 자주 사용되나요?
-**A**: 여러 `FinResponse`를 **연쇄적으로 조합**할 때 유용합니다. 중첩된 `Bind` 호출보다 LINQ 구문이 읽기 쉬운 경우가 많습니다. 다만 단일 변환에는 `Map`이나 `Bind`를 직접 사용하는 것이 더 간결합니다.
+### Q4: Is the LINQ `from ... select` syntax frequently used in practice?
+**A**: It's useful when **sequentially composing** multiple `FinResponse` values. LINQ syntax is often more readable than nested `Bind` calls. However, for single transformations, using `Map` or `Bind` directly is more concise.
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 05-FinResponse-Discriminated-Union/
@@ -235,18 +235,18 @@ var result = primaryLookup | fallbackLookup;
 └── README.md
 ```
 
-## 실행 방법
+## How to Run
 
 ```bash
-# 프로그램 실행
+# Run the program
 dotnet run --project FinResponseDiscriminatedUnion
 
-# 테스트 실행
+# Run tests
 dotnet test --project FinResponseDiscriminatedUnion.Tests.Unit
 ```
 
 ---
 
-IFinResponse 계층이 완성되었습니다. Validation과 Exception Pipeline에 `IFinResponseFactory<TResponse>`만 적용하는 Create-Only 제약 패턴을 학습합니다.
+The IFinResponse hierarchy is complete. The next section covers the Create-Only constraint pattern, applying only `IFinResponseFactory<TResponse>` to the Validation and Exception Pipelines.
 
-→ [4.1장: Create-Only 제약](../../Part4-Pipeline-Constraint-Patterns/01-Create-Only-Constraint/)
+→ [Section 4.1: Create-Only Constraint](../../Part4-Pipeline-Constraint-Patterns/01-Create-Only-Constraint/)

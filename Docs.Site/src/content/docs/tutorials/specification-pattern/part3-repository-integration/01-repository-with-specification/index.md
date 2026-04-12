@@ -1,34 +1,34 @@
 ---
 title: "Specification-Based Repository"
 ---
-## 개요
+## Overview
 
-Part 2에서 Specification에 Expression Tree를 도입했습니다. 이제 이 Expression을 실제 데이터베이스 조회에 활용할 차례입니다. Repository에 Specification을 받는 메서드를 설계하면, 조건 조합마다 새로운 메서드를 추가하는 '메서드 폭발' 문제를 근본적으로 해결할 수 있습니다.
+In Part 2, we introduced Expression Trees to Specifications. Now it is time to leverage these Expressions for actual database queries. By designing Repository methods that accept Specifications, you can fundamentally solve the 'method explosion' problem of adding new methods for every condition combination.
 
-전통적인 Repository 패턴에서는 조회 조건이 추가될 때마다 새로운 메서드를 만들어야 합니다. `FindByCategory`, `FindByPriceRange`, `FindInStock`, `FindByCategoryAndPriceRange`... 조건의 조합이 늘어날수록 메서드 수가 기하급수적으로 폭발합니다.
+In the traditional Repository pattern, a new method must be created every time a query condition is added. `FindByCategory`, `FindByPriceRange`, `FindInStock`, `FindByCategoryAndPriceRange`... As condition combinations grow, the number of methods explodes exponentially.
 
-Specification 패턴은 이 문제를 근본적으로 해결합니다. Repository에는 `FindAll(Specification<T> spec)` 단 하나의 메서드만 두고, **무엇을 찾을지(WHAT)는** Specification에게 위임합니다.
+The Specification pattern fundamentally solves this problem. The Repository has only a single method `FindAll(Specification<T> spec)`, and **WHAT to find** is delegated to the Specification.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **메서드 폭발 문제 인식** - 조건 조합마다 메서드를 추가하는 방식의 한계 이해
-2. **관심사 분리** - Repository는 HOW(어디서 찾을지), Specification은 WHAT(무엇을 찾을지)을 담당
-3. **IProductRepository 인터페이스 설계** - Specification을 매개변수로 받는 범용 Repository 인터페이스
+### Key Learning Objectives
+1. **Recognizing the method explosion problem** - Understanding the limitations of adding methods for every condition combination
+2. **Separation of concerns** - Repository handles HOW (where to find), Specification handles WHAT (what to find)
+3. **IProductRepository interface design** - A generic Repository interface that accepts Specifications as parameters
 
-### 실습을 통해 확인할 내용
-- 메서드 폭발 문제의 구체적인 예시
-- `FindAll(Specification<Product> spec)` 메서드 하나로 모든 조회 조건 처리
-- `Exists(Specification<Product> spec)` 메서드로 존재 여부 확인
+### What You Will Verify Through Practice
+- Concrete examples of the method explosion problem
+- Handling all query conditions with a single `FindAll(Specification<Product> spec)` method
+- Checking existence with the `Exists(Specification<Product> spec)` method
 
-## 핵심 개념
+## Key Concepts
 
-### 메서드 폭발 (Method Explosion)
+### Method Explosion
 
-전통적인 Repository에서 조건 3개(카테고리, 가격, 재고)만 있어도 조합 가능한 메서드 수는 급격히 증가합니다.
+In a traditional Repository, even with just 3 conditions (category, price, stock), the number of combinable methods increases rapidly.
 
 ```csharp
-// Before: 조건마다 메서드 추가
+// Before: Adding a method for each condition
 public interface IProductRepository
 {
     IEnumerable<Product> FindByCategory(string category);
@@ -36,14 +36,14 @@ public interface IProductRepository
     IEnumerable<Product> FindInStock();
     IEnumerable<Product> FindByCategoryAndPriceRange(string category, decimal min, decimal max);
     IEnumerable<Product> FindInStockByCategory(string category);
-    // ... 조건이 늘어날수록 메서드가 기하급수적으로 증가!
+    // ... methods increase exponentially as conditions grow!
 }
 ```
 
-### Specification으로 해결
+### Solving with Specification
 
 ```csharp
-// After: 단 두 개의 메서드로 모든 조건 처리
+// After: Handling all conditions with just two methods
 public interface IProductRepository
 {
     IEnumerable<Product> FindAll(Specification<Product> spec);
@@ -51,27 +51,27 @@ public interface IProductRepository
 }
 ```
 
-새로운 조건이 추가되면 **새로운 Specification 클래스만 만들면 됩니다**. Repository 인터페이스는 변경할 필요가 없습니다.
+When a new condition is added, **you only need to create a new Specification class**. The Repository interface does not need to change.
 
-## 프로젝트 설명
+## Project Description
 
-### 프로젝트 구조
+### Project Structure
 ```
-RepositorySpec/                          # 메인 프로젝트
-├── Product.cs                           # 도메인 모델
-├── IProductRepository.cs                # Repository 인터페이스
+RepositorySpec/                          # Main project
+├── Product.cs                           # Domain model
+├── IProductRepository.cs                # Repository interface
 ├── Specifications/
-│   ├── ProductInStockSpec.cs                   # 재고 있는 상품
-│   ├── ProductPriceRangeSpec.cs                # 가격 범위 상품
-│   └── ProductCategorySpec.cs                  # 카테고리별 상품
-├── Program.cs                           # Before/After 비교 데모
+│   ├── ProductInStockSpec.cs                   # In-stock products
+│   ├── ProductPriceRangeSpec.cs                # Price range products
+│   └── ProductCategorySpec.cs                  # Products by category
+├── Program.cs                           # Before/After comparison demo
 └── RepositorySpec.csproj
-RepositorySpec.Tests.Unit/               # 테스트 프로젝트
-├── RepositorySpecTests.cs               # 인터페이스 계약 + Spec 테스트
+RepositorySpec.Tests.Unit/               # Test project
+├── RepositorySpecTests.cs               # Interface contract + Spec tests
 └── ...
 ```
 
-### 핵심 코드
+### Core Code
 
 #### IProductRepository.cs
 ```csharp
@@ -82,44 +82,44 @@ public interface IProductRepository
 }
 ```
 
-Repository는 Specification이 어떤 조건을 표현하는지 전혀 알 필요가 없습니다. Specification의 `IsSatisfiedBy` 메서드에 위임하기만 하면 됩니다.
+The Repository does not need to know what condition the Specification expresses. It simply delegates to the Specification's `IsSatisfiedBy` method.
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-### Before vs After 비교
+### Before vs After Comparison
 
-Specification 도입 전후로 Repository가 어떻게 달라지는지 비교합니다.
+Comparing how the Repository changes before and after introducing Specification.
 
-| 구분 | Before (전통적) | After (Specification) |
+| Aspect | Before (Traditional) | After (Specification) |
 |------|----------------|----------------------|
-| **새 조건 추가** | Repository에 메서드 추가 | Specification 클래스 추가 |
-| **조건 조합** | 조합마다 별도 메서드 | 연산자(`&`, `\|`, `!`)로 조합 |
-| **Repository 변경** | 조건마다 변경 필요 | 변경 불필요 |
-| **테스트** | 메서드마다 테스트 | Specification 단위 테스트 |
-| **Open-Closed** | 위반 (수정 필요) | 준수 (확장만 필요) |
+| **Adding New Conditions** | Add method to Repository | Add Specification class |
+| **Condition Combinations** | Separate method per combination | Compose with operators (`&`, `\|`, `!`) |
+| **Repository Changes** | Changes needed per condition | No changes needed |
+| **Testing** | Test per method | Specification unit tests |
+| **Open-Closed** | Violated (modification needed) | Adhered (only extension needed) |
 
-### 관심사 분리
+### Separation of Concerns
 
-Repository와 Specification이 각각 담당하는 역할을 정리합니다.
+Summary of the roles handled by Repository and Specification respectively.
 
-| 역할 | 담당 | 예시 |
+| Role | Responsibility | Examples |
 |------|------|------|
-| **Repository** | HOW (어디서 찾을지) | InMemory, DB, API |
-| **Specification** | WHAT (무엇을 찾을지) | 재고 있는 상품, 1만원 이하 |
+| **Repository** | HOW (where to find) | InMemory, DB, API |
+| **Specification** | WHAT (what to find) | In-stock products, under 10,000 won |
 
 ## FAQ
 
-### Q1: Repository에 FindAll과 Exists 외에 다른 메서드가 필요하지 않나요?
-**A**: 실제 프로젝트에서는 `Count(spec)`, `FindFirst(spec)` 등을 추가할 수 있습니다. 핵심은 **조회 조건을 메서드 시그니처가 아닌 Specification 객체로 표현**한다는 점입니다. 어떤 메서드를 추가하든 매개변수는 항상 `Specification<T>`입니다.
+### Q1: Aren't methods other than FindAll and Exists needed in the Repository?
+**A**: In real projects, you can add `Count(spec)`, `FindFirst(spec)`, etc. The key point is that **query conditions are expressed as Specification objects rather than method signatures**. Whatever methods you add, the parameter is always `Specification<T>`.
 
-### Q2: 기존 Repository 패턴과 함께 사용할 수 있나요?
-**A**: 네. `FindById(int id)` 같은 단순 조회는 기존 방식으로 유지하고, 복잡한 조건 조합이 필요한 조회만 Specification으로 전환하는 것이 실용적입니다.
+### Q2: Can this be used alongside existing Repository patterns?
+**A**: Yes. It is practical to keep simple lookups like `FindById(int id)` as-is and only convert queries requiring complex condition combinations to Specification.
 
-### Q3: Specification 패턴이 과도한 설계(Over-Engineering)가 되는 경우는?
-**A**: 조회 조건이 1~2개뿐이고 조합이 필요 없다면, 전통적인 메서드 방식이 더 간단합니다. 조건이 3개 이상이거나 조합이 필요할 때 Specification의 가치가 드러납니다.
+### Q3: When does the Specification pattern become over-engineering?
+**A**: If there are only 1-2 query conditions and no composition is needed, the traditional method approach is simpler. The value of Specification becomes apparent when there are 3 or more conditions or when composition is needed.
 
 ---
 
-Repository 인터페이스가 완성되었으니, 다음 장에서는 이 인터페이스를 가장 단순한 형태로 구현합니다. InMemory 어댑터를 통해 Specification이 Repository에서 실제로 어떻게 동작하는지 확인해보겠습니다.
+Now that the Repository interface is complete, in the next chapter we implement this interface in its simplest form. Through the InMemory adapter, we will see how Specifications actually work within a Repository.
 
-→ [2장: 인메모리 구현](../02-InMemory-Implementation/)
+-> [Chapter 2: InMemory Implementation](../02-InMemory-Implementation/)

@@ -1,40 +1,40 @@
 ---
-title: "All 항등원"
+title: "All Identity Element"
 ---
-## 개요
+## Overview
 
-`Specification<T>.All`은 **모든 엔터티를 만족하는 특별한 Specification**입니다. 이 장에서는 `All`이 AND 연산의 **항등원(identity element)으로서** 동적 필터 구성을 어떻게 간결하게 만드는지 배웁니다.
+`Specification<T>.All` is a **special Specification that satisfies all entities**. In this chapter, you will learn how `All` serves as the **identity element** of the AND operation and how it makes dynamic filter construction concise.
 
-> **`All & X == X` — 수학의 1 * x == x처럼, All은 AND 연산에서 아무 영향을 주지 않는 중립 요소입니다.**
+> **`All & X == X` -- Like 1 * x == x in mathematics, All is a neutral element that has no effect in AND operations.**
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **Null Object 패턴 이해**
-   - `All`은 "조건 없음"을 표현하는 Null Object
-   - null 체크 대신 `All`로 시작하여 안전하게 조건 누적
+### Key Learning Objectives
+1. **Understanding the Null Object Pattern**
+   - `All` is a Null Object representing "no conditions"
+   - Start with `All` instead of null checks to safely accumulate conditions
 
-2. **항등원(Identity Element) 개념**
-   - `All & X == X`, `X & All == X` (AND 연산의 항등원)
-   - `&` 연산자가 `All`을 감지하면 새 객체를 만들지 않고 상대방을 그대로 반환
+2. **Identity Element Concept**
+   - `All & X == X`, `X & All == X` (identity element of AND operation)
+   - When the `&` operator detects `All`, it returns the other operand as-is without creating a new object
 
-3. **동적 필터 패턴**
-   - 사용자 입력이나 검색 조건에 따라 Specification을 점진적으로 조립
-   - `All`에서 시작하여 `&=`로 조건을 추가하는 패턴
+3. **Dynamic Filter Pattern**
+   - Incrementally assembling Specifications based on user input or search criteria
+   - Pattern of starting with `All` and adding conditions with `&=`
 
-### 실습을 통해 확인할 내용
-- `All.IsSatisfiedBy()`가 항상 true 반환
-- `All & X`가 `X`와 동일한 참조 반환 (ReferenceEquals)
-- 동적 필터 구성 및 실행
+### What You Will Verify Through Practice
+- `All.IsSatisfiedBy()` always returns true
+- `All & X` returns the same reference as `X` (ReferenceEquals)
+- Dynamic filter construction and execution
 
-## 핵심 개념
+## Key Concepts
 
-### Null Object 패턴
+### Null Object Pattern
 
-프로그래밍에서 "조건 없음"을 표현할 때 흔히 `null`을 사용합니다:
+When representing "no conditions" in programming, `null` is commonly used:
 
 ```csharp
-// null 사용 - 매번 null 체크 필요
+// Using null - null check required every time
 Specification<Product>? spec = null;
 
 if (hasCategory)
@@ -43,14 +43,14 @@ if (hasCategory)
 if (hasPrice)
     spec = spec == null ? new ProductPriceRangeSpec(min, max) : spec.And(new ProductPriceRangeSpec(min, max));
 
-// 실행 시에도 null 체크
+// Null check also required at execution time
 var results = spec == null ? products : products.Where(p => spec.IsSatisfiedBy(p));
 ```
 
-`All`을 사용하면 null 체크가 사라집니다:
+Using `All` eliminates null checks:
 
 ```csharp
-// All 사용 - null 체크 불필요
+// Using All - no null checks needed
 var spec = Specification<Product>.All;
 
 if (hasCategory)
@@ -59,27 +59,27 @@ if (hasCategory)
 if (hasPrice)
     spec &= new ProductPriceRangeSpec(min, max);
 
-// 실행 - All이면 모든 상품, 조건이 있으면 필터링
+// Execution - All returns all products, conditions apply filtering
 var results = products.Where(p => spec.IsSatisfiedBy(p));
 ```
 
-### 항등원의 참조 최적화
+### Reference Optimization of the Identity Element
 
-`&` 연산자는 `All`을 감지하면 **새 객체를 생성하지 않고 상대방을 그대로 반환**합니다:
+The `&` operator detects `All` and **returns the other operand as-is without creating a new object**:
 
 ```csharp
 var all = Specification<Product>.All;
 var inStock = new ProductInStockSpec();
 
 var result = all & inStock;
-ReferenceEquals(result, inStock); // true - 새 객체가 아님!
+ReferenceEquals(result, inStock); // true - not a new object!
 ```
 
-이는 단순한 최적화가 아니라, **항등원의 수학적 정의**를 코드로 표현한 것입니다. 곱셈에서 `1 * x == x`인 것처럼, AND 연산에서 `All & X == X`입니다.
+This is not merely an optimization but a code expression of the **mathematical definition of an identity element**. Just as `1 * x == x` in multiplication, `All & X == X` in AND operations.
 
-### 동적 필터 패턴
+### Dynamic Filter Pattern
 
-실무에서 가장 많이 사용되는 패턴입니다. 검색 화면에서 사용자가 선택한 조건만 적용해야 할 때:
+This is the most commonly used pattern in practice. When only user-selected conditions on a search screen need to be applied:
 
 ```csharp
 var spec = Specification<Product>.All;
@@ -96,11 +96,11 @@ if (onlyInStock)
 var results = products.Where(p => spec.IsSatisfiedBy(p));
 ```
 
-조건이 하나도 선택되지 않으면 `spec`은 `All` 그대로이므로 모든 상품이 반환됩니다.
+If no conditions are selected, `spec` remains `All`, so all products are returned.
 
-## 프로젝트 설명
+## Project Description
 
-### 프로젝트 구조
+### Project Structure
 ```
 AllIdentity/
 ├── Program.cs
@@ -120,9 +120,9 @@ AllIdentity.Tests.Unit/
 └── AllIdentity.Tests.Unit.csproj
 ```
 
-### 핵심 코드
+### Core Code
 
-#### 동적 필터 구성
+#### Dynamic Filter Construction
 ```csharp
 var spec = Specification<Product>.All;
 
@@ -135,43 +135,43 @@ if (onlyInStock)
 var results = SampleProducts.All.Where(p => spec.IsSatisfiedBy(p));
 ```
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-### All 항등원 특성
-| 속성 | 값/동작 |
+### All Identity Element Properties
+| Property | Value/Behavior |
 |------|---------|
-| `All.IsSatisfiedBy(x)` | 항상 `true` |
+| `All.IsSatisfiedBy(x)` | Always `true` |
 | `All.IsAll` | `true` |
-| `All & X` | `X` 반환 (ReferenceEquals) |
-| `X & All` | `X` 반환 (ReferenceEquals) |
+| `All & X` | Returns `X` (ReferenceEquals) |
+| `X & All` | Returns `X` (ReferenceEquals) |
 
-### null vs All 비교
-| 구분 | null 방식 | All 방식 |
+### null vs All Comparison
+| Aspect | null Approach | All Approach |
 |------|-----------|----------|
-| **초기값** | `null` | `Specification<T>.All` |
-| **조건 추가** | null 체크 후 And 또는 할당 | `&=` 연산자 |
-| **실행** | null 체크 후 필터 또는 전체 반환 | 그냥 필터 (All이면 전체 반환) |
-| **안전성** | NullReferenceException 위험 | null-safe |
+| **Initial Value** | `null` | `Specification<T>.All` |
+| **Adding Conditions** | Null check then And or assign | `&=` operator |
+| **Execution** | Null check then filter or return all | Just filter (All returns everything) |
+| **Safety** | NullReferenceException risk | null-safe |
 
 ## FAQ
 
-### Q1: All은 싱글턴인가요?
-**A**: 네, `AllSpecification<T>`는 `static readonly` 인스턴스를 통해 타입별 싱글턴으로 구현되어 있습니다. `Specification<Product>.All`은 항상 동일한 객체를 반환합니다.
+### Q1: Is All a singleton?
+**A**: Yes, `AllSpecification<T>` is implemented as a per-type singleton through a `static readonly` instance. `Specification<Product>.All` always returns the same object.
 
-### Q2: All을 Or 연산에서도 사용할 수 있나요?
-**A**: 기술적으로 가능하지만 의미가 다릅니다. `All | X`는 항상 true (All이 모든 것을 만족하므로)가 되어 사실상 `All`과 동일합니다. `All`은 AND 연산의 항등원으로 설계된 것이며, Or 연산에서는 흡수원(absorbing element)이 됩니다.
+### Q2: Can All be used in Or operations too?
+**A**: Technically possible, but the semantics are different. `All | X` is always true (since All satisfies everything), making it effectively the same as `All`. `All` is designed as the identity element of the AND operation; in Or operations, it becomes an absorbing element.
 
-### Q3: 왜 And() 메서드에는 항등원 최적화가 없나요?
-**A**: `And()` 메서드는 단순히 `new AndSpecification<T>(this, other)`를 반환합니다. 항등원 최적화는 `&` 연산자에만 포함되어 있습니다. 이는 메서드의 단순성을 유지하면서도, 연산자 사용 시 성능과 참조 동일성을 보장하기 위한 설계 결정입니다.
+### Q3: Why doesn't the And() method have identity element optimization?
+**A**: The `And()` method simply returns `new AndSpecification<T>(this, other)`. The identity element optimization is only included in the `&` operator. This is a design decision to maintain the simplicity of the method while ensuring performance and reference equality when using operators.
 
-### Q4: 동적 필터에서 Or 조건도 추가할 수 있나요?
-**A**: 네, `|=` 연산자를 사용할 수 있습니다. 다만 And와 Or를 혼합할 때는 연산 우선순위에 주의해야 합니다. 복잡한 조합이 필요하다면 중간 변수로 의도를 명확히 하는 것이 좋습니다.
+### Q4: Can Or conditions also be added in dynamic filters?
+**A**: Yes, you can use the `|=` operator. However, when mixing And and Or, be careful about operator precedence. If complex compositions are needed, it is better to clarify intent using intermediate variables.
 
-### Q5: 이 패턴은 실무에서 어떻게 활용되나요?
-**A**: 검색 API, 필터링 UI, 리포트 조건 등 사용자 입력에 따라 쿼리를 동적으로 구성해야 하는 모든 곳에서 활용됩니다. Part 3에서 EF Core와 결합하여 동적 SQL 쿼리를 생성하는 방법을 배웁니다.
+### Q5: How is this pattern used in practice?
+**A**: It is used everywhere that requires dynamically constructing queries based on user input, such as search APIs, filtering UIs, and report conditions. In Part 3, you will learn how to generate dynamic SQL queries by combining this with EF Core.
 
 ---
 
-Part 1에서는 Specification의 기초를 다졌습니다 — 조건 캡슐화, 조합, 연산자, 그리고 All 항등원까지. 하지만 지금까지의 Specification은 메모리 컬렉션에서만 동작합니다. Part 2에서는 Expression Tree를 도입하여 Specification을 EF Core 같은 ORM에서도 사용할 수 있게 만듭니다.
+In Part 1, we built the foundations of Specification -- condition encapsulation, composition, operators, and the All identity element. However, the Specifications so far only work on in-memory collections. In Part 2, we introduce Expression Trees to make Specifications usable with ORMs like EF Core.
 
-→ [Part 2의 1장: Expression 소개](../../Part2-Expression-Specification/01-Expression-Introduction/)
+-> [Part 2 Chapter 1: Introduction to Expressions](../../Part2-Expression-Specification/01-Expression-Introduction/)

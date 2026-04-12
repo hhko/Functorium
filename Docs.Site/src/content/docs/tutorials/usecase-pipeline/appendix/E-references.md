@@ -2,64 +2,64 @@
 title: "References"
 ---
 
-## 개요
+## Overview
 
-이 튜토리얼의 학습에 도움이 되는 참고 자료를 정리합니다.
+This section compiles reference materials that are helpful for learning the concepts covered in this tutorial.
 
 ---
 
-## C# 언어 및 .NET 문서
+## C# Language and .NET Documentation
 
-### 제네릭 변성
+### Generic Variance
 
 - [Covariance and Contravariance in Generics - Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/standard/generics/covariance-and-contravariance)
 - [Covariance and Contravariance (C# Programming Guide)](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/covariance-contravariance/)
 - [out (generic modifier) - C# Reference](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/out-generic-modifier)
 - [in (generic modifier) - C# Reference](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/in-generic-modifier)
 
-### static abstract 멤버
+### static abstract Members
 
 - [Static abstract members in interfaces - C# 11](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-11#generic-math-support)
 - [Tutorial: Explore static virtual members in interfaces](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/tutorials/static-virtual-interface-members)
 
-### Record 타입
+### Record Types
 
 - [Records - C# Reference](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/record)
 - [Use record types - C# Tutorial](https://learn.microsoft.com/en-us/dotnet/csharp/tutorials/records)
 
 ---
 
-## 라이브러리
+## Libraries
 
 ### LanguageExt
 
-C#을 위한 함수형 프로그래밍 라이브러리. `Fin<T>`, `Option<T>`, `Either<L, R>` 등의 모나딕 타입을 제공합니다.
+A functional programming library for C#. It provides monadic types such as `Fin<T>`, `Option<T>`, `Either<L, R>`, and more.
 
 - [GitHub - louthy/language-ext](https://github.com/louthy/language-ext)
 - [LanguageExt Documentation](https://louthy.github.io/language-ext/)
 
 ### Mediator
 
-고성능 .NET Mediator 패턴 라이브러리. Source Generator 기반으로 리플렉션 없이 요청을 라우팅합니다.
+A high-performance .NET Mediator pattern library. It routes requests without reflection, based on Source Generators.
 
 - [GitHub - martinothamar/Mediator](https://github.com/martinothamar/Mediator)
 
 ---
 
-## 함수형 프로그래밍
+## Functional Programming
 
 ### Railway Oriented Programming
 
 - [Railway Oriented Programming - Scott Wlaschin](https://fsharpforfunandprofit.com/rop/)
 - [Against Railway-Oriented Programming - Scott Wlaschin](https://fsharpforfunandprofit.com/posts/against-railway-oriented-programming/)
 
-### 함수형 C#
+### Functional C#
 
 - [Functional Programming in C# - Enrico Buonanno (Manning)](https://www.manning.com/books/functional-programming-in-c-sharp-second-edition)
 
 ---
 
-## 설계 패턴
+## Design Patterns
 
 ### CQRS
 
@@ -77,51 +77,50 @@ C#을 위한 함수형 프로그래밍 라이브러리. `Fin<T>`, `Option<T>`, `
 
 ---
 
-## Functorium 소스 파일
+## Functorium Source Files
 
-이 튜토리얼에서 다루는 Functorium의 핵심 소스 파일 목록입니다.
+The following is a list of key Functorium source files covered in this tutorial.
 
-### IFinResponse 인터페이스 계층
+### IFinResponse Interface Hierarchy
 
-| 파일 | 설명 |
+| File | Description |
 |------|------|
-| `Src/Functorium/Applications/Usecases/IFinResponse.cs` | 인터페이스 정의 (IFinResponse, IFinResponseFactory 등) |
-| `Src/Functorium/Applications/Usecases/IFinResponse.Impl.cs` | FinResponse\<A\> 레코드 (Succ/Fail, Match/Map/Bind) |
-| `Src/Functorium/Applications/Usecases/IFinResponse.Factory.cs` | FinResponse 정적 팩토리 클래스 |
-| `Src/Functorium/Applications/Usecases/IFinResponse.FinConversions.cs` | Fin\<A\> → FinResponse\<A\> 변환 확장 메서드 |
+| `Src/Functorium/Applications/Usecases/IFinResponse.cs` | Interface definitions (IFinResponse, IFinResponseFactory, etc.) |
+| `Src/Functorium/Applications/Usecases/IFinResponse.Impl.cs` | FinResponse\<A\> record (Succ/Fail, Match/Map/Bind) |
+| `Src/Functorium/Applications/Usecases/IFinResponse.Factory.cs` | FinResponse static factory class |
+| `Src/Functorium/Applications/Usecases/IFinResponse.FinConversions.cs` | Fin\<A\> → FinResponse\<A\> conversion extension methods |
 
-### Command/Query 인터페이스
+### Command/Query Interfaces
 
-| 파일 | 설명 |
+| File | Description |
 |------|------|
 | `Src/Functorium/Applications/Usecases/ICommandRequest.cs` | ICommandRequest\<TSuccess\>, ICommandUsecase |
 | `Src/Functorium/Applications/Usecases/IQueryRequest.cs` | IQueryRequest\<TSuccess\>, IQueryUsecase |
-| `Src/Functorium/Applications/Usecases/ICacheable.cs` | ICacheable 인터페이스 |
+| `Src/Functorium/Applications/Usecases/ICacheable.cs` | ICacheable interface |
 
-### Pipeline 구현
+### Pipeline Implementations
 
-모든 파일은 `Src/Functorium.Adapters/Observabilities/Pipelines/` 디렉토리에 위치합니다.
+All files are located in the `Src/Functorium.Adapters/Observabilities/Pipelines/` directory.
 
-| 파일 | 설명 |
+| File | Description |
 |------|------|
-| `UsecasePipelineBase.cs` | 공통 헬퍼 베이스 클래스 (CQRS 타입 식별, 핸들러명 추출) |
+| `UsecasePipelineBase.cs` | Common helper base class (CQRS type identification, handler name extraction) |
 | `UsecaseMetricsPipeline.cs` | Metrics Pipeline (Read + Create) |
 | `UsecaseTracingPipeline.cs` | Tracing Pipeline (Read + Create) |
 | `UsecaseLoggingPipeline.cs` | Logging Pipeline (Read + Create) |
 | `UsecaseValidationPipeline.cs` | Validation Pipeline (CreateFail) |
-| `UsecaseCachingPipeline.cs` | Caching Pipeline (Read + Create, Query 전용) |
+| `UsecaseCachingPipeline.cs` | Caching Pipeline (Read + Create, Query only) |
 | `UsecaseExceptionPipeline.cs` | Exception Pipeline (CreateFail) |
-| `UsecaseTransactionPipeline.cs` | Transaction Pipeline (Read + Create, Command 전용) |
-| `ICustomUsecasePipeline.cs` | Custom Pipeline 마커 인터페이스 (Scrutor 자동 검색용) |
-| `UsecaseMetricCustomPipelineBase.cs` | Custom Metric Pipeline 베이스 클래스 |
-| `UsecaseTracingCustomPipelineBase.cs` | Custom Tracing Pipeline 베이스 클래스 |
-| `IUsecaseCtxEnricher.cs` | 로그 커스텀 속성 Enricher 인터페이스 |
+| `UsecaseTransactionPipeline.cs` | Transaction Pipeline (Read + Create, Command only) |
+| `ICustomUsecasePipeline.cs` | Custom Pipeline marker interface (for Scrutor auto-discovery) |
+| `UsecaseMetricCustomPipelineBase.cs` | Custom Metric Pipeline base class |
+| `UsecaseTracingCustomPipelineBase.cs` | Custom Tracing Pipeline base class |
+| `IUsecaseCtxEnricher.cs` | Log custom property Enricher interface |
 
 ---
 
-## 관련 튜토리얼
+## Related Tutorials
 
-| 튜토리얼 | 위치 | 설명 |
+| Tutorial | Location | Description |
 |------|------|------|
-| CQRS 패턴으로 Command와 Query 분리하기 | `Docs.Site/src/content/docs/tutorials/cqrs-repository/` | CQRS 패턴 기초부터 Usecase 통합까지 |
-
+| Separating Commands and Queries with the CQRS Pattern | `Docs.Site/src/content/docs/tutorials/cqrs-repository/` | From CQRS pattern basics to Usecase integration |

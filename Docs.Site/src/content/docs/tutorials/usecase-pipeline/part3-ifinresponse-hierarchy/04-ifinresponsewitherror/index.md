@@ -2,29 +2,29 @@
 title: "IFinResponseWithError"
 ---
 
-## 개요
+## Overview
 
-**요구사항 R3**: Pipeline이 실패 시 에러 정보에 접근할 수 있어야 합니다. 지금까지 `IFinResponse`로 성공/실패를 확인하고, `IFinResponseFactory`로 실패 응답을 생성할 수 있게 되었지만, Pipeline에서 **에러 정보에 접근**하려면 어떻게 해야 할까요? 이 장에서는 `IFinResponseWithError` 인터페이스를 도입하여, **Fail 케이스에서만** 에러에 접근할 수 있는 타입 안전한 패턴을 설계합니다.
+**Requirement R3**: Pipelines must be able to access error information on failure. So far, `IFinResponse` enables checking success/failure and `IFinResponseFactory` enables creating failure responses, but how do Pipelines **access error information**? This section introduces the `IFinResponseWithError` interface to design a type-safe pattern where errors are accessible **only from the Fail case**.
 
 ```
-IFinResponseWithError           ← 에러 접근 인터페이스 (이번 장)
-├── Error: Error                  Fail에서만 구현
+IFinResponseWithError           ← Error access interface (this section)
+├── Error: Error                  Implemented only in Fail
 ```
 
-## 학습 목표
+## Learning Objectives
 
-이 장을 완료하면 다음을 할 수 있습니다:
+After completing this section, you will be able to:
 
-1. `IFinResponseWithError`가 Fail에서만 구현되는 이유를 설명할 수 있습니다
-2. 패턴 매칭으로 에러에 안전하게 접근하는 코드를 작성할 수 있습니다
-3. Succ에서 에러 접근이 타입 시스템에 의해 방지되는 원리를 이해할 수 있습니다
-4. 인터페이스 분리가 타입 안전성을 강화하는 방식을 설명할 수 있습니다
+1. Explain why `IFinResponseWithError` is implemented only in Fail
+2. Write code that safely accesses errors through pattern matching
+3. Understand the principle by which error access from Succ is prevented by the type system
+4. Explain how interface segregation strengthens type safety
 
-## 핵심 개념
+## Key Concepts
 
-### 1. IFinResponseWithError 인터페이스
+### 1. IFinResponseWithError Interface
 
-`IFinResponseWithError`는 `Error` 속성을 제공하는 별도의 인터페이스입니다. **Fail 케이스에서만** 이 인터페이스를 구현하여, Succ 케이스에서 에러에 접근하는 것을 원천적으로 방지합니다.
+`IFinResponseWithError` is a separate interface providing the `Error` property. By implementing this interface **only in the Fail case**, access to errors from the Succ case is prevented at the source.
 
 ```csharp
 public interface IFinResponseWithError
@@ -33,28 +33,28 @@ public interface IFinResponseWithError
 }
 ```
 
-### 2. Fail에서만 구현
+### 2. Implemented Only in Fail
 
-Discriminated Union의 `Fail` 레코드만 `IFinResponseWithError`를 구현합니다. `Succ`는 이 인터페이스를 구현하지 않으므로, 에러 접근이 타입 시스템에 의해 차단됩니다.
+Only the `Fail` record of the Discriminated Union implements `IFinResponseWithError`. `Succ` does not implement this interface, so error access is blocked by the type system.
 
 ```csharp
 public abstract record ErrorAccessResponse<A> : IFinResponse
 {
     public sealed record Succ(A Value) : ErrorAccessResponse<A>
     {
-        // IFinResponseWithError를 구현하지 않음!
+        // Does NOT implement IFinResponseWithError!
     }
 
     public sealed record Fail(Error Error) : ErrorAccessResponse<A>, IFinResponseWithError
     {
-        // Fail만 IFinResponseWithError 구현
+        // Only Fail implements IFinResponseWithError
     }
 }
 ```
 
-### 3. 패턴 매칭으로 에러 접근
+### 3. Error Access via Pattern Matching
 
-Pipeline에서는 `is IFinResponseWithError` 패턴 매칭을 사용하여 에러에 안전하게 접근합니다. Succ인 경우 패턴 매칭이 실패하므로, 에러 접근이 자연스럽게 방지됩니다.
+In Pipelines, `is IFinResponseWithError` pattern matching is used to safely access errors. When the response is Succ, the pattern match fails, naturally preventing error access.
 
 ```csharp
 public static string LogResponse<TResponse>(TResponse response)
@@ -63,7 +63,7 @@ public static string LogResponse<TResponse>(TResponse response)
     if (response.IsSucc)
         return "Success";
 
-    // 패턴 매칭으로 에러 접근 - Fail에서만 IFinResponseWithError 구현
+    // Pattern matching for error access - only Fail implements IFinResponseWithError
     if (response is IFinResponseWithError failResponse)
         return $"Fail: {failResponse.Error}";
 
@@ -71,22 +71,22 @@ public static string LogResponse<TResponse>(TResponse response)
 }
 ```
 
-### 4. 왜 별도 인터페이스인가?
+### 4. Why a Separate Interface?
 
-`Error` 속성을 `IFinResponse`에 직접 추가하면, Succ 케이스에서도 `Error`에 접근할 수 있게 되어 **런타임 예외** 위험이 생깁니다. 별도 인터페이스로 분리하면 **컴파일 타임에 안전성**을 보장할 수 있습니다.
+If the `Error` property were added directly to `IFinResponse`, it would be accessible even from the Succ case, creating **runtime exception** risks. Separating into a distinct interface ensures **compile-time safety**.
 
 ## FAQ
 
-### Q1: `Error` 속성을 `IFinResponse`에 직접 추가하면 왜 안 되나요?
-**A**: `IFinResponse`에 `Error`를 추가하면 **성공(Succ) 케이스에서도** `Error`에 접근할 수 있게 됩니다. Succ에는 에러가 없으므로 `null` 반환이나 예외 발생 등 런타임 위험이 생깁니다. 별도 인터페이스로 분리하면 Fail에서만 구현하여 **타입 시스템이 안전성을 보장**합니다.
+### Q1: Why can't `Error` be added directly to `IFinResponse`?
+**A**: Adding `Error` to `IFinResponse` would make it accessible **from the Success (Succ) case** as well. Since Succ has no error, this creates runtime risks like `null` returns or exceptions. Separating into a distinct interface and implementing only in Fail ensures **the type system guarantees safety**.
 
-### Q2: `is IFinResponseWithError` 패턴 매칭은 리플렉션과 다른가요?
-**A**: 완전히 다릅니다. `is` 패턴 매칭은 CLR의 타입 시스템이 수행하는 **네이티브 타입 검사**로, 리플렉션(`GetType().GetProperty()`)보다 수십 배 빠릅니다. 또한 `fail.Error` 접근은 컴파일 타임에 검증되므로 프로퍼티 이름 오타 위험도 없습니다.
+### Q2: Is `is IFinResponseWithError` pattern matching different from reflection?
+**A**: Completely different. `is` pattern matching is a **native type check** performed by the CLR's type system, and is tens of times faster than reflection (`GetType().GetProperty()`). Additionally, `fail.Error` access is verified at compile time, eliminating the risk of property name typos.
 
-### Q3: Fail에서만 `IFinResponseWithError`를 구현하는 패턴은 다른 곳에서도 사용되나요?
-**A**: 네. 이 패턴은 **케이스별 인터페이스 구현**이라는 일반적인 설계 기법입니다. 예를 들어 HTTP 응답에서 에러 본문은 4xx/5xx 응답에만 존재하므로, 에러 본문 인터페이스를 에러 응답 케이스에서만 구현하는 것과 동일한 원리입니다.
+### Q3: Is the pattern of implementing `IFinResponseWithError` only in Fail used elsewhere?
+**A**: Yes. This is a general design technique called **per-case interface implementation**. For example, in HTTP responses, error bodies only exist in 4xx/5xx responses, so an error body interface would be implemented only in the error response case -- the same principle.
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 04-IFinResponseWithError/
@@ -103,19 +103,18 @@ public static string LogResponse<TResponse>(TResponse response)
 └── README.md
 ```
 
-## 실행 방법
+## How to Run
 
 ```bash
-# 프로그램 실행
+# Run the program
 dotnet run --project FinResponseWithError
 
-# 테스트 실행
+# Run tests
 dotnet test --project FinResponseWithError.Tests.Unit
 ```
 
 ---
 
-에러 접근까지 해결했으니, 이제 R1~R4 모든 요구사항을 하나의 타입으로 통합합니다. `FinResponse<A>` Discriminated Union으로 Match, Map, Bind, 암시적 변환까지 구현합니다.
+With error access solved, it's time to unify all requirements R1-R4 into a single type. The `FinResponse<A>` Discriminated Union implements Match, Map, Bind, implicit conversions, and more.
 
-→ [3.5장: FinResponse\<A\> Discriminated Union](../05-FinResponse-Discriminated-Union/)
-
+→ [Section 3.5: FinResponse\<A\> Discriminated Union](../05-FinResponse-Discriminated-Union/)

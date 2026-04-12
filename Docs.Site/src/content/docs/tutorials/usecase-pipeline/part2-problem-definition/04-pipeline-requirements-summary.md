@@ -1,65 +1,65 @@
 ---
-title: "파이프라인 요구사항 정리"
+title: "Pipeline Requirements Summary"
 ---
 
-## 개요
+## Overview
 
-세 가지 접근을 시도한 결과, 각각의 한계가 드러났습니다. Pipeline 구조를 분석하여 `where` 제약의 역할을 확인했고(1장), `Fin<T>`를 직접 사용하면 리플렉션 3곳이 필요하다는 것을 발견했으며(2장), 래퍼 인터페이스로 1곳까지 줄였지만 `CreateFail`은 여전히 해결하지 못했습니다(3장). 이 장에서는 이 분석 결과를 바탕으로 **응답 타입 시스템의 4가지 요구사항을** 정리하고, 각 접근 방식이 이를 얼마나 충족하는지 비교합니다.
+After three approaches, the limitations of each have been revealed. We analyzed the Pipeline structure and confirmed the role of `where` constraints (Section 1), discovered that using `Fin<T>` directly requires reflection in 3 places (Section 2), and reduced it to 1 place with a wrapper interface but still could not solve `CreateFail` (Section 3). This section organizes the **4 requirements for the response type system** based on these findings and compares how well each approach satisfies them.
 
 ---
 
-## 1. 응답 타입 시스템의 4가지 요구사항
+## 1. Four Requirements for the Response Type System
 
-Pipeline에서 응답 타입을 안전하게 처리하려면 다음 4가지 요구사항이 충족되어야 합니다.
+The following 4 requirements must be met to safely handle the response type in Pipelines.
 
-### R1: Pipeline에서 성공/실패 상태를 직접 읽을 수 있어야 함 (리플렉션 없이)
+### R1: Pipelines Must Be Able to Read Success/Failure Status Directly (Without Reflection)
 
-Logging, Tracing, Metrics Pipeline은 응답의 성공/실패 상태를 확인해야 합니다. 이 정보는 **컴파일 타임에 보장된 인터페이스 멤버**로 접근 가능해야 합니다.
+Logging, Tracing, and Metrics Pipelines need to check the success/failure status of responses. This information must be accessible through **compile-time guaranteed interface members**.
 
 ```csharp
-// 요구사항: 리플렉션 없이 직접 접근
+// Requirement: Direct access without reflection
 if (response.IsSucc)
     LogSuccess();
 else
     LogFailure();
 ```
 
-### R2: Pipeline에서 실패 응답을 직접 생성할 수 있어야 함 (static abstract)
+### R2: Pipelines Must Be Able to Create Failure Responses Directly (static abstract)
 
-Validation, Exception Pipeline은 실패 응답을 **직접 생성**해야 합니다. 이를 위해 `static abstract` 팩토리 메서드가 필요합니다.
+Validation and Exception Pipelines must **directly create** failure responses. This requires `static abstract` factory methods.
 
 ```csharp
-// 요구사항: 타입 안전한 실패 응답 생성
+// Requirement: Type-safe failure response creation
 return TResponse.CreateFail(Error.New("Validation failed"));
 ```
 
-### R3: Pipeline에서 에러 정보에 접근할 수 있어야 함
+### R3: Pipelines Must Be Able to Access Error Information
 
-Logging, Tracing Pipeline은 실패 시 **에러 정보**(에러 메시지, 에러 코드 등)에 접근해야 합니다.
+Logging and Tracing Pipelines need to access **error information** (error messages, error codes, etc.) on failure.
 
 ```csharp
-// 요구사항: 에러 정보 직접 접근
+// Requirement: Direct error information access
 if (response is IFinResponseWithError fail)
     RecordError(fail.Error);
 ```
 
-### R4: sealed struct(Fin<T>)의 성공/실패를 래핑하지 않고 직접 표현할 수 있어야 함
+### R4: The sealed struct (Fin<T>) Success/Failure Must Be Directly Expressible Without Wrapping
 
-`Fin<T>`를 별도의 래퍼로 감싸면 이중 인터페이스 문제가 발생합니다. 응답 타입 자체가 성공/실패를 **직접 표현**하는 Discriminated Union이어야 합니다.
+Wrapping `Fin<T>` in a separate wrapper causes the dual interface problem. The response type itself must be a Discriminated Union that **directly expresses** success/failure.
 
 ```csharp
-// 요구사항: 래퍼 없이 직접 표현
+// Requirement: Direct expression without wrapper
 FinResponse<string> success = FinResponse.Succ("OK");
 FinResponse<string> fail = FinResponse.Fail<string>(Error.New("error"));
 ```
 
 ---
 
-## 2. Pipeline별 필요 능력 매트릭스
+## 2. Capability Matrix per Pipeline
 
-각 Pipeline이 응답 타입에 대해 필요로 하는 능력은 다릅니다. 다음 매트릭스는 Pipeline마다 R1-R4 중 어떤 능력이 필요한지를 보여주며, Part 3에서 설계할 인터페이스 계층의 분리 근거가 됩니다.
+Each Pipeline requires different capabilities from the response type. The following matrix shows which capabilities (R1-R4) each Pipeline needs, and serves as the basis for the interface hierarchy separation designed in Part 3.
 
-| Pipeline | 읽기 (R1) | 생성 (R2) | 에러 접근 (R3) | 직접 표현 (R4) |
+| Pipeline | Read (R1) | Create (R2) | Error Access (R3) | Direct Expression (R4) |
 |----------|:---------:|:---------:|:--------------:|:--------------:|
 | Validation | | O | | |
 | Exception | | O | | |
@@ -69,56 +69,56 @@ FinResponse<string> fail = FinResponse.Fail<string>(Error.New("error"));
 | Transaction | O | | | |
 | Caching | O | | | |
 
-**핵심 관찰:**
-- **Validation/Exception**: 실패 응답 **생성**만 필요 (Create-Only)
-- **Logging/Tracing/Metrics**: 성공/실패 **읽기** + 에러 정보 접근 필요
-- **Transaction/Caching**: 성공/실패 **읽기**만 필요
+**Key observations:**
+- **Validation/Exception**: Only need to **create** failure responses (Create-Only)
+- **Logging/Tracing/Metrics**: Need to **read** success/failure + access error information
+- **Transaction/Caching**: Only need to **read** success/failure
 
-이 차이가 Part 3에서 설계할 인터페이스 계층의 근거가 됩니다.
+This difference is the basis for the interface hierarchy designed in Part 3.
 
-> 실제 Functorium에서는 Custom Pipeline 슬롯도 제공합니다. Custom Pipeline의 필요 능력(R1-R4)은 구현에 따라 다르며, IFinResponse 계층의 인터페이스를 조합하여 원하는 제약을 적용합니다.
+> In actual Functorium, a Custom Pipeline slot is also provided. The required capabilities (R1-R4) for Custom Pipelines vary by implementation, and the desired constraints are applied by combining interfaces from the IFinResponse hierarchy.
 
 ---
 
-## 3. 접근 방식 비교
+## 3. Approach Comparison
 
-| 접근 방식 | R1 | R2 | R3 | R4 | 리플렉션 |
+| Approach | R1 | R2 | R3 | R4 | Reflection |
 |-----------|:--:|:--:|:--:|:--:|:--------:|
-| Fin\<T\> 직접 (2장) | X | X | X | O | 3곳 |
-| IFinResponse 래퍼 (3장) | △ | X | O | X | 1곳 |
-| IFinResponse 계층 (Part 3) | O | O | O | O | 0곳 |
+| Fin\<T\> Direct (Section 2) | X | X | X | O | 3 places |
+| IFinResponse Wrapper (Section 3) | △ | X | O | X | 1 place |
+| IFinResponse Hierarchy (Part 3) | O | O | O | O | 0 places |
 
-### Fin<T> 직접 사용 (2장)
+### Using Fin<T> Directly (Section 2)
 
-- **장점**: `Fin<T>` 자체가 성공/실패를 직접 표현 (R4 충족)
-- **단점**: sealed struct라 제약 불가, 리플렉션 3곳 필요
+- **Pros**: `Fin<T>` itself directly expresses success/failure (R4 satisfied)
+- **Cons**: Cannot be used as constraint due to sealed struct, requires reflection in 3 places
 
-### IFinResponse 래퍼 (3장)
+### IFinResponse Wrapper (Section 3)
 
-- **장점**: 리플렉션을 1곳(is 캐스팅)으로 감소, 에러 접근 가능 (R3 충족)
-- **단점**: `CreateFail` 불가 (R2 미충족), 이중 인터페이스 (R4 미충족)
-- R1이 △인 이유: `is` 캐스팅으로 접근 가능하지만, 컴파일 타임 보장이 아님
+- **Pros**: Reduces reflection to 1 place (is casting), error access possible (R3 satisfied)
+- **Cons**: `CreateFail` not possible (R2 unsatisfied), dual interface (R4 unsatisfied)
+- R1 is △ because: accessible via `is` casting, but not a compile-time guarantee
 
-### IFinResponse 계층 (Part 3에서 설계)
+### IFinResponse Hierarchy (Designed in Part 3)
 
-- **장점**: 4가지 요구사항 모두 충족, 리플렉션 0곳
-- 핵심 아이디어: **인터페이스 분리 원칙(ISP)** + **static abstract 멤버** + **CRTP 패턴**
+- **Pros**: Satisfies all 4 requirements, 0 reflection sites
+- Key idea: **Interface Segregation Principle (ISP)** + **static abstract members** + **CRTP pattern**
 
 ---
 
-## 4. Part 3에서의 해결 방향
+## 4. Solution Direction in Part 3
 
-Part 3에서는 다음 인터페이스 계층을 하나씩 설계합니다:
+Part 3 designs the following interface hierarchy step by step:
 
-| 인터페이스 | 충족 요구사항 | 핵심 멤버 |
+| Interface | Requirement Satisfied | Key Member |
 |-----------|:------------:|----------|
 | `IFinResponse` | R1 | `IsSucc`, `IsFail` |
-| `IFinResponse<out A>` | R1 + 공변성 | 값 접근 |
+| `IFinResponse<out A>` | R1 + covariance | Value access |
 | `IFinResponseFactory<TSelf>` | R2 | `static abstract CreateFail(Error)` |
-| `IFinResponseWithError` | R3 | `Error` 속성 |
+| `IFinResponseWithError` | R3 | `Error` property |
 | `FinResponse<A>` | R4 | Succ/Fail Discriminated Union |
 
-각 인터페이스는 **하나의 요구사항**을 해결하며, Pipeline은 **필요한 인터페이스만** 제약 조건으로 사용합니다.
+Each interface solves **one requirement**, and Pipelines use only **the interfaces they need** as constraints.
 
 ```csharp
 // Create-Only: Validation, Exception
@@ -130,21 +130,20 @@ where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 
 ## FAQ
 
-### Q1: 4가지 요구사항(R1~R4)을 모두 충족하지 않으면 어떤 문제가 생기나요?
-**A**: R1이 없으면 성공/실패 확인에 리플렉션이 필요하고, R2가 없으면 실패 응답 생성에 리플렉션이 필요합니다. R3이 없으면 에러 정보에 접근할 수 없고, R4가 없으면 이중 인터페이스로 설계가 복잡해집니다. 4가지를 모두 충족해야 리플렉션 0곳의 타입 안전한 Pipeline이 가능합니다.
+### Q1: What problems arise if not all 4 requirements (R1-R4) are satisfied?
+**A**: Without R1, reflection is needed for success/failure checking. Without R2, reflection is needed for failure response creation. Without R3, error information cannot be accessed. Without R4, the design becomes complex with dual interfaces. All 4 must be satisfied for type-safe Pipelines with 0 reflection sites.
 
-### Q2: R1(읽기)과 R2(생성)를 하나의 인터페이스로 합치면 안 되나요?
-**A**: 합칠 수는 있지만, **인터페이스 분리 원칙(ISP)에** 위배됩니다. Validation Pipeline은 생성만 필요하고, Transaction Pipeline은 읽기만 필요합니다. 하나로 합치면 불필요한 능력까지 제약하게 되어, Pipeline의 의도가 코드에 드러나지 않습니다.
+### Q2: Can't R1 (Read) and R2 (Create) be combined into a single interface?
+**A**: They can, but it **violates the Interface Segregation Principle (ISP)**. The Validation Pipeline only needs creation, and the Transaction Pipeline only needs reading. Combining them imposes unnecessary capabilities, and the Pipeline's intent is not expressed in the code.
 
-### Q3: 래퍼 방식의 R1이 왜 △(삼각형)인가요?
-**A**: 래퍼 방식에서 `is IFinResponseWrapper` 캐스팅으로 성공/실패에 접근할 수 있지만, 이는 **런타임 타입 검사**입니다. `where` 제약처럼 컴파일 타임에 접근을 보장하는 것이 아니므로, 완전한 충족(O)이 아닌 부분 충족(△)으로 평가됩니다.
+### Q3: Why is the wrapper approach's R1 rated as △ (triangle)?
+**A**: In the wrapper approach, success/failure can be accessed via `is IFinResponseWrapper` casting, but this is a **runtime type check**. Unlike `where` constraints that guarantee access at compile time, it is evaluated as partial satisfaction (△) rather than full satisfaction (O).
 
-### Q4: Part 3에서 설계할 인터페이스 계층은 몇 개의 인터페이스로 구성되나요?
-**A**: 5개입니다. `IFinResponse`(비제네릭 마커), `IFinResponse<out A>`(공변 인터페이스), `IFinResponseFactory<TSelf>`(CRTP 팩토리), `IFinResponseWithError`(에러 접근), `FinResponse<A>`(Discriminated Union)로, 각각 하나의 요구사항을 해결합니다.
+### Q4: How many interfaces compose the hierarchy designed in Part 3?
+**A**: Five. `IFinResponse` (non-generic marker), `IFinResponse<out A>` (covariant interface), `IFinResponseFactory<TSelf>` (CRTP factory), `IFinResponseWithError` (error access), and `FinResponse<A>` (Discriminated Union), each solving one requirement.
 
 ---
 
-Part 3의 첫 번째 단계로, 요구사항 R1(성공/실패 읽기)을 해결하는 비제네릭 마커 인터페이스 `IFinResponse`를 설계합니다.
+As the first step of Part 3, the next section designs the non-generic marker interface `IFinResponse`, which solves requirement R1 (reading success/failure).
 
-→ [3.1장: IFinResponse 비제네릭 마커](../Part3-IFinResponse-Hierarchy/01-IFinResponse-Marker/)
-
+→ [Section 3.1: IFinResponse Non-Generic Marker](../Part3-IFinResponse-Hierarchy/01-IFinResponse-Marker/)

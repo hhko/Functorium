@@ -2,54 +2,54 @@
 title: "Read+Create Constraint"
 ---
 
-## 개요
+## Overview
 
-앞 장에서 Create 전용 제약을 적용했습니다. 이번에는 응답 상태를 읽는 능력까지 함께 요구하는 패턴을 살펴봅니다. Logging, Tracing, Metrics Pipeline은 핸들러 실행 **후** 응답의 성공/실패 상태를 **읽어야** 합니다. 또한 예외 발생 시 실패 응답을 **생성**할 수도 있어야 합니다. 이 장에서는 Read와 Create를 모두 요구하는 이중 제약 패턴을 학습합니다.
+The previous section applied the Create-only constraint. Now we look at the pattern that also requires the ability to read response status. Logging, Tracing, and Metrics Pipelines need to **read** the success/failure status of responses **after** the handler executes. They must also be able to **create** failure responses when exceptions occur. This section covers the dual constraint pattern that requires both Read and Create.
 
 ```
-Pipeline 동작 흐름:
+Pipeline operation flow:
 
 Logging Pipeline:
   response = next()
-  response.IsSucc? ──Yes──→ Log("Success")    ← 읽기 필요 (IFinResponse)
+  response.IsSucc? ──Yes──→ Log("Success")    ← Read needed (IFinResponse)
                    │
-                   No───→ Log("Fail: ...")     ← Error 접근 (IFinResponseWithError)
+                   No───→ Log("Fail: ...")     ← Error access (IFinResponseWithError)
 
 Tracing Pipeline:
   response = next()
-  Tags.Add("status:" + ...)                    ← 읽기 필요 (IFinResponse)
-  response is IFinResponseWithError?           ← Error 접근 (패턴 매칭)
+  Tags.Add("status:" + ...)                    ← Read needed (IFinResponse)
+  response is IFinResponseWithError?           ← Error access (pattern matching)
 ```
 
-## 학습 목표
+## Learning Objectives
 
-이 장을 완료하면 다음을 할 수 있습니다:
+After completing this section, you will be able to:
 
-1. Read+Create 이중 제약이 필요한 Pipeline을 식별할 수 있습니다
-2. `IFinResponse`(읽기)와 `IFinResponseFactory<TResponse>`(생성)의 역할 차이를 설명할 수 있습니다
-3. Error 접근에 패턴 매칭(`is IFinResponseWithError`)을 사용하는 이유를 설명할 수 있습니다
+1. Identify Pipelines that require the Read+Create dual constraint
+2. Explain the role difference between `IFinResponse` (Read) and `IFinResponseFactory<TResponse>` (Create)
+3. Explain why pattern matching (`is IFinResponseWithError`) is used for Error access
 
-## 핵심 개념
+## Key Concepts
 
-### 1. Read+Create 이중 제약
+### 1. Read+Create Dual Constraint
 
-Pipeline이 응답의 상태를 읽고(Read), 필요 시 실패 응답을 생성(Create)하는 경우에 해당합니다.
+This applies when a Pipeline reads the response status (Read) and, when necessary, creates failure responses (Create).
 
 ```csharp
 where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 ```
 
-이중 제약이 부여하는 능력을 정리하면 다음과 같습니다.
+The capabilities provided by the dual constraint:
 
-| 능력 | 인터페이스 | 용도 |
+| Capability | Interface | Usage |
 |------|-----------|------|
 | Read | `IFinResponse` | `response.IsSucc`, `response.IsFail` |
 | Create | `IFinResponseFactory<TResponse>` | `TResponse.CreateFail(error)` |
-| Error 접근 | `IFinResponseWithError` (패턴 매칭) | `response is IFinResponseWithError fail` |
+| Error access | `IFinResponseWithError` (pattern matching) | `response is IFinResponseWithError fail` |
 
 ### 2. Logging Pipeline
 
-Logging Pipeline은 응답 상태에 따라 다른 로그를 기록합니다:
+The Logging Pipeline records different logs based on the response status:
 
 ```csharp
 public sealed class SimpleLoggingPipeline<TResponse>
@@ -75,12 +75,12 @@ public sealed class SimpleLoggingPipeline<TResponse>
 }
 ```
 
-- `response.IsSucc` / `response.IsFail`: `IFinResponse` 제약 덕분에 직접 접근 가능
-- `response is IFinResponseWithError fail`: 패턴 매칭으로 Error 정보 접근
+- `response.IsSucc` / `response.IsFail`: Direct access thanks to the `IFinResponse` constraint
+- `response is IFinResponseWithError fail`: Error information access via pattern matching
 
 ### 3. Tracing Pipeline
 
-Tracing Pipeline은 응답 상태를 태그로 기록합니다:
+The Tracing Pipeline records the response status as tags:
 
 ```csharp
 public sealed class SimpleTracingPipeline<TResponse>
@@ -100,38 +100,38 @@ public sealed class SimpleTracingPipeline<TResponse>
 }
 ```
 
-### 4. Error 접근은 패턴 매칭으로
+### 4. Error Access via Pattern Matching
 
-`IFinResponseWithError`는 제약 조건에 포함하지 않습니다. 대신 **패턴 매칭**으로 런타임에 확인합니다:
+`IFinResponseWithError` is not included in the constraints. Instead, it is checked at **runtime via pattern matching**:
 
 ```csharp
-// 제약에 IFinResponseWithError를 추가하지 않음
-// 성공 응답도 이 Pipeline을 통과해야 하므로
+// IFinResponseWithError is NOT added to constraints
+// Because success responses must also pass through this Pipeline
 
 if (response is IFinResponseWithError fail)
 {
-    // Fail인 경우에만 Error 접근
+    // Error access only in Fail case
     var error = fail.Error;
 }
 ```
 
-이렇게 하는 이유:
-- `IFinResponseWithError`는 `FinResponse<A>.Fail`에서만 구현됨
-- 성공 응답(`Succ`)은 이 인터페이스를 구현하지 않음
-- 제약에 추가하면 성공 응답이 Pipeline을 통과할 수 없음
+The reason:
+- `IFinResponseWithError` is only implemented in `FinResponse<A>.Fail`
+- Success responses (`Succ`) do not implement this interface
+- Adding it to constraints would prevent success responses from passing through the Pipeline
 
 ## FAQ
 
-### Q1: `IFinResponseWithError`를 제약 조건에 추가하지 않고 패턴 매칭으로 접근하는 이유는 무엇인가요?
-**A**: `IFinResponseWithError`는 **Fail 케이스에서만** 구현됩니다. 이를 제약에 추가하면 성공 응답(`Succ`)은 이 인터페이스를 구현하지 않으므로 Pipeline을 통과할 수 없게 됩니다. 패턴 매칭(`is IFinResponseWithError`)으로 런타임에 확인하면 성공/실패 응답 모두 처리할 수 있습니다.
+### Q1: Why is `IFinResponseWithError` accessed via pattern matching rather than added to constraints?
+**A**: `IFinResponseWithError` is implemented **only in the Fail case**. Adding it to constraints would prevent success responses (`Succ`) from passing through the Pipeline since they don't implement this interface. Using pattern matching (`is IFinResponseWithError`) for runtime checking allows both success and failure responses to be processed.
 
-### Q2: Logging Pipeline과 Tracing Pipeline은 같은 이중 제약을 사용하는데, 어떤 차이가 있나요?
-**A**: 제약 조건은 동일하지만 **사용 목적**이 다릅니다. Logging Pipeline은 텍스트 로그를 기록하고, Tracing Pipeline은 분산 추적(OpenTelemetry) 태그를 설정합니다. 제약이 같다는 것은 응답에 대한 **필요 능력**이 동일하다는 의미이지, Pipeline의 동작이 같다는 의미는 아닙니다.
+### Q2: The Logging Pipeline and Tracing Pipeline use the same dual constraint -- what's the difference?
+**A**: The constraints are identical, but the **purpose** differs. The Logging Pipeline records text logs, while the Tracing Pipeline sets distributed tracing (OpenTelemetry) tags. Having the same constraints means the **required capabilities** from the response are identical, not that the Pipeline behavior is the same.
 
-### Q3: Read+Create 이중 제약에서 Create 능력은 언제 사용되나요?
-**A**: Logging이나 Tracing Pipeline 자체에서 `CreateFail`을 직접 호출하는 경우는 드뭅니다. 하지만 `next()` 호출 시 예외가 발생하면 catch 블록에서 `TResponse.CreateFail(Error.New(ex))`로 실패 응답을 생성해야 합니다. 이 **예외 대응**을 위해 Create 능력이 필요합니다.
+### Q3: When is the Create capability used in the Read+Create dual constraint?
+**A**: It's rare for Logging or Tracing Pipelines to directly call `CreateFail` themselves. However, when an exception occurs during `next()` invocation, a failure response must be created in the catch block with `TResponse.CreateFail(Error.New(ex))`. The Create capability is needed for this **exception handling**.
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 02-Read-Create-Constraint/
@@ -146,19 +146,18 @@ if (response is IFinResponseWithError fail)
 └── README.md
 ```
 
-## 실행 방법
+## How to Run
 
 ```bash
-# 프로그램 실행
+# Run the program
 dotnet run --project ReadCreateConstraint
 
-# 테스트 실행
+# Run tests
 dotnet test --project ReadCreateConstraint.Tests.Unit
 ```
 
 ---
 
-동일한 이중 제약을 사용하면서 `where` 제약 조건으로 Command/Query를 컴파일 타임에 분기하는 Transaction과 Caching Pipeline을 살펴봅니다.
+The next section examines the Transaction and Caching Pipelines, which use the same dual constraint while filtering Command/Query at compile time via `where` constraints.
 
-→ [4.3장: Transaction/Caching Pipeline](../03-Transaction-Caching-Pipeline/)
-
+→ [Section 4.3: Transaction/Caching Pipeline](../03-Transaction-Caching-Pipeline/)

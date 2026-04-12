@@ -2,29 +2,29 @@
 title: "IFinResponseFactory CRTP"
 ---
 
-## 개요
+## Overview
 
-**요구사항 R2**: Pipeline이 실패 응답을 직접 생성할 수 있어야 합니다. 1장과 2장에서 Pipeline이 응답을 **읽을 수** 있게 되었지만, Validation Pipeline처럼 **실패 응답을 생성**해야 하는 경우는 어떻게 할까요? 이 장에서는 **CRTP(Curiously Recurring Template Pattern)와** C# 11의 **static abstract** 메서드를 사용하여, Pipeline에서 리플렉션 없이 `TResponse.CreateFail(error)`을 호출할 수 있는 팩토리 인터페이스를 설계합니다.
+**Requirement R2**: Pipelines must be able to create failure responses directly. In Sections 1 and 2, we enabled Pipelines to **read** responses, but what about cases where **failure responses must be created**, like in the Validation Pipeline? This section uses **CRTP (Curiously Recurring Template Pattern)** and C# 11's **static abstract** methods to design a factory interface that allows Pipelines to call `TResponse.CreateFail(error)` without reflection.
 
 ```
-IFinResponseFactory<TSelf>      ← CRTP 팩토리 (이번 장)
+IFinResponseFactory<TSelf>      ← CRTP factory (this section)
 ├── static abstract CreateFail(Error error) → TSelf
 ```
 
-## 학습 목표
+## Learning Objectives
 
-이 장을 완료하면 다음을 할 수 있습니다:
+After completing this section, you will be able to:
 
-1. CRTP 패턴이 무엇이며 왜 필요한지 설명할 수 있습니다
-2. C# 11 `static abstract` 메서드를 인터페이스에 정의하고 구현할 수 있습니다
-3. Pipeline에서 `TResponse.CreateFail(error)`을 호출하는 제약 조건을 작성할 수 있습니다
-4. CRTP 팩토리가 리플렉션을 제거하는 원리를 이해할 수 있습니다
+1. Explain what CRTP is and why it is needed
+2. Define and implement C# 11 `static abstract` methods in interfaces
+3. Write Pipeline constraints that call `TResponse.CreateFail(error)`
+4. Understand the principle by which a CRTP factory eliminates reflection
 
-## 핵심 개념
+## Key Concepts
 
 ### 1. CRTP (Curiously Recurring Template Pattern)
 
-CRTP는 자기 자신을 타입 파라미터로 전달하는 패턴입니다. `TSelf`가 자기 자신의 타입을 참조하므로, `CreateFail`의 반환 타입이 정확한 구현 타입이 됩니다.
+CRTP is a pattern where a type passes itself as its own type parameter. Since `TSelf` references the type itself, `CreateFail`'s return type is the exact implementing type.
 
 ```csharp
 public interface IFinResponseFactory<TSelf>
@@ -34,23 +34,23 @@ public interface IFinResponseFactory<TSelf>
 }
 ```
 
-### 2. C# 11 static abstract 메서드
+### 2. C# 11 static abstract Methods
 
-`static abstract`는 인터페이스에서 **정적 메서드의 구현을 강제**합니다. 이를 통해 제네릭 제약에서 `T.Method()` 형태의 호출이 가능해집니다.
+`static abstract` **forces implementation of static methods** in interfaces. This enables calls in the form `T.Method()` in generic constraints.
 
 ```csharp
 public record FactoryResponse<A> : IFinResponseFactory<FactoryResponse<A>>
 {
-    // static abstract 구현
+    // static abstract implementation
     public static FactoryResponse<A> CreateFail(Error error) => new(error);
 }
 ```
 
-### 3. Pipeline에서의 활용
+### 3. Usage in Pipelines
 
-`where TResponse : IFinResponseFactory<TResponse>` 제약을 사용하면, Pipeline에서 `TResponse.CreateFail(error)`을 **직접 호출**할 수 있습니다. 리플렉션이 필요 없습니다.
+With the `where TResponse : IFinResponseFactory<TResponse>` constraint, Pipelines can **directly call** `TResponse.CreateFail(error)`. No reflection is needed.
 
-주목할 점은 CRTP 제약 덕분에 `TResponse.CreateFail`이 정확한 구현 타입을 반환한다는 것입니다.
+The key thing to note is that thanks to the CRTP constraint, `TResponse.CreateFail` returns the exact implementing type.
 
 ```csharp
 public static TResponse ValidateAndCreate<TResponse>(
@@ -61,47 +61,47 @@ public static TResponse ValidateAndCreate<TResponse>(
 {
     if (!isValid)
     {
-        // static abstract 호출 - 리플렉션 없음!
+        // static abstract call - no reflection!
         return TResponse.CreateFail(Error.New(errorMessage));
     }
     return onSuccess();
 }
 ```
 
-### 4. 왜 CRTP가 필요한가?
+### 4. Why Is CRTP Needed?
 
-일반 인터페이스로는 `static abstract` 메서드의 반환 타입을 **자기 자신**으로 지정할 수 없습니다. CRTP의 `TSelf` 제약이 있어야 `CreateFail`이 정확한 구현 타입을 반환합니다.
+With a regular interface, the return type of a `static abstract` method cannot be specified as **the type itself**. The CRTP `TSelf` constraint is needed so that `CreateFail` returns the exact implementing type.
 
 ```csharp
-// CRTP 없이: 반환 타입이 모호
+// Without CRTP: return type is ambiguous
 public interface IFactory
 {
-    static abstract ??? CreateFail(Error error);  // 반환 타입을 지정할 수 없음
+    static abstract ??? CreateFail(Error error);  // Cannot specify return type
 }
 
-// CRTP: 반환 타입이 정확
+// With CRTP: return type is exact
 public interface IFinResponseFactory<TSelf>
     where TSelf : IFinResponseFactory<TSelf>
 {
-    static abstract TSelf CreateFail(Error error);  // TSelf = 구현 타입
+    static abstract TSelf CreateFail(Error error);  // TSelf = implementing type
 }
 ```
 
 ## FAQ
 
-### Q1: CRTP 없이 일반 인터페이스로 팩토리를 정의할 수 없나요?
-**A**: 일반 인터페이스에서 `static abstract` 메서드의 반환 타입을 자기 자신으로 지정할 방법이 없습니다. `IFactory.CreateFail(Error)` 형태로 정의하면 반환 타입이 `IFactory`이므로, 구현 타입으로의 다운캐스팅이 필요합니다. CRTP의 `TSelf` 제약이 있어야 `CreateFail`이 **정확한 구현 타입**을 반환합니다.
+### Q1: Can't a factory be defined with a regular interface without CRTP?
+**A**: There is no way to specify the return type of a `static abstract` method as the type itself in a regular interface. If defined as `IFactory.CreateFail(Error)`, the return type would be `IFactory`, requiring downcasting to the implementing type. The CRTP `TSelf` constraint is needed so that `CreateFail` returns the **exact implementing type**.
 
-### Q2: `static abstract`는 C# 11 이전에는 어떻게 대체했나요?
-**A**: C# 11 이전에는 `static abstract`가 없었으므로, 팩토리 패턴을 구현하려면 **별도의 팩토리 클래스**를 DI로 주입하거나, 리플렉션으로 정적 메서드를 호출해야 했습니다. `static abstract`의 등장으로 인터페이스 수준에서 팩토리 계약을 정의할 수 있게 되었고, 이것이 리플렉션 제거의 핵심 기술입니다.
+### Q2: How was `static abstract` substituted before C# 11?
+**A**: Before C# 11, without `static abstract`, implementing the factory pattern required either **injecting a separate factory class** via DI or calling static methods through reflection. The introduction of `static abstract` enabled defining factory contracts at the interface level, which is the key technology for eliminating reflection.
 
-### Q3: `TResponse.CreateFail(error)` 호출이 리플렉션 없이 가능한 원리는 무엇인가요?
-**A**: `where TResponse : IFinResponseFactory<TResponse>` 제약 덕분에 컴파일러가 `TResponse`에 `CreateFail` 정적 메서드가 존재함을 **컴파일 타임에 확인**합니다. JIT 컴파일러는 구체 타입에 따라 직접 호출 코드를 생성하므로, 리플렉션이나 가상 디스패치 없이 실행됩니다.
+### Q3: How is `TResponse.CreateFail(error)` possible without reflection?
+**A**: Thanks to the `where TResponse : IFinResponseFactory<TResponse>` constraint, the compiler **verifies at compile time** that `TResponse` has a `CreateFail` static method. The JIT compiler generates direct call code based on the concrete type, executing without reflection or virtual dispatch.
 
-### Q4: `CreateFail`만 정의하고 `CreateSucc`는 왜 팩토리에 포함하지 않나요?
-**A**: Pipeline에서 응답을 **생성**하는 경우는 대부분 **실패 응답**입니다(Validation 실패, 예외 발생). 성공 응답은 Handler가 직접 반환하므로 Pipeline에서 생성할 필요가 없습니다. 최소 인터페이스 원칙에 따라 실제로 필요한 `CreateFail`만 정의합니다.
+### Q4: Why is only `CreateFail` defined and not `CreateSucc` in the factory?
+**A**: The cases where Pipelines **create** responses are mostly **failure responses** (Validation failure, exception). Success responses are returned directly by the Handler, so Pipelines don't need to create them. Following the principle of minimal interfaces, only `CreateFail`, which is actually needed, is defined.
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 03-IFinResponseFactory-CRTP/
@@ -118,19 +118,18 @@ public interface IFinResponseFactory<TSelf>
 └── README.md
 ```
 
-## 실행 방법
+## How to Run
 
 ```bash
-# 프로그램 실행
+# Run the program
 dotnet run --project FinResponseFactoryCrtp
 
-# 테스트 실행
+# Run tests
 dotnet test --project FinResponseFactoryCrtp.Tests.Unit
 ```
 
 ---
 
-실패 응답을 생성할 수 있게 되었지만, 에러의 내용은 아직 알 수 없습니다. Fail 케이스에서만 에러에 접근할 수 있는 `IFinResponseWithError` 인터페이스를 설계합니다.
+We can now create failure responses, but the content of the error is still unknown. The next section designs the `IFinResponseWithError` interface that enables error access only in the Fail case.
 
-→ [3.4장: IFinResponseWithError 에러 접근](../04-IFinResponseWithError/)
-
+→ [Section 3.4: IFinResponseWithError Error Access](../04-IFinResponseWithError/)

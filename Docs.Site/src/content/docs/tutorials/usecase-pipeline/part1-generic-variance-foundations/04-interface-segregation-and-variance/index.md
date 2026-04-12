@@ -2,33 +2,33 @@
 title: "Interface Segregation and Variance"
 ---
 
-## 개요
+## Overview
 
-3장에서 sealed struct의 한계를 인터페이스로 우회할 수 있다는 것을 확인했습니다. 그런데 하나의 인터페이스가 읽기와 쓰기를 모두 포함하면 변성을 선언할 수 없습니다. 해결책은 **인터페이스 분리 원칙(ISP)입니다.**
+In Section 3, we confirmed that sealed struct limitations can be worked around with interfaces. However, if a single interface includes both reading and writing, variance cannot be declared. The solution is the **Interface Segregation Principle (ISP).**
 
-ISP를 변성과 결합하면, 각 인터페이스에 적절한 변성을 부여할 수 있습니다. 읽기 인터페이스에는 `out`(공변), 쓰기 인터페이스에는 `in`(반공변), 팩토리 인터페이스에는 CRTP(Curiously Recurring Template Pattern)를 적용합니다.
+Combining ISP with variance allows assigning appropriate variance to each interface. Read interfaces get `out` (covariant), write interfaces get `in` (contravariant), and factory interfaces get CRTP (Curiously Recurring Template Pattern).
 
 ```
-IReadable<out T>     → 공변 (읽기 전용)
-IWritable<in T>      → 반공변 (쓰기 전용)
-IFactory<TSelf>      → CRTP (static abstract 팩토리)
+IReadable<out T>     → Covariant (read-only)
+IWritable<in T>      → Contravariant (write-only)
+IFactory<TSelf>      → CRTP (static abstract factory)
 ```
 
-## 학습 목표
+## Learning Objectives
 
-이 장을 완료하면 다음을 할 수 있습니다:
+After completing this section, you will be able to:
 
-1. ISP를 적용하여 인터페이스를 읽기/쓰기/팩토리로 분리할 수 있습니다
-2. 분리된 인터페이스에 적절한 변성(out/in)을 부여할 수 있습니다
-3. CRTP 패턴으로 `static abstract` 팩토리를 구현할 수 있습니다
-4. `where T : IFactory<T>` 제약을 활용하여 제네릭 팩토리 메서드를 작성할 수 있습니다
-5. 이 패턴이 IFinResponse 계층 설계와 어떻게 연결되는지 이해할 수 있습니다
+1. Apply ISP to separate interfaces into read/write/factory
+2. Assign appropriate variance (out/in) to separated interfaces
+3. Implement a `static abstract` factory using the CRTP pattern
+4. Write generic factory methods using `where T : IFactory<T>` constraints
+5. Understand how this pattern connects to the IFinResponse hierarchy design
 
-## 핵심 개념
+## Key Concepts
 
-### 1. 읽기 인터페이스 - 공변(out)
+### 1. Read Interface - Covariant (out)
 
-읽기만 하는 인터페이스는 `out` 키워드로 공변성을 선언합니다.
+A read-only interface declares covariance with the `out` keyword.
 
 ```csharp
 public interface IReadable<out T>
@@ -38,9 +38,9 @@ public interface IReadable<out T>
 }
 ```
 
-### 2. 쓰기 인터페이스 - 반공변(in)
+### 2. Write Interface - Contravariant (in)
 
-쓰기만 하는 인터페이스는 `in` 키워드로 반공변성을 선언합니다.
+A write-only interface declares contravariance with the `in` keyword.
 
 ```csharp
 public interface IWritable<in T>
@@ -49,9 +49,9 @@ public interface IWritable<in T>
 }
 ```
 
-### 3. 팩토리 인터페이스 - CRTP
+### 3. Factory Interface - CRTP
 
-C# 11의 `static abstract` 멤버를 활용한 CRTP 팩토리 패턴입니다. 구현 타입 자신을 타입 파라미터로 전달하여 팩토리 메서드의 반환 타입을 정확히 지정합니다.
+A CRTP factory pattern leveraging C# 11's `static abstract` members. It passes the implementing type itself as the type parameter to precisely specify the factory method's return type.
 
 ```csharp
 public interface IFactory<TSelf> where TSelf : IFactory<TSelf>
@@ -61,39 +61,39 @@ public interface IFactory<TSelf> where TSelf : IFactory<TSelf>
 }
 ```
 
-### 4. 인터페이스 조합
+### 4. Interface Composition
 
-여러 인터페이스를 조합하여 필요한 능력만 제약할 수 있습니다.
+Multiple interfaces can be composed to constrain only the needed capabilities.
 
 ```csharp
-// 읽기+쓰기 = 불변 (두 인터페이스를 동시 구현)
+// Read+Write = Invariant (implements both interfaces)
 public interface IReadWrite<T> : IReadable<T>, IWritable<T>;
 ```
 
-### 5. 이 패턴이 중요한 이유
+### 5. Why This Pattern Matters
 
-이 패턴은 이후 장에서 설계할 **IFinResponse 계층**의 기초입니다. 각 인터페이스가 어떻게 매핑되는지 확인하세요:
+This pattern is the foundation for the **IFinResponse hierarchy** designed in later sections. Check how each interface maps:
 
-| 이 장의 인터페이스 | IFinResponse 계층 | 역할 |
+| This Section's Interface | IFinResponse Hierarchy | Role |
 |-------------------|-------------------|------|
-| `IReadable<out T>` | `IFinResponse<out A>` | 공변적 읽기 접근 |
-| `IFactory<TSelf>` | `IFinResponseFactory<TSelf>` | CRTP 팩토리 (CreateFail) |
+| `IReadable<out T>` | `IFinResponse<out A>` | Covariant read access |
+| `IFactory<TSelf>` | `IFinResponseFactory<TSelf>` | CRTP factory (CreateFail) |
 
 ## FAQ
 
-### Q1: 인터페이스를 왜 하나로 합치지 않고 읽기/쓰기/팩토리로 분리하나요?
-**A**: 하나의 인터페이스가 읽기와 쓰기를 모두 포함하면 `out`(공변)도 `in`(반공변)도 선언할 수 없어 **불변**이 됩니다. 분리해야 각 인터페이스에 적절한 변성을 부여할 수 있고, Pipeline은 필요한 인터페이스만 제약으로 사용하여 **최소 권한 원칙**을 지킬 수 있습니다.
+### Q1: Why separate interfaces into read/write/factory instead of combining them into one?
+**A**: If a single interface includes both reading and writing, neither `out` (covariant) nor `in` (contravariant) can be declared, making it **invariant**. Separation allows assigning appropriate variance to each interface, and Pipelines can use only the interfaces they need as constraints, adhering to the **principle of least privilege**.
 
-### Q2: CRTP 패턴의 `where TSelf : IFactory<TSelf>` 제약은 무엇을 보장하나요?
-**A**: 이 제약은 `TSelf`가 반드시 `IFactory<TSelf>`를 구현한 타입이어야 함을 보장합니다. 이를 통해 `static abstract` 팩토리 메서드의 반환 타입이 **자기 자신의 정확한 타입**이 되어, 런타임 캐스팅 없이 올바른 타입의 인스턴스를 생성할 수 있습니다.
+### Q2: What does the `where TSelf : IFactory<TSelf>` constraint in the CRTP pattern guarantee?
+**A**: This constraint guarantees that `TSelf` must be a type that implements `IFactory<TSelf>`. This ensures that the `static abstract` factory method's return type is **the exact type of the implementor**, allowing correct-type instances to be created without runtime casting.
 
-### Q3: 이 장에서 배운 패턴이 IFinResponse 계층에 어떻게 대응되나요?
-**A**: `IReadable<out T>`는 `IFinResponse<out A>`로, `IFactory<TSelf>`는 `IFinResponseFactory<TSelf>`로 대응됩니다. 읽기 인터페이스에는 공변성을 적용하여 유연한 타입 대입을 지원하고, 팩토리 인터페이스에는 CRTP를 적용하여 리플렉션 없는 응답 생성을 지원합니다.
+### Q3: How does the pattern learned in this section correspond to the IFinResponse hierarchy?
+**A**: `IReadable<out T>` corresponds to `IFinResponse<out A>`, and `IFactory<TSelf>` corresponds to `IFinResponseFactory<TSelf>`. Covariance is applied to the read interface for flexible type assignment, and CRTP is applied to the factory interface for reflection-free response creation.
 
-### Q4: `IReadWrite<T>`처럼 분리된 인터페이스를 조합할 때 변성은 어떻게 되나요?
-**A**: `IReadWrite<T>`가 `IReadable<T>`와 `IWritable<T>`를 동시에 상속하면, T가 입력과 출력 양쪽에서 사용되므로 **불변**이 됩니다. 조합 인터페이스는 변성을 잃지만, Pipeline에서는 필요한 능력의 인터페이스만 개별적으로 제약하므로 변성을 유지할 수 있습니다.
+### Q4: What happens to variance when composing separated interfaces like `IReadWrite<T>`?
+**A**: When `IReadWrite<T>` inherits both `IReadable<T>` and `IWritable<T>`, T is used in both input and output positions, making it **invariant**. The composition interface loses variance, but in Pipelines, only individual capability interfaces are constrained, so variance is maintained.
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 04-Interface-Segregation-And-Variance/
@@ -108,18 +108,18 @@ public interface IReadWrite<T> : IReadable<T>, IWritable<T>;
 └── README.md
 ```
 
-## 실행 방법
+## How to Run
 
 ```bash
-# 프로그램 실행
+# Run the program
 dotnet run --project InterfaceSegregationAndVariance
 
-# 테스트 실행
+# Run tests
 dotnet test --project InterfaceSegregationAndVariance.Tests.Unit
 ```
 
 ---
 
-Part 1에서 다진 변성 기초를 Mediator Pipeline에 적용합니다. `IPipelineBehavior`의 구조와 `where` 제약이 Pipeline 적용 범위를 결정하는 방식을 살펴봅니다.
+Applying the variance fundamentals established in Part 1 to Mediator Pipelines. The next section examines the structure of `IPipelineBehavior` and how `where` constraints determine Pipeline scope.
 
-→ [2.1장: Mediator Pipeline Behavior 구조](../../Part2-Problem-Definition/01-Mediator-Pipeline-Structure/)
+→ [Section 2.1: Mediator Pipeline Behavior Structure](../../Part2-Problem-Definition/01-Mediator-Pipeline-Structure/)

@@ -2,79 +2,79 @@
 title: "Covariance (out)"
 ---
 
-## 개요
+## Overview
 
-`Dog`은 `Animal`의 하위 타입입니다. 그렇다면 `IAnimalShelter<Dog>`은 `IAnimalShelter<Animal>`에 대입할 수 있을까요? 답은 인터페이스의 **변성 선언**에 달려 있습니다.
+`Dog` is a subtype of `Animal`. So can `IAnimalShelter<Dog>` be assigned to `IAnimalShelter<Animal>`? The answer depends on the interface's **variance declaration**.
 
-**공변성(Covariance)은** 제네릭 타입 파라미터가 상속 관계를 **같은 방향**으로 유지하는 성질입니다. C#에서는 `out` 키워드로 공변성을 선언합니다.
+**Covariance** is the property where a generic type parameter preserves the inheritance relationship in the **same direction**. In C#, covariance is declared with the `out` keyword.
 
 ```
-Dog : Animal  (Dog은 Animal의 하위 타입)
-    ↓ 공변성 (같은 방향)
-IAnimalShelter<Dog> → IAnimalShelter<Animal>  (대입 가능)
+Dog : Animal  (Dog is a subtype of Animal)
+    ↓ Covariance (same direction)
+IAnimalShelter<Dog> → IAnimalShelter<Animal>  (assignable)
 ```
 
-## 학습 목표
+## Learning Objectives
 
-이 장을 완료하면 다음을 할 수 있습니다:
+After completing this section, you will be able to:
 
-1. `out` 키워드를 사용하여 공변 인터페이스를 선언할 수 있습니다
-2. 공변 대입이 가능한 이유(출력 위치 제한)를 설명할 수 있습니다
-3. `IEnumerable<out T>`가 공변인 이유를 이해할 수 있습니다
-4. 공변성이 읽기 전용 접근과 어떻게 연결되는지 설명할 수 있습니다
+1. Declare a covariant interface using the `out` keyword
+2. Explain why covariant assignment is possible (output position restriction)
+3. Understand why `IEnumerable<out T>` is covariant
+4. Explain how covariance is connected to read-only access
 
-## 핵심 개념
+## Key Concepts
 
-### 1. `out` 키워드
+### 1. The `out` Keyword
 
-`out T`는 타입 파라미터 `T`가 **출력 위치에서만** 사용됨을 컴파일러에 선언합니다.
+`out T` declares to the compiler that the type parameter `T` is used only in **output positions**.
 
 ```csharp
 public interface IAnimalShelter<out T> where T : Animal
 {
-    T GetAnimal(int index);       // OK: T가 반환 타입 (출력 위치)
-    IEnumerable<T> GetAll();      // OK: T가 반환 타입 (출력 위치)
-    // void Add(T animal);        // 컴파일 에러! T가 파라미터 (입력 위치)
+    T GetAnimal(int index);       // OK: T is a return type (output position)
+    IEnumerable<T> GetAll();      // OK: T is a return type (output position)
+    // void Add(T animal);        // Compile error! T is a parameter (input position)
 }
 ```
 
-### 2. 공변 대입
+### 2. Covariant Assignment
 
-`Dog`이 `Animal`의 하위 타입이면, `IAnimalShelter<Dog>`을 `IAnimalShelter<Animal>`에 대입할 수 있습니다.
+If `Dog` is a subtype of `Animal`, `IAnimalShelter<Dog>` can be assigned to `IAnimalShelter<Animal>`.
 
 ```csharp
 var dogShelter = new DogShelter();
 dogShelter.Add(new Dog("Buddy", "Golden Retriever"));
 
-// 공변성: IAnimalShelter<Dog> → IAnimalShelter<Animal> 대입 가능
+// Covariance: IAnimalShelter<Dog> → IAnimalShelter<Animal> assignable
 IAnimalShelter<Animal> animalShelter = dogShelter;
 ```
 
-### 3. .NET의 공변 인터페이스
+### 3. Covariant Interfaces in .NET
 
-.NET에서 가장 대표적인 공변 인터페이스는 `IEnumerable<out T>`입니다.
+The most representative covariant interface in .NET is `IEnumerable<out T>`.
 
 ```csharp
 IEnumerable<Dog> dogs = new List<Dog> { new("Buddy", "Golden Retriever") };
-IEnumerable<Animal> animals = dogs;  // IEnumerable<out T>이므로 OK
+IEnumerable<Animal> animals = dogs;  // OK because IEnumerable<out T>
 ```
 
-### 4. 왜 공변성이 유용한가?
+### 4. Why Is Covariance Useful?
 
-공변성은 **읽기 전용** 접근을 보장합니다. `out T`로 선언하면 T 타입의 값을 **꺼내기만** 할 수 있으므로, 하위 타입의 컬렉션을 상위 타입으로 안전하게 참조할 수 있습니다.
+Covariance guarantees **read-only** access. When declared with `out T`, values of type T can only be **retrieved**, so a collection of subtypes can be safely referenced as a supertype.
 
 ## FAQ
 
-### Q1: `out` 키워드를 붙이면 왜 입력 위치에서 `T`를 사용할 수 없나요?
-**A**: `out T`는 "이 타입 파라미터로 값을 꺼내기만 한다"는 약속입니다. 만약 `void Add(T animal)` 같은 입력 위치를 허용하면, `IAnimalShelter<Animal>` 참조를 통해 `Cat`을 `DogShelter`에 추가하는 타입 안전성 위반이 발생할 수 있습니다. 컴파일러가 이를 원천적으로 차단합니다.
+### Q1: Why can't `T` be used in input positions when the `out` keyword is applied?
+**A**: `out T` is a promise that "this type parameter only produces values." If an input position like `void Add(T animal)` were allowed, a type safety violation could occur where a `Cat` is added to a `DogShelter` through an `IAnimalShelter<Animal>` reference. The compiler prevents this at the source.
 
-### Q2: `IEnumerable<out T>`가 공변인데, `List<T>`는 왜 공변이 아닌가요?
-**A**: `List<T>`는 `Add(T item)` 메서드로 T를 입력 위치에서도 사용하기 때문입니다. 입력과 출력 양쪽에서 T를 사용하면 `out`도 `in`도 선언할 수 없어 **불변(Invariant)** 타입이 됩니다. `IEnumerable<T>`는 읽기 전용이므로 `out`을 선언할 수 있습니다.
+### Q2: `IEnumerable<out T>` is covariant, but why isn't `List<T>` covariant?
+**A**: Because `List<T>` uses T in input positions through methods like `Add(T item)`. When T is used in both input and output positions, neither `out` nor `in` can be declared, making it an **invariant** type. `IEnumerable<T>` is read-only, so `out` can be declared.
 
-### Q3: 공변성은 이 튜토리얼의 Pipeline 설계에서 어떻게 활용되나요?
-**A**: Part 3에서 설계하는 `IFinResponse<out A>` 인터페이스가 공변성을 활용합니다. `out A` 덕분에 `IFinResponse<string>`을 `IFinResponse<object>`에 대입할 수 있어, Pipeline에서 다양한 응답 타입을 유연하게 처리할 수 있습니다.
+### Q3: How is covariance used in the Pipeline design of this tutorial?
+**A**: The `IFinResponse<out A>` interface designed in Part 3 leverages covariance. Thanks to `out A`, `IFinResponse<string>` can be assigned to `IFinResponse<object>`, allowing Pipelines to handle various response types flexibly.
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 01-Covariance/
@@ -90,19 +90,18 @@ IEnumerable<Animal> animals = dogs;  // IEnumerable<out T>이므로 OK
 └── README.md
 ```
 
-## 실행 방법
+## How to Run
 
 ```bash
-# 프로그램 실행
+# Run the program
 dotnet run --project Covariance
 
-# 테스트 실행
+# Run tests
 dotnet test --project Covariance.Tests.Unit
 ```
 
 ---
 
-공변성이 "꺼내기 전용"이라면, 반대로 "받기 전용"인 경우에는 어떤 변성이 적용될까요? `in` 키워드와 반공변성을 학습합니다.
+If covariance is "retrieve-only," what variance applies in the opposite case of "receive-only"? The next section covers the `in` keyword and contravariance.
 
-→ [1.2장: 반공변성 (in)](../02-Contravariance/)
-
+→ [Section 1.2: Contravariance (in)](../02-Contravariance/)
