@@ -78,7 +78,7 @@ Generates the following three types for the `{EntityName}` class in a single `.g
 
 | Generated Type | Description |
 |----------|------|
-| `{EntityName}Id` | `readonly partial record struct` -- Ulid 기반 Entity ID |
+| `{EntityName}Id` | `readonly partial record struct` -- Ulid-based Entity ID |
 | `{EntityName}IdComparer` | EF Core `ValueComparer<{EntityName}Id>` |
 | `{EntityName}IdConverter` | EF Core `ValueConverter<{EntityName}Id, string>` |
 
@@ -199,11 +199,11 @@ public class {ClassName}Observable : {ClassName}
 
 | Item | Content |
 |------|------|
-| **Tracing** | `ActivitySource.StartActivity`로 span 생성, 성공/실패 상태 기록 |
-| **Logging** | Request(Debug/Info), Response 성공(Debug/Info), Response 실패(Warning/Error) 4단계 |
+| **Tracing** | Creates span via `ActivitySource.StartActivity`, records success/failure status |
+| **Logging** | 4 levels: Request (Debug/Info), Response success (Debug/Info), Response failure (Warning/Error) |
 | **Metrics** | `adapter.{category}.requests` Counter, `adapter.{category}.responses` Counter, `adapter.{category}.duration` Histogram |
 
-**Constructor parameter name conflict resolution**: If the parent class constructor parameter name conflicts with reserved names(`activitySource`, `logger`, `meterFactory`, `openTelemetryOptions`), a `base` prefix is added. 예: `logger` -> `baseLogger`
+**Constructor parameter name conflict resolution**: If the parent class constructor parameter name conflicts with reserved names(`activitySource`, `logger`, `meterFactory`, `openTelemetryOptions`), a `base` prefix is added. Example: `logger` -> `baseLogger`
 
 #### {ClassName}ObservableLoggers
 
@@ -281,7 +281,7 @@ public partial class {ContainingTypes}{RequestTypeName}CtxEnricher
     // Push Request properties to LogContext
     public IDisposable? EnrichRequestLog({RequestFullType} request);
 
-    // Response 속성을 LogContext에 Push (Succ Pattern 매칭)
+    // Push Response properties to LogContext (Succ Pattern matching)
     public IDisposable? EnrichResponseLog(
         {RequestFullType} request,
         FinResponse<{ResponseFullType}> response);
@@ -315,7 +315,7 @@ public partial class {ContainingTypes}{RequestTypeName}CtxEnricher
 **Property filtering rules:**
 
 - Scalar types (primitive, string, DateTime, Guid, enum, Option\<T\>, etc.): output value as-is
-- Collection type(List, Array, Seq 등): `_count` 접미사로 개수만 출력
+- Collection type (List, Array, Seq, etc.): output count only with `_count` suffix
 - Complex types (class, record, struct): excluded
 - `[CtxIgnore]` applied properties: excluded
 
@@ -339,7 +339,7 @@ Auto-detects classes implementing `IDomainEventHandler<TEvent>` and generates `I
 1. Must be a `class` declaration.
 2. Must implement the `IDomainEventHandler<TEvent>` interface.
 3. `TEvent` must not be `abstract`.
-4. `TEvent`에 `[CtxIgnore]` must not be applied at the class level.
+4. `[CtxIgnore]` must not be applied at the class level on `TEvent`.
 5. `TEvent` must have `public` or `internal` accessibility (`private`/`protected` triggers FUNCTORIUM004 warning).
 
 ### Generation Targets
@@ -370,7 +370,7 @@ public partial class {ContainingTypes}{EventTypeName}CtxEnricher
 
 **Property filtering rules:**
 
-`CtxEnricherGenerator`와 동일한 규칙을 따르며, 추가로 `IDomainEvent` Default 속성(`OccurredAt`, `EventId`, `CorrelationId`, `CausationId`)은 자동 제외됩니다. `IValueObject` 또는 `IEntityId<T>` 구현체 프로퍼티는 `.ToString()` call로 keyword 변환됩니다.
+Follows the same rules as `CtxEnricherGenerator`, with the addition that `IDomainEvent` default properties (`OccurredAt`, `EventId`, `CorrelationId`, `CausationId`) are automatically excluded. Properties implementing `IValueObject` or `IEntityId<T>` are converted to keyword via `.ToString()` call.
 
 **ctx field naming rules:**
 
@@ -391,7 +391,7 @@ public partial class {ContainingTypes}{EventTypeName}CtxEnricher
 
 ## UnionTypeGenerator
 
-`abstract partial record`에 `[UnionType]`을 적용하면 내부 `sealed record` 케이스를 분석하여 `Match`/`Switch` Pattern 매칭 메서드를 자동 생성합니다.
+Applying `[UnionType]` to an `abstract partial record` analyzes the internal `sealed record` cases and auto-generates `Match`/`Switch` pattern matching methods.
 
 ### Trigger
 
@@ -419,13 +419,13 @@ Generates the following members as `partial` extensions for the `{TypeName}` rec
 ```csharp
 public abstract partial record {TypeName}
 {
-    // Pattern 매칭 (반환값 있음)
+    // Pattern matching (with return value)
     public TResult Match<TResult>(
         Func<Case1, TResult> case1,
         Func<Case2, TResult> case2,
         ...);
 
-    // Pattern 매칭 (반환값 없음)
+    // Pattern matching (no return value)
     public void Switch(
         Action<Case1> case1,
         Action<Case2> case2,
@@ -456,8 +456,8 @@ UnionTypeGenerator does not currently emit dedicated diagnostic codes. If there 
 
 ## Related Documents
 
-- [Source Generator Observability 튜토리얼](../tutorials/sourcegen-observability/) -- Roslyn API 기초부터 실전 생성기 구현까지
-- [엔티티와 애그리거트 사양](./01-entity-aggregate) -- `IEntityId<T>`, `GenerateEntityIdAttribute` 정의
-- [관찰 가능성 사양](./08-observability) -- `IUsecaseCtxEnricher`, `IDomainEventCtxEnricher` 인터페이스 정의
-- [Adapter 파이프라인과 DI 가이드](../guides/adapter/14a-adapter-pipeline-di) -- Observable 래퍼 DI 등록 Pattern
-- [테스트 라이브러리 가이드](../guides/testing/16-testing-library) -- 소스 생성기 단위 테스트 작성법
+- [Source Generator Observability Tutorial](../tutorials/sourcegen-observability/) -- From Roslyn API basics to practical generator implementation
+- [Entity and Aggregate Specification](./01-entity-aggregate) -- `IEntityId<T>`, `GenerateEntityIdAttribute` definition
+- [Observability Specification](./08-observability) -- `IUsecaseCtxEnricher`, `IDomainEventCtxEnricher` interface definitions
+- [Adapter Pipeline and DI Guide](../guides/adapter/14a-adapter-pipeline-di) -- Observable wrapper DI registration pattern
+- [Testing Library Guide](../guides/testing/16-testing-library) -- Writing unit tests for source generators

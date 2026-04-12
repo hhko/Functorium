@@ -10,24 +10,24 @@ This is the public API specification for the test utility library provided by th
 
 | Type | Namespace | Description |
 |------|-------------|------|
-| `FinTFactory` | `Arrangements.Effects` | `FinT<IO, T>` Mock 반환값 생성 헬퍼 |
-| `HostTestFixture<TProgram>` | `Arrangements.Hosting` | 호스트 통합 테스트 Fixture |
-| `QuartzTestFixture<TProgram>` | `Arrangements.ScheduledJobs` | Quartz Job 통합 테스트 Fixture |
-| `LogTestContext` | `Arrangements.Logging` | Serilog 기반 인메모리 로그 캡처 컨텍스트 |
-| `StructuredTestLogger<T>` | `Arrangements.Logging` | 구조화된 로깅 지원 테스트 Logger |
-| `SourceGeneratorTestRunner` | `Actions.SourceGenerators` | `IIncrementalGenerator` 테스트 실행기 |
-| `DomainErrorAssertions` | `Assertions.Errors` | 도메인 에러 검증 확장 Methods |
-| `ApplicationErrorAssertions` | `Assertions.Errors` | 애플리케이션 에러 검증 확장 Methods |
-| `AdapterErrorAssertions` | `Assertions.Errors` | 어댑터 에러 검증 확장 Methods |
-| `ErrorCodeAssertions` | `Assertions.Errors` | 범용 에러 코드 검증 확장 Methods |
-| `ErrorCodeExceptionalAssertions` | `Assertions.Errors` | 예외 기반 에러 검증 확장 Methods |
-| `ClassValidator` | `Assertions.ArchitectureRules` | 클래스 수준 아키텍처 규칙 Fluent API |
-| `MethodValidator` | `Assertions.ArchitectureRules` | Methods 수준 아키텍처 규칙 Fluent API |
-| `InterfaceValidator` | `Assertions.ArchitectureRules` | Interface 수준 아키텍처 규칙 Fluent API |
-| `DomainArchitectureTestSuite` | `Assertions.ArchitectureRules.Suites` | 도메인 레이어 아키텍처 테스트 스위트 |
-| `ApplicationArchitectureTestSuite` | `Assertions.ArchitectureRules.Suites` | 애플리케이션 레이어 아키텍처 테스트 스위트 |
+| `FinTFactory` | `Arrangements.Effects` | `FinT<IO, T>` Mock return value generation helper |
+| `HostTestFixture<TProgram>` | `Arrangements.Hosting` | Host integration test Fixture |
+| `QuartzTestFixture<TProgram>` | `Arrangements.ScheduledJobs` | Quartz Job integration test Fixture |
+| `LogTestContext` | `Arrangements.Logging` | Serilog-based in-memory log capture context |
+| `StructuredTestLogger<T>` | `Arrangements.Logging` | Structured logging support test Logger |
+| `SourceGeneratorTestRunner` | `Actions.SourceGenerators` | `IIncrementalGenerator` test runner |
+| `DomainErrorAssertions` | `Assertions.Errors` | Domain error verification extension methods |
+| `ApplicationErrorAssertions` | `Assertions.Errors` | Application error verification extension methods |
+| `AdapterErrorAssertions` | `Assertions.Errors` | Adapter error verification extension methods |
+| `ErrorCodeAssertions` | `Assertions.Errors` | General-purpose error code verification extension methods |
+| `ErrorCodeExceptionalAssertions` | `Assertions.Errors` | Exception-based error verification extension methods |
+| `ClassValidator` | `Assertions.ArchitectureRules` | Class-level architecture rules Fluent API |
+| `MethodValidator` | `Assertions.ArchitectureRules` | Method-level architecture rules Fluent API |
+| `InterfaceValidator` | `Assertions.ArchitectureRules` | Interface-level architecture rules Fluent API |
+| `DomainArchitectureTestSuite` | `Assertions.ArchitectureRules.Suites` | Domain layer architecture test suite |
+| `ApplicationArchitectureTestSuite` | `Assertions.ArchitectureRules.Suites` | Application layer architecture test suite |
 
-> 모든 네임스페이스는 `Functorium.Testing` 접두사를 가집니다.
+> All namespaces have the `Functorium.Testing` prefix.
 
 ---
 
@@ -75,7 +75,7 @@ public class HostTestFixture<TProgram> : IAsyncLifetime where TProgram : class
 | `GetTestProjectPath()` | `string` (virtual) | Test project path (default: 3 levels up from `bin/`) |
 | `ConfigureHost(builder)` | `void` (virtual) | Host additional configuration extension point |
 
-**Configuration file load order:** TProgram 프로젝트의 `appsettings.json` (default) -> 테스트 프로젝트의 `appsettings.json` (overrides)
+**Configuration file load order:** TProgram project's `appsettings.json` (default) -> Test project's `appsettings.json` (overrides)
 
 ### QuartzTestFixture\<TProgram\>
 
@@ -150,7 +150,7 @@ public sealed class LogTestContext : IDisposable
 
 | Constructor | Description |
 |--------|------|
-| `LogTestContext()` | default 최소 레벨(`Debug`)로 초기화 |
+| `LogTestContext()` | Initialize with default minimum level (`Debug`) |
 | `LogTestContext(minimumLevel)` | Initialize with specified minimum log level |
 | `LogTestContext(minimumLevel, enrichFromLogContext)` | Minimum level + LogContext enrichment option. Set to `true` to capture `ctx.*` fields |
 
@@ -212,7 +212,7 @@ Type-safe verification extension methods for per-layer error types. All assertio
 
 ### Per-Layer Assertions (3 types)
 
-`DomainErrorAssertions`, `ApplicationErrorAssertions`, `AdapterErrorAssertions`는 동일한 Pattern으로 레이어별 에러를 검증합니다. 각 클래스의 `TContext` Type Parameters와 에러 코드 접두사만 다릅니다.
+`DomainErrorAssertions`, `ApplicationErrorAssertions`, `AdapterErrorAssertions` verify per-layer errors using the same pattern. Only the `TContext` type parameter and error code prefix differ between each class.
 
 | Class | `TContext` Meaning | Error Code Format |
 |--------|----------------|---------------|
@@ -220,7 +220,7 @@ Type-safe verification extension methods for per-layer error types. All assertio
 | `ApplicationErrorAssertions` | `TUsecase` (Usecase type) | `ApplicationErrors.{Name}.{ErrorName}` |
 | `AdapterErrorAssertions` | `TAdapter` (Adapter type) | `AdapterErrors.{Name}.{ErrorName}` |
 
-**공통 Methods Pattern (Domain 기준):**
+**Common method pattern (based on Domain):**
 
 ```csharp
 // Error verification (0-3 current value overloads)
@@ -290,7 +290,7 @@ Specialized extension methods for exception-based error (`ErrorCodeExceptional`)
 ```csharp
 public static class ErrorCodeExceptionalAssertions
 {
-    // Error 검증
+    // Error verification
     public static void ShouldBeErrorCodeExceptional(this Error error, string code);
     public static void ShouldBeErrorCodeExceptional<TException>(this Error error, string code);
     public static void ShouldWrapException<TException>(
@@ -362,7 +362,7 @@ Inherits `TypeValidator<Class, ClassValidator>` and chains via Fluent API.
 | Nested classes | `RequireNestedClass(name, validation?)`, `RequireNestedClassIfExists(name, validation?)` |
 | Immutability | `RequireImmutable()` |
 
-### TypeValidator\<TType, TSelf\> (공통 기반)
+### TypeValidator\<TType, TSelf\> (Common Base)
 
 A CRTP-based abstract base class shared by `ClassValidator` and `InterfaceValidator`.
 
@@ -380,12 +380,12 @@ A CRTP-based abstract base class shared by `ClassValidator` and `InterfaceValida
 | Category | Methods |
 |----------|--------|
 | Visibility/Modifiers | `RequireVisibility(v)`, `RequireStatic()`, `RequireNotStatic()`, `RequireVirtual()`, `RequireNotVirtual()`, `RequireExtensionMethod()` |
-| 반환 Type | `RequireReturnType(type)`, `RequireReturnTypeOfDeclaringClass()`, `RequireReturnTypeOfDeclaringTopLevelClass()`, `RequireReturnTypeContaining(fragment)` |
+| Return Type | `RequireReturnType(type)`, `RequireReturnTypeOfDeclaringClass()`, `RequireReturnTypeOfDeclaringTopLevelClass()`, `RequireReturnTypeContaining(fragment)` |
 | Parameters | `RequireParameterCount(n)`, `RequireParameterCountAtLeast(n)`, `RequireFirstParameterTypeContaining(fragment)`, `RequireAnyParameterTypeContaining(fragment)` |
 
 ### InterfaceValidator
 
-`TypeValidator<Interface, InterfaceValidator>`를 Inheritance합니다. `TypeValidator`의 공통 Methods만 사용합니다.
+Inherits `TypeValidator<Interface, InterfaceValidator>`. Uses only the common methods from `TypeValidator`.
 
 ### IArchRule\<TType\>과 ImmutabilityRule
 
@@ -397,16 +397,16 @@ public interface IArchRule<in TType> where TType : IType
 }
 ```
 
-**`ImmutabilityRule`은** `IArchRule<Class>` 구현체로, 6가지 차원에서 Immutability을 검증합니다: Writability, Constructors (all private), PropertySetters (no public), PublicFields (none), MutableCollections (`List<>` 등 금지), StateChangingMethods (excluding factory/equality/getter).
+**`ImmutabilityRule`** is an `IArchRule<Class>` implementation that verifies immutability across 6 dimensions: Writability, Constructors (all private), PropertySetters (no public), PublicFields (none), MutableCollections (no `List<>`, etc.), StateChangingMethods (excluding factory/equality/getter).
 
 ### Auxiliary Types
 
-| Type | 설명 |
+| Type | Description |
 |------|------|
 | `RuleViolation(TargetName, RuleName, Description)` | Rule violation sealed record |
 | `ValidationResultSummary` | Result aggregation, `ThrowIfAnyFailures(ruleName)` Throws `ArchitectureViolationException` on call |
 | `ArchitectureViolationException` | `RuleName`, `Violations` Has properties |
-| `CompositeArchRule<TType>` | 여러 규칙을 AND Composition |
+| `CompositeArchRule<TType>` | AND composition of multiple rules |
 | `DelegateArchRule<TType>` | Lambda-based custom rules |
 
 ---
@@ -432,12 +432,12 @@ public abstract class DomainArchitectureTestSuite
 | Category | Test | Description |
 |----------|--------|------|
 | Entity (7) | `AggregateRoot_ShouldBe_PublicSealedClass` | public sealed class |
-| | `AggregateRoot_ShouldHave_CreateAndCreateFromValidated` | 정적 팩토리 Methods 필수 |
+| | `AggregateRoot_ShouldHave_CreateAndCreateFromValidated` | Static factory methods required |
 | | `AggregateRoot_ShouldHave_GenerateEntityIdAttribute` | `[GenerateEntityId]` required |
-| | `AggregateRoot_ShouldHave_AllPrivateConstructors` | 모든 Constructors private |
+| | `AggregateRoot_ShouldHave_AllPrivateConstructors` | All constructors private |
 | | `Entity_ShouldBe_PublicSealedClass` | Non-AggregateRoot Entity also public sealed |
-| | `Entity_ShouldHave_CreateAndCreateFromValidated` | Entity 팩토리 Methods 필수 |
-| | `Entity_ShouldHave_AllPrivateConstructors` | Entity Constructors private |
+| | `Entity_ShouldHave_CreateAndCreateFromValidated` | Entity factory methods required |
+| | `Entity_ShouldHave_AllPrivateConstructors` | Entity constructors private |
 | ValueObject (4) | `ValueObject_ShouldBe_PublicSealedWithPrivateConstructors` | public sealed + private Constructors |
 | | `ValueObject_ShouldBe_Immutable` | `ImmutabilityRule` applied |
 | | `ValueObject_ShouldHave_CreateFactoryMethod` | `Create` returns `Fin<T>` |
@@ -448,9 +448,9 @@ public abstract class DomainArchitectureTestSuite
 | | `Specification_ShouldInherit_SpecificationBase` | `Specification<T>` Inheritance |
 | | `Specification_ShouldResideIn_DomainLayer` | Located only in domain layer |
 | DomainService (5) | `DomainService_ShouldBe_PublicSealed` | public sealed |
-| | `DomainService_ShouldBe_Stateless` | 인스턴스 Fields 없음 |
+| | `DomainService_ShouldBe_Stateless` | No instance fields |
 | | `DomainService_ShouldNotDependOn_IObservablePort` | Observation dependency prohibited |
-| | `DomainService_PublicMethods_ShouldReturn_Fin` | public Methods `Fin` 반환 |
+| | `DomainService_PublicMethods_ShouldReturn_Fin` | Public methods return `Fin` |
 | | `DomainService_ShouldNotBe_Record` | record prohibited |
 
 ### ApplicationArchitectureTestSuite
@@ -476,5 +476,5 @@ public abstract class ApplicationArchitectureTestSuite
 
 ## Related Documents
 
-- [Functorium.Testing 라이브러리 가이드](../guides/testing/16-testing-library) - 설계 원칙과 사용 Pattern
-- [단위 테스트 가이드](../guides/testing/15a-unit-testing) - AAA Pattern, MTP 설정, Verify 스냅샷 테스트
+- [Functorium.Testing Library Guide](../guides/testing/16-testing-library) - Design principles and usage patterns
+- [Unit Testing Guide](../guides/testing/15a-unit-testing) - AAA pattern, MTP configuration, Verify snapshot testing

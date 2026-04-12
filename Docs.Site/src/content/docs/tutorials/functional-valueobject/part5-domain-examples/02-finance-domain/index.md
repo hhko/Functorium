@@ -63,7 +63,7 @@ public sealed class AccountNumber : SimpleValueObject<string>
 }
 ```
 
-`ToString()`은 전체 계좌번호를 반환하지만, `Masked`는 중간 부분을 가려서 로그나 화면 표시에 사용할 수 있습니다. 민감 정보의 안전한 표시 Pattern입니다.
+`ToString()`은 전체 계좌번호를 반환하지만, `Masked`는 중간 부minutes을 가려서 로그나 화면 표시에 사용할 수 있습니다. 민감 정보의 안전한 표시 Pattern입니다.
 
 ### InterestRate (Interest Rate)
 
@@ -176,31 +176,31 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
 
 ### Expected Output
 ```
-=== 금융 도메인 값 객체 ===
+=== Finance Domain Value Objects ===
 
-1. AccountNumber (계좌번호)
+1. AccountNumber (Account Number)
 ────────────────────────────────────────
-   계좌번호: 110-1234567890
-   은행 코드: 110
-   마스킹: 110-****7890
+   계좌Number: 110-1234567890
+   Bank code: 110
+   Masked: 110-****7890
 
 2. InterestRate (Interest율)
 ────────────────────────────────────────
-   연이율: 5.50%
-   원금: 1,000,000원
-   기간: 3년
-   단리 Interest: 165,000원
-   복리 Interest: 174,241원
+   Annual rate: 5.50%
+   Principal: 1,000,000 won
+   Period: 3 years
+   단리 Interest: 165,000 won
+   복리 Interest: 174,241 won
 
-3. ExchangeRate (환율)
+3. ExchangeRate (Exchange Rate)
 ────────────────────────────────────────
-   환율: USD/KRW = 1350.5000
+   Exchange rate: USD/KRW = 1350.5000
    100 USD = 135,050 KRW
-   역환율: KRW/USD = 0.0007
+   역Exchange rate: KRW/USD = 0.0007
 
-4. TransactionType (거래 유형)
+4. TransactionType (Transaction Type)
 ────────────────────────────────────────
-   모든 거래 유형:
+   All transaction types:
       - DEPOSIT: Deposit (Deposit)
       - WITHDRAWAL: Withdrawal (Withdrawal)
       - TRANSFER: Transfer (Withdrawal)
@@ -256,7 +256,7 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
 
 ### 금융 도메인 Pattern
 
-금융 도메인에서 활용된 설계 Pattern을 유형별로 분류하면 다음과 같습니다.
+금융 도메인에서 활용된 설계 Pattern을 유형별로 minutes류하면 다음과 같습니다.
 
 | Pattern | value object | Description |
 |------|--------|------|

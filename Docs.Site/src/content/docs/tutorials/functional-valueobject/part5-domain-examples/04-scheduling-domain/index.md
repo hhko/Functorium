@@ -3,40 +3,40 @@ title: "Scheduling/Reservation Domain"
 ---
 ## Overview
 
-종료일이 시작일보다 이른 예약이 저장된다면? 두 회의가 같은 시간대에 겹치는 줄 모르고 확정된다면? "매월 31일" 반복 일정을 2월에 어떻게 처리해야 하는가? 일정/예약 시스템에서 시간 데이터를 원시 타입으로 다루면 이런 문제들이 runtime 버그로 이어집니다.
+종료days이 시작days보다 이른 예약이 저장된다면? 두 회의가 같은  hours대에 겹치는 줄 모르고 확정된다면? "매월 31days" 반복 days정을 2월에 어떻게 처리해야 하는가? days정/예약 시스템에서  hours 데이터를  won시 타입으로 다루면 이런 문제들이 runtime 버그로 이어집니다.
 
-In this chapter, 캘린더와 예약 시스템에 필요한 4가지 핵심 개념을 value object로 구현하여, 범위 검증과 충돌 검사를 타입 수준에서 guarantees.
+In this chapter, we implement 4 core concepts needed for calendar and reservation systems as value objects, guaranteeing range validation and conflict detection at the type level.
 
-- **DateRange**: 시작일과 종료일을 관리하며 겹침 검사 기능 제공
-- **TimeSlot**: 시작 시간과 종료 시간을 관리하며 충돌 검사 기능 제공
-- **Duration**: 분/시간/일 단위의 기간을 표현하며 연산 기능 제공
-- **RecurrenceRule**: 매일/매주/매월 반복 규칙을 표현하며 발생일 계산 기능 제공
+- **DateRange**: 시작days과 종료days을 관리하며 Overlap detection 기능 제공
+- **TimeSlot**: 시작  hours과 종료  hours을 관리하며 Conflict detection 기능 제공
+- **Duration**: minutes/ hours/days 단위의 기간을 표현하며 연산 기능 제공
+- **RecurrenceRule**: 매days/매주/매월 반복 규칙을 표현하며 발생days 계산 기능 제공
 
 ## Learning Objectives
 
-### **핵심 학습 목표**
+### **Core Learning Objectives**
 - DateRange와 TimeSlot에서 시작 < 종료 **범위 검증 Pattern을 구현할 수** 있습니다.
-- 두 범위 간의 중복 여부를 판단하는 **겹침/충돌 검사 로직을 구현할 수** 있습니다.
-- Duration에서 분/시간/일 간의 **단위 변환을 캡슐화할 수** 있습니다.
-- RecurrenceRule에서 다음 발생일을 계산하는 **반복 Pattern 알고리즘을 구현할 수** 있습니다.
+- You can **implement overlap/conflict detection logic** between two ranges.
+- Duration에서 minutes/ hours/days 간의 **unit conversion을 캡슐화할 수** 있습니다.
+- RecurrenceRule에서 다음 발생days을 계산하는 **반복 Pattern 알고리즘을 구현할 수** 있습니다.
 
-### **실습을 통해 확인할 내용**
-- DateRange의 Contains, Overlaps, Intersect 연산
-- TimeSlot의 Duration 계산과 Conflicts 검사
-- Duration의 단위 변환과 Add/Subtract 연산
-- RecurrenceRule의 GetOccurrences로 다음 발생일 계산
+### **What You Will Verify Through Practice**
+- DateRange Contains, Overlaps, Intersect operations
+- TimeSlot Duration calculation and Conflicts detection
+- Duration unit conversion and Add/Subtract operations
+- RecurrenceRule의 GetOccurrences로 다음 발생days 계산
 
 ## Why Is This Needed?
 
-일정과 예약 시스템은 시간 관련 로직이 복잡합니다. 원시 타입으로 시간 데이터를 다루면 여러 문제가 발생합니다.
+days정과 예약 시스템은  hours 관련 로직이 복잡합니다.  won시 타입으로  hours 데이터를 다루면 여러 문제가 발생합니다.
 
-종료일이 시작일보다 이른 잘못된 데이터가 저장될 수 있는데, DateRange와 TimeSlot은 생성 시점에 범위 유효성을 검증합니다. 두 예약이 겹치는지 판단하는 로직이 여러 곳에 흩어지면 버그가 발생하기 쉬운데, value object에 Overlaps/Conflicts 메서드를 캡슐화하면 일관된 중복 검사를 guarantees. "매월 31일"을 2월에 처리하거나 "매주 월/수/금"의 다음 발생일을 계산하는 복잡한 반복 로직도 RecurrenceRule이 캡슐화합니다.
+종료days이 시작days보다 이른 잘못된 데이터가 저장될 수 있는데, DateRange와 TimeSlot은 생성 시점에 범위 유효성을 검증합니다. 두 예약이 겹치는지 판단하는 로직이 여러 곳에 흩어지면 버그가 발생하기 쉬운데, value object에 Overlaps/Conflicts 메서드를 캡슐화하면 days관된 중복 검사를 guarantees. "매월 31days"을 2월에 처리하거나 "매주 월/수/금"의 다음 발생days을 계산하는 복잡한 반복 로직도 RecurrenceRule이 캡슐화합니다.
 
 ## Core Concepts
 
 ### DateRange (날짜 범위)
 
-DateRange는 시작일과 종료일을 관리합니다. 포함 여부, 겹침 검사, 교집합 계산 기능을 provides.
+DateRange는 시작days과 종료days을 관리합니다. 포함 여부, Overlap detection, 교집합 계산 기능을 provides.
 
 ```csharp
 public sealed class DateRange : ValueObject
@@ -76,11 +76,11 @@ public sealed class DateRange : ValueObject
 }
 ```
 
-겹침 검사(`Start <= other.End && End >= other.Start`)와 같은 범위 로직이 value object 내부에 구현되어 어디서든 일관되게 사용됩니다.
+Overlap detection(`Start <= other.End && End >= other.Start`)와 같은 범위 로직이 value object 내부에 구현되어 어디서든 days관되게 사용됩니다.
 
-### TimeSlot (시간 슬롯)
+### TimeSlot ( hours 슬롯)
 
-TimeSlot은 하루 중 시간대를 표현합니다. 시간 충돌 검사와 기간 계산 기능을 provides.
+TimeSlot은 하루 중  hours대를 표현합니다.  hours Conflict detection와 기간 계산 기능을 provides.
 
 ```csharp
 public sealed class TimeSlot : ValueObject
@@ -116,18 +116,18 @@ public sealed class TimeSlot : ValueObject
 }
 ```
 
-두 TimeSlot이 충돌하는지 `Conflicts()` 메서드로 쉽게 판단할 수 있어, 예약 시스템에서 중복 방지 로직을 간단하게 구현할 수 있습니다.
+Whether two TimeSlots conflict can be easily determined with `Conflicts()`, simplifying duplicate prevention in reservation systems.
 
 ### Duration (기간)
 
-Duration은 분 단위로 기간을 저장하고, 시간/일 단위로 변환하는 기능을 provides.
+Duration은 minutes 단위로 기간을 저장하고,  hours/days 단위로 변환하는 기능을 provides.
 
 ```csharp
 public sealed class Duration : ComparableSimpleValueObject<int>
 {
     private Duration(int totalMinutes) : base(totalMinutes) { }
 
-    public int TotalMinutes => Value;  // protected Value에 대한 public 접근자
+    public int TotalMinutes => Value;  // Public accessor for protected Value
     public double TotalHours => Value / 60.0;
     public double TotalDays => Value / (24.0 * 60.0);
     public static Duration Zero => new(0);
@@ -154,11 +154,11 @@ public sealed class Duration : ComparableSimpleValueObject<int>
 }
 ```
 
-내부적으로 분 단위로 저장하고, `TotalHours`, `TotalDays` 속성으로 다른 단위로 변환합니다. `ToString()`은 사람이 읽기 좋은 형식으로 표시합니다.
+내부적으로 minutes 단위로 저장하고, `TotalHours`, `TotalDays` 속성으로 다른 단위로 변환합니다. `ToString()`은 사람이 읽기 좋은 형식으로 표시합니다.
 
 ### RecurrenceRule (반복 규칙)
 
-RecurrenceRule은 반복 일정의 규칙을 표현합니다. 다음 발생일들을 계산하는 기능을 provides.
+RecurrenceRule은 반복 days정의 규칙을 표현합니다. 다음 발생days들을 계산하는 기능을 provides.
 
 ```csharp
 public sealed class RecurrenceRule : ValueObject
@@ -205,50 +205,50 @@ public sealed class RecurrenceRule : ValueObject
 }
 ```
 
-"매주 월/수/금"이나 "매월 15일" 같은 반복 규칙을 value object로 표현하고, `GetOccurrences()`로 다음 발생일들을 계산합니다.
+"매주 월/수/금"이나 "매월 15days" 같은 반복 규칙을 value object로 표현하고, `GetOccurrences()`로 다음 발생days들을 계산합니다.
 
 ## Practical Guidelines
 
 ### Expected Output
 ```
-=== 일정/예약 도메인 값 객체 ===
+=== Scheduling/Reservation Domain Value Objects ===
 
-1. DateRange (날짜 범위)
+1. DateRange (Date Range)
 ────────────────────────────────────────
-   시작: 2025-01-01
-   종료: 2025-01-10
-   기간: 10일
-   2025-01-05 포함: True
-   2025-02-01 포함: False
-   잘못된 범위: 종료일은 시작일보다 이전일 수 없습니다.
-   범위 겹침: True
+   Start: 2025-01-01
+   End: 2025-01-10
+   Period: 10days
+   2025-01-05 Contains: True
+   2025-02-01 Contains: False
+   Invalid range: 종료days은 시작days보다 이전days 수 없습니다.
+   Range overlap: True
 
-2. TimeSlot (시간 슬롯)
+2. TimeSlot (Time Slot)
 ────────────────────────────────────────
-   시간대: 09:00 - 10:30
-   길이: 90분
-   09:30 포함: True
-   11:00 포함: False
-   슬롯 충돌: True
+   Time range: 09:00 - 10:30
+   Length: 90minutes
+   09:30 Contains: True
+   11:00 Contains: False
+   Slot conflict: True
 
-3. Duration (기간)
+3. Duration
 ────────────────────────────────────────
-   90분: 1시간 30분
-   시간: 1.5h
-   분: 90m
-   2시간: 2시간
-   합계: 3시간 30분
-   비교: 1시간 30분 < 2시간 = True
-   음수 기간: 기간은 음수일 수 없습니다.
+   90minutes: 1 hours 30minutes
+   Hours: 1.5h
+   minutes: 90m
+   2Hours: 2 hours
+   Total: 3 hours 30minutes
+   Comparison: 1 hours 30minutes < 2 hours = True
+   음수 Period: 기간은 음수days 수 없습니다.
 
-4. RecurrenceRule (반복 규칙)
+4. RecurrenceRule (Recurrence Rule)
 ────────────────────────────────────────
-   규칙: 매주 월, 수, 금
-   다음 5회: 2025-01-01, 2025-01-03, 2025-01-06, 2025-01-08, 2025-01-10
-   규칙: 매월 15일
-   다음 3회: 2025-01-15, 2025-02-15, 2025-03-15
-   규칙: 매주 월, 화, 수, 목, 금
-   다음 7회: 2025-01-01, 2025-01-02, 2025-01-03, 2025-01-06, 2025-01-07, 2025-01-08, 2025-01-09
+   Rule: Every Mon, Wed, Fri
+   Next 5: 2025-01-01, 2025-01-03, 2025-01-06, 2025-01-08, 2025-01-10
+   Rule: 매월 15days
+   Next 3: 2025-01-15, 2025-02-15, 2025-03-15
+   Rule: Every Mon, Tue, Wed, Thu, Fri
+   Next 7: 2025-01-01, 2025-01-02, 2025-01-03, 2025-01-06, 2025-01-07, 2025-01-08, 2025-01-09
 ```
 
 ## Project Description
@@ -257,8 +257,8 @@ public sealed class RecurrenceRule : ValueObject
 ```
 04-Scheduling-Domain/
 ├── SchedulingDomain/
-│   ├── Program.cs                  # 메인 실행 파일 (4개 값 객체 구현)
-│   └── SchedulingDomain.csproj     # 프로젝트 파일
+│   ├── Program.cs                  # 메인 실행 파days (4개 값 객체 구현)
+│   └── SchedulingDomain.csproj     # 프로젝트 파days
 └── README.md                       # 프로젝트 문서
 ```
 
@@ -275,14 +275,14 @@ public sealed class RecurrenceRule : ValueObject
 
 | value object | Framework Type | Characteristics |
 |--------|---------------|------|
-| DateRange | ValueObject | 범위 검증, 겹침/교집합 계산 |
-| TimeSlot | ValueObject | 범위 검증, 충돌 검사 |
-| Duration | ComparableSimpleValueObject\<int\> | 단위 변환, 산술 연산 |
-| RecurrenceRule | ValueObject | 반복 규칙, 발생일 계산 |
+| DateRange | ValueObject | Range validation, overlap/intersection calculation |
+| TimeSlot | ValueObject | Range validation, conflict detection |
+| Duration | ComparableSimpleValueObject\<int\> | Unit conversion, arithmetic operations |
+| RecurrenceRule | ValueObject | 반복 규칙, 발생days 계산 |
 
 ## Summary at a Glance
 
-### 일정/예약 value object 요약
+### days정/예약 value object 요약
 
 각 value object의 속성, Validation Rules, Domain Operations을 한눈에 비교할 수 있습니다.
 
@@ -290,24 +290,24 @@ public sealed class RecurrenceRule : ValueObject
 |--------|----------|----------|------------|
 | DateRange | Start, End | End >= Start | Contains, Overlaps, Intersect |
 | TimeSlot | Start, End | End > Start | Contains, Conflicts, Duration |
-| Duration | TotalMinutes | 0 ~ 525600 | Add, Subtract, 단위 변환 |
-| RecurrenceRule | Type, Days, Interval | 유효한 규칙 | GetOccurrences |
+| Duration | TotalMinutes | 0 ~ 525600 | Add, Subtract, unit conversion |
+| RecurrenceRule | Type, Days, Interval | Valid rules | GetOccurrences |
 
-### 범위/충돌 검사 공식
+### Range/Conflict Detection Formulas
 
-겹침, 포함, 충돌 검사에 사용되는 조건식을 정리한 것입니다.
+Summarizes conditional expressions used for overlap, containment, and conflict detection.
 
-| 연산 | 공식 | Description |
+| Operation | Formula | Description |
 |------|------|------|
-| 겹침 검사 | `A.Start <= B.End && A.End >= B.Start` | 두 범위가 하나라도 겹침 |
-| 포함 검사 | `date >= Start && date <= End` | 날짜가 범위 내에 있음 |
-| 충돌 검사 | `A.Start < B.End && A.End > B.Start` | 두 슬롯이 시간이 겹침 (경계 제외) |
+| Overlap detection | `A.Start <= B.End && A.End >= B.Start` | Two ranges overlap at all |
+| Containment check | `date >= Start && date <= End` | Date is within range |
+| Conflict detection | `A.Start < B.End && A.End > B.Start` | 두 슬롯이  hours이 겹침 (경계 제외) |
 
 ## FAQ
 
-### Q1: DateRange에서 시작일과 종료일이 같은 경우는?
+### Q1: DateRange에서 시작days과 종료days이 같은 경우는?
 
-현재 구현에서는 허용됩니다. 하루짜리 범위를 표현할 때 유용합니다. 금지하려면 검증 조건을 `end <= start`로 변경합니다.
+Allowed in the current implementation. Useful for single-day ranges. To prohibit, change validation to `end <= start`.
 
 ```csharp
 var singleDay = DateRange.Create(
@@ -317,14 +317,14 @@ var singleDay = DateRange.Create(
 // TotalDays = 1
 ```
 
-### Q2: TimeSlot에서 자정을 넘는 시간대를 처리하려면?
+### Q2: TimeSlot에서 자정을 넘는  hours대를 처리하려면?
 
-현재 구현은 자정을 넘는 슬롯(예: 23:00 - 01:00)을 지원하지 않습니다. 이를 지원하려면 자정 통과 여부를 별도 플래그로 관리해야 합니다.
+현재 구현은 자정을 넘는 슬롯(예: 23:00 - 01:00)을 지 won하지 않습니다. 이를 지 won하려면 자정 통과 여부를 별도 플래그로 관리해야 합니다.
 
 ```csharp
 public static Fin<TimeSlot> CreateCrossMidnight(TimeOnly start, TimeOnly end)
 {
-    // 자정을 넘는 경우 end < start
+    // When crossing midnight, end < start
     if (start == end)
         return DomainErrors.ZeroDuration(start, end);
     return new TimeSlot(start, end, crossesMidnight: end < start);
@@ -338,9 +338,9 @@ public bool Contains(TimeOnly time)
 }
 ```
 
-### Q3: RecurrenceRule에서 "매월 마지막 금요일"을 표현하려면?
+### Q3: RecurrenceRule에서 "매월 마지막 금요days"을 표현하려면?
 
-RFC 5545 (iCalendar) 스펙을 참고하여 주 단위 오프셋을 지원하도록 확장할 수 있습니다.
+RFC 5545 (iCalendar) 스펙을 참고하여 주 단위 오프셋을 지 won하도록 확장할 수 있습니다.
 
 ```csharp
 public static Fin<RecurrenceRule> MonthlyLastWeekday(DayOfWeek day)
@@ -348,7 +348,7 @@ public static Fin<RecurrenceRule> MonthlyLastWeekday(DayOfWeek day)
     return new RecurrenceRule(
         RecurrenceType.MonthlyWeekday,
         new[] { day },
-        weekOfMonth: -1,  // -1 = 마지막 주
+        weekOfMonth: -1,  // -1 = last week
         1
     );
 }
@@ -362,7 +362,7 @@ private DateOnly GetLastWeekdayOfMonth(DateOnly date, DayOfWeek dayOfWeek)
 }
 ```
 
-Part 5에서 다양한 도메인의 value object 구현을 살펴보았습니다. 부록에서는 LanguageExt 타입 참조, Framework Type 선택 가이드, 용어집 등 학습에 필요한 참고 자료를 provides.
+In Part 5, we explored value object implementations across various domains. 부록에서는 LanguageExt 타입 참조, Framework Type 선택 가이드, 용어집 등 학습에 필요한 참고 자료를 provides.
 
 ---
 
@@ -379,23 +379,23 @@ dotnet test
 ### Tests 구조
 ```
 SchedulingDomain.Tests.Unit/
-├── DateRangeTests.cs       # 날짜 범위 검증/교집합 테스트
-├── TimeSlotTests.cs        # 시간 슬롯 충돌 검사 테스트
-├── DurationTests.cs        # 기간 산술 연산 테스트
-└── RecurrenceRuleTests.cs  # 반복 규칙 발생일 테스트
+├── DateRangeTests.cs       # Date range validation/intersection tests
+├── TimeSlotTests.cs        #  hours 슬롯 Conflict detection 테스트
+├── DurationTests.cs        # Duration arithmetic tests
+└── RecurrenceRuleTests.cs  # 반복 규칙 발생days 테스트
 ```
 
 ### Key Test Cases
 
 | Test Class | Test Content |
 |-------------|-----------|
-| DateRangeTests | 범위 검증, Contains, Overlaps, Intersect |
-| TimeSlotTests | 시간 검증, Contains, Conflicts |
-| DurationTests | 단위 변환, Add/Subtract 연산 |
-| RecurrenceRuleTests | Daily/Weekly/Monthly 발생일 계산 |
+| DateRangeTests | Range validation, Contains, Overlaps, Intersect |
+| TimeSlotTests |  hours 검증, Contains, Conflicts |
+| DurationTests | unit conversion, Add/Subtract 연산 |
+| RecurrenceRuleTests | Daily/Weekly/Monthly 발생days 계산 |
 
 ---
 
-Part 5에서 다양한 도메인의 value object 적용 사례를 모두 살펴보았습니다. 부록에서는 LanguageExt 주요 타입 참조, Framework Type 선택 가이드, 용어집 등을 확인할 수 있습니다.
+We have explored all value object application cases across various domains in Part 5. 부록에서는 LanguageExt 주요 타입 참조, Framework Type 선택 가이드, 용어집 등을 확인할 수 있습니다.
 
 → [부록 A: LanguageExt 주요 타입 참조](../../Appendix/A-languageext-reference.md)

@@ -192,11 +192,11 @@ public sealed class OrderStatus : SmartEnum<OrderStatus, string>
     public sealed record AlreadyDelivered : DomainErrorType.Custom;
     public sealed record CannotRevertToPending : DomainErrorType.Custom;
 
-    public static readonly OrderStatus Pending = new("PENDING", "대기중", canCancel: true);
-    public static readonly OrderStatus Confirmed = new("CONFIRMED", "확인됨", canCancel: true);
-    public static readonly OrderStatus Shipped = new("SHIPPED", "배송중", canCancel: false);
-    public static readonly OrderStatus Delivered = new("DELIVERED", "배송완료", canCancel: false);
-    public static readonly OrderStatus Cancelled = new("CANCELLED", "취소됨", canCancel: false);
+    public static readonly OrderStatus Pending = new("PENDING", "Pending", canCancel: true);
+    public static readonly OrderStatus Confirmed = new("CONFIRMED", "Confirmed", canCancel: true);
+    public static readonly OrderStatus Shipped = new("SHIPPED", "Shipping", canCancel: false);
+    public static readonly OrderStatus Delivered = new("DELIVERED", "Delivered", canCancel: false);
+    public static readonly OrderStatus Cancelled = new("CANCELLED", "Cancelled", canCancel: false);
 
     public string DisplayName { get; }
     public bool CanCancel { get; }
@@ -274,45 +274,45 @@ public sealed class ShippingAddress : ValueObject
 
 ### Expected Output
 ```
-=== 이커머스 도메인 값 객체 ===
+=== E-Commerce Domain Value Objects ===
 
-1. Money (금액) - ComparableValueObject
+1. Money (Amount) - ComparableValueObject
 ────────────────────────────────────────
-   상품 가격: 10,000 KRW
-   할인 금액: 1,000 KRW
-   최종 가격: 9,000 KRW
-   다른 통화 합산 시도: Cannot add amounts of different currencies.
+   Product price: 10,000 KRW
+   Discount amount: 1,000 KRW
+   Final price: 9,000 KRW
+   Different currency addition attempt: Cannot add amounts of different currencies.
 
-2. ProductCode (상품 코드) - SimpleValueObject
+2. ProductCode (Product Code) - SimpleValueObject
 ────────────────────────────────────────
-   상품 코드: EL-001234
-   카테고리: EL
-   번호: 001234
-   잘못된 형식: 상품 코드 형식이 올바르지 않습니다. (예: EL-001234)
+   Product code: EL-001234
+   Category: EL
+   Number: 001234
+   Invalid format: Product code format is invalid. (e.g., EL-001234)
 
-3. Quantity (수량) - ComparableSimpleValueObject
+3. Quantity - ComparableSimpleValueObject
 ────────────────────────────────────────
-   수량 1: 5
-   수량 2: 3
-   합계: 8
-   비교: 5 > 3 = True
-   정렬: [1, 3, 5]
+   Quantity 1: 5
+   Quantity 2: 3
+   Total: 8
+   Comparison: 5 > 3 = True
+   Sorting: [1, 3, 5]
 
-4. OrderStatus (주문 상태) - SmartEnum
+4. OrderStatus (Order Status) - SmartEnum
 ────────────────────────────────────────
-   현재 상태: 대기중
-   취소 가능: True
-   전이 후: 확인됨
-   배송 중: 배송중, 취소 가능: False
+   Current status: Pending
+   Cancellable: True
+   After transition: Confirmed
+   Shipping: Shipping, Cancellable: False
 
-5. ShippingAddress (배송 주소) - ValueObject
+5. ShippingAddress (Shipping Address) - ValueObject
 ────────────────────────────────────────
-   수령인: 홍길동
-   주소: 테헤란로 123, 서울
-   우편번호: 06234
-   국가: KR
+   Recipient: Hong Gildong
+   Address: 123 Teheran-ro, Seoul
+   우편Number: 06234
+   Country: KR
 
-   빈 주소 검증 결과: 수령인 이름이 비어있습니다.
+   Empty address validation result: Recipient name is empty.
 ```
 
 ## Project Description
@@ -365,7 +365,7 @@ The following table 각 value object가 어떤 프레임워크 기반 타입을 
 
 ### 검증 Pattern 비교
 
-이커머스 도메인에서 사용된 검증 Pattern을 유형별로 분류하면 다음과 같습니다.
+이커머스 도메인에서 사용된 검증 Pattern을 유형별로 minutes류하면 다음과 같습니다.
 
 | Pattern | value object | Description |
 |------|--------|------|

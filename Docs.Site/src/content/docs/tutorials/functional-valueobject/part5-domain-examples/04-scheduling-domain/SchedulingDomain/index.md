@@ -92,13 +92,13 @@ public sealed class DateRange : IEquatable<DateRange>
 
 ### TimeSlot
 
-시간 슬롯을 표현하는 value object입니다.
+ hours 슬롯을 표현하는 value object입니다.
 
 **Characteristics:**
-- 시작 시간 < 종료 시간 불변식
-- 시간 포함 여부 검사
-- 슬롯 충돌(Conflicts) 감지
-- Duration 속성 제공
+- 시작  hours < 종료  hours 불변식
+-  hours 포함 여부 검사
+- Slot conflict (Conflicts) detection
+- Duration property provided
 
 ```csharp
 public sealed class TimeSlot : IEquatable<TimeSlot>
@@ -115,13 +115,13 @@ public sealed class TimeSlot : IEquatable<TimeSlot>
 
 ### Duration
 
-기간을 표현하는 비교 가능 value object입니다.
+A comparable value object representing durations.
 
 **Characteristics:**
-- 분/시간/일 단위 생성
-- 음수 기간 방지
-- 최대 기간 제한 (1년)
-- 연산 지원 (Add, Subtract)
+- minutes/ hours/days 단위 생성
+- Negative duration prevention
+- 최대 기간 제한 (1 years)
+- 연산 지 won (Add, Subtract)
 
 ```csharp
 public sealed class Duration : IComparable<Duration>
@@ -132,7 +132,7 @@ public sealed class Duration : IComparable<Duration>
     {
         if (minutes < 0)
             return DomainErrors.NegativeDuration;
-        if (minutes > 525600) // 1년
+        if (minutes > 525600) // 1 years
             return DomainErrors.ExceedsMaximum;
         return new Duration(minutes);
     }
@@ -143,13 +143,13 @@ public sealed class Duration : IComparable<Duration>
 
 ### RecurrenceRule
 
-반복 규칙을 표현하는 복합 value object입니다.
+A composite value object representing recurrence rules.
 
 **Characteristics:**
-- 일간/주간/월간 반복 Pattern
-- factory method로 생성
-- 다음 발생일 계산
-- 요일/날짜 기반 반복
+- days간/주간/월간 반복 Pattern
+- Created via factory methods
+- 다음 발생days 계산
+- 요days/날짜 기반 반복
 
 ```csharp
 public sealed class RecurrenceRule : IEquatable<RecurrenceRule>
@@ -171,9 +171,9 @@ public sealed class RecurrenceRule : IEquatable<RecurrenceRule>
 
 ## 핵심 Pattern
 
-### 1. 범위 검사 (Range Validation)
+### 1. Range Validation
 
-시작과 종료의 논리적 순서를 guarantees.
+Guarantees logical order of start and end.
 
 ```csharp
 public static Fin<DateRange> Create(DateOnly start, DateOnly end)
@@ -184,23 +184,23 @@ public static Fin<DateRange> Create(DateOnly start, DateOnly end)
 }
 ```
 
-### 2. 충돌/겹침 감지 (Conflict Detection)
+### 2. Conflict Detection
 
-두 범위가 겹치는지 verifies.
+Verifies whether two ranges overlap.
 
 ```csharp
-// 날짜 범위 겹침
+// Date range overlap
 public bool Overlaps(DateRange other) =>
     Start <= other.End && End >= other.Start;
 
-// 시간 슬롯 충돌
+//  hours 슬롯 충돌
 public bool Conflicts(TimeSlot other) =>
     Start < other.End && End > other.Start;
 ```
 
-### 3. 다양한 단위 지원 (Multiple Units)
+### 3. 다양한 단위 지 won (Multiple Units)
 
-같은 값을 다양한 단위로 접근할 수 있습니다.
+The same value can be accessed in various units.
 
 ```csharp
 public int TotalMinutes { get; }
@@ -210,7 +210,7 @@ public double TotalDays => TotalMinutes / (24.0 * 60.0);
 
 ### 4. factory method Pattern (Factory Methods)
 
-용도별로 명확한 생성 메서드를 provides.
+Provides clear creation methods for each use case.
 
 ```csharp
 public static Fin<RecurrenceRule> Daily(int interval = 1);
@@ -219,9 +219,9 @@ public static Fin<RecurrenceRule> Weekdays();
 public static Fin<RecurrenceRule> Monthly(int dayOfMonth);
 ```
 
-### 5. 계산 메서드 (Computational Methods)
+### 5. Computational Methods
 
-value object에 도메인 로직을 캡슐화합니다.
+Encapsulates domain logic within value objects.
 
 ```csharp
 public IEnumerable<DateOnly> GetOccurrences(DateOnly from, int count)
@@ -242,17 +242,17 @@ public IEnumerable<DateOnly> GetOccurrences(DateOnly from, int count)
 
 ## FAQ
 
-### Q1: `DateRange`와 `TimeSlot`을 별도 value object로 분리하는 이유는 무엇인가요?
-**A**: `DateRange`는 날짜 수준의 범위(휴가 기간, 프로젝트 일정)를, `TimeSlot`은 하루 내 시간 범위(회의 시간, 진료 시간)를 표현합니다. 관심사가 다르므로 각각의 불변식과 연산을 독립적으로 관리하는 것이 도메인 모델링에 적합합니다.
+### Q1: `DateRange`와 `TimeSlot`을 별도 value object로 minutes리하는 이유는 무엇인가요?
+**A**: `DateRange`는 날짜 수준의 범위(휴가 기간, 프로젝트 days정)를, `TimeSlot`은 하루 내  hours 범위(회의  hours, 진료  hours)를 표현합니다. Since the concerns differ, managing each invariant and operation independently is appropriate for domain modeling.
 
-### Q2: `Duration`에서 최대 기간을 1년(525,600분)으로 제한하는 이유는 무엇인가요?
-**A**: 일정/예약 도메인에서 1년을 초과하는 기간은 실무적으로 거의 사용되지 않습니다. 상한을 설정하면 실수로 과도한 값이 입력되는 것을 방지합니다. 도메인 요구사항에 따라 이 제한은 조정할 수 있습니다.
+### Q2: `Duration`에서 최대 기간을 1 years(525,600minutes)으로 be limited?
+**A**: days정/예약 도메인에서 1 years을 초과하는 기간은 실무적으로 거의 사용되지 않습니다. Setting an upper bound prevents accidentally entering excessive values. This limit can be adjusted according to domain requirements.
 
-### Q3: `RecurrenceRule`에서 factory method(`Daily`, `Weekly`, `Monthly`)를 분리한 이유는 무엇인가요?
-**A**: 생성자 하나로 모든 반복 유형을 처리하면 매개변수 조합이 복잡해지고 유효하지 않은 조합이 생길 수 있습니다. `Weekly(DayOfWeek.Monday, DayOfWeek.Wednesday)`처럼 용도별 factory method를 제공하면 호출 측에서 의도가 명확해지고, 각 메서드가 해당 유형에 맞는 검증만 수행합니다.
+### Q3: `RecurrenceRule`에서 factory method(`Daily`, `Weekly`, `Monthly`)를 minutes리한 이유는 무엇인가요?
+**A**: Handling all recurrence types with a single constructor makes parameter combinations complex and can create invalid combinations. `Weekly(DayOfWeek.Monday, DayOfWeek.Wednesday)` purpose-specific factory methods make the intent clear on the calling side, and each method only performs validation appropriate for that type.
 
 ---
 
-Part 5에서 다양한 도메인의 value object 적용 사례를 모두 살펴보았습니다. 부록에서는 LanguageExt 주요 타입 참조, Framework Type 선택 가이드, 용어집 등을 확인할 수 있습니다.
+We have explored all value object application cases across various domains in Part 5. 부록에서는 LanguageExt 주요 타입 참조, Framework Type 선택 가이드, 용어집 등을 확인할 수 있습니다.
 
 → [부록 A: LanguageExt 주요 타입 참조](../../../Appendix/A-languageext-reference.md)

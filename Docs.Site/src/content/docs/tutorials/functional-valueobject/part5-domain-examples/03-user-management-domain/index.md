@@ -3,40 +3,40 @@ title: "User Management Domain"
 ---
 ## Overview
 
-"User@Example.COM"과 "user@example.com"을 다른 이메일로 취급하면 같은 사용자가 중복 가입합니다. 비밀번호를 `string`으로 다루면 로그나 디버거에 평문이 노출됩니다. 전화번호 "010-1234-5678"과 "+82-10-1234-5678"이 다르게 저장되면 검색이 불가능합니다. 사용자 관리 도메인에서 원시 타입은 보안과 데이터 품질 모두를 위협합니다.
+"User@Example.COM"과 "user@example.com"을 다른 이메days로 취급하면 같은 사용자가 중복 가입합니다. Handling passwords as `string` exposes plain text in logs and debuggers. If phone numbers "010-1234-5678" and "+82-10-1234-5678" are stored differently, search becomes impossible. 사용자 관리 도메인에서  won시 타입은 보안과 데이터 품질 모두를 위협합니다.
 
-In this chapter, 사용자 인증과 프로필에 필요한 4가지 핵심 개념을 value object로 구현하여, 정규화/마스킹/해시를 타입 수준에서 guarantees.
+In this chapter, we implement 4 core concepts needed for user authentication and profiles as value objects, guaranteeing normalization/masking/hashing at the type level.
 
-- **Email**: 이메일 형식 검증과 정규화, 마스킹 기능 제공
-- **Password**: 비밀번호 강도 검증과 해시 저장, 검증 기능 제공
-- **PhoneNumber**: 전화번호 정규화와 포맷팅, 마스킹 기능 제공
-- **Username**: 사용자명 규칙 검증과 예약어 차단 기능 제공
+- **Email**: 이메days 형식 검증과 정규화, Masking 기능 제공
+- **Password**: Provides password strength validation, hash storage, and verification
+- **PhoneNumber**: Provides phone number normalization, formatting, and masking
+- **Username**: Provides username rule validation and reserved word blocking
 
 ## Learning Objectives
 
-### **핵심 학습 목표**
-- Password에서 평문을 저장하지 않고 해시만 유지하는 **보안 중심 설계를 구현할 수** 있습니다.
-- Email과 PhoneNumber에서 입력값 정규화와 표시용 포맷팅을 **분리할 수** 있습니다.
+### **Core Learning Objectives**
+- You can **implement a security-focused design** that stores only hashes without saving plain text in Password.
+- Email과 PhoneNumber에서 입력값 정규화와 표시용 포맷팅을 **minutes리할 수** 있습니다.
 - Username에서 시스템 예약어를 **차단하는 Pattern을 구현할 수** 있습니다.
-- 모든 value object에서 Masked 속성이나 안전한 ToString()으로 **민감 정보를 보호할 수** 있습니다.
+- You can **protect sensitive information** with Masked properties or safe ToString() in all value objects.
 
-### **실습을 통해 확인할 내용**
-- Email의 정규화(소문자 변환)와 LocalPart/Domain 파싱
-- Password의 강도 검증(대소문자, 숫자, 특수문자)과 해시 검증
-- PhoneNumber의 국제 형식 변환과 국가별 포맷팅
-- Username의 형식 규칙과 예약어 검증
+### **What You Will Verify Through Practice**
+- Email normalization (lowercase conversion) and LocalPart/Domain parsing
+- Password strength validation (uppercase, lowercase, digits, special characters) and hash verification
+- PhoneNumber international format conversion and per-country formatting
+- Username format rules and reserved word validation
 
 ## Why Is This Needed?
 
-사용자 관리는 보안과 데이터 품질이 특히 중요한 도메인입니다. 원시 타입으로 사용자 데이터를 다루면 여러 문제가 발생합니다.
+사용자 관리는 보안과 데이터 품질이 특히 중요한 도메인입니다.  won시 타입으로 사용자 데이터를 다루면 여러 문제가 발생합니다.
 
-비밀번호를 `string`으로 다루면 로그나 디버거에 평문이 노출될 수 있는데, Password value object는 생성 시 해시하고 `ToString()`은 항상 "********"를 returns. "User@Example.COM"과 "user@example.com"이 다른 이메일로 취급되면 중복 가입이 가능한데, Email value object는 항상 소문자로 정규화하여 이를 방지합니다. 전화번호의 다양한 입력 형식("010-1234-5678", "+82-10-1234-5678" 등)도 PhoneNumber가 내부적으로 정규화된 형식을 유지하여 일관된 검색을 guarantees.
+Handling passwords as `string` can expose plain text in logs and debuggers, but the Password value object hashes at creation and `ToString()` always returns "********". "User@Example.COM"과 "user@example.com"이 다른 이메days로 취급되면 중복 가입이 가능한데, Email value object는 항상 소문자로 정규화하여 이를 방지합니다. 전화번호의 다양한 입력 형식("010-1234-5678", "+82-10-1234-5678" 등)도 PhoneNumber가 내부적으로 정규화된 형식을 유지하여 days관된 검색을 guarantees.
 
 ## Core Concepts
 
-### Email (이메일)
+### Email (이메days)
 
-Email은 이메일 주소를 검증하고 정규화합니다. LocalPart, Domain 파싱과 마스킹 기능을 provides.
+Email은 이메days 주소를 검증하고 정규화합니다. LocalPart, Domain 파싱과 Masking 기능을 provides.
 
 ```csharp
 public sealed class Email : SimpleValueObject<string>
@@ -47,7 +47,7 @@ public sealed class Email : SimpleValueObject<string>
 
     private Email(string value) : base(value) { }
 
-    public string Address => Value;  // protected Value에 대한 public 접근자
+    public string Address => Value;  // Public accessor for protected Value
     public string LocalPart => Value.Split('@')[0];    // "user"
     public string Domain => Value.Split('@')[1];       // "example.com"
 
@@ -86,7 +86,7 @@ public sealed class Email : SimpleValueObject<string>
 
 ### Password (비밀번호)
 
-Password는 비밀번호 강도를 검증하고 해시하여 저장합니다. 평문은 절대 저장하지 않습니다.
+Password validates password strength and stores hashed values. Plain text is never stored.
 
 ```csharp
 public sealed class Password : IEquatable<Password>
@@ -96,7 +96,7 @@ public sealed class Password : IEquatable<Password>
     public const int MinLength = 8;
     public const int MaxLength = 128;
 
-    public string Value { get; }  // 해시된 값
+    public string Value { get; }  // Hashed value
 
     private Password(string hashedValue) => Value = hashedValue;
 
@@ -122,15 +122,15 @@ public sealed class Password : IEquatable<Password>
                 $"Password cannot be empty. Current value: '{value}'");
 
     public bool Verify(string plainText) => Value == HashPassword(plainText);
-    public override string ToString() => "********";  // 절대 평문 노출 안 함
+    public override string ToString() => "********";  // Never expose plain text
 }
 ```
 
-`Create()` 시점에 평문을 해시하고, value object에는 해시만 저장합니다. `Verify()`로 검증하고, `ToString()`은 항상 마스킹된 값을 반환하여 평문 노출을 원천 차단합니다.
+`Create()` 시점에 평문을 Hash하고, value object에는 Hash만 저장합니다. `Verify()`로 검증하고, `ToString()`은 항상 Masking된 값을 반환하여 평문 노출을  won천 차단합니다.
 
 ### PhoneNumber (전화번호)
 
-PhoneNumber는 전화번호를 국제 형식으로 정규화합니다. 국가별 포맷팅과 마스킹 기능을 provides.
+PhoneNumber normalizes phone numbers to international format. It provides per-country formatting and masking functionality.
 
 ```csharp
 public sealed class PhoneNumber : ValueObject
@@ -172,11 +172,11 @@ public sealed class PhoneNumber : ValueObject
 }
 ```
 
-다양한 입력 형식(010-1234-5678, +82-10-1234-5678 등)을 정규화된 국제 형식으로 저장하고, `Formatted`로 표시용 형식을 provides. 입력 형식과 저장 형식의 분리 Pattern입니다.
+다양한 입력 형식(010-1234-5678, +82-10-1234-5678 등)을 정규화된 국제 형식으로 저장하고, `Formatted`로 표시용 형식을 provides. 입력 형식과 저장 형식의 minutes리 Pattern입니다.
 
 ### Username (사용자명)
 
-Username은 사용자명 규칙을 검증하고 예약어를 차단합니다.
+Username validates username rules and blocks reserved words.
 
 ```csharp
 public sealed class Username : SimpleValueObject<string>
@@ -196,7 +196,7 @@ public sealed class Username : SimpleValueObject<string>
 
     private Username(string value) : base(value) { }
 
-    public string Name => Value;  // protected Value에 대한 public 접근자
+    public string Name => Value;  // Public accessor for protected Value
 
     public static Fin<Username> Create(string? value) =>
         CreateFromValidation(
@@ -220,42 +220,42 @@ public sealed class Username : SimpleValueObject<string>
 }
 ```
 
-사용자명 규칙(영문자 시작, 길이 제한)과 예약어 목록이 value object 내부에 정의되어 일관되게 적용됩니다.
+사용자명 규칙(영문자 시작, 길이 제한)과 예약어 목록이 value object 내부에 정의되어 days관되게 적용됩니다.
 
 ## Practical Guidelines
 
 ### Expected Output
 ```
-=== 사용자 관리 도메인 값 객체 ===
+=== User Management Domain Value Objects ===
 
-1. Email (이메일)
+1. Email
 ────────────────────────────────────────
-   정규화: user@example.com
-   로컬 파트: user
-   도메인: example.com
-   마스킹: u***r@example.com
-   잘못된 형식: 이메일 형식이 올바르지 않습니다.
+   Normalized: user@example.com
+   Local part: user
+   Domain: example.com
+   Masked: u***r@example.com
+   Invalid format: Email format is invalid.
 
-2. Password (비밀번호)
+2. Password
 ────────────────────────────────────────
-   비밀번호 생성: 성공
-   표시: ********
-   검증(맞음): True
-   검증(틀림): False
-   약한 비밀번호: 비밀번호가 너무 약합니다. 대문자, 소문자, 숫자, 특수문자 중 3가지 이상을 포함해야 합니다.
+   Password creation: Success
+   Display: ********
+   Verification (correct): True
+   Verification (incorrect): False
+   약한 비밀Number: Password is too weak. Must contain at least 3 of: uppercase, lowercase, digits, special characters.
 
-3. PhoneNumber (전화번호)
+3. PhoneNumber (Phone Number)
 ────────────────────────────────────────
-   정규화: +821012345678
-   포맷팅: 010-1234-5678
-   국가 코드: +82
-   마스킹: +82 ***-****-5678
+   Normalized: +821012345678
+   Formatted: 010-1234-5678
+   Country code: +82
+   Masked: +82 ***-****-5678
 
-4. Username (사용자명)
+4. Username
 ────────────────────────────────────────
-   사용자명: john_doe123
-   예약어: 예약된 사용자명은 사용할 수 없습니다.
-   잘못된 형식: 사용자명은 영문자로 시작해야 하며, 영문자, 숫자, 밑줄(_), 하이픈(-)만 사용할 수 있습니다.
+   Username: john_doe123
+   Reserved: Reserved usernames cannot be used.
+   Invalid format: Username must start with a letter and can only contain letters, digits, underscores (_), and hyphens (-).
 ```
 
 ## Project Description
@@ -264,8 +264,8 @@ public sealed class Username : SimpleValueObject<string>
 ```
 03-User-Management-Domain/
 ├── UserManagementDomain/
-│   ├── Program.cs                      # 메인 실행 파일 (4개 값 객체 구현)
-│   └── UserManagementDomain.csproj     # 프로젝트 파일
+│   ├── Program.cs                      # 메인 실행 파days (4개 값 객체 구현)
+│   └── UserManagementDomain.csproj     # 프로젝트 파days
 └── README.md                           # 프로젝트 문서
 ```
 
@@ -282,43 +282,43 @@ public sealed class Username : SimpleValueObject<string>
 
 | value object | Framework Type | Characteristics |
 |--------|---------------|------|
-| Email | SimpleValueObject\<string\> | 순차 검증, 정규화, 파싱 |
-| Password | IEquatable\<Password\> (독립 구현) | 강도 검증, 해시 저장, 검증 |
-| PhoneNumber | ValueObject | 정규화, 포맷팅, 마스킹 |
-| Username | SimpleValueObject\<string\> | 순차 검증, 예약어 차단 |
+| Email | SimpleValueObject\<string\> | Sequential validation, normalization, parsing |
+| Password | IEquatable\<Password\> (independent implementation) | Strength validation, hash storage, verification |
+| PhoneNumber | ValueObject | Normalization, formatting, masking |
+| Username | SimpleValueObject\<string\> | Sequential validation, reserved word blocking |
 
 ## Summary at a Glance
 
-### 사용자 관리 value object 요약
+### User Management Value Object Summary
 
 각 value object의 속성, Validation Rules, Security Features을 한눈에 비교할 수 있습니다.
 
 | value object | Key Properties | Validation Rules | Security Features |
 |--------|----------|----------|----------|
-| Email | Value | 이메일 형식, 254자 이하 | Masked |
-| Password | Value (해시) | 8~128자, 강도 3/4 이상 | 해시 저장, ToString 마스킹 |
-| PhoneNumber | Value, CountryCode | 9~11자리 숫자 | Masked |
-| Username | Value | 3~30자, 영문 시작, 예약어 금지 | 없음 |
+| Email | Value | 이메days 형식, 254자 이하 | Masked |
+| Password | Value (Hash) | 8-128 chars, strength 3/4+ | Hash storage, ToString masking |
+| PhoneNumber | Value, CountryCode | 9-11 digit number | Masked |
+| Username | Value | 3-30 chars, starts with letter, reserved words prohibited | None |
 
 ### 보안 Pattern
 
-사용자 관리 도메인에서 활용된 보안 Pattern을 유형별로 분류하면 다음과 같습니다.
+사용자 관리 도메인에서 활용된 보안 Pattern을 유형별로 minutes류하면 다음과 같습니다.
 
 | Pattern | value object | Description |
 |------|--------|------|
-| 해시 저장 | Password | 평문을 저장하지 않음 |
-| 마스킹 | Email, PhoneNumber | 민감 정보 일부만 표시 |
-| 예약어 차단 | Username | 시스템 사용 이름 금지 |
-| 안전한 ToString | Password | 항상 "********" 반환 |
+| Hash storage | Password | Does not store plain text |
+| Masking | Email, PhoneNumber | 민감 정보 days부만 표시 |
+| Reserved word blocking | Username | System-used names prohibited |
+| Safe ToString | Password | Always returns "********" |
 
 ## FAQ
 
-### Q1: Password에서 더 강력한 해시 알고리즘을 사용하려면?
+### Q1: How to use a stronger hash algorithm in Password?
 
-실제 프로덕션에서는 SHA256 대신 bcrypt나 Argon2를 사용해야 합니다. bcrypt는 솔트를 자동으로 생성하고, work factor로 계산 시간을 조절할 수 있어 브루트포스 공격에 더 강합니다.
+In production, bcrypt or Argon2 should be used instead of SHA256. bcrypt는 솔트를 자동으로 생성하고, work factor로 계산  hours을 조절할 수 있어 브루트포스 공격에 더 강합니다.
 
 ```csharp
-// BCrypt 사용 예시 (BCrypt.Net-Next 패키지)
+// BCrypt usage example (BCrypt.Net-Next package)
 private static string HashPassword(string plainText)
 {
     return BCrypt.Net.BCrypt.HashPassword(plainText, workFactor: 12);
@@ -330,14 +330,14 @@ public bool Verify(string plainText)
 }
 ```
 
-### Q2: Email에서 도메인별로 추가 검증을 하려면?
+### Q2: How to add per-domain validation in Email?
 
-도메인 기반 validation logic을 추가하여 특정 도메인을 차단하거나 허용 목록만 통과시킬 수 있습니다.
+Add domain-based validation logic to block specific domains or allow only whitelisted ones.
 
 ```csharp
 public static Fin<Email> Create(string? value, EmailValidationOptions? options = null)
 {
-    // 기본 검증...
+    // Basic validation...
 
     if (options?.BlockedDomains?.Contains(domain) == true)
         return DomainError.For<Email>(new BlockedDomain(), domain,
@@ -351,9 +351,9 @@ public static Fin<Email> Create(string? value, EmailValidationOptions? options =
 }
 ```
 
-### Q3: PhoneNumber에서 여러 국가 형식을 지원하려면?
+### Q3: PhoneNumber에서 여러 국가 형식을 지 won하려면?
 
-국가별 포맷터를 별도로 defines.
+Define separate formatters per country.
 
 ```csharp
 private static readonly Dictionary<string, Func<string, string>> Formatters = new()
@@ -378,7 +378,7 @@ private static string FormatUS(string number)
 }
 ```
 
-사용자 관리 도메인의 value object 구현을 살펴보았습니다. Next chapter에서는 날짜 범위, 시간 슬롯, 반복 규칙 등 시간 관련 로직이 복잡한 일정/예약 도메인의 value object를 implements.
+We have explored the value object implementation for the user management domain. Next chapter에서는 날짜 범위,  hours 슬롯, 반복 규칙 등  hours 관련 로직이 복잡한 days정/예약 도메인의 value object를 implements.
 
 ---
 
@@ -395,23 +395,23 @@ dotnet test
 ### Tests 구조
 ```
 UserManagementDomain.Tests.Unit/
-├── EmailTests.cs      # 이메일 형식 검증 테스트
-├── PasswordTests.cs   # 비밀번호 강도 검증 테스트
-├── PhoneNumberTests.cs # 전화번호 형식/마스킹 테스트
-└── UsernameTests.cs   # 사용자명 규칙 검증 테스트
+├── EmailTests.cs      # 이메days 형식 검증 테스트
+├── PasswordTests.cs   # Password strength validation tests
+├── PhoneNumberTests.cs # 전화번호 형식/Masking 테스트
+└── UsernameTests.cs   # Username rule validation tests
 ```
 
 ### Key Test Cases
 
 | Test Class | Test Content |
 |-------------|-----------|
-| EmailTests | 형식 검증, 정규화, 도메인 추출 |
-| PasswordTests | 강도 규칙, HashedValue, 문자 요구사항 |
-| PhoneNumberTests | 형식 검증, 국가 코드, 마스킹 |
-| UsernameTests | 길이 제한, 예약어 검사, 정규화 |
+| EmailTests | Format validation, normalization, domain extraction |
+| PasswordTests | Strength rules, HashedValue, character requirements |
+| PhoneNumberTests | 형식 검증, 국가 코드, Masking |
+| UsernameTests | Length limits, reserved word check, normalization |
 
 ---
 
-사용자 관리 도메인의 value object를 구현했습니다. Next chapter에서는 일정/예약 도메인에서 날짜 범위, 시간 슬롯, 반복 규칙 등 시간 기반 value object를 다룹니다.
+We have implemented the user management domain value objects. Next chapter에서는 days정/예약 도메인에서 날짜 범위,  hours 슬롯, 반복 규칙 등  hours 기반 value object를 다룹니다.
 
-→ [4장: 일정/예약 도메인](../04-Scheduling-Domain/)
+→ [4장: days정/예약 도메인](../04-Scheduling-Domain/)
