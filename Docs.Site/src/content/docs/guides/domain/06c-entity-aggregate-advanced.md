@@ -31,16 +31,16 @@ Once you have the basic Aggregate structure in place, the following questions im
 
 | Concept | Description |
 |------|------|
-| Cross-Aggregate 참조 | EntityId로만 참조, 도메인 이벤트로 Aggregate 간 통신 |
-| IAuditable | 생성/수정 시각 추적, 도메인이 직접 관리 |
-| ISoftDeletable | 소프트 삭제 지원, `Option<DateTime>` 기반 단일 진실 원천 |
-| IConcurrencyAware | 낙관적 동시성 제어, RowVersion 기반 Lost Update 방지 |
+| Cross-Aggregate references | Reference only by EntityId, inter-Aggregate communication via domain events |
+| IAuditable | Tracks creation/modification timestamps, managed directly by the domain |
+| ISoftDeletable | Supports soft delete, `Option<DateTime>` as single source of truth |
+| IConcurrencyAware | Optimistic concurrency control, RowVersion-based Lost Update prevention |
 
 ### Key Procedures
 
-1. Cross-Aggregate 참조는 EntityId만 사용, Domain Port로 외부 Aggregate 조회
-2. 필요 시 부가 인터페이스 적용 (`IAuditable`, `ISoftDeletable`, `IConcurrencyAware`)
-3. 각 인터페이스의 체크리스트에 따라 도메인 모델 + 인프라 구현
+1. Use only EntityId for Cross-Aggregate references, query external Aggregates via Domain Port
+2. Apply supplementary interfaces as needed (`IAuditable`, `ISoftDeletable`, `IConcurrencyAware`)
+3. Implement domain model + infrastructure according to each interface checklist
 
 ---
 
@@ -50,10 +50,10 @@ Once you have the basic Aggregate structure in place, the following questions im
 
 When referencing another Aggregate, **only EntityId is stored.**
 
-In the code below, `ProductId`는 Product Aggregate 자체가 아닌 ID 값만 보유한다는 점.
+Note in the code below that `ProductId` holds only the ID value, not the Product Aggregate itself.
 
 ```csharp
-// Order Aggregate가 Product Aggregate를 ID로 참조
+// Order Aggregate references Product Aggregate by ID
 public sealed class Order : AggregateRoot<OrderId>
 {
     // Cross-Aggregate reference (references Product by ID value)
@@ -68,23 +68,23 @@ public sealed class Order : AggregateRoot<OrderId>
 
 ### Querying External Aggregates via Domain Port
 
-다른 Aggregate의 정보가 필요할 때는 **Domain Port(인터페이스)를** 정의하고, Application Layer에서 구현합니다.
+When information from another Aggregate is needed, **define a Domain Port (interface)** and implement it in the Application Layer.
 
 ```csharp
 // Domain Layer: Port definition
 public interface IProductCatalog : IObservablePort
 {
     /// <summary>
-    /// 여러 상품의 가격을 배치로 조회
+    /// Batch query prices for multiple products
     /// </summary>
     FinT<IO, Map<ProductId, Money>> GetPricesForProducts(IReadOnlyList<ProductId> productIds);
 }
 ```
 
-Port는 **도메인이 필요한 것을** 표현합니다:
-- `IProductCatalog`는 Product Aggregate 전체를 노출하지 않음
-- 배치 API로 필요한 정보(가격)를 효율적으로 제공 (N+1 문제 방지)
-- 구현은 Application/Adapter Layer에서 담당
+The Port **expresses what the domain needs:**
+- `IProductCatalog` does not expose the entire Product Aggregate
+- Provides needed information (prices) efficiently via batch API (prevents N+1 problem)
+- Implementation is handled by the Application/Adapter Layer
 
 ### Inter-Aggregate Communication via Domain Events
 
@@ -102,14 +102,14 @@ Order Aggregate                     Inventory Aggregate
 
 ### Entities Referencing Other Entities
 
-Entity가 다른 Entity를 참조할 때는 **EntityId만 참조합니다** (외래 키 패턴).
+When an Entity references another Entity, **only EntityId is referenced** (foreign key pattern).
 
 ```csharp
 [GenerateEntityId]
 public class OrderItem : Entity<OrderItemId>
 {
-    public OrderId OrderId { get; private set; }      // Order Entity 참조
-    public ProductId ProductId { get; private set; }  // Product Entity 참조
+    public OrderId OrderId { get; private set; }      // Reference to Order Entity
+    public ProductId ProductId { get; private set; }  // Reference to Product Entity
     public Quantity Quantity { get; private set; }
     public Price UnitPrice { get; private set; }
 
@@ -152,7 +152,7 @@ public class OrderItem : Entity<OrderItemId>
 }
 ```
 
-> Navigation Property가 필요한 경우는 [Adapter 구현 가이드](../adapter/13-adapters)를 참조하세요.
+> For cases where Navigation Properties are needed, see the [Adapter Implementation Guide](../adapter/13-adapters).
 
 Now that we understand Cross-Aggregate reference rules, let us look at how to apply common supplementary features (audit, soft delete, concurrency control) to Entities via interfaces.
 
@@ -164,7 +164,7 @@ These are interfaces that provide additional capabilities to Entities.
 
 ### IAuditable
 
-생성/수정 시각을 추적합니다. Cross-Cutting Concern이지만, 엔티티가 자신의 상태를 직접 관리하는 원칙에 따라 도메인 레이어에 배치합니다. EF Core `SaveChanges` 인터셉터 등 인프라에 위임하지 않고, 비즈니스 메서드가 명시적으로 시각을 설정합니다.
+Tracks creation/modification timestamps. Although a cross-cutting concern, it is placed in the Domain Layer following the principle that entities directly manage their own state. Rather than delegating to infrastructure such as EF Core `SaveChanges` interceptors, business methods explicitly set timestamps.
 
 **Location**: `Functorium.Domains.Entities.IAuditable`
 
@@ -186,23 +186,23 @@ public interface IAuditableWithUser : IAuditable
 }
 ```
 
-**Design Point:** `Option<T>`을 사용하여 값의 존재/부재를 명시적으로 표현합니다. `null` 대신 `Option.None`으로 "아직 수정되지 않음"을 타입 안전하게 나타냅니다.
+**Design Point:** `Option<T>` is used to explicitly represent the presence/absence of a value. Instead of `null`, `Option.None` type-safely represents "not yet modified."
 
-#### 구현 패턴 — 도메인이 직접 관리
+#### Implementation Pattern -- Domain Directly Manages
 
-SingleHost의 5개 엔티티 모두 `IAuditable`을 구현하며, 동일한 패턴을 따릅니다.
+All 5 entities in SingleHost implement `IAuditable` and follow the same pattern.
 
-| Entity | CreatedAt 설정 위치 | UpdatedAt 설정 위치 |
+| Entity | Where CreatedAt Is Set | Where UpdatedAt Is Set |
 |--------|-------------------|-------------------|
-| Product | 생성자 | `Update()` |
-| Order | 생성자 | `TransitionTo()` |
-| Tag | 생성자 | `Rename()` |
-| Customer | 생성자 | `UpdateCreditLimit()`, `ChangeEmail()` |
-| Inventory | 생성자 | `DeductStock()`, `AddStock()` |
+| Product | Constructor | `Update()` |
+| Order | Constructor | `TransitionTo()` |
+| Tag | Constructor | `Rename()` |
+| Customer | Constructor | `UpdateCreditLimit()`, `ChangeEmail()` |
+| Inventory | Constructor | `DeductStock()`, `AddStock()` |
 
-**사용 예제 (Product.cs 발췌):**
+**Usage Example (excerpt from Product.cs):**
 
-생성자에서 `CreatedAt`을 설정하고, 비즈니스 메서드에서 `UpdatedAt`을 갱신하는 패턴.
+Pattern of setting `CreatedAt` in the constructor and updating `UpdatedAt` in business methods.
 
 ```csharp
 [GenerateEntityId]
@@ -226,7 +226,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable, ISoftDeletab
         return this;
     }
 
-    // For ORM restoration: createdAt, updatedAt을 파라미터로 수신
+    // For ORM restoration: receives createdAt, updatedAt as parameters
     public static Product CreateFromValidated(
         ProductId id, ...,
         DateTime createdAt,
@@ -240,11 +240,11 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable, ISoftDeletab
 
 #### Infrastructure Strategy -- Mapper Conversion
 
-| 관점 | 현재 구현 | 대안 (미사용) |
+| Aspect | Current Implementation | Alternative (Not Used) |
 |------|----------|-------------|
-| 감사 필드 설정 | 도메인 모델이 직접 설정 | EF Core `SaveChanges` 인터셉터로 자동 주입 |
-| Mapper 변환 | `Option<DateTime>.ToNullable()` / `Optional()` | — |
-| Persistence Model | `DateTime?` (nullable) | — |
+| Audit field setting | Domain model sets directly | Auto-injection via EF Core `SaveChanges` interceptor |
+| Mapper conversion | `Option<DateTime>.ToNullable()` / `Optional()` | -- |
+| Persistence Model | `DateTime?` (nullable) | -- |
 
 ```csharp
 // Domain → Persistence Model (ToModel)
@@ -261,32 +261,32 @@ Product.CreateFromValidated(
 
 #### IAuditableWithUser Reference
 
-`IAuditableWithUser`는 사용자 추적이 필요한 경우를 위해 제공됩니다. SingleHost에서는 아직 사용되지 않으며, 멀티테넌트 등 사용자 식별이 필요한 시나리오에서 적용합니다.
+`IAuditableWithUser` is provided for cases where user tracking is needed. It is not yet used in SingleHost and is applied in scenarios requiring user identification such as multi-tenancy.
 
-#### Checklist — 새 엔티티에 IAuditable 적용 시
+#### Checklist -- When Applying IAuditable to a New Entity
 
-- [ ] `IAuditable` 구현 (`CreatedAt`, `UpdatedAt` 속성)
-- [ ] 생성자에서 `CreatedAt = DateTime.UtcNow`
-- [ ] 상태 변경 메서드에서 `UpdatedAt = DateTime.UtcNow`
-- [ ] `CreateFromValidated()`에 `createdAt`, `updatedAt` 파라미터
-- [ ] Persistence Model: `DateTime?` 타입
-- [ ] Mapper: `Option<DateTime>.ToNullable()` / `Optional()` 변환
+- [ ] Implement `IAuditable` (`CreatedAt`, `UpdatedAt` properties)
+- [ ] Set `CreatedAt = DateTime.UtcNow` in constructor
+- [ ] Set `UpdatedAt = DateTime.UtcNow` in state change methods
+- [ ] Add `createdAt`, `updatedAt` parameters to `CreateFromValidated()`
+- [ ] Persistence Model: `DateTime?` type
+- [ ] Mapper: `Option<DateTime>.ToNullable()` / `Optional()` conversion
 
 ### ISoftDeletable
 
-소프트 삭제를 지원합니다. 실제로 레코드를 삭제하지 않고 삭제됨으로 표시합니다.
+Supports soft delete. Records are not actually deleted but marked as deleted.
 
 **Location**: `Functorium.Domains.Entities.ISoftDeletable`
 
-#### 왜 Soft Delete인가 — 5가지 원칙
+#### Why Soft Delete -- 5 Principles
 
-| # | 가치 | Description |
+| # | Value | Description |
 |---|------|------|
-| 1 | **참조 무결성** | Cross-Aggregate 참조 보존. 예: `OrderLine → ProductId` 참조가 존재하므로 물리 삭제 불가 |
-| 2 | **비즈니스 의미 분리** | "단종"은 도메인 개념이지 데이터 소멸이 아님. `Delete()`/`Restore()` + 도메인 이벤트로 명시적 모델링 |
-| 3 | **복원 가능성** | `Restore()` 메서드로 복구 가능. 멱등성 보장 |
-| 4 | **감사 추적** | `ISoftDeletableWithUser`의 `DeletedBy`로 삭제자 추적 |
-| 5 | **인프라 관심사 분리** | EF Core Global Query Filter + Dapper `WHERE DeletedAt IS NULL` 자동 필터링 |
+| 1 | **Referential integrity** | Preserves Cross-Aggregate references. Example: physical deletion is impossible because `OrderLine -> ProductId` references exist |
+| 2 | **Business meaning separation** | "Discontinued" is a domain concept, not data destruction. Explicit modeling with `Delete()`/`Restore()` + domain events |
+| 3 | **Restorability** | Recoverable via `Restore()` method. Idempotency guaranteed |
+| 4 | **Audit trail** | Track who deleted via `DeletedBy` in `ISoftDeletableWithUser` |
+| 5 | **Infrastructure concern separation** | EF Core Global Query Filter + Dapper `WHERE DeletedAt IS NULL` automatic filtering |
 
 #### Interface Definition
 
@@ -295,7 +295,7 @@ Product.CreateFromValidated(
 public interface ISoftDeletable
 {
     Option<DateTime> DeletedAt { get; }
-    bool IsDeleted => DeletedAt.IsSome;  // default interface member (파생 속성)
+    bool IsDeleted => DeletedAt.IsSome;  // default interface member (derived property)
 }
 
 // Tracks deletion status + who deleted
@@ -305,13 +305,13 @@ public interface ISoftDeletableWithUser : ISoftDeletable
 }
 ```
 
-**Design Point:** `bool IsDeleted`는 `DeletedAt`에서 파생되는 default interface member입니다. `Option<DateTime>`이 단일 진실 원천(Single Source of Truth)이므로 상태 불일치가 불가능합니다.
+**Design Point:** `bool IsDeleted` is a default interface member derived from `DeletedAt`. Since `Option<DateTime>` is the single source of truth, state inconsistency is impossible.
 
 #### Domain Model Implementation Pattern
 
 **Reference**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Products/Product.cs`
 
-`Delete()`와 `Restore()`의 멱등성 보장 패턴, 그리고 `Update()`에서 삭제된 엔티티 수정을 방지하는 가드 패턴.
+Idempotency guarantee pattern for `Delete()` and `Restore()`, and guard pattern preventing modification of deleted entities in `Update()`.
 
 ```csharp
 [GenerateEntityId]
@@ -324,11 +324,11 @@ public sealed class Product : AggregateRoot<ProductId>, ISoftDeletableWithUser
     public sealed record DeletedEvent(ProductId ProductId, string DeletedBy) : DomainEvent;
     public sealed record RestoredEvent(ProductId ProductId) : DomainEvent;
 
-    // --- SoftDelete 속성 ---
+    // --- SoftDelete properties ---
     public Option<DateTime> DeletedAt { get; private set; }
     public Option<string> DeletedBy { get; private set; }
 
-    // --- Delete: 멱등성 보장 ---
+    // --- Delete: Idempotency guarantee ---
     public Product Delete(string deletedBy)
     {
         if (DeletedAt.IsSome)           // Already deleted → do nothing
@@ -340,7 +340,7 @@ public sealed class Product : AggregateRoot<ProductId>, ISoftDeletableWithUser
         return this;
     }
 
-    // --- Restore: 멱등성 보장 ---
+    // --- Restore: Idempotency guarantee ---
     public Product Restore()
     {
         if (DeletedAt.IsNone)           // Not deleted → do nothing
@@ -352,18 +352,18 @@ public sealed class Product : AggregateRoot<ProductId>, ISoftDeletableWithUser
         return this;
     }
 
-    // --- Update 가드: 삭제된 엔티티 수정 방지 ---
+    // --- Update guard: Prevent modification of deleted entities ---
     public Fin<Product> Update(ProductName name, ProductDescription description, Money price)
     {
         if (DeletedAt.IsSome)
             return DomainError.For<Product>(
                 new AlreadyDeleted(), Id.ToString(),
                 "Cannot update a deleted product");
-        // ... 업데이트 로직
+        // ... update logic
         return this;
     }
 
-    // --- ORM 복원용 팩토리: deletedAt, deletedBy 파라미터 포함 ---
+    // --- ORM restoration factory: includes deletedAt, deletedBy parameters ---
     public static Product CreateFromValidated(
         ProductId id, ...,
         Option<DateTime> deletedAt, Option<string> deletedBy)
@@ -378,11 +378,11 @@ public sealed class Product : AggregateRoot<ProductId>, ISoftDeletableWithUser
 
 | Pattern | Implementation |
 |------|------|
-| 멱등성 | `Delete()` — `DeletedAt.IsSome` → early return |
-| 멱등성 | `Restore()` — `DeletedAt.IsNone` → early return |
-| 에러 가드 | `Update()` — `DeletedAt.IsSome` → `Fin.Fail(AlreadyDeleted)` |
-| 도메인 이벤트 | 상태 변경 시 `DeletedEvent`/`RestoredEvent` 발행 |
-| 초기화 | `Option<T>.None`으로 복원 (null이 아님) |
+| Idempotency | `Delete()` -- `DeletedAt.IsSome` -> early return |
+| Idempotency | `Restore()` -- `DeletedAt.IsNone` -> early return |
+| Error guard | `Update()` -- `DeletedAt.IsSome` -> `Fin.Fail(AlreadyDeleted)` |
+| Domain events | Publish `DeletedEvent`/`RestoredEvent` on state changes |
+| Initialization | Restore with `Option<T>.None` (not null) |
 
 #### Repository Port Pattern
 
@@ -395,39 +395,39 @@ public interface IProductRepository : IRepository<Product, ProductId>
 }
 ```
 
-`GetByIdIncludingDeleted()`가 필요한 이유: Delete/Restore 커맨드가 삭제된 엔티티에 접근해야 하므로 Global Query Filter를 우회하는 별도 메서드가 필요합니다.
+Why `GetByIdIncludingDeleted()` is needed: Delete/Restore commands need to access deleted entities, so a separate method that bypasses the Global Query Filter is required.
 
 #### Infrastructure Filtering Strategy
 
 | Adapter | Filter Strategy | Bypass Method |
 |---------|-----------|-----------|
 | EF Core | `HasQueryFilter(p => p.DeletedAt == null)` | `IgnoreQueryFilters()` |
-| Dapper | `WHERE DeletedAt IS NULL` (BuildWhereClause) | 별도 쿼리 작성 |
-| InMemory | `p.DeletedAt.IsNone` 조건 | 조건 제거 |
+| Dapper | `WHERE DeletedAt IS NULL` (BuildWhereClause) | Write separate query |
+| InMemory | `p.DeletedAt.IsNone` condition | Remove condition |
 
 **Mapper Conversion:**
-- Domain → Model: `Option<DateTime>.ToNullable()` (DB에 `NULL`로 저장)
-- Model → Domain: `Optional(model.DeletedAt)` (`NULL` → `Option.None`)
+- Domain -> Model: `Option<DateTime>.ToNullable()` (stored as `NULL` in DB)
+- Model -> Domain: `Optional(model.DeletedAt)` (`NULL` -> `Option.None`)
 
-> 인프라 구현 상세는 [Adapter 구현 가이드](../adapter/13-adapters)를 참조하세요.
+> For detailed infrastructure implementation, see the [Adapter Implementation Guide](../adapter/13-adapters).
 
 #### Checklist
 
-Soft Delete를 새 Aggregate에 적용할 때 확인할 항목:
+Items to check when applying Soft Delete to a new Aggregate:
 
-- [ ] 도메인 모델: `ISoftDeletableWithUser` 구현
-- [ ] 도메인 모델: `Delete()`/`Restore()` 멱등성 메서드
-- [ ] 도메인 모델: 상태 변경 메서드에 `DeletedAt.IsSome` 가드
-- [ ] 도메인 모델: 도메인 이벤트 (`DeletedEvent`, `RestoredEvent`) 발행
-- [ ] 도메인 모델: `CreateFromValidated()`에 `deletedAt`/`deletedBy` 파라미터
-- [ ] Repository Port: `GetByIdIncludingDeleted()` 메서드
-- [ ] EF Core: `HasQueryFilter(e => e.DeletedAt == null)` 설정
-- [ ] Dapper: `WHERE DeletedAt IS NULL` 자동 필터링
-- [ ] Mapper: `Option<DateTime>` ↔ `DateTime?` 변환
+- [ ] Domain model: Implement `ISoftDeletableWithUser`
+- [ ] Domain model: Idempotent `Delete()`/`Restore()` methods
+- [ ] Domain model: `DeletedAt.IsSome` guard in state change methods
+- [ ] Domain model: Publish domain events (`DeletedEvent`, `RestoredEvent`)
+- [ ] Domain model: `deletedAt`/`deletedBy` parameters in `CreateFromValidated()`
+- [ ] Repository Port: `GetByIdIncludingDeleted()` method
+- [ ] EF Core: `HasQueryFilter(e => e.DeletedAt == null)` configuration
+- [ ] Dapper: `WHERE DeletedAt IS NULL` automatic filtering
+- [ ] Mapper: `Option<DateTime>` <-> `DateTime?` conversion
 
 ### IConcurrencyAware
 
-낙관적 동시성 제어를 지원합니다. Aggregate의 불변식(Invariant)은 단일 트랜잭션 안에서만 보호되므로, 동시 트랜잭션 간에는 도메인 로직만으로 invariant protection가 불가능합니다(Lost Update). 도메인이 "나는 동시성 보호가 필요하다"고 명시적으로 선언하는 인터페이스이며, 고경합 Aggregate에 선택적으로 적용합니다.
+Supports optimistic concurrency control. An Aggregate's invariants are protected only within a single transaction, so invariant protection through domain logic alone is impossible across concurrent transactions (Lost Update). This is an interface where the domain explicitly declares "I need concurrency protection," and it is selectively applied to high-contention Aggregates.
 
 **Location**: `Functorium.Domains.Entities.IConcurrencyAware`
 
@@ -442,31 +442,31 @@ public interface IConcurrencyAware
 
 #### Why It Is Needed -- Lost Update Scenario
 
-다음 시나리오는 RowVersion 없이 두 트랜잭션이 동시에 재고를 차감할 때 발생하는 Lost Update 문제를 보여줍니다.
+The following scenario shows the Lost Update problem that occurs when two transactions simultaneously deduct stock without RowVersion.
 
-Inventory의 `DeductStock` 예시로 동시성 문제를 설명합니다:
+Explaining the concurrency issue with the Inventory `DeductStock` example:
 
 ```
 Initial state: stock = 10 items
 
-1. [트랜잭션 A] 재고를 읽음 → 10개
-2. [트랜잭션 B] 재고를 읽음 → 10개  (A가 아직 저장 전이므로 같은 값)
-3. [트랜잭션 A] DeductStock(7): 7 ≤ 10 ✓ → 재고 = 3 → DB 저장
-4. [트랜잭션 B] DeductStock(7): 7 ≤ 10 ✓ → 재고 = 3 → DB 저장 (A의 결과를 덮어씀!)
+1. [Transaction A] Reads stock -> 10 items
+2. [Transaction B] Reads stock -> 10 items  (same value because A has not saved yet)
+3. [Transaction A] DeductStock(7): 7 <= 10 OK -> stock = 3 -> save to DB
+4. [Transaction B] DeductStock(7): 7 <= 10 OK -> stock = 3 -> save to DB (overwrites A's result!)
 
 Final result: stock = 3 items
-기대 결과: B는 거부되어야 함 (A 반영 후 실제 재고 = 3, 7개 차감 불가)
+Expected result: B should be rejected (actual stock = 3 after A, cannot deduct 7)
 ```
 
-핵심: `DeductStock()`의 `if (quantity > StockQuantity)` 가드는 **읽은 시점의 값으로만** 판단합니다. 트랜잭션 B는 A가 저장하기 전의 값(10)을 읽었기 때문에 검증을 통과하지만, 실제로는 재고가 이미 3개로 줄어든 상태입니다. 이것이 **Lost Update** 문제이며, 도메인 로직만으로는 방지할 수 없습니다.
+Key point: The `if (quantity > StockQuantity)` guard in `DeductStock()` judges **only based on the value at the time of reading.** Transaction B passes validation because it read the value before A saved (10), but in reality stock has already decreased to 3. This is the **Lost Update** problem, and it cannot be prevented by domain logic alone.
 
 #### Why Place It in the Domain Layer
 
 | Aspect | Description |
 |------|------|
-| 도메인 모델링 결정 | 어떤 Aggregate가 고경합인지는 도메인 지식. Inventory(주문마다 차감)는 고경합, Product(관리자 저빈도 수정)는 저경합 |
-| 명시적 선언 | 인프라가 추측하는 것이 아니라, 도메인이 선언 |
-| 인프라 분리 | 인터페이스는 도메인, `IsRowVersion()` 매핑은 인프라. 도메인은 DB를 모름 |
+| Domain modeling decision | Which Aggregate has high contention is domain knowledge. Inventory (deducted with every order) is high contention, Product (low-frequency admin edits) is low contention |
+| Explicit declaration | The domain declares it, rather than infrastructure guessing |
+| Infrastructure separation | Interface is in domain, `IsRowVersion()` mapping is in infrastructure. Domain does not know about DB |
 
 #### Domain Model Implementation Pattern
 
@@ -503,7 +503,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
         return unit;
     }
 
-    // For ORM restoration: byte[] rowVersion 파라미터 포함
+    // For ORM restoration: includes byte[] rowVersion parameter
     public static Inventory CreateFromValidated(
         InventoryId id, ProductId productId, Quantity stockQuantity,
         byte[] rowVersion, DateTime createdAt, Option<DateTime> updatedAt)
@@ -522,18 +522,18 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 
 | Pattern | Implementation |
 |------|------|
-| RowVersion 선언 | `byte[] RowVersion { get; private set; } = []` |
-| 초기값 | 빈 배열 `[]` — DB 저장 시 EF Core가 자동 생성 |
-| 비즈니스 메서드 | `RowVersion`을 직접 변경하지 않음 — DB가 자동 갱신 |
-| ORM 복원 | `CreateFromValidated()`에 `byte[] rowVersion` 파라미터로 전달 |
+| RowVersion declaration | `byte[] RowVersion { get; private set; } = []` |
+| Initial value | Empty array `[]` -- auto-generated by EF Core on DB save |
+| Business methods | `RowVersion` is not directly changed -- DB auto-updates |
+| ORM restoration | Passed as `byte[] rowVersion` parameter in `CreateFromValidated()` |
 
-#### 인프라 구현 — 전체 흐름
+#### Infrastructure Implementation -- Full Flow
 
-`IConcurrencyAware`를 인프라에서 지원하려면 4개 파일이 협력합니다:
+Supporting `IConcurrencyAware` in infrastructure requires 4 files to cooperate:
 
 ```
-Domain Model ──→ Mapper ──→ Persistence Model ──→ DB 저장 (UoW)
-(byte[] RowVersion)  (직접 전달)  (byte[] RowVersion)     │
+Domain Model ──→ Mapper ──→ Persistence Model ──→ DB Save (UoW)
+(byte[] RowVersion)  (direct pass-through)  (byte[] RowVersion)     │
                                        ↑                   │
                               EF Core Configuration        │
                               (.IsRowVersion())            │
@@ -542,14 +542,14 @@ Domain Model ──→ Mapper ──→ Persistence Model ──→ DB 저장 (U
                                                            │
                                               ┌────────────┴────────────┐
                                               │                         │
-                                         행 갱신 성공              행 갱신 0건
+                                         Row update success              Zero rows updated
                                               │                         │
-                                         정상 응답         DbUpdateConcurrencyException
+                                         Normal response         DbUpdateConcurrencyException
                                                                         │
-                                                              ConcurrencyConflict 에러
+                                                              ConcurrencyConflict error
 ```
 
-**Step 1. Persistence Model** — `byte[] RowVersion` 속성 정의
+**Step 1. Persistence Model** -- Define `byte[] RowVersion` property
 
 ```csharp
 // InventoryModel.cs
@@ -558,21 +558,21 @@ public class InventoryModel
     public string Id { get; set; } = default!;
     public string ProductId { get; set; } = default!;
     public int StockQuantity { get; set; }
-    public byte[] RowVersion { get; set; } = [];    // ← 동시성 토큰
+    public byte[] RowVersion { get; set; } = [];    // <- concurrency token
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }
 ```
 
-**Step 2. EF Core Configuration** — `.IsRowVersion()`으로 SQL Server ROWVERSION 매핑
+**Step 2. EF Core Configuration** -- Map SQL Server ROWVERSION with `.IsRowVersion()`
 
 ```csharp
 // InventoryConfiguration.cs
 builder.Property(i => i.RowVersion)
-    .IsRowVersion();    // SQL Server: 자동 증가하는 8바이트 타임스탬프
+    .IsRowVersion();    // SQL Server: auto-incrementing 8-byte timestamp
 ```
 
-**Step 3. Mapper** — Domain ↔ Persistence Model 양방향 `byte[]` 직접 전달
+**Step 3. Mapper** -- Bidirectional `byte[]` direct pass-through between Domain and Persistence Model
 
 ```csharp
 // InventoryMapper.cs — Domain → Persistence Model
@@ -582,18 +582,18 @@ public static InventoryModel ToModel(this Inventory inventory) => new()
     RowVersion = inventory.RowVersion,
 };
 
-// InventoryMapper.cs — Persistence Model → Domain
+// InventoryMapper.cs -- Persistence Model -> Domain
 public static Inventory ToDomain(this InventoryModel model) =>
     Inventory.CreateFromValidated(
         // ...
-        model.RowVersion,       // byte[] 직접 전달
+        model.RowVersion,       // byte[] direct pass-through
         // ...);
 ```
 
-**Step 4. UoW 충돌 처리** — `DbUpdateConcurrencyException` → `ConcurrencyConflict` 에러 변환
+**Step 4. UoW Conflict Handling** -- `DbUpdateConcurrencyException` -> `ConcurrencyConflict` error conversion
 
 ```csharp
-// EfCoreUnitOfWork.SaveChanges() 내부
+// Inside EfCoreUnitOfWork.SaveChanges()
 catch (DbUpdateConcurrencyException ex)
 {
     return AdapterError.FromException<EfCoreUnitOfWork>(
@@ -601,24 +601,24 @@ catch (DbUpdateConcurrencyException ex)
 }
 ```
 
-**How it Works:** EF Core는 `IsRowVersion()`으로 설정된 속성을 UPDATE/DELETE 쿼리의 `WHERE` 조건에 자동 추가합니다. DB에 저장된 RowVersion이 읽어온 시점의 값과 다르면 갱신 행이 0건이 되고, EF Core가 `DbUpdateConcurrencyException`을 발생시킵니다. UoW는 이를 `ConcurrencyConflict` 에러로 변환하여 반환합니다.
+**How it Works:** EF Core automatically adds properties configured with `IsRowVersion()` to the `WHERE` clause of UPDATE/DELETE queries. If the RowVersion stored in the DB differs from the value at the time of reading, the update affects 0 rows, and EF Core raises `DbUpdateConcurrencyException`. The UoW converts this into a `ConcurrencyConflict` error and returns it.
 
-> 적용 시기, 충돌 처리 전략(Fail-Fast), 전체 UoW 코드는 [§4. Aggregate 경계 설정 실전 예제 — 동시성 고려사항](./06a-aggregate-design#동시성-고려사항)을 참고하세요.
+> For application timing, conflict handling strategy (Fail-Fast), and full UoW code, see [Section 4. Practical Examples of Aggregate Boundary Setting -- Concurrency Considerations](./06a-aggregate-design#concurrency-considerations).
 
-**참조 파일:**
+**Reference Files:**
 - `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/Models/InventoryModel.cs`
 - `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/Configurations/InventoryConfiguration.cs`
 - `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/Mappers/InventoryMapper.cs`
 - `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/EfCoreUnitOfWork.cs`
 
-#### Checklist — 새 Aggregate에 IConcurrencyAware 적용 시
+#### Checklist -- When Applying IConcurrencyAware to a New Aggregate
 
-- [ ] 도메인 모델: `IConcurrencyAware` 구현 (`byte[] RowVersion` 속성)
-- [ ] 도메인 모델: `CreateFromValidated()`에 `byte[] rowVersion` 파라미터
-- [ ] Persistence Model: `byte[] RowVersion` 속성
-- [ ] EF Core Configuration: `.IsRowVersion()` 설정
-- [ ] Mapper: `RowVersion` 양방향 직접 전달
-- [ ] 적용 판단: [§4 적용 기준표](./06a-aggregate-design#동시성-고려사항) 참고
+- [ ] Domain model: Implement `IConcurrencyAware` (`byte[] RowVersion` property)
+- [ ] Domain model: `byte[] rowVersion` parameter in `CreateFromValidated()`
+- [ ] Persistence Model: `byte[] RowVersion` property
+- [ ] EF Core Configuration: `.IsRowVersion()` setting
+- [ ] Mapper: `RowVersion` bidirectional direct pass-through
+- [ ] Application decision: See [Section 4 Application Criteria Table](./06a-aggregate-design#concurrency-considerations)
 
 Now that we have learned the individual supplementary interface patterns, let us examine a complete Aggregate example combining all of them.
 
@@ -626,19 +626,19 @@ Now that we have learned the individual supplementary interface patterns, let us
 
 ## Practical Examples
 
-### Order Aggregate (복합 예제)
+### Order Aggregate (Comprehensive Example)
 
-Value Object 속성, Entity 참조, 도메인 이벤트를 모두 포함하는 완전한 예제입니다.
+A complete example including Value Object properties, Entity references, and domain events.
 
 ```csharp
-// 참조: samples/ecommerce-ddd/.../OrderStatus.cs, Order.cs
+// Reference: samples/ecommerce-ddd/.../OrderStatus.cs, Order.cs
 using Functorium.Domains.Entities;
 using Functorium.Domains.Events;
 using Functorium.Domains.Errors;
 using static Functorium.Domains.Errors.DomainErrorType;
 using static LanguageExt.Prelude;
 
-// OrderStatus: SimpleValueObject<string> 기반 Smart Enum + 상태 전이 규칙
+// OrderStatus: Smart Enum based on SimpleValueObject<string> + state transition rules
 public sealed class OrderStatus : SimpleValueObject<string>
 {
     public sealed record InvalidValue : DomainErrorType.Custom;
@@ -653,7 +653,7 @@ public sealed class OrderStatus : SimpleValueObject<string>
         ("Pending", Pending), ("Confirmed", Confirmed), ("Shipped", Shipped),
         ("Delivered", Delivered), ("Cancelled", Cancelled));
 
-    // 허용된 전이를 데이터로 선언 — 메서드별 하드코딩 제거
+    // Declare allowed transitions as data -- eliminates per-method hard-coding
     private static readonly HashMap<string, Seq<string>> AllowedTransitions = HashMap(
         ("Pending", Seq("Confirmed", "Cancelled")),
         ("Confirmed", Seq("Shipped", "Cancelled")),
@@ -677,7 +677,7 @@ public sealed class OrderStatus : SimpleValueObject<string>
             .IfNone(false);
 }
 
-// Order Aggregate Root — 중앙화된 TransitionTo() 패턴
+// Order Aggregate Root -- Centralized TransitionTo() pattern
 [GenerateEntityId]
 public class Order : AggregateRoot<OrderId>, IAuditableWithUser
 {
@@ -701,19 +701,19 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
     public Money TotalAmount { get; private set; }
     public Address ShippingAddress { get; private set; }
 
-    // 다른 Entity 참조 (EntityId)
+    // Other Entity references (EntityId)
     public CustomerId CustomerId { get; private set; }
 
-    // 상태 — OrderStatus는 SimpleValueObject<string> 기반 Smart Enum
+    // Status -- OrderStatus is a Smart Enum based on SimpleValueObject<string>
     public OrderStatus Status { get; private set; }
 
-    // 감사 정보
+    // Audit information
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
     public string? CreatedBy { get; private set; }
     public string? UpdatedBy { get; private set; }
 
-    // 컬렉션
+    // Collection
     public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();
 
     // Default constructor for ORM
@@ -776,14 +776,14 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
         };
     }
 
-    // 도메인 연산: 각 메서드가 TransitionTo()에 위임
+    // Domain operations: each method delegates to TransitionTo()
     public Fin<Unit> Confirm(string updatedBy) =>
         TransitionTo(OrderStatus.Confirmed, new ConfirmedEvent(Id), updatedBy);
 
     public Fin<Unit> Cancel(string updatedBy) =>
         TransitionTo(OrderStatus.Cancelled, new CancelledEvent(Id), updatedBy);
 
-    // 배송지 변경 — 상태 전이가 아닌 불변식 체크는 CanTransitionTo()와 별개
+    // Shipping address change -- invariant checks unrelated to state transitions are separate from CanTransitionTo()
     public Fin<Unit> UpdateShippingAddress(Address newAddress, string updatedBy)
     {
         if (Status != OrderStatus.Pending)
@@ -799,7 +799,7 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
         return unit;
     }
 
-    // 중앙화된 상태 전이 — 전이 규칙은 OrderStatus.CanTransitionTo()에 위임
+    // Centralized state transition -- transition rules delegated to OrderStatus.CanTransitionTo()
     private Fin<Unit> TransitionTo(OrderStatus target, DomainEvent domainEvent, string updatedBy)
     {
         if (!Status.CanTransitionTo(target))
@@ -816,7 +816,7 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
         return unit;
     }
 
-    // 주문 항목 추가 (내부용)
+    // Add order item (internal use)
     internal void AddItem(OrderItem item)
     {
         _items.Add(item);
@@ -835,93 +835,93 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
 
 ## Checklist
 
-### Aggregate 경계 설정 시 확인사항
+### Aggregate Boundary Setting Checklist
 
-- [ ] **이 Aggregate가 보호하는 불변식은 무엇인가?**
-  - 명확한 불변식이 없으면 경계가 잘못되었을 수 있음
-- [ ] **Aggregate가 충분히 작은가?**
-  - invariant protection에 필요한 최소한의 데이터만 포함하는가?
-- [ ] **다른 Aggregate를 ID로만 참조하는가?**
-  - 객체 직접 참조가 있으면 경계 재검토 필요
-- [ ] **하나의 트랜잭션에서 하나의 Aggregate만 변경하는가?**
-  - 여러 Aggregate를 동시에 변경하면 설계 재검토 필요
-- [ ] **자식 Entity가 Aggregate Root 없이 의미가 있는가?**
-  - 있다면 별도 Aggregate로 분리 고려
-- [ ] **커맨드 메서드가 불변식을 캡슐화하는가?**
-  - 외부에서 불변식을 직접 검증하고 있지 않은가?
-- [ ] **도메인 이벤트가 Aggregate Root에서만 발행되는가?**
-  - 자식 Entity에서 이벤트를 발행하려 하면 설계 재검토
+- [ ] **What invariants does this Aggregate protect?**
+  - If there are no clear invariants, the boundary may be incorrect
+- [ ] **Is the Aggregate small enough?**
+  - Does it contain only the minimum data needed for invariant protection?
+- [ ] **Does it reference other Aggregates only by ID?**
+  - If there are direct object references, boundary review is needed
+- [ ] **Does one transaction change only one Aggregate?**
+  - If multiple Aggregates are changed simultaneously, design review is needed
+- [ ] **Does the child Entity have meaning without the Aggregate Root?**
+  - If so, consider separating it into its own Aggregate
+- [ ] **Do command methods encapsulate invariants?**
+  - Are invariants not being directly validated from outside?
+- [ ] **Are domain events published only from the Aggregate Root?**
+  - If attempting to publish events from child Entities, review the design
 
-### Functorium 구현 확인사항
+### Functorium Implementation Checklist
 
-- [ ] Cross-Aggregate 참조는 `EntityId` 타입만 사용
-- [ ] 부가 인터페이스 적용 여부 결정 (`IAuditable`, `ISoftDeletable`, `IConcurrencyAware`)
-- [ ] EF Core 통합은 [Adapter 구현 가이드](../adapter/13-adapters) 참조
+- [ ] Cross-Aggregate references use only `EntityId` types
+- [ ] Determine whether to apply supplementary interfaces (`IAuditable`, `ISoftDeletable`, `IConcurrencyAware`)
+- [ ] See [Adapter Implementation Guide](../adapter/13-adapters) for EF Core integration
 
 ---
 
 ## Troubleshooting
 
-### Aggregate 간 직접 객체 참조로 인한 transaction boundary 위반
-**Cause:** 다른 Aggregate의 Entity를 직접 참조(Navigation Property)하면 하나의 트랜잭션에서 여러 Aggregate를 변경하게 되어 설계 원칙에 위배됩니다.
-**Resolution:** Cross-Aggregate 참조는 항상 EntityId만 사용하세요. 다른 Aggregate의 정보가 필요하면 Domain Port를 정의하고, Aggregate 간 상태 동기화는 도메인 이벤트로 처리하세요.
+### Transaction Boundary Violation Due to Direct Object References Between Aggregates
+**Cause:** Directly referencing an Entity from another Aggregate (Navigation Property) causes multiple Aggregates to be changed in a single transaction, violating design principles.
+**Resolution:** Always use only EntityId for Cross-Aggregate references. If information from another Aggregate is needed, define a Domain Port, and handle state synchronization between Aggregates via domain events.
 
 ---
 
 ## FAQ
 
-### Q1. 다른 Entity를 참조할 때 전체 Entity vs EntityId 중 무엇을 사용하나요?
+### Q1. When referencing another Entity, do you use the full Entity or EntityId?
 
-항상 EntityId만 참조합니다. [§Cross-Aggregate 관계](#cross-aggregate-관계)를 참조하세요.
+Always reference only by EntityId. See [Cross-Aggregate Relationships](#cross-aggregate-relationships).
 
 ---
 
 ## References
 
-- [Entity/Aggregate 핵심 패턴](./06b-entity-aggregate-core) - 클래스 계층, ID 시스템, 생성 패턴, 커맨드 메서드, 도메인 이벤트
-- [Aggregate 설계 원칙 (WHY)](./06a-aggregate-design) - Aggregate 설계 원칙과 개념
-- [값 객체 구현 가이드](./05a-value-objects) - Value Object 구현 패턴, [검증·열거형 가이드](./05b-value-objects-validation) - 열거형·Application 검증·FAQ
-- [도메인 이벤트 가이드](./07-domain-events) - 도메인 이벤트 전체 설계 (IDomainEvent, Pub/Sub, 핸들러, 트랜잭션)
-- [에러 시스템: 기초와 네이밍](./08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙
-- [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app) - Domain/Application 에러 정의 및 테스트 패턴
-- [도메인 모델링 개요](./04-ddd-tactical-overview) - 도메인 모델링 개요
-- [유스케이스 구현 가이드](../application/11-usecases-and-cqrs) - Application Layer에서의 Aggregate 사용 (Apply 패턴, 교차 Aggregate 조율)
-- [Adapter 구현 가이드](../adapter/13-adapters) - EF Core 통합, Persistence Model 매핑
-- [단위 테스트 가이드](../testing/15a-unit-testing)
+- [Entity/Aggregate Core Patterns](./06b-entity-aggregate-core) - Class hierarchy, ID system, creation patterns, command methods, domain events
+- [Aggregate Design Principles (WHY)](./06a-aggregate-design) - Aggregate design principles and concepts
+- [Value Object Implementation Guide](./05a-value-objects) - Value Object implementation patterns, [Validation and Enumeration Guide](./05b-value-objects-validation) - Enumeration, Application validation, FAQ
+- [Domain Events Guide](./07-domain-events) - Complete domain events design (IDomainEvent, Pub/Sub, handlers, transactions)
+- [Error System: Basics and Naming](./08a-error-system) - Error handling basic principles and naming conventions
+- [Error System: Domain/Application Errors](./08b-error-system-domain-app) - Domain/Application error definitions and test patterns
+- [Domain Modeling Overview](./04-ddd-tactical-overview) - Domain modeling overview
+- [Usecase Implementation Guide](../application/11-usecases-and-cqrs) - Aggregate usage in the Application Layer (Apply pattern, Cross-Aggregate coordination)
+- [Adapter Implementation Guide](../adapter/13-adapters) - EF Core integration, Persistence Model mapping
+- [Unit Testing Guide](../testing/15a-unit-testing)
 
 ---
 
-## Dictionary 조회 성능 팁
+## Dictionary Lookup Performance Tips
 
-Entity/Aggregate 구현에서 Dictionary 기반 캐시나 조회 로직을 사용할 때, `ContainsKey` + 인덱서 조합은 동일한 키를 두 번 조회합니다. `TryGetValue`를 사용하면 단일 조회로 존재 여부와 값을 동시에 확인합니다.
+When using Dictionary-based cache or lookup logic in Entity/Aggregate implementation, the `ContainsKey` + indexer combination looks up the same key twice. Using `TryGetValue` checks existence and retrieves the value in a single lookup.
 
-### 값 조회 패턴
+### Value Lookup Pattern
 
 ```csharp
-// 변경 전: 키를 2번 조회
+// Before: looks up key twice
 if (_cache.ContainsKey(id))
 {
     return _cache[id];
 }
 
-// 변경 후: 키를 1번만 조회
+// After: looks up key only once
 if (_cache.TryGetValue(id, out var cachedValue))
 {
     return cachedValue;
 }
 ```
 
-### GetOrAdd 패턴
+### GetOrAdd Pattern
 
 ```csharp
-// 변경 전
+// Before
 if (!_factories.ContainsKey(type))
 {
     _factories[type] = CreateFactory(type);
 }
 return _factories[type];
 
-// 변경 후
+// After
 if (!_factories.TryGetValue(type, out var factory))
 {
     factory = CreateFactory(type);
@@ -930,14 +930,14 @@ if (!_factories.TryGetValue(type, out var factory))
 return factory;
 ```
 
-### 성능 비교
+### Performance Comparison
 
-| Pattern | 해시 계산 | 버킷 조회 | 총 연산 |
+| Pattern | Hash Computation | Bucket Lookup | Total Operations |
 |------|----------|----------|--------|
-| `ContainsKey` + `[key]` | 2회 | 2회 | 4 |
-| `TryGetValue` | 1회 | 1회 | 2 |
+| `ContainsKey` + `[key]` | 2 times | 2 times | 4 |
+| `TryGetValue` | 1 time | 1 time | 2 |
 
-읽기 집약적 워크로드에서는 `ConcurrentDictionary`의 `GetOrAdd`도 고려합니다:
+For read-intensive workloads, also consider `ConcurrentDictionary`'s `GetOrAdd`:
 
 ```csharp
 private readonly ConcurrentDictionary<string, MetricsSet> _metrics = new();
@@ -948,4 +948,4 @@ public MetricsSet GetMetrics(string category)
 }
 ```
 
-> **코드 분석 도구**: .NET 분석기 `CA1854`가 `ContainsKey` + 인덱서 패턴을 감지합니다.
+> **Code Analysis Tool**: The .NET analyzer `CA1854` detects the `ContainsKey` + indexer pattern.

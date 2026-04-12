@@ -1,39 +1,39 @@
 ---
-title: "Observability 네이밍 가이드"
+title: "Observability Naming Guide"
 ---
 
-이 문서는 Functorium 프로젝트의 Observability 관련 코드 작성 시 따라야 할 명명 규칙을 정의합니다.
+This document defines the naming conventions to follow when writing Observability-related code in the Functorium project.
 
 ## Introduction
 
-- "관측 가능성 코드의 네이밍이 일관되지 않으면 검색과 필터링이 어려워지는데, Signal과 Component를 어떻게 구분하는가?"
-- "Logger 메서드 이름을 팀 전체가 동일한 패턴으로 작성하려면 어떤 규칙이 필요한가?"
-- "Configurator, Pipeline, Options 등 클래스 유형마다 네이밍 패턴이 다른 이유는 무엇인가?"
+- "If observability code naming is inconsistent, searching and filtering become difficult -- how do we distinguish Signal from Component?"
+- "What rules are needed to ensure the entire team writes Logger method names in the same pattern?"
+- "Why do different class types such as Configurator, Pipeline, and Options have different naming patterns?"
 
-OpenTelemetry 표준 용어를 기반으로 하되 .NET 생태계와 실용성을 고려한 네이밍 규칙을 수립하면, 코드베이스의 가독성과 검색 효율성을 동시에 확보할 수 있습니다.
+By establishing naming conventions based on OpenTelemetry standard terminology while considering the .NET ecosystem and practicality, you can achieve both code readability and search efficiency.
 
 ### What You Will Learn
 
 This document covers the following topics:
 
-1. **코드 네이밍 규칙** - Signal 접두사와 Component 접미사의 역할 구분
-2. **Logger 메서드 네이밍** - `Log{Context}{Phase}{Status}` 패턴과 적용 예시
-3. **일관된 계측 식별자** - Configurator, Pipeline, Options, Extensions 등 클래스 유형별 명명 패턴
+1. **Code naming conventions** - Distinguishing roles of Signal prefixes and Component suffixes
+2. **Logger method naming** - The `Log{Context}{Phase}{Status}` pattern and usage examples
+3. **Consistent instrumentation identifiers** - Naming patterns for each class type: Configurator, Pipeline, Options, Extensions, etc.
 
-> **Core principle:** Signal 이름(`Logging`, `Tracing`, `Metrics`)은 설정/활동 대상에 접두사로, Component 유형(`Logger`, `Span`, `Metric`)은 구체적 객체에 접미사로 사용합니다. 내부 일관성이 외부 표준 준수보다 우선합니다.
+> **Core principle:** Signal names (`Logging`, `Tracing`, `Metrics`) are used as prefixes for configuration/activity targets, while Component types (`Logger`, `Span`, `Metric`) are used as suffixes for concrete objects. Internal consistency takes priority over external standard compliance.
 
 ## Summary
 
 ### Key Commands
 
 ```csharp
-// Configurator: Signal 접두사
+// Configurator: Signal prefix
 LoggingConfigurator, TracingConfigurator, MetricsConfigurator
 
 // Pipeline: Layer + Signal
 UsecaseLoggingPipeline, UsecaseTracingPipeline, UsecaseMetricsPipeline
 
-// Options: Signal + Property (동명사)
+// Options: Signal + Property (gerund)
 LoggingEndpoint, TracingEndpoint, MetricsEndpoint
 
 // Logger Method: Log{Context}{Phase}{Status}
@@ -42,98 +42,98 @@ LogUsecaseRequest, LogUsecaseResponseSuccess, LogUsecaseResponseError
 
 ### Key Procedures
 
-1. 새 클래스 작성 시 Signal 이름(`Logging`, `Tracing`, `Metrics`)과 Component 유형(`Logger`, `Span`, `Metric`)을 구분
-2. 접두사로 Signal 이름 사용 (설정/활동 클래스), 접미사로 Component 유형 사용 (구성 요소)
-3. Logger 메서드는 `Log{Context}{Phase}{Status}` 패턴 사용
+1. When writing new classes, distinguish between Signal names (`Logging`, `Tracing`, `Metrics`) and Component types (`Logger`, `Span`, `Metric`)
+2. Use Signal names as prefixes (configuration/activity classes), Component types as suffixes (components)
+3. Logger methods follow the `Log{Context}{Phase}{Status}` pattern
 
 ### Key Concepts
 
 | Concept | Rule | Example |
 |------|------|------|
-| Signal 접두사 | 설정/활동 대상 | `LoggingConfigurator`, `TracingEndpoint` |
-| Component 접미사 | 구체적 객체 | `StartupLogger`, `ISpanFactory` |
-| Logger 메서드 | `Log{Context}{Phase}{Status}` | `LogDomainEventHandlerResponseError` |
-| 내부 일관성 우선 | OpenTelemetry "Traces" 대신 `Tracing` 사용 | `TracingConfigurator` (not `TracesConfigurator`) |
+| Signal prefix | Configuration/activity target | `LoggingConfigurator`, `TracingEndpoint` |
+| Component suffix | Concrete object | `StartupLogger`, `ISpanFactory` |
+| Logger method | `Log{Context}{Phase}{Status}` | `LogDomainEventHandlerResponseError` |
+| Internal consistency first | Use `Tracing` instead of OpenTelemetry "Traces" | `TracingConfigurator` (not `TracesConfigurator`) |
 
-요약에서 Signal/Component 구분과 Logger 메서드 패턴의 핵심 규칙을 확인했습니다. 이제 각 규칙을 코드 수준에서 상세히 살펴봅니다.
+The summary covered the core rules for Signal/Component distinction and Logger method patterns. Now let's examine each rule in detail at the code level.
 
 ---
 
-## 코드 네이밍 규칙
+## Code Naming Conventions
 
-### 개요
+### Overview
 
-이 문서는 Functorium 프로젝트의 Observability 관련 코드 작성 시 따라야 할 명명 규칙을 정의합니다.
-OpenTelemetry 표준 용어를 기반으로 하되, .NET 생태계와 실용성을 고려하여 수립되었습니다.
+This document defines the naming conventions to follow when writing Observability-related code in the Functorium project.
+The conventions are based on OpenTelemetry standard terminology while considering the .NET ecosystem and practicality.
 
-### 핵심 원칙
+### Core Principles
 
 #### OpenTelemetry Signals
 
-OpenTelemetry는 세 가지 관찰 가능성 신호(Signals)를 정의합니다:
+OpenTelemetry defines three observability signals:
 
-- **Logging**: 로그 신호 시스템
-- **Tracing**: 분산 추적 신호 시스템
-- **Metrics**: 메트릭 신호 시스템
+- **Logging**: Log signal system
+- **Tracing**: Distributed tracing signal system
+- **Metrics**: Metrics signal system
 
-#### 용어 역할 구분
+#### Terminology Role Distinction
 
-**Signal 이름 (Logging, Tracing, Metrics):**
-- Signal 체계/시스템을 나타냄
-- 활동/설정을 나타내는 형용사/동명사로도 사용
-- 사용 위치:
-  - 접두사: 설정/활동 대상 → `LoggingConfigurator`, `TracingEndpoint`
-  - 단독: 활동/프로세스 → `UsecaseLoggingPipeline` (Logging 활동 수행)
+**Signal names (Logging, Tracing, Metrics):**
+- Represent the signal system/framework
+- Also used as adjectives/gerunds representing activity/configuration
+- Usage locations:
+  - Prefix: Configuration/activity target → `LoggingConfigurator`, `TracingEndpoint`
+  - Standalone: Activity/process → `UsecaseLoggingPipeline` (performs Logging activity)
 
-**Component 유형 (Logger, Span, Metric 등):**
-- 구체적인 객체/구성 요소
-- 주로 접미사로만 사용
-- 종류:
-  - `Logger`: 로그를 생성하는 객체 → `StartupLogger`
-  - `Span`: 추적의 단위 → `ISpan`, `OpenTelemetrySpan`
-  - `Metric`: 측정값 → `IMetricRecorder`
-  - `Tracer`: Span을 생성하는 팩토리 (실제로는 `SpanFactory` 사용)
-  - `Meter`: Metric을 기록하는 객체 (실제로는 `MetricRecorder` 사용)
+**Component types (Logger, Span, Metric, etc.):**
+- Concrete objects/components
+- Primarily used only as suffixes
+- Types:
+  - `Logger`: Object that generates logs → `StartupLogger`
+  - `Span`: Unit of tracing → `ISpan`, `OpenTelemetrySpan`
+  - `Metric`: Measurement value → `IMetricRecorder`
+  - `Tracer`: Factory that creates Spans (actually uses `SpanFactory`)
+  - `Meter`: Object that records Metrics (actually uses `MetricRecorder`)
 
-**명명 원칙 정리:**
+**Naming principle summary:**
 ```
-접두사:
-  Logging-     : 로깅 설정/활동 (LoggingConfigurator, LoggingEndpoint)
-  Tracing-     : 추적 설정/활동 (TracingConfigurator, TracingEndpoint, TracingProtocol)
-  Metrics-     : 메트릭 설정/활동 (MetricsConfigurator, MetricsEndpoint)
+Prefix:
+  Logging-     : Logging configuration/activity (LoggingConfigurator, LoggingEndpoint)
+  Tracing-     : Tracing configuration/activity (TracingConfigurator, TracingEndpoint, TracingProtocol)
+  Metrics-     : Metrics configuration/activity (MetricsConfigurator, MetricsEndpoint)
 
-접미사 (Component):
-  -Logger      : 로거 객체 (StartupLogger, IStartupOptionsLogger)
-  -Span        : 추적 단위 (ISpan, OpenTelemetrySpan)
-  -Metric      : 메트릭 (단독으로는 거의 사용 안 함)
-  -SpanFactory : Span 팩토리 (ISpanFactory)
-  -MetricRecorder : Metric 기록자 (IMetricRecorder)
+Suffix (Component):
+  -Logger      : Logger object (StartupLogger, IStartupOptionsLogger)
+  -Span        : Tracing unit (ISpan, OpenTelemetrySpan)
+  -Metric      : Metric (rarely used standalone)
+  -SpanFactory : Span factory (ISpanFactory)
+  -MetricRecorder : Metric recorder (IMetricRecorder)
 
-단독 사용 (활동):
-  Logging      : 로깅 활동 (UsecaseLoggingPipeline)
-  Tracing      : 추적 활동 (UsecaseTracingPipeline)
-  Metrics      : 메트릭 활동 (UsecaseMetricsPipeline)
+Standalone (Activity):
+  Logging      : Logging activity (UsecaseLoggingPipeline)
+  Tracing      : Tracing activity (UsecaseTracingPipeline)
+  Metrics      : Metrics activity (UsecaseMetricsPipeline)
 ```
 
-#### 용어 일관성 원칙
+#### Terminology Consistency Principle
 
-**Endpoint와 Protocol 명명:**
-- Endpoint: 동명사 형태 (`LoggingEndpoint`, `TracingEndpoint`, `MetricsEndpoint`)
-- Protocol: 동명사 형태 (`LoggingProtocol`, `TracingProtocol`, `MetricsProtocol`)
-- 이유: 설정/구성을 나타내므로 동명사가 자연스러움
+**Endpoint and Protocol naming:**
+- Endpoint: Gerund form (`LoggingEndpoint`, `TracingEndpoint`, `MetricsEndpoint`)
+- Protocol: Gerund form (`LoggingProtocol`, `TracingProtocol`, `MetricsProtocol`)
+- Reason: Gerunds are natural since they represent configuration/setup
 
-**Configurator 명명:**
-- Logging: `LoggingConfigurator` (동명사)
-- Tracing: `TracingConfigurator` (동명사 — 근거: [Tracing 일관성 원칙](#tracing-일관성-원칙) 참조)
-- Metrics: `MetricsConfigurator` (복수 명사)
+**Configurator naming:**
+- Logging: `LoggingConfigurator` (gerund)
+- Tracing: `TracingConfigurator` (gerund -- see [Tracing Consistency Principle](#tracing-consistency-principle))
+- Metrics: `MetricsConfigurator` (plural noun)
 
-### 명명 규칙
+### Naming Rules
 
-#### Configurator (설정 클래스)
+#### Configurator (Configuration Class)
 
-**규칙**: `{Signal}Configurator`
+**Rule**: `{Signal}Configurator`
 
-Signal 전체 시스템을 설정하는 클래스이므로 Signal 이름을 접두사로 사용합니다.
+Since these classes configure the entire Signal system, the Signal name is used as a prefix.
 
 ```csharp
 // ✅ Correct
@@ -142,10 +142,10 @@ public class TracingConfigurator { }
 public class MetricsConfigurator { }
 
 // ❌ Incorrect
-public class LogsConfigurator { }      // "Logs"는 파일 디렉토리와 혼동
-public class LoggerConfigurator { }    // Logger는 구성 요소, Signal 아님
-public class TraceConfigurator { }     // 단수형 부적절
-public class TracesConfigurator { }    // OpenTelemetry 공식 용어이지만 내부 일관성이 더 중요
+public class LogsConfigurator { }      // "Logs" confused with file directories
+public class LoggerConfigurator { }    // Logger is a component, not a Signal
+public class TraceConfigurator { }     // Singular form inappropriate
+public class TracesConfigurator { }    // Official OpenTelemetry term, but internal consistency matters more
 ```
 
 **Usage Example**:
@@ -161,11 +161,11 @@ builder.ConfigureTracing(tracing =>
 });
 ```
 
-#### Logger (로거 구성 요소)
+#### Logger (Logger Component)
 
-**규칙**: `{Purpose}Logger`
+**Rule**: `{Purpose}Logger`
 
-로그를 생성하는 구성 요소는 용도나 역할을 접두사로, Logger를 접미사로 사용합니다.
+Components that generate logs use purpose or role as prefix and Logger as suffix.
 
 ```csharp
 // ✅ Correct
@@ -175,15 +175,15 @@ public class FileLogger { }
 public interface IStartupOptionsLogger { }
 
 // ❌ Incorrect
-public class StartupLogging { }        // Logging은 활동/설정, 객체 아님
-public class LoggerStartup { }         // 어색한 어순
+public class StartupLogging { }        // Logging is activity/configuration, not an object
+public class LoggerStartup { }         // Awkward word order
 ```
 
-#### Pipeline (파이프라인)
+#### Pipeline
 
-**규칙**: `{Layer}{Signal}Pipeline`
+**Rule**: `{Layer}{Signal}Pipeline`
 
-Pipeline은 특정 계층에서 Signal 활동을 수행하는 클래스입니다.
+A Pipeline is a class that performs Signal activity in a specific layer.
 
 ```csharp
 // ✅ Correct
@@ -195,21 +195,21 @@ public class AdapterLoggingPipeline { }
 public class AdapterTracingPipeline { }
 
 // ❌ Incorrect
-public class UsecaseLoggerPipeline { }   // Logger는 구성 요소, 활동 아님
-public class UsecaseTracePipeline { }    // Trace는 단수형
-public class LoggingUsecasePipeline { }  // 어색한 어순
+public class UsecaseLoggerPipeline { }   // Logger is a component, not an activity
+public class UsecaseTracePipeline { }    // Trace is singular
+public class LoggingUsecasePipeline { }  // Awkward word order
 ```
 
-**이유**:
-- Pipeline은 "무엇을 하는가"를 표현 → Signal 활동 강조
-- 세 가지 Pipeline 모두 동일한 패턴 유지 (일관성)
-- Configurator와 명명 패턴 일치
+**Reason**:
+- Pipeline expresses "what it does" → emphasizes Signal activity
+- All three Pipelines maintain the same pattern (consistency)
+- Matches naming pattern with Configurator
 
-#### Extensions (확장 메서드)
+#### Extensions (Extension Methods)
 
-**규칙**: `{Target}Extensions`
+**Rule**: `{Target}Extensions`
 
-확장 대상 Component를 접두사로 사용합니다.
+The target Component is used as a prefix.
 
 ```csharp
 // ✅ Correct
@@ -219,31 +219,31 @@ public static class SpanExtensions { }
 public static class MetricExtensions { }
 
 // ❌ Incorrect
-public static class LoggingExtensions { }  // Logging은 설정/활동
-public static class ExtensionsLogger { }   // 어색한 어순
+public static class LoggingExtensions { }  // Logging is configuration/activity
+public static class ExtensionsLogger { }   // Awkward word order
 ```
 
-#### Options (설정 속성)
+#### Options (Configuration Properties)
 
-**규칙**: `{Signal}{Property}`
+**Rule**: `{Signal}{Property}`
 
-Options 속성명은 Signal 이름(동명사 형태)을 접두사로 사용합니다.
+Options property names use the Signal name (gerund form) as a prefix.
 
 ```csharp
 // ✅ Correct
 public class OpenTelemetryOptions
 {
-    // Endpoint는 동명사 형태
+    // Endpoint in gerund form
     public string LoggingEndpoint { get; set; }
     public string TracingEndpoint { get; set; }
     public string MetricsEndpoint { get; set; }
 
-    // Protocol도 동명사 형태
+    // Protocol also in gerund form
     public string LoggingProtocol { get; set; }
     public string TracingProtocol { get; set; }
     public string MetricsProtocol { get; set; }
 
-    // Getter 메서드도 동일
+    // Getter methods follow the same pattern
     public string GetLoggingEndpoint() { }
     public string GetTracingEndpoint() { }
     public string GetMetricsEndpoint() { }
@@ -254,22 +254,22 @@ public class OpenTelemetryOptions
 }
 
 // ❌ Incorrect
-public string LogsEndpoint { get; set; }        // "Logs"는 파일 디렉토리와 혼동
-public string TracesEndpoint { get; set; }      // Endpoint는 동명사 사용
-public string LoggerEndpoint { get; set; }      // Logger는 구성 요소
-public string LogEndpoint { get; set; }         // 단수형
+public string LogsEndpoint { get; set; }        // "Logs" confused with file directories
+public string TracesEndpoint { get; set; }      // Endpoint uses gerund form
+public string LoggerEndpoint { get; set; }      // Logger is a component
+public string LogEndpoint { get; set; }         // Singular form
 ```
 
-**일관성 원칙**:
-- `LoggingEndpoint` + `LoggingProtocol` (동명사로 통일)
-- `TracingEndpoint` + `TracingProtocol` (동명사로 통일)
-- `MetricsEndpoint` + `MetricsProtocol` (동명사로 통일)
+**Consistency principle**:
+- `LoggingEndpoint` + `LoggingProtocol` (unified with gerund form)
+- `TracingEndpoint` + `TracingProtocol` (unified with gerund form)
+- `MetricsEndpoint` + `MetricsProtocol` (unified with gerund form)
 
-#### Builder Methods (빌더 메서드)
+#### Builder Methods
 
-**규칙**: `Configure{Signal}()`
+**Rule**: `Configure{Signal}()`
 
-빌더 메서드는 Signal 설정을 위해 Signal 이름을 사용합니다.
+Builder methods use the Signal name for Signal configuration.
 
 ```csharp
 // ✅ Correct
@@ -281,33 +281,33 @@ public class OpenTelemetryBuilder
 }
 
 // ❌ Incorrect
-public OpenTelemetryBuilder ConfigureSerilog(...) { }  // 기술 종속적
-public OpenTelemetryBuilder ConfigureLogs(...) { }     // Logs는 파일과 혼동
-public OpenTelemetryBuilder ConfigureLogger(...) { }   // Logger는 구성 요소
-public OpenTelemetryBuilder ConfigureTraces(...) { }   // Tracing으로 일관성 유지
+public OpenTelemetryBuilder ConfigureSerilog(...) { }  // Technology-dependent
+public OpenTelemetryBuilder ConfigureLogs(...) { }     // Logs confused with files
+public OpenTelemetryBuilder ConfigureLogger(...) { }   // Logger is a component
+public OpenTelemetryBuilder ConfigureTraces(...) { }   // Use Tracing for consistency
 ```
 
-#### Interfaces (인터페이스)
+#### Interfaces
 
-**규칙**: Component 유형을 접미사로 사용
+**Rule**: Use Component type as suffix
 
 ```csharp
-// ✅ Correct - Component 유형이 명확
+// ✅ Correct - Component type is explicit
 public interface IStartupOptionsLogger { }
 public interface IMetricRecorder { }
 public interface ISpanFactory { }
 public interface ISpan { }
 
 // ❌ Incorrect
-public interface ILogging { }           // 너무 추상적
-public interface ILog { }               // 단일 로그 엔트리와 혼동
+public interface ILogging { }           // Too abstract
+public interface ILog { }               // Confused with a single log entry
 ```
 
-#### Implementation Classes (구현 클래스)
+#### Implementation Classes
 
-**규칙**: `{Technology}{Component}`
+**Rule**: `{Technology}{Component}`
 
-특정 기술의 구현체는 기술명을 접두사로 사용합니다.
+Implementations of specific technologies use the technology name as a prefix.
 
 ```csharp
 // ✅ Correct
@@ -316,25 +316,25 @@ public class OpenTelemetrySpanFactory : ISpanFactory { }
 public class OpenTelemetryMetricRecorder : IMetricRecorder { }
 
 // ❌ Incorrect
-public class SpanOpenTelemetry : ISpan { }     // 어색한 어순
-public class OTelSpan : ISpan { }              // 약어 사용 지양
+public class SpanOpenTelemetry : ISpan { }     // Awkward word order
+public class OTelSpan : ISpan { }              // Avoid abbreviations
 ```
 
-### 특수 케이스
+### Special Cases
 
 #### Span vs Tracer
 
-Tracing 시스템에서는 두 가지 개념이 있습니다:
+There are two concepts in the Tracing system:
 
-- **Span**: 추적의 단일 작업 단위 (데이터 객체)
-- **Tracer**: Span을 생성하는 팩토리 (생성 객체)
+- **Span**: A single unit of work in tracing (data object)
+- **Tracer**: A factory that creates Spans (creation object)
 
 ```csharp
 // ✅ Correct
-public interface ISpan { }              // 단일 작업 단위
-public interface ISpanFactory { }       // Span 생성 팩토리 (Tracer 역할)
+public interface ISpan { }              // Single unit of work
+public interface ISpanFactory { }       // Span creation factory (Tracer role)
 
-// OpenTelemetry에서는 ActivitySource가 Tracer 역할
+// In OpenTelemetry, ActivitySource plays the Tracer role
 public class OpenTelemetrySpanFactory : ISpanFactory
 {
     private readonly ActivitySource _activitySource;  // Tracer
@@ -343,31 +343,31 @@ public class OpenTelemetrySpanFactory : ISpanFactory
 
 #### Logging vs Logger
 
-- **Logging**: Signal 이름, 설정/활동 (접두사)
-- **Logger**: Component 유형 (접미사)
+- **Logging**: Signal name, configuration/activity (prefix)
+- **Logger**: Component type (suffix)
 
 ```csharp
-// ✅ Correct - 설정 클래스 (Logging)
+// ✅ Correct - Configuration class (Logging)
 public class LoggingConfigurator { }
 
-// ✅ Correct - 구성 요소 (Logger)
+// ✅ Correct - Component (Logger)
 public class StartupLogger { }
 public interface IStartupOptionsLogger { }
 
-// ✅ Correct - Pipeline (Logging 활동)
+// ✅ Correct - Pipeline (Logging activity)
 public class UsecaseLoggingPipeline { }
 
-// ✅ Correct - Extensions (Logger 확장)
+// ✅ Correct - Extensions (Logger extension)
 public static class UsecaseLoggerExtensions { }
 
-// ✅ Correct - Options (Logging 설정)
+// ✅ Correct - Options (Logging configuration)
 public string LoggingEndpoint { get; set; }
 public string LoggingProtocol { get; set; }
 ```
 
-#### Tracing 일관성 원칙
+#### Tracing Consistency Principle
 
-- **Tracing**: 모든 컨텍스트에서 일관되게 사용 (동명사)
+- **Tracing**: Used consistently across all contexts (gerund)
 
 ```csharp
 // ✅ Correct - Configurator
@@ -376,54 +376,54 @@ public class TracingConfigurator { }
 // ✅ Correct - Builder Method (Tracing)
 public OpenTelemetryBuilder ConfigureTracing(Action<TracingConfigurator> configure) { }
 
-// ✅ Correct - Pipeline (Tracing 활동)
+// ✅ Correct - Pipeline (Tracing activity)
 public class UsecaseTracingPipeline { }
 
-// ✅ Correct - Options (Tracing 설정)
+// ✅ Correct - Options (Tracing configuration)
 public string TracingEndpoint { get; set; }
 public string TracingProtocol { get; set; }
 public string GetTracingEndpoint() { }
 public OtlpCollectorProtocol GetTracingProtocol() { }
 ```
 
-**명명 원칙 정리:**
+**Naming principle summary:**
 - **Configurator**: `TracingConfigurator`
-- **Options/Settings**: `TracingEndpoint`, `TracingProtocol` (설정 활동)
-- **Pipeline**: `UsecaseTracingPipeline` (추적 활동)
-- **Builder Method**: `ConfigureTracing()` (일관성 유지)
+- **Options/Settings**: `TracingEndpoint`, `TracingProtocol` (configuration activity)
+- **Pipeline**: `UsecaseTracingPipeline` (tracing activity)
+- **Builder Method**: `ConfigureTracing()` (maintain consistency)
 
-> **Design Decision — 내부 일관성 우선 원칙**
+> **Design Decision -- Internal Consistency First Principle**
 >
-> OpenTelemetry 공식 용어는 "Traces"이지만, Functorium은 **내부 일관성**을 우선합니다.
-> `LoggingConfigurator`, `TracingConfigurator`, `MetricsConfigurator`의 일관된 동명사 패턴이
-> 외부 표준 준수보다 코드베이스의 가독성과 유지보수성에 더 기여한다고 판단했습니다.
-> 동일한 원칙이 Endpoint, Protocol, Pipeline 등 모든 Signal 접두사 명명에 적용됩니다.
+> While the official OpenTelemetry term is "Traces", Functorium prioritizes **internal consistency**.
+> The consistent gerund pattern of `LoggingConfigurator`, `TracingConfigurator`, `MetricsConfigurator`
+> contributes more to codebase readability and maintainability than external standard compliance.
+> The same principle applies to all Signal prefix naming including Endpoint, Protocol, Pipeline, etc.
 
 #### Configuration vs Configurator
 
-- **Configuration**: 설정 데이터/옵션
-- **Configurator**: 설정을 수행하는 빌더 클래스
+- **Configuration**: Configuration data/options
+- **Configurator**: Builder class that performs configuration
 
 ```csharp
-// ✅ Configuration (데이터)
+// ✅ Configuration (data)
 public class OpenTelemetryOptions { }
 public class LoggingConfiguration { }
 
-// ✅ Configurator (빌더)
+// ✅ Configurator (builder)
 public class LoggingConfigurator { }
 public class TracingConfigurator { }
 ```
 
-#### 폴더 명명 규칙
+#### Folder Naming Convention
 
-**폴더는 복수형을 사용합니다** - "무엇들을 담고 있는가"
+**Folders use plural forms** - "what do they contain"
 
 ```
 Src/Functorium/Applications/Observabilities/
-├── Loggers/          ✅ Logger 관련 클래스들을 담고 있음
-├── Metrics/          ✅ Metric 관련 클래스들을 담고 있음
-├── Spans/            ✅ Span 관련 클래스들을 담고 있음
-└── Context/          ✅ Context 관련 클래스들을 담고 있음
+├── Loggers/          ✅ Contains Logger-related classes
+├── Metrics/          ✅ Contains Metric-related classes
+├── Spans/            ✅ Contains Span-related classes
+└── Context/          ✅ Contains Context-related classes
 
 Src/Functorium.Adapters/Observabilities/
 ├── Loggers/          ✅
@@ -432,17 +432,17 @@ Src/Functorium.Adapters/Observabilities/
 └── Context/          ✅
 ```
 
-> **Note**: 위 구조는 설계 의도를 나타내며, 현재 코드베이스의 실제 구조와 차이가 있습니다. 현재 `Applications/Observabilities/` 디렉토리는 존재하지 않고, `Adapters/Observabilities/`의 실제 하위 폴더 구조는 다음과 같습니다:
+> **Note**: The above structure represents the design intent and may differ from the actual codebase structure. Currently the `Applications/Observabilities/` directory does not exist, and the actual subfolder structure of `Adapters/Observabilities/` is as follows:
 > ```
 > Src/Functorium.Adapters/Observabilities/
-> ├── Builders/Configurators/   (LoggingConfigurator, TracingConfigurator, MetricsConfigurator 등)
-> ├── Events/                   (ObservableDomainEventPublisher 등)
-> ├── Loggers/                  (UsecaseLoggerExtensions, StartupLogger 등)
-> ├── Naming/                   (ObservabilityNaming 상수)
-> └── Pipelines/                (UsecaseLoggingPipeline, UsecaseTracingPipeline, UsecaseMetricsPipeline 등)
+> ├── Builders/Configurators/   (LoggingConfigurator, TracingConfigurator, MetricsConfigurator, etc.)
+> ├── Events/                   (ObservableDomainEventPublisher, etc.)
+> ├── Loggers/                  (UsecaseLoggerExtensions, StartupLogger, etc.)
+> ├── Naming/                   (ObservabilityNaming constants)
+> └── Pipelines/                (UsecaseLoggingPipeline, UsecaseTracingPipeline, UsecaseMetricsPipeline, etc.)
 > ```
 
-### Namespace 구조
+### Namespace Structure
 
 ```
 Functorium.Abstractions.Observabilities/
@@ -450,49 +450,49 @@ Functorium.Abstractions.Observabilities/
 │   ├── IContextPropagator.cs
 │   └── IObservabilityContext.cs
 ├── Loggers/
-│   └── UsecaseLoggerExtensions.cs         // Logger 확장
+│   └── UsecaseLoggerExtensions.cs         // Logger extension
 ├── Metrics/
-│   └── IMetricRecorder.cs                 // Metric 기록
+│   └── IMetricRecorder.cs                 // Metric recording
 ├── Spans/
-│   ├── ISpan.cs                           // Span 인터페이스
-│   └── ISpanFactory.cs                    // Span 팩토리
+│   ├── ISpan.cs                           // Span interface
+│   └── ISpanFactory.cs                    // Span factory
 └── ObservabilityNaming.cs
 
 Functorium.Adapters.Observabilities/
 ├── Builders/
 │   ├── Configurators/
-│   │   ├── LoggingConfigurator.cs         // Logging 설정
-│   │   ├── TracingConfigurator.cs         // Tracing 설정
-│   │   └── MetricsConfigurator.cs         // Metrics 설정
-│   ├── PipelineConfigurator.cs          // Pipeline 선택적 등록 (UseObservability, UseMetrics 등)
+│   │   ├── LoggingConfigurator.cs         // Logging configuration
+│   │   ├── TracingConfigurator.cs         // Tracing configuration
+│   │   └── MetricsConfigurator.cs         // Metrics configuration
+│   ├── PipelineConfigurator.cs          // Pipeline selective registration (UseObservability, UseMetrics, etc.)
 │   └── OpenTelemetryBuilder.cs
 ├── Loggers/
-│   ├── IStartupOptionsLogger.cs           // Logger 인터페이스
-│   └── StartupLogger.cs                   // Logger 구현
+│   ├── IStartupOptionsLogger.cs           // Logger interface
+│   └── StartupLogger.cs                   // Logger implementation
 ├── Metrics/
-│   └── OpenTelemetryMetricRecorder.cs     // Metric 구현
+│   └── OpenTelemetryMetricRecorder.cs     // Metric implementation
 └── Spans/
-    ├── OpenTelemetrySpan.cs               // Span 구현
-    └── OpenTelemetrySpanFactory.cs        // SpanFactory 구현
+    ├── OpenTelemetrySpan.cs               // Span implementation
+    └── OpenTelemetrySpanFactory.cs        // SpanFactory implementation
 
 Functorium.Adapters.Pipelines/
-├── UsecasePipelineBase.cs                 // Pipeline 공통 베이스 클래스
-├── ICustomUsecasePipeline.cs              // 커스텀 파이프라인 마커 인터페이스
-├── CtxEnricherPipeline.cs                 // ctx.* 3-Pillar Enrichment Pipeline (최선두)
+├── UsecasePipelineBase.cs                 // Pipeline common base class
+├── ICustomUsecasePipeline.cs              // Custom pipeline marker interface
+├── CtxEnricherPipeline.cs                 // ctx.* 3-Pillar Enrichment Pipeline (runs first)
 ├── UsecaseLoggingPipeline.cs              // Logging Pipeline
 ├── UsecaseTracingPipeline.cs              // Tracing Pipeline
-├── UsecaseTracingCustomPipelineBase.cs    // 커스텀 Tracing Pipeline 베이스
+├── UsecaseTracingCustomPipelineBase.cs    // Custom Tracing Pipeline base
 ├── UsecaseMetricsPipeline.cs              // Metrics Pipeline
-├── UsecaseMetricCustomPipelineBase.cs     // 커스텀 Metrics Pipeline 베이스
+├── UsecaseMetricCustomPipelineBase.cs     // Custom Metrics Pipeline base
 ├── UsecaseValidationPipeline.cs           // FluentValidation Pipeline
-├── UsecaseExceptionPipeline.cs            // Exception → Fin.Fail 변환 Pipeline
-├── UsecaseTransactionPipeline.cs          // Transaction + SaveChanges + 이벤트 발행 Pipeline
-└── UsecaseCachingPipeline.cs              // IMemoryCache 기반 캐싱 Pipeline
+├── UsecaseExceptionPipeline.cs            // Exception → Fin.Fail conversion Pipeline
+├── UsecaseTransactionPipeline.cs          // Transaction + SaveChanges + event publishing Pipeline
+└── UsecaseCachingPipeline.cs              // IMemoryCache-based caching Pipeline
 ```
 
-### ObservabilityNaming 상수
+### ObservabilityNaming Constants
 
-`ObservabilityNaming` 클래스는 모든 관찰 가능성 관련 상수를 정의합니다.
+The `ObservabilityNaming` class defines all observability-related constants.
 
 ```csharp
 public static partial class ObservabilityNaming
@@ -520,7 +520,7 @@ public static partial class ObservabilityNaming
     }
 
     /// <summary>
-    /// OpenTelemetry 표준 attributes
+    /// OpenTelemetry standard attributes
     /// https://opentelemetry.io/docs/specs/semconv/
     /// </summary>
     public static class OTelAttributes
@@ -534,7 +534,7 @@ public static partial class ObservabilityNaming
     }
 
     /// <summary>
-    /// 커스텀 attributes (request.*, response.*, error.*)
+    /// Custom attributes (request.*, response.*, error.*)
     /// </summary>
     public static class CustomAttributes
     {
@@ -551,14 +551,14 @@ public static partial class ObservabilityNaming
 }
 ```
 
-### 실전 예시
+### Practical Examples
 
-#### Configurator 구현
+#### Configurator Implementation
 
 ```csharp
 /// <summary>
-/// Tracing 확장 설정을 위한 Configurator 클래스
-/// ActivitySource, Processor 등 프로젝트별 Tracing 확장 제공
+/// Configurator class for Tracing extension configuration
+/// Provides project-specific Tracing extensions such as ActivitySource, Processor, etc.
 /// </summary>
 public class TracingConfigurator
 {
@@ -573,12 +573,12 @@ public class TracingConfigurator
 }
 ```
 
-#### Pipeline 구현
+#### Pipeline Implementation
 
 ```csharp
 /// <summary>
-/// Usecase의 Logging을 담당하는 Pipeline
-/// Result 패턴을 사용하여 요청/응답을 안전하게 로깅합니다.
+/// Pipeline responsible for Usecase Logging
+/// Safely logs requests/responses using the Result pattern.
 /// </summary>
 public sealed class UsecaseLoggingPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
@@ -591,13 +591,13 @@ public sealed class UsecaseLoggingPipeline<TRequest, TResponse>
         MessageHandlerDelegate<TRequest, TResponse> next,
         CancellationToken cancellationToken)
     {
-        // 요청 로깅
+        // Request logging
         _logger.LogUsecaseRequest(...);
 
-        // 다음 Pipeline 실행
+        // Execute next Pipeline
         TResponse response = await next(request, cancellationToken);
 
-        // 응답 로깅
+        // Response logging
         _logger.LogUsecaseResponseSuccess(...);
 
         return response;
@@ -605,7 +605,7 @@ public sealed class UsecaseLoggingPipeline<TRequest, TResponse>
 }
 ```
 
-#### Builder 사용
+#### Builder Usage
 
 ```csharp
 services
@@ -627,7 +627,7 @@ services
     .Build();
 ```
 
-#### Options 설정 (appsettings.json)
+#### Options Configuration (appsettings.json)
 
 ```json
 {
@@ -635,12 +635,12 @@ services
     "ServiceName": "MyService",
     "CollectorEndpoint": "http://localhost:18889",
 
-    // 개별 엔드포인트 (선택적)
+    // Individual endpoints (optional)
     "LoggingEndpoint": "http://localhost:21892",
     "TracingEndpoint": "http://localhost:21890",
     "MetricsEndpoint": "http://localhost:21891",
 
-    // 개별 프로토콜 (선택적)
+    // Individual protocols (optional)
     "LoggingProtocol": "HttpProtobuf",
     "TracingProtocol": "Grpc",
     "MetricsProtocol": "Grpc"
@@ -650,74 +650,74 @@ services
 
 ### Checklist
 
-새로운 Observability 관련 클래스를 작성할 때 다음을 확인하세요:
+When writing new Observability-related classes, verify the following:
 
-- [ ] Signal 이름을 사용하는가? → `Logging`, `Tracing`, `Metrics`
-- [ ] Component 유형을 사용하는가? → `Logger`, `Span`, `Metric`, `Tracer`, `Meter`
-- [ ] 접두사로 Signal 이름을 사용하는가? (설정/활동)
-- [ ] 접미사로 Component 유형을 사용하는가? (구성 요소)
-- [ ] `.gitignore`와 충돌하지 않는가? (`Logs` 지양)
-- [ ] OpenTelemetry 표준 용어와 일치하는가?
-- [ ] 세 가지 Signal이 일관된 패턴을 따르는가?
-- [ ] Endpoint와 Protocol이 모두 동명사 형태인가?
-- [ ] Configurator는 Tracing을 사용하는가? (TracesConfigurator ❌)
+- [ ] Are you using Signal names? → `Logging`, `Tracing`, `Metrics`
+- [ ] Are you using Component types? → `Logger`, `Span`, `Metric`, `Tracer`, `Meter`
+- [ ] Are Signal names used as prefixes? (configuration/activity)
+- [ ] Are Component types used as suffixes? (components)
+- [ ] Does it not conflict with `.gitignore`? (avoid `Logs`)
+- [ ] Does it match OpenTelemetry standard terminology?
+- [ ] Do all three Signals follow a consistent pattern?
+- [ ] Are both Endpoint and Protocol in gerund form?
+- [ ] Does Configurator use Tracing? (TracesConfigurator ❌)
 
-### 용어 정리표
+### Terminology Reference Table
 
 | Purpose | Logging | Tracing | Metrics | Note |
 |------|---------|---------|---------|------|
-| **Configurator** | `LoggingConfigurator` | `TracingConfigurator` | `MetricsConfigurator` | 내부 일관성 우선 |
-| **Endpoint** | `LoggingEndpoint` | `TracingEndpoint` | `MetricsEndpoint` | 동명사 형태 |
-| **Protocol** | `LoggingProtocol` | `TracingProtocol` | `MetricsProtocol` | 동명사 형태 |
-| **Pipeline** | `UsecaseLoggingPipeline` | `UsecaseTracingPipeline` | `UsecaseMetricsPipeline` | 활동 강조 |
-| **Builder Method** | `ConfigureLogging()` | `ConfigureTracing()` | `ConfigureMetrics()` | 일관성 유지 |
-| **Getter Method** | `GetLoggingEndpoint()` | `GetTracingEndpoint()` | `GetMetricsEndpoint()` | 동명사 형태 |
-| **Getter Method** | `GetLoggingProtocol()` | `GetTracingProtocol()` | `GetMetricsProtocol()` | 동명사 형태 |
+| **Configurator** | `LoggingConfigurator` | `TracingConfigurator` | `MetricsConfigurator` | Internal consistency first |
+| **Endpoint** | `LoggingEndpoint` | `TracingEndpoint` | `MetricsEndpoint` | Gerund form |
+| **Protocol** | `LoggingProtocol` | `TracingProtocol` | `MetricsProtocol` | Gerund form |
+| **Pipeline** | `UsecaseLoggingPipeline` | `UsecaseTracingPipeline` | `UsecaseMetricsPipeline` | Emphasizes activity |
+| **Builder Method** | `ConfigureLogging()` | `ConfigureTracing()` | `ConfigureMetrics()` | Maintain consistency |
+| **Getter Method** | `GetLoggingEndpoint()` | `GetTracingEndpoint()` | `GetMetricsEndpoint()` | Gerund form |
+| **Getter Method** | `GetLoggingProtocol()` | `GetTracingProtocol()` | `GetMetricsProtocol()` | Gerund form |
 
 ---
 
-> 필드/태그 네이밍 규칙은 [08-observability.md](../../spec/08-observability)를 참조하세요.
+> For field/tag naming conventions, see [08-observability.md](../../spec/08-observability).
 
-코드 네이밍 규칙에서 클래스, 인터페이스, 파이프라인 등의 명명 패턴을 정의했습니다. 이어서, LoggerExtensions 메서드에 적용되는 별도의 네이밍 패턴을 살펴봅니다.
+The code naming conventions defined naming patterns for classes, interfaces, pipelines, etc. Next, let's look at the separate naming pattern applied to LoggerExtensions methods.
 
-## Logger 메서드 네이밍 규칙
+## Logger Method Naming Convention
 
-LoggerExtensions 클래스에서 로그 메서드 이름을 작성할 때 따라야 하는 규칙입니다.
+These are the rules to follow when naming log methods in LoggerExtensions classes.
 
-### 네이밍 패턴
+### Naming Pattern
 
 ```
 Log{Context}{Phase}{Status}
 ```
 
-### 구성 요소
+### Components
 
-| 요소 | Description | Value |
+| Element | Description | Value |
 |------|------|-----|
-| `Context` | 로깅 대상 컨텍스트 | `Usecase`, `DomainEventHandler`, `DomainEventPublisher`, `DomainEventsPublisher` |
-| `Phase` | 요청/응답 단계 | `Request`, `Response` |
-| `Status` | 결과 상태 (Response에만 사용) | (없음), `Success`, `Warning`, `Error`, `PartialFailure` |
+| `Context` | Logging target context | `Usecase`, `DomainEventHandler`, `DomainEventPublisher`, `DomainEventsPublisher` |
+| `Phase` | Request/response stage | `Request`, `Response` |
+| `Status` | Result status (used only for Response) | (none), `Success`, `Warning`, `Error`, `PartialFailure` |
 
-### 규칙
+### Rules
 
-#### Phase 규칙
-- `Request`: 작업 시작 시점 로그 (Status 없음)
-- `Response`: 작업 완료 시점 로그 (Status 필수)
+#### Phase Rules
+- `Request`: Log at the start of an operation (no Status)
+- `Response`: Log at the completion of an operation (Status required)
 
-#### Status 규칙
-| Status | 로그 레벨 | Purpose |
+#### Status Rules
+| Status | Log Level | Purpose |
 |--------|-----------|------|
-| `Success` | Information | 정상 완료 |
-| `Warning` | Warning | 예상된 에러 (Expected Error) |
-| `Error` | Error | 예외적 에러 (Exceptional Error) |
-| `PartialFailure` | Warning | 부분 실패 (일부만 성공) |
+| `Success` | Information | Normal completion |
+| `Warning` | Warning | Expected Error |
+| `Error` | Error | Exceptional Error |
+| `PartialFailure` | Warning | Partial failure (only some succeeded) |
 
-#### Context 규칙
-- 단수/복수 구분: 단일 항목은 단수, 다중 항목은 복수 사용
-  - `DomainEventPublisher`: 단일 이벤트 발행
-  - `DomainEventsPublisher`: 다중 이벤트 발행 (Aggregate의 모든 이벤트)
+#### Context Rules
+- Singular/plural distinction: Use singular for single items, plural for multiple items
+  - `DomainEventPublisher`: Publishing a single event
+  - `DomainEventsPublisher`: Publishing multiple events (all events from an Aggregate)
 
-### 예시
+### Examples
 
 #### UsecaseLoggerExtensions
 ```csharp
@@ -738,19 +738,19 @@ LogDomainEventHandlerRequest<TEvent>(...)
 // Response
 LogDomainEventHandlerResponseSuccess(...)
 LogDomainEventHandlerResponseWarning(...)
-LogDomainEventHandlerResponseError(...)   // Error 파라미터
-LogDomainEventHandlerResponseError(...)   // Exception 파라미터 (오버로드)
+LogDomainEventHandlerResponseError(...)   // Error parameter
+LogDomainEventHandlerResponseError(...)   // Exception parameter (overload)
 ```
 
 #### DomainEventPublisherLoggerExtensions
 ```csharp
-// 단일 이벤트
+// Single event
 LogDomainEventPublisherRequest<TEvent>(...)
 LogDomainEventPublisherResponseSuccess<TEvent>(...)
 LogDomainEventPublisherResponseWarning<TEvent>(...)
 LogDomainEventPublisherResponseError<TEvent>(...)
 
-// 다중 이벤트 (Aggregate)
+// Multiple events (Aggregate)
 LogDomainEventsPublisherRequest(...)
 LogDomainEventsPublisherResponseSuccess(...)
 LogDomainEventsPublisherResponseWarning(...)
@@ -760,64 +760,64 @@ LogDomainEventsPublisherResponsePartialFailure(...)
 
 ### Anti-Patterns
 
-| 잘못된 예 | 올바른 예 | 이유 |
+| Incorrect | Correct | Reason |
 |-----------|-----------|------|
-| `LogRequestMessage` | `LogUsecaseRequest` | Context 누락 |
-| `LogDomainEventHandlerSuccess` | `LogDomainEventHandlerResponseSuccess` | Phase 누락 |
-| `LogDomainEventPublish` | `LogDomainEventPublisherRequest` | 동작 대신 Phase 사용 |
-| `LogResponseMessageSuccess` | `LogUsecaseResponseSuccess` | "Message" 접미사 불필요 |
+| `LogRequestMessage` | `LogUsecaseRequest` | Missing Context |
+| `LogDomainEventHandlerSuccess` | `LogDomainEventHandlerResponseSuccess` | Missing Phase |
+| `LogDomainEventPublish` | `LogDomainEventPublisherRequest` | Use Phase instead of action |
+| `LogResponseMessageSuccess` | `LogUsecaseResponseSuccess` | "Message" suffix unnecessary |
 
-### 새 LoggerExtensions 클래스 추가 시
+### When Adding a New LoggerExtensions Class
 
-1. Context 이름 결정 (예: `Repository`, `ExternalApi`)
-2. 필요한 Phase 결정 (`Request`, `Response` 또는 둘 다)
-3. 필요한 Status 결정 (`Success`, `Warning`, `Error`)
-4. 패턴에 따라 메서드 이름 작성
+1. Determine the Context name (e.g., `Repository`, `ExternalApi`)
+2. Determine the required Phase (`Request`, `Response`, or both)
+3. Determine the required Status (`Success`, `Warning`, `Error`)
+4. Write method names according to the pattern
 
-네이밍 규칙을 적용하면서 자주 발생하는 문제와 해결 방법을 정리합니다.
+The following summarizes common issues and solutions encountered when applying naming conventions.
 
 ## Troubleshooting
 
-### Signal 이름과 Component 유형을 혼동하여 클래스 이름이 일관되지 않은 경우
+### Class names are inconsistent due to confusion between Signal names and Component types
 
-**Cause:** `Logging`(Signal/활동)과 `Logger`(Component/객체)의 역할 구분이 명확하지 않아 `LoggingPipeline`과 `LoggerPipeline`이 혼재됩니다.
+**Cause:** The role distinction between `Logging` (Signal/activity) and `Logger` (Component/object) is not clear, resulting in a mix of `LoggingPipeline` and `LoggerPipeline`.
 
-**Resolution:** 설정/활동 클래스에는 Signal 이름을 접두사로(`LoggingConfigurator`, `UsecaseLoggingPipeline`), 구성 요소에는 Component 유형을 접미사로(`StartupLogger`, `ISpanFactory`) 사용합니다.
+**Resolution:** Use Signal names as prefixes for configuration/activity classes (`LoggingConfigurator`, `UsecaseLoggingPipeline`), and Component types as suffixes for components (`StartupLogger`, `ISpanFactory`).
 
-### count 필드에서 `.count`와 `_count`를 혼용한 경우
+### Mixed usage of `.count` and `_count` in count fields
 
-**Cause:** 단독 count와 형용사 조합 count의 규칙을 구분하지 않았습니다.
+**Cause:** The rules for standalone count and adjective-combined count were not distinguished.
 
-**Resolution:** 엔티티 수준 count는 `.count`(`request.event.count`, `request.aggregate.count`), 동적 필드 count는 `_count` 접미사(`request.params.{name}_count`, `response.event.success_count`, `response.event.failure_count`)를 사용합니다.
+**Resolution:** Use `.count` for entity-level counts (`request.event.count`, `request.aggregate.count`), and `_count` suffix for dynamic field counts (`request.params.{name}_count`, `response.event.success_count`, `response.event.failure_count`).
 
 ## FAQ
 
-### Q1. OpenTelemetry에서는 "Traces"라고 하는데 왜 Functorium에서는 "Tracing"을 사용하나요?
+### Q1. OpenTelemetry uses "Traces", so why does Functorium use "Tracing"?
 
-Functorium은 **내부 일관성 우선 원칙**을 따릅니다. `LoggingConfigurator`, `TracingConfigurator`, `MetricsConfigurator`처럼 모든 Signal에 동명사 패턴을 일관되게 적용하는 것이 코드베이스의 가독성과 유지보수성에 더 기여한다고 판단했습니다.
+Functorium follows the **internal consistency first principle**. Consistently applying the gerund pattern across all Signals like `LoggingConfigurator`, `TracingConfigurator`, `MetricsConfigurator` contributes more to codebase readability and maintainability.
 
-### Q2. Logger 메서드에서 단수/복수 구분은 어떻게 하나요?
+### Q2. How do you distinguish singular/plural in Logger methods?
 
-단일 항목 처리 시 단수, 다중 항목 처리 시 복수를 사용합니다. 예: `LogDomainEventPublisherRequest` (단일 이벤트 발행), `LogDomainEventsPublisherRequest` (Aggregate의 모든 이벤트 발행).
+Use singular for single item processing and plural for multiple item processing. Example: `LogDomainEventPublisherRequest` (publishing a single event), `LogDomainEventsPublisherRequest` (publishing all events from an Aggregate).
 
-### Q3. Endpoint와 Protocol 속성명에 동명사를 사용하는 이유는?
+### Q3. Why use gerunds in Endpoint and Protocol property names?
 
-설정/구성 활동을 나타내므로 동명사 형태가 자연스럽습니다. `LoggingEndpoint`는 "로깅을 위한 엔드포인트", `TracingProtocol`은 "추적을 위한 프로토콜"로 읽힙니다. 세 Signal 모두 동일한 패턴(`LoggingEndpoint`, `TracingEndpoint`, `MetricsEndpoint`)으로 일관성을 유지합니다.
+Gerund forms are natural since they represent configuration/setup activities. `LoggingEndpoint` reads as "endpoint for logging", `TracingProtocol` reads as "protocol for tracing". All three Signals maintain consistency with the same pattern (`LoggingEndpoint`, `TracingEndpoint`, `MetricsEndpoint`).
 
-### Q4. 폴더는 왜 복수형을 사용하나요?
+### Q4. Why do folders use plural forms?
 
-폴더는 "무엇들을 담고 있는가"를 표현합니다. `Loggers/`는 Logger 관련 클래스들, `Spans/`는 Span 관련 클래스들을 담고 있습니다. 이는 .NET 프로젝트의 일반적인 관례와도 일치합니다.
+Folders express "what they contain". `Loggers/` contains Logger-related classes, `Spans/` contains Span-related classes. This is consistent with common conventions in .NET projects.
 
-### Q5. 새 LoggerExtensions 클래스를 추가할 때 어떤 순서로 작업하나요?
+### Q5. What order should you follow when adding a new LoggerExtensions class?
 
-1) Context 이름 결정 (예: `Repository`, `ExternalApi`), 2) 필요한 Phase 결정 (`Request`, `Response`), 3) 필요한 Status 결정 (`Success`, `Warning`, `Error`), 4) `Log{Context}{Phase}{Status}` 패턴으로 메서드 이름 작성합니다.
+1) Determine the Context name (e.g., `Repository`, `ExternalApi`), 2) Determine the required Phase (`Request`, `Response`), 3) Determine the required Status (`Success`, `Warning`, `Error`), 4) Write method names using the `Log{Context}{Phase}{Status}` pattern.
 
 ## References
 
-- [08-observability.md](../../spec/08-observability) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
-- [19-observability-logging.md](./19-observability-logging) — Observability 로깅 상세
-- [20-observability-metrics.md](./20-observability-metrics) — Observability 메트릭 상세
-- [21-observability-tracing.md](./21-observability-tracing) — Observability 트레이싱 상세
+- [08-observability.md](../../spec/08-observability) — Observability specification (Field/Tag, Meter, message templates)
+- [19-observability-logging.md](./19-observability-logging) — Observability logging details
+- [20-observability-metrics.md](./20-observability-metrics) — Observability metrics details
+- [21-observability-tracing.md](./21-observability-tracing) — Observability tracing details
 - [OpenTelemetry Specification](https://opentelemetry.io/docs/specs/)
 - [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/)
 - [OpenTelemetry .NET](https://github.com/open-telemetry/opentelemetry-dotnet)

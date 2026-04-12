@@ -1161,30 +1161,30 @@ public sealed class Validator : AbstractValidator<Request>
 
 > **Note**: `MustSatisfyValidationOf`는 C#14 extension members의 타입 추론 제한으로 `IRuleBuilderInitial`에서 추가 제네릭 파라미터 해결이 안 되는 경우, 전통적인 확장 메서드 오버로드(`MustSatisfyValidationOf<TRequest, TProperty, TValueObject>`)도 제공됩니다.
 
-### EntityId / OneOf / PairedRange 검증 확장 메서드
+### EntityId / OneOf / PairedRange Validation Extension Methods
 
-Functorium은 자주 사용되는 검증 패턴을 위한 확장 메서드를 추가로 제공합니다:
+Functorium additionally provides extension methods for frequently used validation patterns:
 
 | Method | Purpose | Example |
 |--------|------|------|
-| `MustBeEntityId<TRequest, TEntityId>` | 문자열이 유효한 EntityId 형식인지 검증 (NotEmpty + TryParse 통합) | `RuleFor(x => x.ProductId).MustBeEntityId<Request, ProductId>()` |
-| `MustBeOneOf<TRequest>` | 허용된 문자열 목록 중 하나인지 검증 (대소문자 무시, null/빈 문자열 건너뜀) | `RuleFor(x => x.SortBy).MustBeOneOf<Request>(["Name", "Price"])` |
-| `MustBePairedRange<TRequest, T>` | `Option<T>` 쌍 범위 필터 검증 (둘 다 None → 통과, 하나만 Some → 실패, 둘 다 Some → 범위 검증) | 아래 예제 참조 |
+| `MustBeEntityId<TRequest, TEntityId>` | Validates that a string is a valid EntityId format (NotEmpty + TryParse combined) | `RuleFor(x => x.ProductId).MustBeEntityId<Request, ProductId>()` |
+| `MustBeOneOf<TRequest>` | Validates that a value is one of the allowed string list (case-insensitive, skips null/empty) | `RuleFor(x => x.SortBy).MustBeOneOf<Request>(["Name", "Price"])` |
+| `MustBePairedRange<TRequest, T>` | Validates `Option<T>` paired range filter (both None = pass, only one Some = fail, both Some = range validation) | See example below |
 
 ```csharp
 public sealed class Validator : AbstractValidator<Request>
 {
     public Validator()
     {
-        // EntityId 형식 검증
+        // EntityId format validation
         RuleFor(x => x.ProductId)
             .MustBeEntityId<Request, ProductId>();
 
-        // 허용 값 목록 검증
+        // Allowed values list validation
         RuleFor(x => x.SortBy)
             .MustBeOneOf<Request>(["Name", "Price", "CreatedAt"]);
 
-        // Option<T> 쌍 범위 필터 검증
+        // Option<T> paired range filter validation
         this.MustBePairedRange(
             x => x.MinPrice,
             x => x.MaxPrice,
@@ -1193,9 +1193,9 @@ public sealed class Validator : AbstractValidator<Request>
 }
 ```
 
-### SmartEnum 검증 확장 메서드
+### SmartEnum Validation Extension Methods
 
-Ardalis.SmartEnum에 대한 FluentValidation 확장 메서드도 제공됩니다:
+FluentValidation extension methods for Ardalis.SmartEnum are also provided:
 
 | Method | Purpose |
 |--------|------|
@@ -1204,9 +1204,9 @@ Ardalis.SmartEnum에 대한 FluentValidation 확장 메서드도 제공됩니다
 | `MustBeEnumName<TRequest, TSmartEnum, TValue>` | SmartEnum Name으로 검증 |
 | `MustBeEnumValue<TRequest, TSmartEnum>` | string Value SmartEnum (대소문자 무시) |
 
-### ICacheable 인터페이스
+### ICacheable Interface
 
-Query Request에 `ICacheable`을 구현하면 캐싱을 지원할 수 있습니다:
+Implementing `ICacheable` on a Query Request enables caching support:
 
 ```csharp
 public sealed record Request(string ProductId) : IQueryRequest<Response>, ICacheable
@@ -1216,11 +1216,11 @@ public sealed record Request(string ProductId) : IQueryRequest<Response>, ICache
 }
 ```
 
-`UsecaseCachingPipeline`은 `where TRequest : IQuery<TResponse>` 제약으로 Query에만 적용되며, `ICacheable`을 구현한 Query Request를 자동으로 캐싱합니다:
-- `IMemoryCache`를 사용하여 `CacheKey` 기반으로 캐시 히트/미스 처리
-- 캐시 히트 시 Handler를 호출하지 않고 캐싱된 응답을 즉시 반환
-- `response.IsSucc`인 경우에만 캐싱 (실패 응답은 캐싱하지 않음)
-- `Duration`이 `null`이면 기본 5분 캐시
+`UsecaseCachingPipeline` applies only to Queries via the `where TRequest : IQuery<TResponse>` constraint and automatically caches Query Requests that implement `ICacheable`:
+- Uses `IMemoryCache` for cache hit/miss handling based on `CacheKey`
+- On cache hit, returns the cached response immediately without calling the Handler
+- Only caches when `response.IsSucc` (failure responses are not cached)
+- Default 5-minute cache when `Duration` is `null`
 
 ---
 
@@ -1305,24 +1305,24 @@ public sealed record Response(
 
 | Document | Description |
 |------|------|
-| [05a-value-objects.md](../domain/05a-value-objects) | 값 객체 구현 패턴 |
-| [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) | Entity 핵심 패턴 및 Create 패턴 |
-| [07-domain-events.md](../domain/07-domain-events) | 도메인 이벤트 발행 및 Event Handler |
-| [08a-error-system.md](../domain/08a-error-system) | 에러 시스템: 기초와 네이밍 |
-| [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) | 에러 시스템: Domain/Application 에러 |
-| [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) | 에러 시스템: Adapter 에러와 테스트 |
-| [10-specifications.md](../domain/10-specifications) | Specification 패턴 (Usecase에서 활용) |
-| [12-ports.md](../adapter/12-ports) | Repository 인터페이스 설계 |
-| [15a-unit-testing.md](../testing/15a-unit-testing) | Usecase 테스트 작성 방법 |
+| [05a-value-objects.md](../domain/05a-value-objects) | Value Object implementation patterns |
+| [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) | Entity core patterns and Create pattern |
+| [07-domain-events.md](../domain/07-domain-events) | Domain event publishing and Event Handler |
+| [08a-error-system.md](../domain/08a-error-system) | Error system: foundations and naming |
+| [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) | Error system: Domain/Application errors |
+| [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) | Error system: Adapter errors and testing |
+| [10-specifications.md](../domain/10-specifications) | Specification pattern (used in Use Cases) |
+| [12-ports.md](../adapter/12-ports) | Repository interface design |
+| [15a-unit-testing.md](../testing/15a-unit-testing) | Usecase test writing methods |
 
-**외부 참고:**
-- [Mediator](https://github.com/martinothamar/Mediator) - 기반 라이브러리
-- [LanguageExt](https://github.com/louthy/language-ext) - Fin 타입 제공 라이브러리
+**External References:**
+- [Mediator](https://github.com/martinothamar/Mediator) - Base library
+- [LanguageExt](https://github.com/louthy/language-ext) - Library providing Fin types
 
 ---
 
-## 관련 문서
+## Related Documents
 
-- Usecase에서 사용하는 Port 인터페이스 정의: [Port 정의](../adapter/12-ports)
-- Port 구현체인 Adapter 작성: [Adapter 구현](../adapter/13-adapters)
-- Pipeline과 DI 등록: [Adapter 연결](../adapter/14a-adapter-pipeline-di)
+- Port interface definitions used in Use Cases: [Port Definition](../adapter/12-ports)
+- Writing Adapters that implement Ports: [Adapter Implementation](../adapter/13-adapters)
+- Pipeline and DI registration: [Adapter Integration](../adapter/14a-adapter-pipeline-di)
