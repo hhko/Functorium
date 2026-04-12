@@ -1,68 +1,68 @@
 ---
-title: "사용자 관리 도메인 value object"
+title: "User Management Domain Value Objects"
 ---
 
-사용자 관리 도메인에서 자주 사용되는 value object 구현 예제입니다.
+Implementation examples of value objects commonly used in the user management domain.
 
 ## Learning Objectives
 
-1. **Email** - 형식 검증 및 정규화가 필요한 단순 value object
-2. **Password** - 보안 해시와 validation logic을 캡슐화한 value object
-3. **PhoneNumber** - 국제 형식을 지원하는 전화번호 value object
-4. **Username** - 예약어 검증이 포함된 사용자명 value object
+1. **Email** - Simple value object requiring format validation and normalization
+2. **Password** - Value object encapsulating security hashing and validation logic
+3. **PhoneNumber** - Phone number value object supporting international formats
+4. **Username** - Username value object with reserved word validation
 
-## 실행
+## Run
 
 ```bash
 dotnet run
 ```
 
-## 예상 출력
+## Expected Output
 
 ```
-=== 사용자 관리 도메인 값 객체 ===
+=== User Management Domain Value Objects ===
 
-1. Email (이메일)
+1. Email
 ────────────────────────────────────────
-   정규화: user@example.com
-   로컬 파트: user
-   도메인: example.com
-   마스킹: u***r@example.com
-   잘못된 형식: 유효한 이메일 형식이 아닙니다.
+   Normalized: user@example.com
+   Local part: user
+   Domain: example.com
+   Masked: u***r@example.com
+   Invalid format: Not a valid email format.
 
-2. Password (비밀번호)
+2. Password
 ────────────────────────────────────────
-   비밀번호 생성: 성공
-   표시: ********
-   검증(맞음): True
-   검증(틀림): False
-   약한 비밀번호: 비밀번호는 대문자, 소문자, 숫자, 특수문자 중 3가지 이상을 포함해야 합니다.
+   Password creation: Success
+   Display: ********
+   Verify (correct): True
+   Verify (incorrect): False
+   Weak password: Password must contain at least 3 of: uppercase, lowercase, digits, special characters.
 
-3. PhoneNumber (전화번호)
+3. PhoneNumber
 ────────────────────────────────────────
-   정규화: +821012345678
-   포맷팅: 010-1234-5678
-   국가 코드: +82
-   마스킹: +82 ***-****-5678
+   Normalized: +821012345678
+   Formatted: 010-1234-5678
+   Country code: +82
+   Masked: +82 ***-****-5678
 
-4. Username (사용자명)
+4. Username
 ────────────────────────────────────────
-   사용자명: john_doe123
-   예약어: 'admin'은(는) 예약된 사용자명입니다.
-   잘못된 형식: 사용자명은 영문자로 시작하고, 영문자, 숫자, 밑줄(_), 하이픈(-)만 포함할 수 있습니다.
+   Username: john_doe123
+   Reserved word: 'admin' is a reserved username.
+   Invalid format: Username must start with a letter and may only contain letters, digits, underscores (_), and hyphens (-).
 ```
 
-## value object 설명
+## Value Object Descriptions
 
 ### Email
 
-이메일 주소를 표현하는 단순 value object입니다.
+A simple value object representing an email address.
 
-**특징:**
-- 정규 표현식을 통한 형식 검증
-- 소문자로 정규화하여 일관성 유지
-- LocalPart와 Domain 분리 접근
-- 마스킹 기능 (개인정보 보호)
+**Features:**
+- Format validation via regular expression
+- Normalization to lowercase for consistency
+- Separate access to LocalPart and Domain
+- Masking feature (for privacy protection)
 
 ```csharp
 public static Fin<Email> Create(string? value)
@@ -84,18 +84,18 @@ public static Fin<Email> Create(string? value)
 
 ### Password
 
-비밀번호를 표현하는 value object입니다. 평문이 아닌 해시값을 저장합니다.
+A value object representing a password. Stores hashed values, not plaintext.
 
-**특징:**
-- 비밀번호 강도 검증 (대/소문자, 숫자, 특수문자)
-- 해시 기반 저장 (평문 노출 방지)
-- 검증 메서드 제공
-- ToString에서 마스킹 출력
+**Features:**
+- Password strength validation (uppercase, lowercase, digits, special characters)
+- Hash-based storage (prevents plaintext exposure)
+- Verification method provided
+- Masked output from ToString
 
 ```csharp
 public static Fin<Password> Create(string? plainText)
 {
-    // 강도 검증
+    // Strength validation
     var hasUpperCase = plainText.Any(char.IsUpper);
     var hasLowerCase = plainText.Any(char.IsLower);
     var hasDigit = plainText.Any(char.IsDigit);
@@ -113,13 +113,13 @@ public static Fin<Password> Create(string? plainText)
 
 ### PhoneNumber
 
-국제 형식을 지원하는 전화번호 value object입니다.
+A phone number value object supporting international formats.
 
-**특징:**
-- 국가 코드와 국내 번호 분리
-- 다양한 입력 형식 정규화
-- 로케일별 포맷팅
-- 마스킹 기능
+**Features:**
+- Separation of country code and national number
+- Normalization of various input formats
+- Locale-specific formatting
+- Masking feature
 
 ```csharp
 public static Fin<PhoneNumber> Create(string? value, string defaultCountryCode = "82")
@@ -129,7 +129,7 @@ public static Fin<PhoneNumber> Create(string? value, string defaultCountryCode =
 
     var digits = new string(value.Where(char.IsDigit).ToArray());
 
-    // 국내 번호 0 제거
+    // Remove leading 0 from national number
     if (digits.StartsWith("0"))
         digits = digits[1..];
 
@@ -142,13 +142,13 @@ public static Fin<PhoneNumber> Create(string? value, string defaultCountryCode =
 
 ### Username
 
-예약어 검증이 포함된 사용자명 value object입니다.
+A username value object with reserved word validation.
 
-**특징:**
-- 형식 규칙 (영문자로 시작, 특수문자 제한)
-- 예약어 목록 검증
-- 소문자로 정규화
-- 길이 제한
+**Features:**
+- Format rules (must start with a letter, restricted special characters)
+- Reserved word list validation
+- Normalization to lowercase
+- Length limits
 
 ```csharp
 private static readonly HashSet<string> ReservedNames = new(StringComparer.OrdinalIgnoreCase)
@@ -167,31 +167,31 @@ public static Fin<Username> Create(string? value)
 }
 ```
 
-## 핵심 패턴
+## Key Patterns
 
-### 1. 정규화 (Normalization)
+### 1. Normalization
 
-입력값을 일관된 형식으로 변환하여 동등성 비교의 정확성을 guarantees.
+Converts input values to a consistent format to guarantee accurate equality comparison.
 
 ```csharp
-// Email: 소문자 정규화
+// Email: lowercase normalization
 var normalized = value.Trim().ToLowerInvariant();
 
-// PhoneNumber: 숫자만 추출
+// PhoneNumber: extract digits only
 var digits = new string(value.Where(char.IsDigit).ToArray());
 ```
 
-### 2. 마스킹 (Masking)
+### 2. Masking
 
-개인정보 보호를 위해 민감한 정보를 가립니다.
+Conceals sensitive information for privacy protection.
 
 ```csharp
 public string Masked => $"{local[0]}***{local[^1]}@{Domain}";
 ```
 
-### 3. 보안 해싱 (Security Hashing)
+### 3. Security Hashing
 
-비밀번호와 같은 민감한 데이터는 해시로 저장합니다.
+Sensitive data such as passwords are stored as hashes.
 
 ```csharp
 private static string HashPassword(string plainText)
@@ -203,9 +203,9 @@ private static string HashPassword(string plainText)
 }
 ```
 
-### 4. 예약어 검증 (Reserved Word Validation)
+### 4. Reserved Word Validation
 
-시스템에서 특별한 의미를 가지는 값을 제외합니다.
+Excludes values that have special meaning in the system.
 
 ```csharp
 private static readonly HashSet<string> ReservedNames = new(StringComparer.OrdinalIgnoreCase)
@@ -216,20 +216,20 @@ private static readonly HashSet<string> ReservedNames = new(StringComparer.Ordin
 
 ## FAQ
 
-### Q1: `Email`에서 소문자로 정규화하는 이유는 무엇인가요?
-**A**: RFC 표준상 이메일의 로컬 파트는 대소문자를 구분할 수 있지만, 대부분의 메일 서버는 대소문자를 구분하지 않습니다. 소문자로 정규화하면 `User@Example.com`과 `user@example.com`이 동일한 value object로 인식되어 동등성 비교가 정확해집니다.
+### Q1: Why does `Email` normalize to lowercase?
+**A**: According to the RFC standard, the local part of an email can be case-sensitive, but most mail servers do not distinguish case. Normalizing to lowercase ensures that `User@Example.com` and `user@example.com` are recognized as the same value object, making equality comparison accurate.
 
-### Q2: `Password` value object가 해시값을 저장하는 이유는 무엇인가요?
-**A**: 평문 비밀번호를 메모리에 유지하면 로그 출력이나 직렬화 시 노출될 위험이 있습니다. value object가 생성 시점에 해시로 변환하여 저장하면, `ToString()`이나 디버거에서도 원본 비밀번호가 노출되지 않습니다.
+### Q2: Why does the `Password` value object store a hash value?
+**A**: Keeping a plaintext password in memory risks exposure through log output or serialization. When the value object converts to a hash at creation time, the original password is never exposed even through `ToString()` or a debugger.
 
-### Q3: `Username`에서 예약어 목록을 `HashSet`으로 관리하는 이유는 무엇인가요?
-**A**: 예약어 검증은 사용자 등록 시마다 실행됩니다. `List`의 `Contains`는 O(n)이지만 `HashSet`의 `Contains`는 O(1)이므로, 예약어가 많아져도 성능이 일정합니다. `StringComparer.OrdinalIgnoreCase`를 사용하여 대소문자 구분 없이 compares.
+### Q3: Why does `Username` manage the reserved word list with a `HashSet`?
+**A**: Reserved word validation runs every time a user registers. `List.Contains` is O(n), but `HashSet.Contains` is O(1), so performance remains constant even as the reserved word list grows. `StringComparer.OrdinalIgnoreCase` is used for case-insensitive comparison.
 
-### Q4: 마스킹 기능은 모든 value object에 필요한가요?
-**A**: 아닙니다. 개인정보가 포함된 value object(`Email`, `PhoneNumber`, `AccountNumber` 등)에만 필요합니다. `ProductCode`나 `OrderStatus` 같은 비민감 데이터에는 마스킹이 불필요합니다.
+### Q4: Is the masking feature needed for all value objects?
+**A**: No. It is only needed for value objects containing personal information (`Email`, `PhoneNumber`, `AccountNumber`, etc.). Non-sensitive data like `ProductCode` or `OrderStatus` does not require masking.
 
 ---
 
-Next chapter에서는 일정/예약 도메인의 value object를 학습합니다.
+The next chapter covers value objects in the scheduling/reservation domain.
 
-→ [5.4 일정/예약 도메인](../../04-Scheduling-Domain/SchedulingDomain/)
+-> [5.4 Scheduling Domain](../../04-Scheduling-Domain/SchedulingDomain/)

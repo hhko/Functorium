@@ -128,7 +128,7 @@ Internally, `Fin<T>` handles success/failure, and at the API boundary it is conv
 The Mediator pattern reduces coupling between Commands/Queries and Handlers. Combined with value objects, input validation is encapsulated within Handlers.
 
 ```csharp
-// DI 설정
+// DI configuration
 services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
 services.AddSingleton<UserRepository>();
 
@@ -398,4 +398,4 @@ With CQRS integration, we now have a structure where value objects flow naturall
 
 ---
 
-→ [4장: 테스트 전략](../04-Testing-Strategies/)
+→ [Chapter 4: Testing Strategies](../04-Testing-Strategies/)

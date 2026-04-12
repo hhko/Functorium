@@ -11,21 +11,21 @@ Functorium's Usecase Pipeline system separates cross-cutting concerns into a Med
 | Type | Namespace | Description |
 |------|-------------|------|
 | `UsecasePipelineBase<TRequest>` | `Functorium.Adapters.Pipelines` | Common base class for all Pipelines |
-| `UsecaseMetricsPipeline<TRequest, TResponse>` | 동일 | Automatic metrics collection Pipeline |
-| `UsecaseTracingPipeline<TRequest, TResponse>` | 동일 | Distributed tracing Pipeline |
-| `UsecaseLoggingPipeline<TRequest, TResponse>` | 동일 | Structured logging Pipeline |
-| `UsecaseValidationPipeline<TRequest, TResponse>` | 동일 | FluentValidation validation Pipeline |
-| `UsecaseCachingPipeline<TRequest, TResponse>` | 동일 | Query caching Pipeline |
-| `UsecaseExceptionPipeline<TRequest, TResponse>` | 동일 | Exception to `FinResponse.Fail` conversion Pipeline |
-| `UsecaseTransactionPipeline<TRequest, TResponse>` | 동일 | Transaction + UoW + domain event Pipeline |
-| `ICustomUsecasePipeline` | 동일 | Custom Pipeline marker interface |
-| `UsecaseMetricCustomPipelineBase<TRequest>` | 동일 | Custom metrics Pipeline base |
-| `UsecaseTracingCustomPipelineBase<TRequest>` | 동일 | Custom tracing Pipeline base |
+| `UsecaseMetricsPipeline<TRequest, TResponse>` | Same | Automatic metrics collection Pipeline |
+| `UsecaseTracingPipeline<TRequest, TResponse>` | Same | Distributed tracing Pipeline |
+| `UsecaseLoggingPipeline<TRequest, TResponse>` | Same | Structured logging Pipeline |
+| `UsecaseValidationPipeline<TRequest, TResponse>` | Same | FluentValidation validation Pipeline |
+| `UsecaseCachingPipeline<TRequest, TResponse>` | Same | Query caching Pipeline |
+| `UsecaseExceptionPipeline<TRequest, TResponse>` | Same | Exception to `FinResponse.Fail` conversion Pipeline |
+| `UsecaseTransactionPipeline<TRequest, TResponse>` | Same | Transaction + UoW + domain event Pipeline |
+| `ICustomUsecasePipeline` | Same | Custom Pipeline marker interface |
+| `UsecaseMetricCustomPipelineBase<TRequest>` | Same | Custom metrics Pipeline base |
+| `UsecaseTracingCustomPipelineBase<TRequest>` | Same | Custom tracing Pipeline base |
 | `PipelineConfigurator` | `Functorium.Adapters.Observabilities.Builders.Configurators` | Pipeline enable/disable Fluent API |
 | `OpenTelemetryBuilder` | `Functorium.Adapters.Observabilities.Builders` | OpenTelemetry configuration main Builder |
-| `LoggingConfigurator` | 동일(Configurators) | Serilog extension configuration |
-| `MetricsConfigurator` | 동일(Configurators) | Metrics extension configuration |
-| `TracingConfigurator` | 동일(Configurators) | Tracing extension configuration |
+| `LoggingConfigurator` | Same (Configurators) | Serilog extension configuration |
+| `MetricsConfigurator` | Same (Configurators) | Metrics extension configuration |
+| `TracingConfigurator` | Same (Configurators) | Tracing extension configuration |
 | `OpenTelemetryOptions` | `Functorium.Adapters.Observabilities` | OTLP endpoint/protocol configuration |
 | `ObservabilityNaming` | `Functorium.Adapters.Observabilities.Naming` | Observability naming constants |
 
@@ -123,7 +123,7 @@ internal sealed class UsecaseValidationPipeline<TRequest, TResponse>
 | DI Dependencies | `IEnumerable<IValidator<TRequest>>` |
 | Behavior | Passes through `next()` if no Validators exist; runs all Validators otherwise |
 | Error Type | `AdapterErrorType.PipelineValidation(PropertyName)` |
-| 다중 에러 | Returns `Error.Many(errors)` when there are 2 or more validation failures |
+| Multiple errors | Returns `Error.Many(errors)` when there are 2 or more validation failures |
 
 ### UsecaseLoggingPipeline
 
@@ -138,11 +138,11 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
 
 | Item | Description |
 |------|------|
-| DI Dependencies | `ILogger<UsecaseLoggingPipeline<TRequest, TResponse>>`, `IUsecaseCtxEnricher<TRequest, TResponse>?` (선택) |
-| Request log | Information 레벨, `{Layer} {Category} {CategoryType} {Handler} {Method} requesting` |
-| Response log (success) | Information 레벨, `responded success in {Elapsed:0.0000} ms` |
-| Response log (Expected error) | Warning 레벨, `responded failure ... with {@Error}` |
-| Response log (Exceptional error) | Error 레벨, `responded failure ... with {@Error}` |
+| DI Dependencies | `ILogger<UsecaseLoggingPipeline<TRequest, TResponse>>`, `IUsecaseCtxEnricher<TRequest, TResponse>?` (optional) |
+| Request log | Information level, `{Layer} {Category} {CategoryType} {Handler} {Method} requesting` |
+| Response log (success) | Information level, `responded success in {Elapsed:0.0000} ms` |
+| Response log (Expected error) | Warning level, `responded failure ... with {@Error}` |
+| Response log (Exceptional error) | Error level, `responded failure ... with {@Error}` |
 
 ### UsecaseTracingPipeline
 
@@ -158,12 +158,12 @@ internal sealed class UsecaseTracingPipeline<TRequest, TResponse>
 | Item | Description |
 |------|------|
 | DI Dependencies | `ActivitySource` |
-| Span 이름 | `{layer} {category}.{categoryType} {handler}.{method}` |
+| Span name | `{layer} {category}.{categoryType} {handler}.{method}` |
 | ActivityKind | `Internal` |
 | Request tags | `request.layer`, `request.category.name`, `request.category.type`, `request.handler.name`, `request.handler.method` |
 | Response tags (success) | `response.status = success`, `ActivityStatusCode.Ok` |
 | Response tags (failure) | `response.status = failure`, `error.type`, `error.code`, `ActivityStatusCode.Error` |
-| Time tag | `response.elapsed` (초 단위) |
+| Time tag | `response.elapsed` (in seconds) |
 
 ### UsecaseMetricsPipeline
 
@@ -179,10 +179,10 @@ internal sealed class UsecaseMetricsPipeline<TRequest, TResponse>
 | Item | Description |
 |------|------|
 | DI Dependencies | `IOptions<OpenTelemetryOptions>`, `IMeterFactory` |
-| Meter 이름 | `{ServiceNamespace}.application` |
-| Counter (요청) | `application.usecase.{categoryType}.requests` (단위: `{request}`) |
-| Counter (응답) | `application.usecase.{categoryType}.responses` (단위: `{response}`) |
-| Histogram (시간) | `application.usecase.{categoryType}.duration` (단위: `s`) |
+| Meter name | `{ServiceNamespace}.application` |
+| Counter (requests) | `application.usecase.{categoryType}.requests` (unit: `{request}`) |
+| Counter (responses) | `application.usecase.{categoryType}.responses` (unit: `{response}`) |
+| Histogram (duration) | `application.usecase.{categoryType}.duration` (unit: `s`) |
 | Request tags | `request.layer`, `request.category.name`, `request.category.type`, `request.handler.name`, `request.handler.method` |
 | Response tags (success) | Request tags + `response.status = success` |
 | Response tags (failure) | Request tags + `response.status = failure` + `error.type` + `error.code` |
@@ -219,12 +219,12 @@ internal sealed class UsecaseCachingPipeline<TRequest, TResponse>
 | Item | Description |
 |------|------|
 | Constraint | `TRequest : IQuery<TResponse>` (Query only) |
-| DI Dependencies | `IMemoryCache` (`services.AddMemoryCache()` 필요) |
+| DI Dependencies | `IMemoryCache` (`services.AddMemoryCache()` required) |
 | Cache key | `ICacheable.CacheKey` |
-| Cache duration | `ICacheable.Duration` (null이면 기본 5분) |
+| Cache duration | `ICacheable.Duration` (defaults to 5 minutes if null) |
 | Behavior | Returns immediately on cache hit; on cache miss, executes Handler and caches only successful responses |
 
-**ICacheable 인터페이스:**
+**ICacheable interface:**
 
 ```csharp
 public interface ICacheable
@@ -263,29 +263,29 @@ public abstract class UsecaseMetricCustomPipelineBase<TRequest>
 
 | Member | Description |
 |------|------|
-| `protected readonly Meter _meter` | `{ServiceNamespace}.application` Meter 인스턴스 |
+| `protected readonly Meter _meter` | `{ServiceNamespace}.application` Meter instance |
 | `protected const string DurationUnit` | `"s"` |
 | `protected const string CountUnit` | `"requests"` |
-| `GetMetricName(string metricName)` | `application.usecase.{cqrs}.{handler}.{metricName}` 형식 반환 |
-| `GetMetricNameWithoutHandler(string metricName)` | `application.usecase.{cqrs}.{metricName}` 형식 반환 |
+| `GetMetricName(string metricName)` | Returns `application.usecase.{cqrs}.{handler}.{metricName}` format |
+| `GetMetricNameWithoutHandler(string metricName)` | Returns `application.usecase.{cqrs}.{metricName}` format |
 
-**생성자:**
+**Constructor:**
 
 ```csharp
 protected UsecaseMetricCustomPipelineBase(string serviceNamespace, IMeterFactory meterFactory)
 ```
 
-**RequestDuration 헬퍼:**
+**RequestDuration helper:**
 
 ```csharp
 public class RequestDuration : IDisposable
 {
     public RequestDuration(Histogram<double> histogram);
-    public void Dispose(); // 경과 시간을 histogram에 자동 기록
+    public void Dispose(); // Automatically records elapsed time to histogram
 }
 ```
 
-`using` 구문과 함께 사용하여 자동으로 시간 측정 및 Histogram 기록을 수행합니다.
+Used with the `using` statement to automatically perform time measurement and Histogram recording.
 
 ### UsecaseTracingCustomPipelineBase\<TRequest\>
 
@@ -298,19 +298,19 @@ public abstract class UsecaseTracingCustomPipelineBase<TRequest>
 
 | Member | Description |
 |------|------|
-| `protected readonly ActivitySource _activitySource` | Activity 생성에 사용하는 ActivitySource |
-| `StartCustomActivity(string operationName, ActivityKind kind)` | `{prefix}.{operationName}` 형식의 커스텀 Activity 생성 |
-| `GetActivityName(string operationName)` | Activity 이름 조회 (`{prefix}.{operationName}`) |
-| `SetStandardRequestTags(Activity activity, string method)` | 표준 Request tags 5종 설정 |
+| `protected readonly ActivitySource _activitySource` | ActivitySource used for creating Activities |
+| `StartCustomActivity(string operationName, ActivityKind kind)` | Creates custom Activity in `{prefix}.{operationName}` format |
+| `GetActivityName(string operationName)` | Gets Activity name (`{prefix}.{operationName}`) |
+| `SetStandardRequestTags(Activity activity, string method)` | Sets 5 standard Request tags |
 
-**생성자:**
+**Constructor:**
 
 ```csharp
 protected UsecaseTracingCustomPipelineBase(ActivitySource activitySource)
 ```
 
-- Activity 이름 접두사: `{layer} {category}.{categoryType} {handler}`
-- 부모 `Activity.Current`가 존재하면 자식 Span으로 생성됩니다.
+- Activity name prefix: `{layer} {category}.{categoryType} {handler}`
+- If a parent `Activity.Current` exists, it is created as a child Span.
 
 ---
 
@@ -340,7 +340,7 @@ public class PipelineConfigurator
 | Method | Return Type | Description |
 |--------|----------|------|
 | `WithLifetime(ServiceLifetime lifetime)` | `PipelineConfigurator` | Set Pipeline service Lifetime (default: `Scoped`) |
-| `AddCustomPipeline<TPipeline>()` | `PipelineConfigurator` | 커스텀 Pipeline을 타입으로 명시적 등록 (파이프라인 Execution order의 결정론적 보장) |
+| `AddCustomPipeline<TPipeline>()` | `PipelineConfigurator` | Explicitly register custom Pipeline by type (deterministic guarantee of Pipeline execution order) |
 
 ### Usage Example
 
@@ -349,7 +349,7 @@ public class PipelineConfigurator
 services
     .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
     .ConfigurePipelines(pipelines => pipelines
-        .UseObservability()   // CtxEnricher, Metrics, Tracing, Logging 일괄 활성화
+        .UseObservability()   // Batch enable CtxEnricher, Metrics, Tracing, Logging
         .UseValidation()
         .UseException())
     .Build();
@@ -381,7 +381,7 @@ Inside `Apply()`, Pipelines are registered to `IPipelineBehavior<,>` in the foll
 5. Caching
 6. Exception
 7. Transaction
-8. Custom (`AddCustomPipeline<T>()` 호출 순서대로 등록)
+8. Custom (registered in the order `AddCustomPipeline<T>()` is called)
 9. Handler
 
 **Transaction Pipeline auto-detection:** Even if `UseTransaction()` is called, registration is skipped if `IUnitOfWork`, `IDomainEventPublisher`, and `IDomainEventCollector` are not all registered in DI.
@@ -401,7 +401,7 @@ public partial class OpenTelemetryBuilder
 #### Entry Point
 
 ```csharp
-// IServiceCollection 확장 메서드
+// IServiceCollection extension method
 public static OpenTelemetryBuilder RegisterOpenTelemetry(
     this IServiceCollection services,
     IConfiguration configuration,
@@ -433,7 +433,7 @@ public static OpenTelemetryBuilder RegisterOpenTelemetry(
 
 ### LoggingConfigurator
 
-Serilog extension configuration을 위한 Builder 클래스입니다.
+A Builder class for Serilog extension configuration.
 
 ```csharp
 public class LoggingConfigurator
@@ -449,7 +449,7 @@ public class LoggingConfigurator
 
 ### MetricsConfigurator
 
-OpenTelemetry Metrics extension configuration을 위한 Builder 클래스입니다.
+A Builder class for OpenTelemetry Metrics extension configuration.
 
 ```csharp
 public class MetricsConfigurator
@@ -458,13 +458,13 @@ public class MetricsConfigurator
 | Member | Description |
 |------|------|
 | `Options` | `OpenTelemetryOptions` Access property |
-| `AddMeter(string meterName)` | Register additional Meter (와일드카드 지원: `"MyApp.*"`) |
+| `AddMeter(string meterName)` | Register additional Meter (wildcard supported: `"MyApp.*"`) |
 | `AddInstrumentation(Action<MeterProviderBuilder> configure)` | Register additional Instrumentation |
 | `Configure(Action<MeterProviderBuilder> configure)` | `MeterProviderBuilder` Direct access |
 
 ### TracingConfigurator
 
-OpenTelemetry Tracing extension configuration을 위한 Builder 클래스입니다.
+A Builder class for OpenTelemetry Tracing extension configuration.
 
 ```csharp
 public class TracingConfigurator
@@ -473,7 +473,7 @@ public class TracingConfigurator
 | Member | Description |
 |------|------|
 | `Options` | `OpenTelemetryOptions` Access property |
-| `AddSource(string sourceName)` | Register additional ActivitySource (와일드카드 지원: `"MyApp.*"`) |
+| `AddSource(string sourceName)` | Register additional ActivitySource (wildcard supported: `"MyApp.*"`) |
 | `AddProcessor(BaseProcessor<Activity> processor)` | Register additional Processor |
 | `Configure(Action<TracerProviderBuilder> configure)` | `TracerProviderBuilder` Direct access |
 
@@ -493,12 +493,12 @@ public sealed class OpenTelemetryOptions : IStartupOptionsLogger, IOpenTelemetry
 |---------|------|--------|------|
 | `ServiceNamespace` | `string` | `""` | Service namespace (group) |
 | `ServiceName` | `string` | `""` | Service name |
-| `ServiceVersion` | `string` | (어셈블리 버전) | Service version (auto-configured) |
-| `ServiceInstanceId` | `string` | (호스트네임) | Service instance ID (auto-configured) |
+| `ServiceVersion` | `string` | (assembly version) | Service version (auto-configured) |
+| `ServiceInstanceId` | `string` | (hostname) | Service instance ID (auto-configured) |
 | `CollectorEndpoint` | `string` | `""` | Unified OTLP Collector endpoint |
-| `TracingEndpoint` | `string?` | `null` | Tracing-specific endpoint (null이면 `CollectorEndpoint` 사용) |
-| `MetricsEndpoint` | `string?` | `null` | Metrics-specific endpoint (null이면 `CollectorEndpoint` 사용) |
-| `LoggingEndpoint` | `string?` | `null` | Logging-specific endpoint (null이면 `CollectorEndpoint` 사용) |
+| `TracingEndpoint` | `string?` | `null` | Tracing-specific endpoint (uses `CollectorEndpoint` if null) |
+| `MetricsEndpoint` | `string?` | `null` | Metrics-specific endpoint (uses `CollectorEndpoint` if null) |
+| `LoggingEndpoint` | `string?` | `null` | Logging-specific endpoint (uses `CollectorEndpoint` if null) |
 | `CollectorProtocol` | `string` | `"Grpc"` | Unified OTLP Protocol |
 | `TracingProtocol` | `string?` | `null` | Tracing-specific Protocol |
 | `MetricsProtocol` | `string?` | `null` | Metrics-specific Protocol |
@@ -512,8 +512,8 @@ The resolution rules for individual endpoints (`TracingEndpoint`, `MetricsEndpoi
 
 | Value | Behavior |
 |----|------|
-| `null` | `CollectorEndpoint` 사용 (기본 Behavior) |
-| `""` (빈 문자열) | Disables that signal |
+| `null` | Uses `CollectorEndpoint` (default behavior) |
+| `""` (empty string) | Disables that signal |
 | `"http://..."` | Uses that endpoint |
 
 ### Protocol Methods
@@ -546,7 +546,7 @@ A `FluentValidation`-based options validator.
 |------|------|
 | `ServiceNamespace` | Required (NotEmpty) |
 | `ServiceName` | Required (NotEmpty) |
-| 엔드포인트 | `CollectorEndpoint` or at least one individual endpoint required |
+| Endpoints | `CollectorEndpoint` or at least one individual endpoint required |
 | `SamplingRate` | 0.0 ~ 1.0 Range |
 | Protocol | SmartEnum valid value validation |
 
@@ -621,9 +621,9 @@ public static partial class ObservabilityNaming
 |------|----|------|
 | `Handle` | `"Handle"` | Usecase Handler method |
 | `Publish` | `"Publish"` | Event publishing method |
-| `PublishTrackedEvents` | `"PublishTrackedEvents"` | 추적 Event publishing method |
+| `PublishTrackedEvents` | `"PublishTrackedEvents"` | Tracked event publishing method |
 
-### OTelAttributes (OpenTelemetry 표준)
+### OTelAttributes (OpenTelemetry Standard)
 
 | Constant | Value |
 |------|----|
@@ -634,9 +634,9 @@ public static partial class ObservabilityNaming
 | `ServiceInstanceId` | `"service.instance.id"` |
 | `DeploymentEnvironment` | `"deployment.environment"` |
 
-### CustomAttributes (3-Pillar 공통)
+### CustomAttributes (3-Pillar Common)
 
-| Constant | Value | 용도 |
+| Constant | Value | Purpose |
 |------|----|------|
 | `RequestMessage` | `"request.message"` | Request message |
 | `RequestParams` | `"request.params"` | Request parameters |
@@ -684,10 +684,10 @@ public static partial class ObservabilityNaming
 
 ## Related Documents
 
-- **Guide:** [Adapter 연결 -- Pipeline과 DI](../guides/adapter/14a-adapter-pipeline-di) -- Pipeline DI registration practice
-- **Guide:** [Adapter 테스트](../guides/adapter/14b-adapter-testing) -- Pipeline unit testing
-- **Guide:** [Observability 로깅](../guides/observability/19-observability-logging) -- Logging Pipeline details
-- **Guide:** [Observability 메트릭](../guides/observability/20-observability-metrics) -- Metrics Pipeline details
-- **Guide:** [Observability 트레이싱](../guides/observability/21-observability-tracing) -- Tracing Pipeline details
-- **Spec:** [관측 가능성 사양](./08-observability) -- Field/Tag specification, Meter definition, message templates
-- **Spec:** [유스케이스 CQRS](./05-usecase-cqrs) -- `FinResponse<T>`, `ICommandRequest`, `IQueryRequest`
+- **Guide:** [Adapter Connection -- Pipeline and DI](../guides/adapter/14a-adapter-pipeline-di) -- Pipeline DI registration practice
+- **Guide:** [Adapter Testing](../guides/adapter/14b-adapter-testing) -- Pipeline unit testing
+- **Guide:** [Observability Logging](../guides/observability/19-observability-logging) -- Logging Pipeline details
+- **Guide:** [Observability Metrics](../guides/observability/20-observability-metrics) -- Metrics Pipeline details
+- **Guide:** [Observability Tracing](../guides/observability/21-observability-tracing) -- Tracing Pipeline details
+- **Spec:** [Observability Specification](./08-observability) -- Field/Tag specification, Meter definition, message templates
+- **Spec:** [Usecase CQRS](./05-usecase-cqrs) -- `FinResponse<T>`, `ICommandRequest`, `IQueryRequest`

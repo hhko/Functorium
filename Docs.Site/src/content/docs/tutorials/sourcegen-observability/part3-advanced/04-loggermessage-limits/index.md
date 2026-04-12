@@ -2,59 +2,59 @@
 title: "LoggerMessage.Define Limits"
 ---
 
-## 개요
+## Overview
 
-고성능 로깅과 유연성 사이에는 트레이드오프가 존재합니다. .NET의 `LoggerMessage.Define`은 제로 할당(zero-allocation) 로깅을 제공하지만, 최대 6개의 타입 파라미터만 지원합니다. ObservablePortGenerator는 기본 필드 4개(layer, category, handler, method)에 메서드 파라미터와 컬렉션 Count 필드를 더한 총합이 6개 이하이면 고성능 경로를 사용하고, 초과하면 `logger.LogDebug()`로 자동 폴백합니다. 이 분기 로직 덕분에 개발자는 파라미터 수를 의식하지 않아도 최적의 로깅 전략이 적용됩니다.
+There is a trade-off between high-performance logging and flexibility. .NET's `LoggerMessage.Define` provides zero-allocation logging but supports a maximum of 6 type parameters. ObservablePortGenerator uses the high-performance path when the total of 4 base fields (layer, category, handler, method) plus method parameters and collection Count fields is 6 or fewer, and automatically falls back to `logger.LogDebug()` when exceeded. Thanks to this branching logic, developers get the optimal logging strategy applied without being conscious of parameter counts.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **LoggerMessage.Define의 6개 파라미터 제한 이해**
-   - .NET 런타임이 부과하는 제네릭 타입 파라미터 상한
-2. **고성능 로깅 vs 폴백 전략**
-   - 제로 할당 경로와 일반 로깅 경로의 성능 차이
-3. **파라미터 수 계산 로직**
-   - 기본 필드, 메서드 파라미터, 컬렉션 Count를 합산하는 방식
+### Core Learning Objectives
+1. **Understanding LoggerMessage.Define's 6-parameter limit**
+   - The generic type parameter ceiling imposed by the .NET runtime
+2. **High-performance logging vs fallback strategy**
+   - Performance differences between the zero-allocation path and the regular logging path
+3. **Parameter count calculation logic**
+   - How base fields, method parameters, and collection Counts are summed
 
 ---
 
-## LoggerMessage.Define 소개
+## Introducing LoggerMessage.Define
 
-### 고성능 로깅
+### High-Performance Logging
 
-.NET의 `LoggerMessage.Define`은 제로 할당 로깅을 제공합니다.
+.NET's `LoggerMessage.Define` provides zero-allocation logging.
 
 ```csharp
-// LoggerMessage.Define 사용 (고성능)
+// Using LoggerMessage.Define (high-performance)
 private static readonly Action<ILogger, string, int, Exception?> _logUserCreated =
     LoggerMessage.Define<string, int>(
         LogLevel.Information,
         new EventId(1, "UserCreated"),
         "User created: {Name}, Age: {Age}");
 
-// 호출
+// Call
 _logUserCreated(logger, "John", 25, null);
 ```
 
-### 일반 로깅과의 차이
+### Differences from Regular Logging
 
-| 특성 | LoggerMessage.Define | logger.LogDebug() |
-|------|----------------------|-------------------|
-| 메모리 할당 | 제로 할당 | params 배열 할당 |
-| 박싱 | 없음 | 값 타입 박싱 |
-| 템플릿 파싱 | 컴파일 타임 | 런타임 매 호출 |
-| 성능 | 최적화됨 | 오버헤드 있음 |
+| Characteristic | LoggerMessage.Define | logger.LogDebug() |
+|---------------|----------------------|-------------------|
+| Memory allocation | Zero allocation | params array allocation |
+| Boxing | None | Value type boxing |
+| Template parsing | Compile time | Runtime per call |
+| Performance | Optimized | Has overhead |
 
 ---
 
-## 6개 파라미터 제한
+## The 6-Parameter Limit
 
-### .NET 제약
+### .NET Constraint
 
-`LoggerMessage.Define`은 **최대 6개**의 제네릭 타입 파라미터만 지원합니다.
+`LoggerMessage.Define` supports a **maximum of 6** generic type parameters.
 
 ```csharp
-// ✅ 지원
+// ✅ Supported
 LoggerMessage.Define<T1>(...)
 LoggerMessage.Define<T1, T2>(...)
 LoggerMessage.Define<T1, T2, T3>(...)
@@ -62,57 +62,57 @@ LoggerMessage.Define<T1, T2, T3, T4>(...)
 LoggerMessage.Define<T1, T2, T3, T4, T5>(...)
 LoggerMessage.Define<T1, T2, T3, T4, T5, T6>(...)
 
-// ❌ 지원 안 됨
-LoggerMessage.Define<T1, T2, T3, T4, T5, T6, T7>(...)  // 7개 이상
+// ❌ Not supported
+LoggerMessage.Define<T1, T2, T3, T4, T5, T6, T7>(...)  // 7 or more
 ```
 
 ---
 
-## Observable 로깅 필드 계산
+## Observable Logging Field Calculation
 
-### 기본 필드 (4개)
+### Base Fields (4)
 
-Observable은 기본적으로 4개의 필드를 로깅합니다.
+Observable logs 4 fields by default.
 
 ```csharp
-// 기본 필드
+// Base fields
 1. requestLayer           // "adapter"
 2. requestCategory        // "repository"
 3. requestHandler         // "UserRepository"
 4. requestHandlerMethod   // "GetUser"
 ```
 
-### 추가 필드 계산
+### Additional Field Calculation
 
 ```
-총 필드 수 = 기본 필드(4) + Request 파라미터 수 + 컬렉션 Count 수
+Total fields = Base fields(4) + Request parameter count + Collection Count count
 
-예시:
-GetValue()                              → 4개        ✅ LoggerMessage.Define
-GetFile(int ms)                         → 5개 (4+1)  ✅ LoggerMessage.Define
-GetData(int id, string name)            → 6개 (4+2)  ✅ LoggerMessage.Define
-GetResult(int a, int b, int c)          → 7개 (4+3)  ❌ logger.LogDebug()
-ProcessItems(List<T> items)             → 6개 (4+1+1)✅ LoggerMessage.Define
+Examples:
+GetValue()                              -> 4          ✅ LoggerMessage.Define
+GetFile(int ms)                         -> 5 (4+1)   ✅ LoggerMessage.Define
+GetData(int id, string name)            -> 6 (4+2)   ✅ LoggerMessage.Define
+GetResult(int a, int b, int c)          -> 7 (4+3)   ❌ logger.LogDebug()
+ProcessItems(List<T> items)             -> 6 (4+1+1) ✅ LoggerMessage.Define
 ProcessData(int id, List<T> data, string name)
-                                        → 8개 (4+3+1)❌ logger.LogDebug()
+                                        -> 8 (4+3+1) ❌ logger.LogDebug()
 ```
 
 ---
 
-## 코드 생성 전략
+## Code Generation Strategy
 
-### 파라미터 수 계산
+### Parameter Count Calculation
 
 ```csharp
 // ObservablePortGenerator.cs
 
-// ===== LoggerMessage.Define 제약 검사 =====
-// .NET의 LoggerMessage.Define<T1, T2, ..., T6>은 최대 6개의 타입 파라미터만 지원합니다.
+// ===== LoggerMessage.Define constraint check =====
+// .NET's LoggerMessage.Define<T1, T2, ..., T6> supports a maximum of 6 type parameters.
 
-// 로그 파라미터 수 계산:
-// - 기본 4개: requestLayer, requestCategory, requestHandler, requestHandlerMethod
-// - 메서드 파라미터: 각 파라미터당 1개
-// - 컬렉션 파라미터: 추가로 Count 필드 1개 (배열/리스트 등)
+// Log parameter count calculation:
+// - Base 4: requestLayer, requestCategory, requestHandler, requestHandlerMethod
+// - Method parameters: 1 per parameter
+// - Collection parameters: additional 1 Count field (arrays/lists etc.)
 
 int baseFieldCount = 4;  // requestLayer, requestCategory, requestHandler, requestHandlerMethod
 int parameterCount = method.Parameters.Count;
@@ -121,7 +121,7 @@ int collectionCount = CountCollectionParameters(method);
 int totalRequestFields = baseFieldCount + parameterCount + collectionCount;
 ```
 
-### 컬렉션 파라미터 카운팅
+### Collection Parameter Counting
 
 ```csharp
 private static int CountCollectionParameters(MethodInfo method)
@@ -131,7 +131,7 @@ private static int CountCollectionParameters(MethodInfo method)
     {
         if (CollectionTypeHelper.IsCollectionType(param.Type))
         {
-            count++;  // Count 필드 추가
+            count++;  // Count field added
         }
     }
     return count;
@@ -140,14 +140,14 @@ private static int CountCollectionParameters(MethodInfo method)
 
 ---
 
-## 생성 코드 분기
+## Generated Code Branching
 
-### 고성능 경로 (≤ 6개)
+### High-Performance Path (<= 6)
 
 ```csharp
 if (totalRequestFields <= 6)
 {
-    // ✅ 고성능 경로: LoggerMessage.Define 사용
+    // ✅ High-performance path: use LoggerMessage.Define
     sb.AppendLine($"    private static readonly Action<ILogger, {typeParams}, Exception?> _logAdapterRequestDebug_{classInfo.ClassName}_{method.Name} =");
     sb.AppendLine($"        LoggerMessage.Define<{typeParams}>(");
     sb.AppendLine($"            LogLevel.Debug,");
@@ -156,13 +156,13 @@ if (totalRequestFields <= 6)
 }
 ```
 
-### 폴백 경로 (> 6개)
+### Fallback Path (> 6)
 
 ```csharp
 else
 {
-    // ⚠️ 폴백 경로: logger.LogDebug() 직접 사용
-    // LoggerMessage.Define의 제약으로 인해 일반 로깅 메서드 사용
+    // ⚠️ Fallback path: use logger.LogDebug() directly
+    // Uses regular logging method due to LoggerMessage.Define constraint
     sb.Append("        logger.LogDebug(")
       .Append($"\"{logTemplate}\", ")
       .AppendLine($"{paramValues});");
@@ -171,30 +171,30 @@ else
 
 ---
 
-## 생성 결과 비교
+## Generated Result Comparison
 
-### LoggerMessage.Define 사용 (≤ 6개)
+### Using LoggerMessage.Define (<= 6)
 
 ```csharp
-// 원본: GetData(int id, string name) - 6개 필드
+// Original: GetData(int id, string name) - 6 fields
 
-// 생성된 delegate 필드
+// Generated delegate field
 private static readonly Action<ILogger, string, string, string, string, int, string, Exception?> _logAdapterRequestDebug_DataRepository_GetData =
     LoggerMessage.Define<string, string, string, string, int, string>(
         LogLevel.Debug,
         ObservabilityNaming.EventIds.Adapter.AdapterRequest,
         "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.params.id} {request.params.name}");
 
-// 생성된 호출 코드 (확장 메서드 형태)
+// Generated call code (extension method form)
 _logger.LogAdapterRequestDebug_DataRepository_GetData(layer, category, handler, method, id, name, null);
 ```
 
-### logger.LogDebug() 폴백 (> 6개)
+### logger.LogDebug() Fallback (> 6)
 
 ```csharp
-// 원본: GetResult(int a, int b, int c) - 7개 필드
+// Original: GetResult(int a, int b, int c) - 7 fields
 
-// 생성된 호출 코드 (delegate 없음)
+// Generated call code (no delegate)
 logger.LogDebug(
     "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.params.a} {request.params.b} {request.params.c}",
     layer, category, handler, method, a, b, c);
@@ -202,39 +202,39 @@ logger.LogDebug(
 
 ---
 
-## Response 로깅 필드
+## Response Logging Fields
 
-### 기본 Response 필드
+### Base Response Fields
 
 ```csharp
-// 기본 필드 (6개)
+// Base fields (6)
 1. requestLayer           // "adapter"
 2. requestCategory        // "repository"
 3. requestHandler         // "UserRepository"
 4. requestHandlerMethod   // "GetUser"
-5. status                 // "success" 또는 "failure"
-6. elapsed                // 0.0123 (초 단위)
+5. status                 // "success" or "failure"
+6. elapsed                // 0.0123 (in seconds)
 
-// 컬렉션 반환 시 추가 필드
-7. response.count         // 결과 크기 (List, 배열 등)
+// Additional field when returning collection
+7. response.count         // Result size (List, array, etc.)
 ```
 
-### Response 필드 계산
+### Response Field Calculation
 
 ```csharp
-// Response용 필드 계산
+// Response field calculation
 int baseResponseFields = 6;  // requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed
 bool isCollectionReturn = CollectionTypeHelper.IsCollectionType(actualReturnType);
 
 int totalResponseFields = baseResponseFields + (isCollectionReturn ? 1 : 0);
-// 컬렉션 반환: 7개 → 폴백 필요
+// Collection return: 7 -> fallback needed
 ```
 
 ---
 
-## 테스트 시나리오
+## Test Scenarios
 
-### 2개 파라미터 테스트 (LoggerMessage.Define)
+### 2-Parameter Test (LoggerMessage.Define)
 
 ```csharp
 [Fact]
@@ -251,7 +251,7 @@ public Task Should_Generate_LoggerMessageDefine_WithTwoParameters()
 
     string? actual = _sut.Generate(input);
 
-    // LoggerMessage.Define 사용 확인
+    // Verify LoggerMessage.Define is used
     actual.ShouldContain("LoggerMessage.Define<");
     actual.ShouldNotContain("logger.LogDebug(");
 
@@ -259,7 +259,7 @@ public Task Should_Generate_LoggerMessageDefine_WithTwoParameters()
 }
 ```
 
-### 3개 파라미터 테스트 (logger.LogDebug 폴백)
+### 3-Parameter Test (logger.LogDebug Fallback)
 
 ```csharp
 [Fact]
@@ -276,14 +276,14 @@ public Task Should_Generate_LogDebugFallback_WithThreeParameters()
 
     string? actual = _sut.Generate(input);
 
-    // 기본 4 + 파라미터 3 = 7개 → 폴백
+    // Base 4 + parameters 3 = 7 -> fallback
     actual.ShouldContain("logger.LogDebug(");
 
     return Verify(actual);
 }
 ```
 
-### 0개 파라미터 테스트
+### 0-Parameter Test
 
 ```csharp
 [Fact]
@@ -300,7 +300,7 @@ public Task Should_Generate_LoggerMessageDefine_WithZeroParameters()
 
     string? actual = _sut.Generate(input);
 
-    // 기본 4개만 → LoggerMessage.Define 사용
+    // Only base 4 -> LoggerMessage.Define used
     actual.ShouldContain("LoggerMessage.Define<string, string, string, string>");
 
     return Verify(actual);
@@ -309,12 +309,12 @@ public Task Should_Generate_LoggerMessageDefine_WithZeroParameters()
 
 ---
 
-## 필드 수 참조표
+## Field Count Reference Table
 
-### Request 로깅
+### Request Logging
 
-| 메서드 시그니처 | 기본 | 파라미터 | 컬렉션 Count | 총합 | 사용 |
-|----------------|------|----------|--------------|------|------|
+| Method Signature | Base | Parameters | Collection Count | Total | Used |
+|-----------------|------|------------|------------------|-------|------|
 | `GetValue()` | 4 | 0 | 0 | 4 | Define |
 | `GetData(int id)` | 4 | 1 | 0 | 5 | Define |
 | `GetData(int id, string name)` | 4 | 2 | 0 | 6 | Define |
@@ -322,10 +322,10 @@ public Task Should_Generate_LoggerMessageDefine_WithZeroParameters()
 | `Process(List<T> items)` | 4 | 1 | 1 | 6 | Define |
 | `Process(List<T> a, int b)` | 4 | 2 | 1 | 7 | LogDebug |
 
-### Response 로깅
+### Response Logging
 
-| 반환 타입 | 기본 | Count | 총합 | 사용 |
-|----------|------|-------|------|------|
+| Return Type | Base | Count | Total | Used |
+|------------|------|-------|-------|------|
 | `int` | 6 | 0 | 6 | Define |
 | `string` | 6 | 0 | 6 | Define |
 | `List<T>` | 6 | 1 | 7 | LogDebug |
@@ -333,25 +333,25 @@ public Task Should_Generate_LoggerMessageDefine_WithZeroParameters()
 
 ---
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-ObservablePortGenerator는 로깅 파라미터의 총합을 자동으로 계산하여 최적의 경로를 선택합니다. 기본 필드 4개에 메서드 파라미터와 컬렉션 Count 필드를 합산한 값이 6 이하이면 `LoggerMessage.Define`의 제로 할당 경로를, 초과하면 `logger.LogDebug()` 폴백 경로를 사용합니다. Response 로깅도 동일한 원리로 기본 6개 필드에 컬렉션 반환의 Count 필드가 추가되면 폴백이 발생합니다.
+ObservablePortGenerator automatically calculates the total logging parameters and selects the optimal path. When the sum of the 4 base fields plus method parameters and collection Count fields is 6 or fewer, it uses the zero-allocation `LoggerMessage.Define` path; when exceeded, it uses the `logger.LogDebug()` fallback path. Response logging follows the same principle, where fallback occurs when a collection return's Count field is added to the base 6 fields.
 
 ---
 
 ## FAQ
 
-### Q1: `LoggerMessage.Define`의 6개 제한은 .NET의 어떤 제약에서 비롯되나요?
-**A**: `LoggerMessage.Define`은 `Action<ILogger, T1, ..., T6, Exception?>` 형태의 delegate를 생성합니다. .NET 런타임의 `Action<>` 제네릭 delegate는 최대 16개 타입 파라미터를 지원하지만, `LoggerMessage` 클래스에서는 성능과 API 복잡도의 균형을 위해 6개까지만 오버로드를 제공합니다.
+### Q1: What .NET constraint gives rise to `LoggerMessage.Define`'s 6-parameter limit?
+**A**: `LoggerMessage.Define` generates delegates of the form `Action<ILogger, T1, ..., T6, Exception?>`. While the .NET runtime's `Action<>` generic delegate supports up to 16 type parameters, the `LoggerMessage` class provides overloads only up to 6 for the balance of performance and API complexity.
 
-### Q2: 폴백 경로(`logger.LogDebug()`)의 성능 차이는 실무에서 얼마나 유의미한가요?
-**A**: `LoggerMessage.Define`은 로그 템플릿 파싱을 컴파일 타임에 한 번만 수행하고 값 타입 박싱이 없지만, `logger.LogDebug()`는 매 호출 시 `params object[]` 배열을 할당하고 값 타입을 박싱합니다. 초당 수만 건의 로그가 발생하는 고처리량 시스템에서는 유의미한 차이가 발생하지만, 대부분의 어댑터 호출에서는 I/O 지연이 지배적이므로 실질적 영향은 미미합니다.
+### Q2: How significant is the performance difference of the fallback path (`logger.LogDebug()`) in practice?
+**A**: `LoggerMessage.Define` performs log template parsing only once at compile time with no value type boxing, while `logger.LogDebug()` allocates a `params object[]` array and boxes value types on every call. In high-throughput systems with tens of thousands of logs per second, the difference is significant, but for most adapter calls where I/O latency is dominant, the practical impact is minimal.
 
-### Q3: 컬렉션 파라미터의 Count 필드가 총 필드 수에 포함되는 이유는 무엇인가요?
-**A**: `List<string> items` 파라미터가 있으면 로깅 메시지에 `{request.params.items}`와 `{request.params.items.count}` 두 개의 필드가 추가됩니다. Count 필드도 `LoggerMessage.Define`의 타입 파라미터 하나를 차지하므로, 기본 4개 + 파라미터 1개 + Count 1개 = 6개가 되어 경계값에 도달합니다.
+### Q3: Why are Count fields for collection parameters included in the total field count?
+**A**: When a `List<string> items` parameter exists, two fields are added to the logging message: `{request.params.items}` and `{request.params.items.count}`. Since the Count field also occupies one type parameter of `LoggerMessage.Define`, the base 4 + parameter 1 + Count 1 = 6, reaching the boundary value.
 
 ---
 
-지금까지 ObservablePortGenerator의 핵심 코드 생성 로직을 모두 살펴보았습니다. 다음 섹션에서는 이 생성기를 검증하기 위한 단위 테스트 환경 구축 방법을 학습합니다.
+We have now covered all the core code generation logic of ObservablePortGenerator. The next section covers how to set up a unit test environment to verify this generator.
 
-→ [05. Unit Test 설정](../05-Unit-Testing-Setup/)
+-> [05. Unit Test Setup](../05-Unit-Testing-Setup/)

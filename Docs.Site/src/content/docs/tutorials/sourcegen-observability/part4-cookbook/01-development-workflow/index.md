@@ -2,60 +2,60 @@
 title: "Development Workflow"
 ---
 
-## 개요
+## Overview
 
-소스 생성기를 처음 만들 때 가장 어려운 부분은 "무엇을 어떤 순서로 해야 하는가"입니다. 프로젝트 설정부터 패키징까지, 각 단계가 이전 단계의 결과물에 의존하기 때문에 순서를 잘못 잡으면 불필요한 삽질이 발생합니다. 이 절에서는 ObservablePortGenerator를 만들며 검증한 7단계 개발 절차를 정리하고, 어떤 소스 생성기에도 적용할 수 있는 표준 워크플로우로 제시합니다.
+The most difficult part when creating a source generator for the first time is "what to do in what order." Since each step depends on the results of the previous step, from project setup to packaging, getting the order wrong leads to unnecessary struggles. This section organizes the 7-step development procedure validated while building ObservablePortGenerator and presents it as a standard workflow applicable to any source generator.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **소스 생성기 프로젝트 설정 방법 이해**
-   - csproj 필수 설정과 패키지 참조 구성
-2. **표준 개발 워크플로우 습득**
-   - 7단계 순서와 각 단계 간 의존 관계
-3. **테스트 및 디버깅 전략 수립**
-   - Verify 스냅샷 테스트와 체크리스트 기반 검증
-
----
-
-## 개발 절차 개요
-
-소스 생성기 개발은 다음 7단계로 진행됩니다. 이 순서는 Part 2에서 ObservablePortGenerator를 구현하며 자연스럽게 형성된 것으로, 각 단계가 다음 단계의 입력을 만들어내는 파이프라인 구조입니다.
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    소스 생성기 개발 절차                      │
-├─────────────────────────────────────────────────────────────┤
-│  1. 프로젝트 설정                                            │
-│     └── csproj, 패키지 참조                                  │
-│                                                             │
-│  2. 마커 속성(Attribute) 정의                                │
-│     └── [EntityId], [ValueConverter] 등                     │
-│                                                             │
-│  3. 심볼 분석 전략 수립                                       │
-│     └── 어떤 정보를 추출할 것인가?                            │
-│                                                             │
-│  4. 메타데이터 클래스 설계                                    │
-│     └── 추출한 정보를 담을 데이터 구조                         │
-│                                                             │
-│  5. 코드 생성 템플릿 설계                                     │
-│     └── 생성할 코드의 구조                                    │
-│                                                             │
-│  6. 단위 테스트 작성                                          │
-│     └── Verify 스냅샷 테스트                                  │
-│                                                             │
-│  7. 패키징 및 배포                                            │
-│     └── dotnet pack -c Release                              │
-└─────────────────────────────────────────────────────────────┘
-```
+### Core Learning Objectives
+1. **Understanding source generator project setup**
+   - Required csproj settings and package reference configuration
+2. **Mastering the standard development workflow**
+   - The 7-step sequence and dependencies between steps
+3. **Establishing testing and debugging strategies**
+   - Verification based on Verify snapshot tests and checklists
 
 ---
 
-## 1. 프로젝트 설정
+## Development Procedure Overview
 
-모든 소스 생성기 개발은 csproj 설정에서 시작합니다. `netstandard2.0` 타겟과 Roslyn 패키지 참조는 모든 생성기 프로젝트에 공통으로 필요한 설정입니다.
+Source generator development proceeds in the following 7 steps. This order was naturally formed while implementing ObservablePortGenerator in Part 2, where each step creates the input for the next step in a pipeline structure.
 
-### csproj 기본 구성
+```
++-------------------------------------------------------------+
+|                Source Generator Development Procedure         |
++-------------------------------------------------------------+
+|  1. Project Setup                                            |
+|     +-- csproj, package references                           |
+|                                                              |
+|  2. Marker Attribute Definition                              |
+|     +-- [EntityId], [ValueConverter], etc.                   |
+|                                                              |
+|  3. Symbol Analysis Strategy                                 |
+|     +-- What information to extract?                         |
+|                                                              |
+|  4. Metadata Class Design                                    |
+|     +-- Data structure to hold extracted information         |
+|                                                              |
+|  5. Code Generation Template Design                          |
+|     +-- Structure of the code to generate                    |
+|                                                              |
+|  6. Unit Test Writing                                        |
+|     +-- Verify snapshot tests                                |
+|                                                              |
+|  7. Packaging and Deployment                                 |
+|     +-- dotnet pack -c Release                               |
++-------------------------------------------------------------+
+```
+
+---
+
+## 1. Project Setup
+
+All source generator development starts with csproj configuration. The `netstandard2.0` target and Roslyn package references are settings commonly needed for every generator project.
+
+### Basic csproj Configuration
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -66,11 +66,11 @@ title: "Development Workflow"
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
 
-    <!-- 소스 생성기 필수 설정 -->
+    <!-- Source generator required settings -->
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IsRoslynComponent>true</IsRoslynComponent>
 
-    <!-- 패키지 정보 -->
+    <!-- Package information -->
     <PackageId>MyCompany.SourceGenerator</PackageId>
     <Version>1.0.0</Version>
     <Authors>Your Name</Authors>
@@ -84,35 +84,35 @@ title: "Development Workflow"
   </ItemGroup>
 
   <ItemGroup>
-    <!-- 소스 생성기로 패키징 -->
+    <!-- Package as source generator -->
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
 </Project>
 ```
 
-### 핵심 설정 설명
+### Key Configuration Descriptions
 
-| 설정 | 설명 |
-|------|------|
-| `TargetFramework` | `netstandard2.0` - 최대 호환성 |
-| `EnforceExtendedAnalyzerRules` | 분석기/생성기 규칙 강제 |
-| `IsRoslynComponent` | Roslyn 컴포넌트임을 명시 |
-| `PrivateAssets="all"` | 의존성이 소비자에게 전파되지 않음 |
+| Setting | Description |
+|---------|-------------|
+| `TargetFramework` | `netstandard2.0` - maximum compatibility |
+| `EnforceExtendedAnalyzerRules` | Enforces analyzer/generator rules |
+| `IsRoslynComponent` | Declares this as a Roslyn component |
+| `PrivateAssets="all"` | Dependencies do not propagate to consumers |
 
 ---
 
-## 2. 마커 속성 정의
+## 2. Marker Attribute Definition
 
-프로젝트 설정이 완료되면 사용자가 코드에 붙일 마커 속성을 정의합니다. 이 속성은 소스 생성기가 "이 타입을 처리해야 한다"는 신호로 사용됩니다. Part 2의 `[ObservablePort]`와 동일한 패턴입니다.
+Once project setup is complete, define the marker attribute that users will apply to their code. This attribute is used as a signal that the source generator should "process this type." It follows the same pattern as `[ObservablePort]` from Part 2.
 
-### Post-Initialization으로 속성 생성
+### Generating Attribute via Post-Initialization
 
 ```csharp
 [Generator(LanguageNames.CSharp)]
 public class EntityIdGenerator : IIncrementalGenerator
 {
-    // 속성 정의 (소스 코드)
+    // Attribute definition (source code)
     private const string EntityIdAttribute = """
         // <auto-generated/>
         #nullable enable
@@ -120,7 +120,7 @@ public class EntityIdGenerator : IIncrementalGenerator
         namespace MyCompany.SourceGenerator;
 
         /// <summary>
-        /// Entity Id로 생성할 타입에 적용합니다.
+        /// Apply to types to be generated as Entity Ids.
         /// </summary>
         [global::System.AttributeUsage(
             global::System.AttributeTargets.Struct,
@@ -133,67 +133,67 @@ public class EntityIdGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // 1단계: 속성 생성 (컴파일 초기에 한 번)
+        // Step 1: Generate attribute (once at compilation start)
         context.RegisterPostInitializationOutput(ctx =>
             ctx.AddSource(
                 hintName: "EntityIdAttribute.g.cs",
                 sourceText: SourceText.From(EntityIdAttribute, Encoding.UTF8)));
 
-        // 2단계: 속성이 붙은 타입 처리
+        // Step 2: Process types with the attribute
         // ...
     }
 }
 ```
 
-### 왜 Post-Initialization인가?
+### Why Post-Initialization?
 
 ```
-컴파일 시작
-    │
-    ▼
-┌──────────────────────────────────────┐
-│ RegisterPostInitializationOutput     │  ← 1단계: 속성 정의 생성
-│ - EntityIdAttribute.g.cs 생성        │
-└──────────────────────────────────────┘
-    │
-    ▼
-┌──────────────────────────────────────┐
-│ 사용자 코드 파싱                      │  ← 사용자가 [EntityId] 사용 가능
-│ - [EntityId] 속성 인식                │
-└──────────────────────────────────────┘
-    │
-    ▼
-┌──────────────────────────────────────┐
-│ ForAttributeWithMetadataName         │  ← 2단계: 속성 대상 코드 생성
-│ - EntityId 타입 생성                  │
-└──────────────────────────────────────┘
-    │
-    ▼
-컴파일 완료
+Compilation Start
+    |
+    v
++--------------------------------------+
+| RegisterPostInitializationOutput     |  <- Step 1: Generate attribute definition
+| - EntityIdAttribute.g.cs generated   |
++--------------------------------------+
+    |
+    v
++--------------------------------------+
+| User code parsing                    |  <- User can use [EntityId]
+| - [EntityId] attribute recognized    |
++--------------------------------------+
+    |
+    v
++--------------------------------------+
+| ForAttributeWithMetadataName         |  <- Step 2: Generate code for attribute targets
+| - EntityId type generated            |
++--------------------------------------+
+    |
+    v
+Compilation Complete
 ```
 
 ---
 
-## 3. 심볼 분석 전략
+## 3. Symbol Analysis Strategy
 
-마커 속성이 준비되면, 그 속성이 붙은 타입에서 어떤 정보를 추출할지 결정합니다. 이 단계의 결정이 4단계 메타데이터 클래스의 형태를 결정하므로, 생성할 코드에 필요한 정보를 빠짐없이 파악해야 합니다.
+Once the marker attribute is ready, decide what information to extract from types annotated with it. The decisions at this step determine the shape of the Step 4 metadata class, so all information needed for generated code must be identified without omission.
 
-### 분석할 정보 결정
+### Determining Information to Analyze
 
 ```csharp
-// 예: Entity Id 생성기에서 필요한 정보
-// 입력:
+// Example: information needed for Entity Id generator
+// Input:
 [EntityId]
 public readonly partial record struct ProductId;
 
-// 추출할 정보:
-// - 타입 이름: ProductId
-// - 네임스페이스: MyApp.Domain
-// - 한정자: readonly partial record struct
-// - 기존 인터페이스: 없음
+// Information to extract:
+// - Type name: ProductId
+// - Namespace: MyApp.Domain
+// - Modifiers: readonly partial record struct
+// - Existing interfaces: none
 ```
 
-### ForAttributeWithMetadataName 사용
+### Using ForAttributeWithMetadataName
 
 ```csharp
 public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -225,20 +225,20 @@ private static EntityIdInfo? MapToEntityIdInfo(
 
 ---
 
-## 4. 메타데이터 클래스 설계
+## 4. Metadata Class Design
 
-3단계에서 결정한 정보를 담을 데이터 구조를 설계합니다. 이 메타데이터 클래스는 Roslyn의 증분 캐싱에서 동등성 비교에 사용되므로, 반드시 값 동등성을 보장하는 `record`로 정의해야 합니다.
+Design the data structure to hold the information determined in Step 3. Since this metadata class is used for equality comparison in Roslyn's incremental caching, it must be defined as a `record` that guarantees value equality.
 
-### record로 불변 데이터 구조 정의
+### Defining Immutable Data Structures with record
 
 ```csharp
-// 추출한 정보를 담는 데이터 클래스
+// Data class holding extracted information
 public sealed record EntityIdInfo(
     string TypeName,
     string Namespace,
     bool IsReadOnly);
 
-// 복잡한 경우 중첩 record 사용
+// For complex cases, use nested records
 public sealed record ValidationInfo(
     string TypeName,
     string Namespace,
@@ -254,17 +254,17 @@ public sealed record ValidationRule(
     IReadOnlyDictionary<string, object?> Arguments);
 ```
 
-### 왜 record인가?
+### Why record?
 
 ```csharp
-// ✅ record 장점
-// 1. 불변성 - 증분 캐싱에 필수
-// 2. 값 동등성 - Equals/GetHashCode 자동 생성
-// 3. 간결함 - 적은 코드
+// ✅ record advantages
+// 1. Immutability - essential for incremental caching
+// 2. Value equality - Equals/GetHashCode auto-generated
+// 3. Conciseness - less code
 
 public sealed record EntityIdInfo(string TypeName, string Namespace);
 
-// ❌ class로 구현 시 (장황함)
+// ❌ Implementing with class (verbose)
 public sealed class EntityIdInfo : IEquatable<EntityIdInfo>
 {
     public string TypeName { get; }
@@ -284,14 +284,14 @@ public sealed class EntityIdInfo : IEquatable<EntityIdInfo>
 
 ---
 
-## 5. 코드 생성 템플릿 설계
+## 5. Code Generation Template Design
 
-메타데이터가 준비되면 실제로 생성할 코드의 형태를 결정합니다. 먼저 "완성된 코드가 어떤 모습이어야 하는지" 목표를 정한 뒤, 그 코드를 `StringBuilder`로 조립하는 방식으로 구현합니다.
+Once metadata is ready, determine the shape of the code to actually generate. First define the goal of "what the finished code should look like," then implement it by assembling with `StringBuilder`.
 
-### 생성할 코드 구조 결정
+### Determining the Code Structure to Generate
 
 ```csharp
-// 목표: 이런 코드가 생성되어야 함
+// Goal: this code should be generated
 [DebuggerDisplay("{ToString()}")]
 public readonly partial record struct ProductId : IEntityId<ProductId>, IComparable<ProductId>
 {
@@ -313,7 +313,7 @@ public readonly partial record struct ProductId : IEntityId<ProductId>, ICompara
 }
 ```
 
-### StringBuilder로 생성
+### Generating with StringBuilder
 
 ```csharp
 private static string GenerateEntityIdSource(EntityIdInfo info)
@@ -347,11 +347,11 @@ private static string GenerateEntityIdSource(EntityIdInfo info)
 
 ---
 
-## 6. 단위 테스트 작성
+## 6. Unit Test Writing
 
-코드 생성 로직이 구현되면 Verify 스냅샷 테스트로 생성 결과를 검증합니다. 생성된 코드의 정확성은 수작업으로 확인하기 어렵기 때문에, 스냅샷으로 기대 결과를 고정해 두는 것이 필수적입니다.
+Once code generation logic is implemented, verify the generation results with Verify snapshot tests. Since the accuracy of generated code is difficult to confirm manually, fixing expected results with snapshots is essential.
 
-### 테스트 프로젝트 설정
+### Test Project Setup
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -376,7 +376,7 @@ private static string GenerateEntityIdSource(EntityIdInfo info)
 </Project>
 ```
 
-### Verify 스냅샷 테스트
+### Verify Snapshot Tests
 
 ```csharp
 public sealed class EntityIdGeneratorTests
@@ -405,7 +405,7 @@ public sealed class EntityIdGeneratorTests
 }
 ```
 
-### 테스트 러너 구현
+### Test Runner Implementation
 
 ```csharp
 public static class SourceGeneratorTestRunner
@@ -419,68 +419,68 @@ public static class SourceGeneratorTestRunner
         string sourceCode)
         where TGenerator : IIncrementalGenerator, new()
     {
-        // 1. 구문 트리 생성
+        // 1. Create syntax tree
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceCode);
 
-        // 2. 참조 어셈블리 수집
+        // 2. Collect reference assemblies
         var references = RequiredTypes
             .Select(t => t.Assembly.Location)
             .Distinct()
             .Select(loc => MetadataReference.CreateFromFile(loc))
             .ToList();
 
-        // 3. 컴파일레이션 생성
+        // 3. Create compilation
         var compilation = CSharpCompilation.Create(
             assemblyName: "TestAssembly",
             syntaxTrees: [syntaxTree],
             references: references,
             options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
-        // 4. 생성기 실행
+        // 4. Run generator
         var driver = CSharpGeneratorDriver.Create(generator);
         driver = (CSharpGeneratorDriver)driver.RunGeneratorsAndUpdateCompilation(
             compilation,
             out var outputCompilation,
             out var diagnostics);
 
-        // 5. 진단 검증
+        // 5. Verify diagnostics
         var errors = outputCompilation.GetDiagnostics()
             .Where(d => d.Severity == DiagnosticSeverity.Error)
             .ToList();
 
         errors.ShouldBeEmpty();
 
-        // 6. 생성된 코드 반환
+        // 6. Return generated code
         var result = driver.GetRunResult();
         return result.GeneratedTrees
             .Select(t => t.GetText().ToString())
-            .LastOrDefault();  // 마지막 생성 파일 (속성 제외)
+            .LastOrDefault();  // Last generated file (excluding attribute)
     }
 }
 ```
 
 ---
 
-## 7. 패키징 및 배포
+## 7. Packaging and Deployment
 
-테스트를 통과하면 소스 생성기를 NuGet 패키지로 만들어 배포합니다. 소스 생성기는 일반 라이브러리와 달리 `analyzers/dotnet/cs` 경로에 DLL을 포함해야 하므로, csproj에서 이미 설정한 패키징 구성이 여기서 효과를 발휘합니다.
+Once tests pass, package the source generator as a NuGet package for deployment. Since source generators must include the DLL in the `analyzers/dotnet/cs` path unlike regular libraries, the packaging configuration already set in csproj takes effect here.
 
-### NuGet 패키지 생성
+### NuGet Package Creation
 
 ```bash
-# Release 구성으로 빌드 (중요!)
+# Build with Release configuration (important!)
 dotnet pack -c Release -o ./packages
 
-# 로컬 피드에 추가
+# Add to local feed
 dotnet nuget push ./packages/MyCompany.SourceGenerator.1.0.0.nupkg \
     --source ./local-feed
 ```
 
-### 소비자 프로젝트에서 사용
+### Usage in Consumer Projects
 
 ```xml
 <ItemGroup>
-  <!-- 분석기/생성기로 참조 -->
+  <!-- Reference as analyzer/generator -->
   <PackageReference Include="MyCompany.SourceGenerator" Version="1.0.0"
                     OutputItemType="Analyzer"
                     ReferenceOutputAssembly="false" />
@@ -489,75 +489,75 @@ dotnet nuget push ./packages/MyCompany.SourceGenerator.1.0.0.nupkg \
 
 ---
 
-## 개발 체크리스트
+## Development Checklist
 
 ```markdown
-## 소스 생성기 개발 체크리스트
+## Source Generator Development Checklist
 
-### 프로젝트 설정
+### Project Setup
 - [ ] TargetFramework: netstandard2.0
 - [ ] EnforceExtendedAnalyzerRules: true
 - [ ] IsRoslynComponent: true
-- [ ] Microsoft.CodeAnalysis.CSharp 참조
+- [ ] Microsoft.CodeAnalysis.CSharp reference
 
-### 구현
-- [ ] IIncrementalGenerator 구현
-- [ ] [Generator] 속성 적용
-- [ ] 마커 속성 Post-Initialization으로 생성
-- [ ] ForAttributeWithMetadataName으로 대상 필터링
-- [ ] 메타데이터 record 클래스 정의
-- [ ] 코드 생성 템플릿 작성
+### Implementation
+- [ ] IIncrementalGenerator implementation
+- [ ] [Generator] attribute applied
+- [ ] Marker attribute generated via Post-Initialization
+- [ ] Target filtering with ForAttributeWithMetadataName
+- [ ] Metadata record class defined
+- [ ] Code generation template written
 
-### 테스트
-- [ ] Verify 스냅샷 테스트 작성
-- [ ] 경계 케이스 테스트 추가
-- [ ] 에러 케이스 테스트 추가
+### Testing
+- [ ] Verify snapshot tests written
+- [ ] Boundary case tests added
+- [ ] Error case tests added
 
-### 품질
-- [ ] 생성 코드에 // <auto-generated/> 헤더
-- [ ] #nullable enable 포함
-- [ ] ExcludeFromCodeCoverage 속성
-- [ ] 결정적 출력 (동일 입력 → 동일 출력)
+### Quality
+- [ ] // <auto-generated/> header in generated code
+- [ ] #nullable enable included
+- [ ] ExcludeFromCodeCoverage attribute
+- [ ] Deterministic output (same input -> same output)
 
-### 배포
+### Deployment
 - [ ] dotnet pack -c Release
-- [ ] 버전 번호 업데이트
-- [ ] CHANGELOG 작성
+- [ ] Version number updated
+- [ ] CHANGELOG written
 ```
 
 ---
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-소스 생성기 개발의 7단계 표준 절차를 정리합니다.
+Here is a summary of the 7-step standard procedure for source generator development.
 
-| 단계 | 핵심 작업 |
+| Step | Key Work |
 |------|----------|
-| 1. 프로젝트 설정 | netstandard2.0, Roslyn 패키지 참조 |
-| 2. 속성 정의 | Post-Initialization으로 마커 속성 생성 |
-| 3. 심볼 분석 | ForAttributeWithMetadataName으로 대상 필터링 |
-| 4. 메타데이터 | record로 불변 데이터 구조 정의 |
-| 5. 코드 생성 | StringBuilder + Raw String Literals |
-| 6. 테스트 | Verify 스냅샷 테스트 |
-| 7. 배포 | dotnet pack -c Release |
+| 1. Project setup | netstandard2.0, Roslyn package references |
+| 2. Attribute definition | Generate marker attribute via Post-Initialization |
+| 3. Symbol analysis | Target filtering with ForAttributeWithMetadataName |
+| 4. Metadata | Define immutable data structure with record |
+| 5. Code generation | StringBuilder + Raw String Literals |
+| 6. Testing | Verify snapshot tests |
+| 7. Deployment | dotnet pack -c Release |
 
-이 7단계는 ObservablePortGenerator를 포함한 모든 소스 생성기에 동일하게 적용되는 표준 절차입니다. 다음 절부터는 이 절차를 따라 세 가지 실전 생성기를 구현하면서, 각 단계의 구체적인 구현 방법을 확인합니다.
+These 7 steps are a standard procedure that applies equally to all source generators including ObservablePortGenerator. Starting from the next section, we will implement three practical generators following this procedure to confirm the specific implementation methods for each step.
 
 ---
 
 ## FAQ
 
-### Q1: 소스 생성기 프로젝트의 `TargetFramework`가 `netstandard2.0`이어야 하는 이유는 무엇인가요?
-**A**: 소스 생성기는 Roslyn 컴파일러 프로세스 내에서 실행되며, 컴파일러는 `netstandard2.0` 어셈블리만 로드합니다. `net8.0`이나 `net9.0`으로 빌드하면 컴파일러가 생성기 어셈블리를 로드하지 못해 "생성기가 실행되지 않는" 현상이 발생합니다.
+### Q1: Why must the source generator project's `TargetFramework` be `netstandard2.0`?
+**A**: Source generators run within the Roslyn compiler process, and the compiler only loads `netstandard2.0` assemblies. Building with `net8.0` or `net9.0` prevents the compiler from loading the generator assembly, causing the "generator doesn't run" phenomenon.
 
-### Q2: `RegisterPostInitializationOutput`으로 마커 속성을 생성하는 것과 별도 NuGet 패키지로 배포하는 것의 차이는 무엇인가요?
-**A**: Post-Initialization 방식은 소스 생성기 하나로 속성과 생성 코드를 모두 제공하여 의존성이 단순합니다. 반면 별도 패키지로 분리하면 속성만 참조하는 프로젝트(인터페이스 프로젝트 등)에서 생성기 의존성 없이 속성을 사용할 수 있습니다. ObservablePortGenerator처럼 단일 프로젝트 내에서 사용하는 경우 Post-Initialization이 간편합니다.
+### Q2: What is the difference between generating the marker attribute with `RegisterPostInitializationOutput` versus deploying it as a separate NuGet package?
+**A**: The Post-Initialization approach provides both the attribute and generated code with a single source generator, keeping dependencies simple. In contrast, separating into a separate package allows using the attribute without the generator dependency in projects that only reference the attribute (such as interface projects). For cases like ObservablePortGenerator used within a single project, Post-Initialization is more convenient.
 
-### Q3: 7단계 워크플로우에서 가장 시간이 많이 걸리는 단계는 어디인가요?
-**A**: 3단계(심볼 분석 전략)와 5단계(코드 생성 템플릿 설계)가 가장 많은 시간을 요구합니다. 어떤 정보를 추출할지 결정하는 것이 이후 모든 단계의 기반이 되고, 생성할 코드의 목표 형태를 먼저 확정해야 구현이 수월해지기 때문입니다. 반면 1단계(프로젝트 설정)와 7단계(패키징)는 템플릿을 재사용하면 빠르게 완료됩니다.
+### Q3: Which step in the 7-step workflow takes the most time?
+**A**: Step 3 (symbol analysis strategy) and Step 5 (code generation template design) require the most time. Deciding what information to extract forms the foundation for all subsequent steps, and establishing the target shape of the code to generate first makes implementation smoother. In contrast, Step 1 (project setup) and Step 7 (packaging) can be completed quickly by reusing templates.
 
 ---
 
-이 절에서 정리한 7단계 워크플로우를 실제로 적용해 봅니다. 다음 절에서는 DDD에서 가장 흔히 필요한 강타입 Entity Id 생성기를 구현합니다.
+We will now apply the 7-step workflow organized in this section in practice. The next section implements the most commonly needed strong-typed Entity Id generator in DDD.
 
-→ [02. Entity Id 생성기](../02-Entity-Id-Generator/)
+-> [02. Entity Id Generator](../02-Entity-Id-Generator/)

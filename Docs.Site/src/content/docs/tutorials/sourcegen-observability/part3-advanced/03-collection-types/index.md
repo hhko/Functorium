@@ -2,37 +2,37 @@
 title: "Collection Type Handling"
 ---
 
-## 개요
+## Overview
 
-관찰 가능성(Observability)에서 "사용자 목록을 조회했다"는 것만으로는 충분하지 않습니다. 실제 운영 환경에서는 "몇 건을 반환했는가"가 성능 분석과 이상 탐지의 핵심 지표가 됩니다. ObservablePortGenerator는 반환 타입이나 파라미터가 컬렉션인 경우 `Count` 또는 `Length` 태그를 자동으로 추가합니다. 다만 튜플 내부에 컬렉션이 포함된 경우는 튜플 자체에 Count 속성이 없으므로 예외로 처리해야 합니다.
+In observability, simply knowing "a user list was queried" is not enough. In actual production environments, "how many items were returned" becomes a key metric for performance analysis and anomaly detection. ObservablePortGenerator automatically adds `Count` or `Length` tags when a return type or parameter is a collection. However, when a collection is contained inside a tuple, the tuple itself has no Count property, so it must be treated as an exception.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **컬렉션 타입 감지 방법**
-   - 패턴 매칭으로 `List<T>`, `Dictionary<K,V>`, 배열 등을 식별
-2. **Count/Length 필드 자동 생성**
-   - 컬렉션 종류에 따라 적절한 크기 접근 표현식 생성
-3. **튜플 내 컬렉션 예외 처리**
-   - 튜플 반환 타입에서 내부 컬렉션을 무시하는 이유와 구현
+### Core Learning Objectives
+1. **Collection type detection method**
+   - Identifying `List<T>`, `Dictionary<K,V>`, arrays, etc. through pattern matching
+2. **Automatic Count/Length field generation**
+   - Generating the appropriate size access expression based on collection type
+3. **Exception handling for collections inside tuples**
+   - Why and how to ignore inner collections in tuple return types
 
 ---
 
-## 컬렉션 타입 처리의 필요성
+## The Need for Collection Type Handling
 
-관찰 가능성 코드에서 컬렉션의 크기 정보는 중요한 메트릭입니다.
+Collection size information is an important metric in observability code.
 
 ```csharp
-// 원본 메서드
+// Original method
 public virtual FinT<IO, List<User>> GetUsersAsync() => ...;
 
-// 생성된 Pipeline 코드
+// Generated Pipeline code
 public override FinT<IO, List<User>> GetUsersAsync() =>
     FinT.lift<IO, List<User>>(
         // ...
         from __ in IO.lift(() =>
         {
-            // ← 컬렉션 크기를 태그로 기록
+            // <- Record collection size as a tag
             activityContext?.SetTag("response.result.count", result?.Count ?? 0);
             activityContext?.Dispose();
             return Unit.Default;
@@ -43,21 +43,21 @@ public override FinT<IO, List<User>> GetUsersAsync() =>
 
 ---
 
-## CollectionTypeHelper 구현
+## CollectionTypeHelper Implementation
 
-### 컬렉션 패턴 정의
+### Collection Pattern Definition
 
 ```csharp
 // Generators/ObservablePortGenerator/CollectionTypeHelper.cs
 namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
-/// 컬렉션 타입 여부를 확인하는 헬퍼 클래스
+/// Helper class for checking whether a type is a collection
 /// </summary>
 public static class CollectionTypeHelper
 {
     private static readonly string[] CollectionTypePatterns = [
-        // 일반 네임스페이스
+        // Regular namespaces
         "System.Collections.Generic.List<",
         "System.Collections.Generic.IList<",
         "System.Collections.Generic.ICollection<",
@@ -71,73 +71,73 @@ public static class CollectionTypeHelper
         "System.Collections.Generic.Queue<",
         "System.Collections.Generic.Stack<",
 
-        // global:: 접두사 버전
+        // global:: prefixed versions
         "global::System.Collections.Generic.List<",
         "global::System.Collections.Generic.IList<",
-        // ... (동일 패턴)
+        // ... (same patterns)
     ];
 }
 ```
 
-### 컬렉션 타입 확인
+### Collection Type Check
 
 ```csharp
 /// <summary>
-/// 타입이 Count 속성을 가진 컬렉션인지 확인합니다.
-/// 튜플 타입은 내부에 컬렉션이 있더라도 컬렉션으로 취급하지 않습니다.
+/// Checks whether a type is a collection with a Count property.
+/// Tuple types are not treated as collections even if they contain collections internally.
 /// </summary>
 public static bool IsCollectionType(string typeFullName)
 {
     if (string.IsNullOrEmpty(typeFullName))
         return false;
 
-    // 튜플 타입은 컬렉션으로 취급하지 않음
+    // Tuple types are not treated as collections
     if (IsTupleType(typeFullName))
         return false;
 
-    // 배열 타입 확인 (예: int[], string[])
+    // Check array types (e.g., int[], string[])
     if (typeFullName.Contains("[]"))
         return true;
 
-    // 컬렉션 타입 패턴 확인
+    // Check collection type patterns
     return CollectionTypePatterns.Any(pattern => typeFullName.Contains(pattern));
 }
 ```
 
 ---
 
-## 튜플 예외 처리
+## Tuple Exception Handling
 
-### 왜 튜플을 제외하는가?
+### Why Exclude Tuples?
 
-튜플 내부에 컬렉션이 있어도 **튜플 자체**의 Count를 기록하는 것은 의미가 없습니다.
+Even when a collection exists inside a tuple, recording the Count of the **tuple itself** is meaningless.
 
 ```csharp
-// 반환 타입: (int Id, List<string> Tags)
+// Return type: (int Id, List<string> Tags)
 
-// ❌ 잘못된 처리 - 튜플을 컬렉션으로 인식
-result?.Count  // 튜플에는 Count가 없음!
+// ❌ Incorrect handling - recognizing tuple as collection
+result?.Count  // Tuple has no Count!
 
-// ✅ 올바른 처리 - 튜플은 Count 생성 안 함
-// Count 필드 미생성
+// ✅ Correct handling - do not generate Count for tuples
+// Count field not generated
 ```
 
-### 튜플 타입 확인
+### Tuple Type Check
 
 ```csharp
 /// <summary>
-/// 타입이 튜플인지 확인합니다.
+/// Checks whether a type is a tuple.
 /// </summary>
 public static bool IsTupleType(string typeFullName)
 {
     if (string.IsNullOrEmpty(typeFullName))
         return false;
 
-    // C# 튜플 구문: (int Id, string Name)
+    // C# tuple syntax: (int Id, string Name)
     if (typeFullName.StartsWith("(") && typeFullName.EndsWith(")"))
         return true;
 
-    // ValueTuple 타입
+    // ValueTuple type
     if (typeFullName.Contains("System.ValueTuple") ||
         typeFullName.Contains("global::System.ValueTuple"))
         return true;
@@ -148,14 +148,14 @@ public static bool IsTupleType(string typeFullName)
 
 ---
 
-## Count 표현식 생성
+## Count Expression Generation
 
 ### Count vs Length
 
 ```csharp
 /// <summary>
-/// 컬렉션 타입에 대한 Count 접근 표현식을 생성합니다.
-/// 배열은 Length, 나머지는 Count를 사용합니다.
+/// Generates a Count access expression for collection types.
+/// Arrays use Length, others use Count.
 /// </summary>
 public static string? GetCountExpression(string variableName, string typeFullName)
 {
@@ -165,19 +165,19 @@ public static string? GetCountExpression(string variableName, string typeFullNam
     if (!IsCollectionType(typeFullName))
         return null;
 
-    // 배열은 Length 사용
+    // Arrays use Length
     if (typeFullName.Contains("[]"))
         return $"{variableName}?.Length ?? 0";
 
-    // 나머지 컬렉션은 Count 사용
+    // Other collections use Count
     return $"{variableName}?.Count ?? 0";
 }
 ```
 
-### 표현식 결과 예시
+### Expression Result Examples
 
-| 타입 | 표현식 |
-|------|--------|
+| Type | Expression |
+|------|------------|
 | `List<User>` | `result?.Count ?? 0` |
 | `string[]` | `result?.Length ?? 0` |
 | `Dictionary<K, V>` | `result?.Count ?? 0` |
@@ -185,46 +185,46 @@ public static string? GetCountExpression(string variableName, string typeFullNam
 
 ---
 
-## 필드명 생성
+## Field Name Generation
 
-### Request 파라미터 필드
+### Request Parameter Fields
 
 ```csharp
 /// <summary>
-/// Request 파라미터에 대한 필드 이름을 생성합니다.
-/// 예: "ms" -> "request.params.ms", "name" -> "request.params.name"
-/// 동적 필드는 request.params.{name} 형식으로 정적 필드와 구분됩니다.
+/// Generates a field name for a request parameter.
+/// Example: "ms" -> "request.params.ms", "name" -> "request.params.name"
+/// Dynamic fields use the request.params.{name} format to distinguish from static fields.
 /// </summary>
 public static string GetRequestFieldName(string parameterName)
 {
     if (string.IsNullOrEmpty(parameterName))
         return parameterName;
 
-    // 소문자로 변환하여 snake_case + dot 형식 사용
+    // Convert to lowercase using snake_case + dot format
     return $"request.params.{parameterName.ToLowerInvariant()}";
 }
 
 /// <summary>
-/// Request 파라미터에 대한 Count 필드 이름을 생성합니다.
-/// 예: "orders" -> "request.params.orders.count"
+/// Generates a Count field name for a request parameter.
+/// Example: "orders" -> "request.params.orders.count"
 /// </summary>
-/// <returns>Count 필드 이름. parameterName이 비어있으면 null</returns>
+/// <returns>Count field name. null if parameterName is empty</returns>
 public static string? GetRequestCountFieldName(string parameterName)
 {
     if (string.IsNullOrEmpty(parameterName))
         return null;
 
-    // 소문자로 변환하여 snake_case + dot 형식 사용
+    // Convert to lowercase using snake_case + dot format
     return $"request.params.{parameterName.ToLowerInvariant()}.count";
 }
 ```
 
-### Response 필드
+### Response Fields
 
 ```csharp
 /// <summary>
-/// Response 결과에 대한 필드 이름을 생성합니다.
-/// 반환값: "response.result"
+/// Generates a field name for response results.
+/// Returns: "response.result"
 /// </summary>
 public static string GetResponseFieldName()
 {
@@ -232,8 +232,8 @@ public static string GetResponseFieldName()
 }
 
 /// <summary>
-/// Response 결과에 대한 Count 필드 이름을 생성합니다.
-/// 반환값: "response.result.count"
+/// Generates a Count field name for response results.
+/// Returns: "response.result.count"
 /// </summary>
 public static string GetResponseCountFieldName()
 {
@@ -243,9 +243,9 @@ public static string GetResponseCountFieldName()
 
 ---
 
-## 코드 생성에서 활용
+## Usage in Code Generation
 
-### 반환 타입 처리
+### Return Type Handling
 
 ```csharp
 private static void AppendResultTagging(
@@ -264,7 +264,7 @@ private static void AppendResultTagging(
 }
 ```
 
-### 파라미터 처리
+### Parameter Handling
 
 ```csharp
 private static void AppendParameterTags(
@@ -279,7 +279,7 @@ private static void AppendParameterTags(
         string fieldName = CollectionTypeHelper.GetRequestFieldName(param.Name);
         sb.AppendLine($"            activityContext?.SetTag(\"{fieldName}\", {param.Name});");
 
-        // 컬렉션 파라미터의 경우 Count 태그 추가
+        // Add Count tag for collection parameters
         if (CollectionTypeHelper.IsCollectionType(paramType))
         {
             string? countField = CollectionTypeHelper.GetRequestCountFieldName(param.Name);
@@ -296,22 +296,22 @@ private static void AppendParameterTags(
 
 ---
 
-## 생성 결과 예시
+## Generated Result Examples
 
-### 컬렉션 파라미터
+### Collection Parameter
 
 ```csharp
-// 원본
+// Original
 public virtual FinT<IO, int> ProcessItems(List<string> items) => ...;
 
-// 생성된 코드
+// Generated code
 public override FinT<IO, int> ProcessItems(List<string> items) =>
     FinT.lift<IO, int>(
         from activityContext in IO.lift(() => CreateActivity("ProcessItems"))
         from _ in IO.lift(() =>
         {
             activityContext?.SetTag("request.params.items", items);
-            activityContext?.SetTag("request.params.items.count", items?.Count ?? 0);  // ← Count 태그
+            activityContext?.SetTag("request.params.items.count", items?.Count ?? 0);  // <- Count tag
             StartActivity(activityContext);
             return Unit.Default;
         })
@@ -325,19 +325,19 @@ public override FinT<IO, int> ProcessItems(List<string> items) =>
     );
 ```
 
-### 컬렉션 반환 타입
+### Collection Return Type
 
 ```csharp
-// 원본
+// Original
 public virtual FinT<IO, List<User>> GetUsers() => ...;
 
-// 생성된 코드
+// Generated code
 public override FinT<IO, List<User>> GetUsers() =>
     FinT.lift<IO, List<User>>(
         // ...
         from __ in IO.lift(() =>
         {
-            activityContext?.SetTag("response.result.count", result?.Count ?? 0);  // ← Count 태그
+            activityContext?.SetTag("response.result.count", result?.Count ?? 0);  // <- Count tag
             activityContext?.Dispose();
             return Unit.Default;
         })
@@ -345,22 +345,22 @@ public override FinT<IO, List<User>> GetUsers() =>
     );
 ```
 
-### 배열 반환 타입
+### Array Return Type
 
 ```csharp
-// 원본
+// Original
 public virtual FinT<IO, string[]> GetNames() => ...;
 
-// 생성된 코드
+// Generated code
 // ...
-activityContext?.SetTag("response.result.count", result?.Length ?? 0);  // ← Length 사용
+activityContext?.SetTag("response.result.count", result?.Length ?? 0);  // <- Length used
 ```
 
 ---
 
-## 테스트 시나리오
+## Test Scenarios
 
-### 컬렉션 파라미터 테스트
+### Collection Parameter Test
 
 ```csharp
 [Fact]
@@ -377,7 +377,7 @@ public Task Should_Generate_CollectionCountFields_WithCollectionParameters()
 
     string? actual = _sut.Generate(input);
 
-    // request.params.items.count 필드 확인
+    // Verify request.params.items.count field
     actual.ShouldContain("request.params.items.count");
     actual.ShouldContain("items?.Count ?? 0");
 
@@ -385,13 +385,13 @@ public Task Should_Generate_CollectionCountFields_WithCollectionParameters()
 }
 ```
 
-### 튜플 반환 타입 테스트
+### Tuple Return Type Test
 
 ```csharp
 [Fact]
 public Task Should_Not_Generate_Count_ForTupleContainingCollection()
 {
-    // 튜플 내부에 컬렉션이 있어도 Count 미생성
+    // Count should not be generated even if tuple contains a collection
     string input = """
         [GenerateObservablePort]
         public class UserRepository : IObservablePort
@@ -403,14 +403,14 @@ public Task Should_Not_Generate_Count_ForTupleContainingCollection()
 
     string? actual = _sut.Generate(input);
 
-    // response.result.count 미생성 확인
+    // Verify response.result.count is not generated
     actual.ShouldNotContain("response.result.count");
 
     return Verify(actual);
 }
 ```
 
-### 배열 포함 튜플 테스트
+### Array-Containing Tuple Test
 
 ```csharp
 [Fact]
@@ -427,7 +427,7 @@ public Task Should_Not_Generate_Length_ForTupleContainingArray()
 
     string? actual = _sut.Generate(input);
 
-    // response.result.count (Length) 미생성 확인
+    // Verify response.result.count (Length) is not generated
     actual.ShouldNotContain("response.result.count");
 
     return Verify(actual);
@@ -436,10 +436,10 @@ public Task Should_Not_Generate_Length_ForTupleContainingArray()
 
 ---
 
-## 타입별 동작 요약
+## Type Behavior Summary
 
-| 반환 타입 | Count/Length 생성 | 표현식 |
-|----------|-------------------|--------|
+| Return Type | Count/Length Generated | Expression |
+|-------------|----------------------|------------|
 | `List<T>` | O | `?.Count ?? 0` |
 | `T[]` | O | `?.Length ?? 0` |
 | `Dictionary<K, V>` | O | `?.Count ?? 0` |
@@ -451,25 +451,25 @@ public Task Should_Not_Generate_Length_ForTupleContainingArray()
 
 ---
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-`CollectionTypeHelper`는 컬렉션 감지, 튜플 예외 처리, Count/Length 표현식 생성을 하나의 유틸리티로 통합합니다. 패턴 매칭 방식으로 `global::` 접두사를 포함한 Fully Qualified Name도 올바르게 인식하며, 필드명은 `request.params.{name}.count`와 `response.result.count` 규칙을 따릅니다.
+`CollectionTypeHelper` unifies collection detection, tuple exception handling, and Count/Length expression generation into a single utility. Its pattern matching approach correctly recognizes Fully Qualified Names including the `global::` prefix, and field names follow the `request.params.{name}.count` and `response.result.count` conventions.
 
 ---
 
 ## FAQ
 
-### Q1: `IEnumerable<T>`도 컬렉션으로 인식하는데, `Count()` 호출 시 전체 열거가 발생하지 않나요?
-**A**: `CollectionTypeHelper`는 패턴 매칭으로 타입을 감지하지만, 실제 생성 코드에서는 `?.Count ?? 0` 표현식을 사용합니다. 이는 `ICollection<T>.Count` 속성(O(1))을 호출하는 것이지 LINQ의 `Count()` 확장 메서드(O(n))가 아닙니다. 다만 순수한 `IEnumerable<T>`만 구현한 타입에서는 `Count` 속성이 없어 컴파일 오류가 발생할 수 있으므로, 실무에서는 구체적인 컬렉션 타입 사용을 권장합니다.
+### Q1: `IEnumerable<T>` is recognized as a collection, but wouldn't calling `Count()` trigger a full enumeration?
+**A**: `CollectionTypeHelper` detects types through pattern matching, but the actual generated code uses the `?.Count ?? 0` expression. This calls the `ICollection<T>.Count` property (O(1)), not LINQ's `Count()` extension method (O(n)). However, for types that only implement pure `IEnumerable<T>`, the `Count` property does not exist and a compilation error may occur, so using concrete collection types is recommended in practice.
 
-### Q2: 튜플 내부에 컬렉션이 있을 때 Count를 생성하지 않는 이유는 무엇인가요?
-**A**: 튜플 자체에는 `Count` 속성이 없으므로, `result?.Count`와 같은 표현식이 컴파일 오류를 발생시킵니다. 튜플 내부의 개별 요소에 접근하려면 `result.Item2?.Count`처럼 요소별로 분해해야 하는데, 이는 생성기의 복잡도를 크게 높이는 반면 관찰 가능성 측면에서의 가치는 제한적입니다.
+### Q2: Why is Count not generated when a collection exists inside a tuple?
+**A**: Since the tuple itself has no `Count` property, an expression like `result?.Count` would cause a compilation error. To access individual elements inside the tuple, you would need to decompose them like `result.Item2?.Count`, which greatly increases the complexity of the generator while offering limited value from an observability perspective.
 
-### Q3: `CollectionTypePatterns` 배열에 `global::` 접두사 버전을 별도로 추가하는 이유는 무엇인가요?
-**A**: Roslyn의 `SymbolDisplayFormat`에 따라 타입 문자열이 `List<T>` 또는 `global::System.Collections.Generic.List<T>` 두 가지 형태로 나올 수 있기 때문입니다. `Contains()` 패턴 매칭이 두 경우 모두 올바르게 동작하려면 양쪽 패턴을 모두 포함해야 합니다.
+### Q3: Why are `global::` prefixed versions added separately to the `CollectionTypePatterns` array?
+**A**: Depending on Roslyn's `SymbolDisplayFormat`, type strings can appear in two forms: `List<T>` or `global::System.Collections.Generic.List<T>`. For `Contains()` pattern matching to work correctly in both cases, both patterns must be included.
 
 ---
 
-컬렉션 Count 필드가 추가되면 로깅에 필요한 총 파라미터 수가 늘어납니다. 다음 섹션에서는 .NET `LoggerMessage.Define`의 6개 파라미터 제한과 이를 초과할 때의 폴백 전략을 학습합니다.
+With collection Count fields added, the total number of parameters needed for logging increases. The next section covers .NET `LoggerMessage.Define`'s 6-parameter limit and the fallback strategy when this limit is exceeded.
 
-→ [04. LoggerMessage.Define 제한](../04-LoggerMessage-Limits/)
+-> [04. LoggerMessage.Define Limits](../04-LoggerMessage-Limits/)

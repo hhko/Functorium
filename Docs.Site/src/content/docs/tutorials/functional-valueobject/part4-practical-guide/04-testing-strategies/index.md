@@ -416,4 +416,4 @@ Part 4 covered practical integration and testing strategies for value objects. P
 
 ---
 
-→ [Part 5의 1장: 이커머스 도메인](../../Part5-Domain-Examples/01-Ecommerce-Domain/)
+→ [Part 5, Chapter 1: E-commerce Domain](../../Part5-Domain-Examples/01-Ecommerce-Domain/)

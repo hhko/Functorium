@@ -2,41 +2,41 @@
 title: "Unit Test Setup"
 ---
 
-## 개요
+## Overview
 
-일반적인 단위 테스트는 메서드를 호출하고 반환값을 검증합니다. 하지만 소스 생성기는 컴파일 타임에 실행되므로, 테스트하려면 Roslyn 컴파일 파이프라인을 직접 구성해야 합니다. 입력 소스 코드를 `CSharpCompilation`으로 컴파일하고, `CSharpGeneratorDriver`로 소스 생성기를 실행한 뒤, 생성된 코드를 문자열로 추출하는 과정이 필요합니다. Functorium은 이 과정을 `SourceGeneratorTestRunner`라는 유틸리티로 추상화하여, 테스트 코드에서는 `_sut.Generate(input)` 한 줄로 생성 결과를 얻을 수 있습니다.
+Typical unit tests call a method and verify the return value. However, since source generators run at compile time, testing them requires directly configuring the Roslyn compilation pipeline. You need to compile input source code with `CSharpCompilation`, run the source generator with `CSharpGeneratorDriver`, and then extract the generated code as a string. Functorium abstracts this process into a utility called `SourceGeneratorTestRunner`, so that test code can obtain generation results with a single line: `_sut.Generate(input)`.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **CSharpCompilation을 이용한 테스트 환경 구축**
-   - Roslyn 컴파일러 API로 소스 생성기를 실행하는 방법
-2. **SourceGeneratorTestRunner 유틸리티 이해**
-   - 어셈블리 참조 관리와 생성 결과 추출 과정
-3. **테스트 프로젝트 구성**
-   - 필요한 NuGet 패키지와 프로젝트 참조 설정
+### Core Learning Objectives
+1. **Building a test environment using CSharpCompilation**
+   - How to run a source generator using the Roslyn compiler API
+2. **Understanding the SourceGeneratorTestRunner utility**
+   - Assembly reference management and generation result extraction process
+3. **Test project configuration**
+   - Required NuGet packages and project reference setup
 
 ---
 
-## 소스 생성기 테스트의 특수성
+## The Uniqueness of Source Generator Testing
 
-소스 생성기는 컴파일 타임에 실행되므로 일반 단위 테스트와 다른 접근이 필요합니다.
+Source generators run at compile time, so they require a different approach than regular unit tests.
 
 ```
-일반 단위 테스트
-================
-입력 → 메서드 호출 → 출력 검증
-
-소스 생성기 테스트
+Regular Unit Tests
 ==================
-입력 소스 코드 → 컴파일 → 생성된 코드 검증
+Input -> Method call -> Verify output
+
+Source Generator Tests
+======================
+Input source code -> Compile -> Verify generated code
 ```
 
 ---
 
-## SourceGeneratorTestRunner 구현
+## SourceGeneratorTestRunner Implementation
 
-### 전체 구조
+### Overall Structure
 
 ```csharp
 // Functorium.Testing/Actions/SourceGenerators/SourceGeneratorTestRunner.cs
@@ -47,12 +47,12 @@ using Shouldly;
 namespace Functorium.Testing.SourceGenerators;
 
 /// <summary>
-/// 소스 생성기 테스트를 위한 유틸리티 클래스.
-/// IIncrementalGenerator를 테스트 환경에서 실행하고 결과를 반환합니다.
+/// Utility class for source generator testing.
+/// Runs IIncrementalGenerator in a test environment and returns results.
 /// </summary>
 public static class SourceGeneratorTestRunner
 {
-    // 테스트에서 항상 참조해야 하는 필수 어셈블리 타입 목록
+    // List of required assembly types that must always be referenced in tests
     private static readonly Type[] RequiredTypes =
     [
         typeof(object),                                        // System.Runtime
@@ -62,40 +62,40 @@ public static class SourceGeneratorTestRunner
     ];
 
     /// <summary>
-    /// 소스 생성기를 실행하고 생성된 코드를 반환합니다.
+    /// Runs the source generator and returns the generated code.
     /// </summary>
     public static string? Generate<TGenerator>(this TGenerator generator, string sourceCode)
         where TGenerator : IIncrementalGenerator, new()
     {
-        // 구현...
+        // Implementation...
     }
 }
 ```
 
 ---
 
-## 테스트 실행 흐름
+## Test Execution Flow
 
-### 1. Syntax Tree 생성
+### 1. Syntax Tree Creation
 
 ```csharp
-// 소스 코드에서 Syntax Tree 생성
+// Create Syntax Tree from source code
 var syntaxTree = CSharpSyntaxTree.ParseText(sourceCode);
 ```
 
-입력 소스 코드를 Roslyn이 이해할 수 있는 형태로 변환합니다.
+Converts the input source code into a form that Roslyn can understand.
 
-### 2. 필수 어셈블리 참조
+### 2. Required Assembly References
 
 ```csharp
-// 필수 어셈블리를 먼저 추가 (순서 보장)
+// Add required assemblies first (order guaranteed)
 var requiredReferences = RequiredTypes
     .Select(t => t.Assembly)
     .Distinct()
     .Select(assembly => MetadataReference.CreateFromFile(assembly.Location))
     .Cast<MetadataReference>();
 
-// 현재 로드된 어셈블리 중 동적이 아닌 것들을 참조로 변환
+// Convert currently loaded non-dynamic assemblies to references
 var otherReferences = AppDomain
     .CurrentDomain
     .GetAssemblies()
@@ -104,53 +104,53 @@ var otherReferences = AppDomain
     .Select(assembly => MetadataReference.CreateFromFile(assembly.Location))
     .Cast<MetadataReference>();
 
-// 필수 참조를 먼저, 그 다음 나머지 참조
+// Required references first, then other references
 var references = requiredReferences.Concat(otherReferences);
 ```
 
-### 3. Compilation 생성
+### 3. Compilation Creation
 
 ```csharp
 var compilation = CSharpCompilation.Create(
-    "SourceGeneratorTests",     // 생성할 어셈블리 이름
-    [syntaxTree],               // 소스
-    references,                 // 참조
+    "SourceGeneratorTests",     // Assembly name to create
+    [syntaxTree],               // Sources
+    references,                 // References
     new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 ```
 
-### 4. 소스 생성기 실행
+### 4. Source Generator Execution
 
 ```csharp
-// 컴파일: IIncrementalGenerator 소스 생성기 호출
+// Compile: invoke IIncrementalGenerator source generator
 CSharpGeneratorDriver
     .Create(generator)
     .RunGeneratorsAndUpdateCompilation(
         compilation,
-        out var outputCompilation,          // 소스 생성기 결과: 소스
-        out var diagnostics);               // 소스 생성기 진단: 경고, 에러
+        out var outputCompilation,          // Source generator result: sources
+        out var diagnostics);               // Source generator diagnostics: warnings, errors
 ```
 
-### 5. 결과 검증
+### 5. Result Verification
 
 ```csharp
-// 소스 생성기 진단(컴파일러 에러)
+// Source generator diagnostics (compiler errors)
 diagnostics
     .Where(d => d.Severity == DiagnosticSeverity.Error)
     .ShouldBeEmpty();
 
-// 소스 생성기 결과(컴파일러 결과)
+// Source generator results (compiler output)
 return outputCompilation
     .SyntaxTrees
-    .Skip(1)                // [0] 원본 소스 SyntaxTree 제외
+    .Skip(1)                // [0] Exclude original source SyntaxTree
     .LastOrDefault()?
     .ToString();
 ```
 
 ---
 
-## 테스트 프로젝트 구성
+## Test Project Configuration
 
-### 프로젝트 참조
+### Project References
 
 ```xml
 <!-- Tests/Functorium.Tests.Unit/Functorium.Tests.Unit.csproj -->
@@ -164,7 +164,7 @@ return outputCompilation
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- 테스트 프레임워크 -->
+    <!-- Test framework -->
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.0.1" />
@@ -172,35 +172,35 @@ return outputCompilation
     <!-- Assertion -->
     <PackageReference Include="Shouldly" Version="4.3.0" />
 
-    <!-- 스냅샷 테스트 -->
+    <!-- Snapshot testing -->
     <PackageReference Include="Verify.Xunit" Version="28.9.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- 테스트 유틸리티 -->
+    <!-- Test utilities -->
     <ProjectReference Include="..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
 
-    <!-- 테스트 대상 소스 생성기 -->
+    <!-- Source generator under test -->
     <ProjectReference Include="..\..\Src\Functorium.SourceGenerators\Functorium.SourceGenerators.csproj" />
   </ItemGroup>
 
 </Project>
 ```
 
-### NuGet 패키지
+### NuGet Packages
 
-| 패키지 | 용도 |
-|--------|------|
-| `xunit` | 테스트 프레임워크 |
+| Package | Purpose |
+|---------|---------|
+| `xunit` | Test framework |
 | `Shouldly` | Fluent Assertion |
-| `Verify.Xunit` | 스냅샷 테스트 |
-| `Microsoft.CodeAnalysis.CSharp` | Roslyn 컴파일러 |
+| `Verify.Xunit` | Snapshot testing |
+| `Microsoft.CodeAnalysis.CSharp` | Roslyn compiler |
 
 ---
 
-## 기본 테스트 작성
+## Writing Basic Tests
 
-### 테스트 클래스 구조
+### Test Class Structure
 
 ```csharp
 // ObservablePortGeneratorTests.cs
@@ -252,25 +252,25 @@ public sealed class ObservablePortGeneratorTests
 }
 ```
 
-### 입력 소스 코드 패턴
+### Input Source Code Pattern
 
 ```csharp
 string input = """
-    // 1. 필요한 using 문
+    // 1. Required using statements
     using Functorium.Adapters.SourceGenerators;
     using Functorium.Abstractions.Observabilities;
     using LanguageExt;
 
-    // 2. 네임스페이스
+    // 2. Namespace
     namespace TestNamespace;
 
-    // 3. 인터페이스 정의 (IObservablePort 상속)
+    // 3. Interface definition (inheriting IObservablePort)
     public interface ITestAdapter : IObservablePort
     {
         FinT<IO, int> GetValue();
     }
 
-    // 4. [GenerateObservablePort] 속성 적용
+    // 4. Apply [GenerateObservablePort] attribute
     [GenerateObservablePort]
     public class TestAdapter : ITestAdapter
     {
@@ -282,22 +282,22 @@ string input = """
 
 ---
 
-## 확장 메서드 활용
+## Using Extension Methods
 
-### Generate 메서드 사용
+### Using the Generate Method
 
 ```csharp
-// SourceGeneratorTestRunner의 확장 메서드
+// SourceGeneratorTestRunner extension method
 string? actual = _sut.Generate(input);
 
-// 내부적으로:
+// Internally:
 // 1. CSharpSyntaxTree.ParseText(input)
 // 2. CSharpCompilation.Create(...)
 // 3. CSharpGeneratorDriver.Create(_sut).RunGeneratorsAndUpdateCompilation(...)
-// 4. 생성된 SyntaxTree의 ToString() 반환
+// 4. Returns ToString() of generated SyntaxTree
 ```
 
-### Null 결과 처리
+### Null Result Handling
 
 ```csharp
 [Fact]
@@ -309,28 +309,28 @@ public void Should_Return_Null_When_NoAttributeApplied()
 
     string? actual = _sut.Generate(input);
 
-    // [GenerateObservablePort] 속성이 없으면 생성 안 됨
+    // No generation when [GenerateObservablePort] attribute is absent
     actual.ShouldBeNull();
 }
 ```
 
 ---
 
-## 테스트 실행
+## Test Execution
 
 ### Visual Studio
 
 ```
-Test Explorer → Run All Tests
+Test Explorer -> Run All Tests
 ```
 
-### 명령줄
+### Command Line
 
 ```bash
 dotnet test Tests/Functorium.Tests.Unit/Functorium.Tests.Unit.csproj
 ```
 
-### 특정 테스트만 실행
+### Running Specific Tests Only
 
 ```bash
 dotnet test --filter "FullyQualifiedName~ObservablePortGeneratorTests"
@@ -338,25 +338,25 @@ dotnet test --filter "FullyQualifiedName~ObservablePortGeneratorTests"
 
 ---
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-소스 생성기 테스트의 핵심은 Roslyn 컴파일 파이프라인을 테스트 환경에서 재현하는 것입니다. `SourceGeneratorTestRunner`가 Syntax Tree 생성, 어셈블리 참조 수집, Compilation 생성, Generator 실행의 전 과정을 캡슐화하므로, 테스트 코드는 입력과 출력에만 집중할 수 있습니다. 생성된 코드의 검증에는 `Verify` 스냅샷 테스트와 `Shouldly` assertion을 함께 사용합니다.
+The key to source generator testing is reproducing the Roslyn compilation pipeline in a test environment. `SourceGeneratorTestRunner` encapsulates the entire process of Syntax Tree creation, assembly reference collection, Compilation creation, and Generator execution, so test code can focus solely on input and output. `Verify` snapshot tests and `Shouldly` assertions are used together for verifying generated code.
 
 ---
 
 ## FAQ
 
-### Q1: `SourceGeneratorTestRunner`에서 `RequiredTypes`에 타입을 추가해야 하는 기준은 무엇인가요?
-**A**: 입력 소스 코드에서 사용하는 외부 타입의 어셈블리가 컴파일에 참조되어야 합니다. `LanguageExt.IO`, `FinT<,>`, `ILogger` 등 ObservablePortGenerator가 분석하는 코드에 등장하는 타입들의 어셈블리를 `RequiredTypes`에 등록하면, `MetadataReference.CreateFromFile()`로 자동 수집됩니다. 테스트 입력에 새로운 외부 타입이 추가되면 이 배열도 업데이트해야 합니다.
+### Q1: What is the criterion for adding types to `RequiredTypes` in `SourceGeneratorTestRunner`?
+**A**: Assemblies of external types used in the input source code must be referenced in the compilation. By registering assemblies of types that appear in code analyzed by ObservablePortGenerator -- such as `LanguageExt.IO`, `FinT<,>`, and `ILogger` -- in `RequiredTypes`, they are automatically collected via `MetadataReference.CreateFromFile()`. When new external types are added to test inputs, this array must also be updated.
 
-### Q2: `outputCompilation.SyntaxTrees.Skip(1)`에서 첫 번째 트리를 건너뛰는 이유는 무엇인가요?
-**A**: `SyntaxTrees`의 첫 번째 항목은 테스트에서 입력한 원본 소스 코드입니다. 소스 생성기가 추가한 코드는 그 이후에 위치하므로, `Skip(1).LastOrDefault()`로 마지막 생성 파일(일반적으로 Observable 클래스 코드)을 가져옵니다. 마커 Attribute도 생성 파일에 포함되므로, 마지막 파일이 실제 생성 코드가 됩니다.
+### Q2: Why does `outputCompilation.SyntaxTrees.Skip(1)` skip the first tree?
+**A**: The first item in `SyntaxTrees` is the original source code provided as test input. Code added by the source generator comes after it, so `Skip(1).LastOrDefault()` retrieves the last generated file (typically the Observable class code). Since the marker Attribute is also included in generated files, the last file is the actual generation code.
 
-### Q3: 소스 생성기 테스트에서 컴파일 오류가 발생하면 어떻게 디버깅하나요?
-**A**: `diagnostics`에서 `DiagnosticSeverity.Error`를 필터링하면 오류 메시지를 확인할 수 있습니다. 흔한 원인은 입력 소스 코드에서 사용하는 타입의 어셈블리가 `RequiredTypes`에 누락된 경우, 또는 입력 코드 자체에 구문 오류가 있는 경우입니다. `outputCompilation.GetDiagnostics()`로 전체 진단 목록을 출력하면 원인을 특정할 수 있습니다.
+### Q3: How do you debug when compilation errors occur in source generator tests?
+**A**: Filtering `DiagnosticSeverity.Error` from `diagnostics` reveals the error messages. Common causes include missing assemblies for types used in input source code from `RequiredTypes`, or syntax errors in the input code itself. Printing the complete diagnostic list with `outputCompilation.GetDiagnostics()` helps pinpoint the cause.
 
 ---
 
-테스트 환경이 갖추어졌으니, 생성된 코드 전체를 파일로 저장하고 비교하는 Verify 스냅샷 테스트 방식을 알아봅니다.
+With the test environment in place, we will learn about the Verify snapshot testing approach that saves and compares the entire generated code as a file.
 
-→ [06. Verify 스냅샷 테스트](../06-Verify-Snapshot-Testing/)
+-> [06. Verify Snapshot Testing](../06-Verify-Snapshot-Testing/)

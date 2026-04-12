@@ -102,6 +102,6 @@ dotnet run
 
 ## Next Steps
 
-금융 도메인의 value object를 학습합니다.
+Learn about value objects in the finance domain.
 
-→ [5.2 금융 도메인](../../02-Finance-Domain/FinanceDomain/)
+→ [5.2 Finance Domain](../../02-Finance-Domain/FinanceDomain/)

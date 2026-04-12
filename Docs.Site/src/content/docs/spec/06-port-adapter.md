@@ -10,32 +10,32 @@ This is the API specification for Port interfaces, Adapter implementation base c
 
 | Type | Namespace | Description |
 |------|-------------|------|
-| `IObservablePort` | `Functorium.Abstractions.Observabilities` | 모든 Port/Adapter의 기반 인터페이스 (Observability category 제공) |
-| `IRepository<TAggregate, TId>` | `Functorium.Domains.Repositories` | Aggregate Root 단위 Repository CRUD 계약 |
-| `IQueryPort` | `Functorium.Applications.Queries` | 비제네릭 QueryPort 마커 인터페이스 |
-| `IQueryPort<TEntity, TDto>` | `Functorium.Applications.Queries` | Specification 기반 조회 + 페이지네이션 계약 |
-| `PageRequest` | `Functorium.Applications.Queries` | Offset 기반 페이지네이션 요청 |
-| `PagedResult<T>` | `Functorium.Applications.Queries` | Offset 기반 페이지네이션 결과 |
-| `CursorPageRequest` | `Functorium.Applications.Queries` | Keyset(Cursor) 기반 페이지네이션 요청 |
-| `CursorPagedResult<T>` | `Functorium.Applications.Queries` | Keyset(Cursor) 기반 페이지네이션 결과 |
-| `SortExpression` | `Functorium.Applications.Queries` | 다중 필드 정렬 표현 |
-| `SortField` | `Functorium.Applications.Queries` | 정렬 필드 + 방향 쌍 |
-| `SortDirection` | `Functorium.Applications.Queries` | 정렬 방향 SmartEnum (`Ascending`, `Descending`) |
-| `Specification<T>` | `Functorium.Domains.Specifications` | Specification 패턴 추상 기반 클래스 |
-| `ExpressionSpecification<T>` | `Functorium.Domains.Specifications` | Expression Tree 기반 Specification 추상 클래스 |
-| `IExpressionSpec<T>` | `Functorium.Domains.Specifications` | Expression Tree 제공 능력을 나타내는 인터페이스 |
-| `PropertyMap<TEntity, TModel>` | `Functorium.Domains.Specifications.Expressions` | Entity-Model 간 Expression 자동 변환 프로퍼티 매핑 |
-| `SpecificationExpressionResolver` | `Functorium.Domains.Specifications.Expressions` | Specification에서 Expression Tree를 추출/합성하는 유틸리티 |
-| `EfCoreRepositoryBase<TAggregate, TId, TModel>` | `Functorium.Adapters.Repositories` | EF Core Repository 공통 베이스 클래스 |
-| `InMemoryRepositoryBase<TAggregate, TId>` | `Functorium.Adapters.Repositories` | InMemory Repository 공통 베이스 클래스 |
-| `DapperQueryBase<TEntity, TDto>` | `Functorium.Adapters.Repositories` | Dapper 기반 QueryAdapter 공통 베이스 클래스 |
-| `InMemoryQueryBase<TEntity, TDto>` | `Functorium.Adapters.Repositories` | InMemory QueryAdapter 공통 베이스 클래스 |
-| `DapperSpecTranslator<TEntity>` | `Functorium.Adapters.Repositories` | Specification → SQL WHERE 절 번역 레지스트리 |
-| `IHasStringId` | `Functorium.Adapters.Repositories` | EF Core 모델의 string Id 공통 인터페이스 |
-| `ObservablePortRegistration` | `Functorium.Abstractions.Registrations` | Observable Port DI 등록 확장 메서드 |
-| `OptionsConfigurator` | `Functorium.Adapters.Abstractions.Options` | FluentValidation 기반 옵션 유효성 검사 등록 |
-| `GenerateObservablePortAttribute` | `Functorium.Adapters.SourceGenerators` | Observable 래퍼 자동 생성 어트리뷰트 |
-| `ObservablePortIgnoreAttribute` | `Functorium.Adapters.SourceGenerators` | Observable 래퍼 생성 제외 어트리뷰트 |
+| `IObservablePort` | `Functorium.Abstractions.Observabilities` | Base interface for all Ports/Adapters (provides Observability category) |
+| `IRepository<TAggregate, TId>` | `Functorium.Domains.Repositories` | Aggregate Root level Repository CRUD contract |
+| `IQueryPort` | `Functorium.Applications.Queries` | Non-generic QueryPort marker interface |
+| `IQueryPort<TEntity, TDto>` | `Functorium.Applications.Queries` | Specification-based query + pagination contract |
+| `PageRequest` | `Functorium.Applications.Queries` | Offset-based pagination request |
+| `PagedResult<T>` | `Functorium.Applications.Queries` | Offset-based pagination result |
+| `CursorPageRequest` | `Functorium.Applications.Queries` | Keyset(Cursor)-based pagination request |
+| `CursorPagedResult<T>` | `Functorium.Applications.Queries` | Keyset(Cursor)-based pagination result |
+| `SortExpression` | `Functorium.Applications.Queries` | Multi-field sort expression |
+| `SortField` | `Functorium.Applications.Queries` | Sort field + direction pair |
+| `SortDirection` | `Functorium.Applications.Queries` | Sort direction SmartEnum (`Ascending`, `Descending`) |
+| `Specification<T>` | `Functorium.Domains.Specifications` | Specification pattern abstract base class |
+| `ExpressionSpecification<T>` | `Functorium.Domains.Specifications` | Expression Tree-based Specification abstract class |
+| `IExpressionSpec<T>` | `Functorium.Domains.Specifications` | Interface indicating Expression Tree provision capability |
+| `PropertyMap<TEntity, TModel>` | `Functorium.Domains.Specifications.Expressions` | Entity-Model Expression auto-conversion property mapping |
+| `SpecificationExpressionResolver` | `Functorium.Domains.Specifications.Expressions` | Utility for extracting/composing Expression Trees from Specifications |
+| `EfCoreRepositoryBase<TAggregate, TId, TModel>` | `Functorium.Adapters.Repositories` | EF Core Repository common base class |
+| `InMemoryRepositoryBase<TAggregate, TId>` | `Functorium.Adapters.Repositories` | InMemory Repository common base class |
+| `DapperQueryBase<TEntity, TDto>` | `Functorium.Adapters.Repositories` | Dapper-based QueryAdapter common base class |
+| `InMemoryQueryBase<TEntity, TDto>` | `Functorium.Adapters.Repositories` | InMemory QueryAdapter common base class |
+| `DapperSpecTranslator<TEntity>` | `Functorium.Adapters.Repositories` | Specification to SQL WHERE clause translation registry |
+| `IHasStringId` | `Functorium.Adapters.Repositories` | Common string Id interface for EF Core models |
+| `ObservablePortRegistration` | `Functorium.Abstractions.Registrations` | Observable Port DI registration extension methods |
+| `OptionsConfigurator` | `Functorium.Adapters.Abstractions.Options` | FluentValidation-based options validation registration |
+| `GenerateObservablePortAttribute` | `Functorium.Adapters.SourceGenerators` | Observable wrapper auto-generation attribute |
+| `ObservablePortIgnoreAttribute` | `Functorium.Adapters.SourceGenerators` | Observable wrapper generation exclusion attribute |
 
 ---
 
@@ -62,7 +62,7 @@ public interface IObservablePort
 IObservablePort
 ├── IRepository<TAggregate, TId>    — Aggregate Root CRUD (Domain Layer)
 ├── IQueryPort                      — Non-generic marker (Application Layer)
-│   └── IQueryPort<TEntity, TDto>   — Specification 기반 조회 (Application Layer)
+│   └── IQueryPort<TEntity, TDto>   — Specification-based query (Application Layer)
 └── (User-defined Port)               — External API, Messaging, etc.
 ```
 
@@ -387,7 +387,7 @@ An Expression Tree-based Specification abstract class. Implementing `ToExpressio
 public abstract class ExpressionSpecification<T> : Specification<T>, IExpressionSpec<T>
 {
     public abstract Expression<Func<T, bool>> ToExpression();
-    public sealed override bool IsSatisfiedBy(T entity);  // Expression 컴파일 + 캐싱
+    public sealed override bool IsSatisfiedBy(T entity);  // Expression compile + caching
 }
 ```
 
@@ -464,7 +464,7 @@ public static class SpecificationExpressionResolver
 
 ### EfCoreRepositoryBase\<TAggregate, TId, TModel\>
 
-EF Core Repository의 공통 베이스 클래스입니다. 생성자에서 선언한 Include가 `ReadQuery()`를 통해 모든 읽기 쿼리에 자동 적용되어 N+1 문제를 구조적으로 방지합니다.
+Common base class for EF Core Repositories. Includes declared in the constructor are automatically applied to all read queries through `ReadQuery()`, structurally preventing N+1 problems.
 
 ```csharp
 namespace Functorium.Adapters.Repositories;
@@ -486,53 +486,53 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 
 | Type Parameter | Constraint | Description |
 |---------------|------|------|
-| `TAggregate` | `AggregateRoot<TId>` | Aggregate Root 타입 |
-| `TId` | `struct, IEntityId<TId>` | Ulid 기반 EntityId 타입 |
-| `TModel` | `class, IHasStringId` | EF Core 엔티티 모델 (string Id 필수) |
+| `TAggregate` | `AggregateRoot<TId>` | Aggregate Root type |
+| `TId` | `struct, IEntityId<TId>` | Ulid-based EntityId type |
+| `TModel` | `class, IHasStringId` | EF Core entity model (string Id required) |
 
-#### Constructors 파라미터
+#### Constructor Parameters
 
 | Parameter | Type | Description |
 |----------|------|------|
-| `eventCollector` | `IDomainEventCollector` | 도메인 이벤트 수집기 |
-| `applyIncludes` | `Func<IQueryable<TModel>, IQueryable<TModel>>?` | Navigation Property Include 선언 (N+1 방지). `null`이면 Include 없음 |
-| `propertyMap` | `PropertyMap<TAggregate, TModel>?` | Specification → Model Expression 변환용 매핑. `BuildQuery`/`ExistsBySpec` 사용 시 필수 |
+| `eventCollector` | `IDomainEventCollector` | Domain event collector |
+| `applyIncludes` | `Func<IQueryable<TModel>, IQueryable<TModel>>?` | Navigation Property Include declaration (N+1 prevention). No Includes if `null` |
+| `propertyMap` | `PropertyMap<TAggregate, TModel>?` | Mapping for Specification to Model Expression conversion. Required when using `BuildQuery`/`ExistsBySpec` |
 
 #### Required Subclass Implementation
 
 | Member | Type | Description |
 |------|------|------|
 | `DbContext` | `DbContext` | EF Core DbContext (abstract property) |
-| `DbSet` | `DbSet<TModel>` | 엔티티 모델의 DbSet (abstract property) |
-| `ToDomain(model)` | `TAggregate` | Model → Domain 매핑 (abstract method) |
-| `ToModel(aggregate)` | `TModel` | Domain → Model 매핑 (abstract method) |
+| `DbSet` | `DbSet<TModel>` | Entity model's DbSet (abstract property) |
+| `ToDomain(model)` | `TAggregate` | Model to Domain mapping (abstract method) |
+| `ToModel(aggregate)` | `TModel` | Domain to Model mapping (abstract method) |
 
 #### Protected Infrastructure Members
 
 | Member | Type | Description |
 |------|------|------|
-| `EventCollector` | `IDomainEventCollector` | 도메인 이벤트 수집기 |
-| `PropertyMap` | `PropertyMap<TAggregate, TModel>?` | Specification → Model 프로퍼티 매핑 |
-| `IdBatchSize` | `int` (virtual, 기본 `500`) | SQL IN 절 파라미터 한계 방지를 위한 배치 크기 |
-| `ReadQuery()` | `IQueryable<TModel>` | Include가 자동 적용된 읽기 전용 쿼리 (`AsNoTracking`) |
-| `ReadQueryIgnoringFilters()` | `IQueryable<TModel>` | Include + 글로벌 필터 무시 읽기 쿼리 (Soft Delete 조회용) |
-| `BuildQuery(spec)` | `Fin<IQueryable<TModel>>` | Specification → Model Expression 쿼리 빌더 (PropertyMap 필수) |
-| `ExistsBySpec(spec)` | `FinT<IO, bool>` | Specification 기반 존재 여부 확인 (PropertyMap 필수) |
-| `ByIdPredicate(id)` | `Expression<Func<TModel, bool>>` | 단일 ID 매칭 Expression (virtual, `IHasStringId` 기반 기본 구현) |
-| `ByIdsPredicate(ids)` | `Expression<Func<TModel, bool>>` | 복수 ID 매칭 Expression (virtual, `IHasStringId` 기반 기본 구현) |
+| `EventCollector` | `IDomainEventCollector` | Domain event collector |
+| `PropertyMap` | `PropertyMap<TAggregate, TModel>?` | Specification to Model property mapping |
+| `IdBatchSize` | `int` (virtual, default `500`) | Batch size for preventing SQL IN clause parameter limit |
+| `ReadQuery()` | `IQueryable<TModel>` | Read-only query with Includes auto-applied (`AsNoTracking`) |
+| `ReadQueryIgnoringFilters()` | `IQueryable<TModel>` | Read query with Includes + global filter bypass (for Soft Delete queries) |
+| `BuildQuery(spec)` | `Fin<IQueryable<TModel>>` | Specification to Model Expression query builder (PropertyMap required) |
+| `ExistsBySpec(spec)` | `FinT<IO, bool>` | Specification-based existence check (PropertyMap required) |
+| `ByIdPredicate(id)` | `Expression<Func<TModel, bool>>` | Single ID matching Expression (virtual, default `IHasStringId`-based implementation) |
+| `ByIdsPredicate(ids)` | `Expression<Func<TModel, bool>>` | Multiple ID matching Expression (virtual, default `IHasStringId`-based implementation) |
 
 #### Error Helpers
 
 | Method | Description |
 |--------|------|
-| `NotFoundError(id)` | `AdapterErrorType.NotFound` 에러 생성. 실제 서브클래스 이름이 에러 코드에 포함 |
-| `PartialNotFoundError(requestedIds, foundAggregates)` | `AdapterErrorType.PartialNotFound` 에러 생성. 누락 ID 목록 포함 |
-| `NotConfiguredError(message)` | `AdapterErrorType.NotConfigured` 에러 생성 |
-| `NotSupportedError(currentValue, message)` | `AdapterErrorType.NotSupported` 에러 생성 |
+| `NotFoundError(id)` | Creates `AdapterErrorType.NotFound` error. Actual subclass name is included in the error code |
+| `PartialNotFoundError(requestedIds, foundAggregates)` | Creates `AdapterErrorType.PartialNotFound` error. Includes list of missing IDs |
+| `NotConfiguredError(message)` | Creates `AdapterErrorType.NotConfigured` error |
+| `NotSupportedError(currentValue, message)` | Creates `AdapterErrorType.NotSupported` error |
 
 #### IHasStringId
 
-EF Core 모델이 구현해야 하는 string Id 인터페이스입니다. `EfCoreRepositoryBase`의 `ByIdPredicate`/`ByIdsPredicate` 기본 구현을 제공합니다.
+String Id interface that EF Core models must implement. Provides default implementation for `EfCoreRepositoryBase`'s `ByIdPredicate`/`ByIdsPredicate`.
 
 ```csharp
 namespace Functorium.Adapters.Repositories;
@@ -545,7 +545,7 @@ public interface IHasStringId
 
 ### InMemoryRepositoryBase\<TAggregate, TId\>
 
-InMemory Repository의 공통 베이스 클래스입니다. `ConcurrentDictionary` 기반으로 `IRepository` 전체 CRUD를 기본 구현합니다.
+Common base class for InMemory Repositories. Provides default implementation of full `IRepository` CRUD based on `ConcurrentDictionary`.
 
 ```csharp
 namespace Functorium.Adapters.Repositories;
@@ -563,18 +563,18 @@ public abstract class InMemoryRepositoryBase<TAggregate, TId>
 
 | Member | Type | Description |
 |------|------|------|
-| `Store` | `ConcurrentDictionary<TId, TAggregate>` | 인메모리 저장소 (abstract property). 서브클래스에서 static 인스턴스 제공 |
+| `Store` | `ConcurrentDictionary<TId, TAggregate>` | In-memory store (abstract property). Subclass provides a static instance |
 
 #### Protected Members
 
 | Member | Type | Description |
 |------|------|------|
-| `EventCollector` | `IDomainEventCollector` | 도메인 이벤트 수집기 |
-| `RequestCategory` | `string` (virtual, 기본 `"Repository"`) | Observability category |
+| `EventCollector` | `IDomainEventCollector` | Domain event collector |
+| `RequestCategory` | `string` (virtual, default `"Repository"`) | Observability category |
 
 ### DapperQueryBase\<TEntity, TDto\>
 
-Dapper 기반 QueryAdapter의 공통 인프라입니다. 서브클래스는 SQL 선언과 WHERE 빌드만 담당합니다.
+Common infrastructure for Dapper-based QueryAdapters. Subclasses are responsible only for SQL declaration and WHERE building.
 
 ```csharp
 namespace Functorium.Adapters.Repositories;
@@ -593,39 +593,39 @@ public abstract class DapperQueryBase<TEntity, TDto>
 
 | Member | Type | Description |
 |------|------|------|
-| `SelectSql` | `string` | SELECT 쿼리 (FROM + JOIN까지, WHERE 제외) |
-| `CountSql` | `string` | COUNT 쿼리 (FROM + JOIN까지, WHERE 제외) |
-| `DefaultOrderBy` | `string` | 기본 정렬 절 (예: `"p.created_at DESC"`) |
-| `AllowedSortColumns` | `Dictionary<string, string>` | 허용된 정렬 컬럼 매핑 (DTO 필드명 → DB 컬럼명) |
+| `SelectSql` | `string` | SELECT query (up to FROM + JOIN, excluding WHERE) |
+| `CountSql` | `string` | COUNT query (up to FROM + JOIN, excluding WHERE) |
+| `DefaultOrderBy` | `string` | Default ORDER BY clause (e.g., `"p.created_at DESC"`) |
+| `AllowedSortColumns` | `Dictionary<string, string>` | Allowed sort column mapping (DTO field name to DB column name) |
 
 #### Protected Methods
 
 | Method | Description |
 |--------|------|
-| `BuildWhereClause(spec)` | Specification → SQL WHERE 절 변환. `DapperSpecTranslator` 주입 시 기본 구현 제공. 아니면 서브클래스에서 오버라이드 필수 |
-| `PaginationClause` | DB 방언별 Offset 페이지네이션 절 (virtual, 기본 `"LIMIT @PageSize OFFSET @Skip"`) |
-| `CursorPaginationClause` | DB 방언별 Keyset 페이지네이션 절 (virtual, 기본 `"LIMIT @PageSize"`) |
-| `GetCursorValue(item, fieldName)` | DTO에서 커서 값 추출 (virtual, Reflection 기반 기본 구현 + 캐싱) |
-| `Params(values)` | `DynamicParameters` 생성 헬퍼 (정적 메서드) |
+| `BuildWhereClause(spec)` | Specification to SQL WHERE clause conversion. Default implementation provided when `DapperSpecTranslator` is injected. Otherwise, subclass override is required |
+| `PaginationClause` | DB dialect-specific Offset pagination clause (virtual, default `"LIMIT @PageSize OFFSET @Skip"`) |
+| `CursorPaginationClause` | DB dialect-specific Keyset pagination clause (virtual, default `"LIMIT @PageSize"`) |
+| `GetCursorValue(item, fieldName)` | Extract cursor value from DTO (virtual, Reflection-based default implementation + caching) |
+| `Params(values)` | `DynamicParameters` creation helper (static method) |
 
 #### Public Methods
 
 | Method | Return Type | Description |
 |--------|-----------|------|
-| `Search(spec, page, sort)` | `FinT<IO, PagedResult<TDto>>` | Offset 기반 페이지네이션 검색 (COUNT + SELECT 멀티 쿼리) |
-| `SearchByCursor(spec, cursor, sort)` | `FinT<IO, CursorPagedResult<TDto>>` | Keyset 기반 검색 (`PageSize + 1` 전략으로 HasMore 판단) |
-| `Stream(spec, sort, ct)` | `IAsyncEnumerable<TDto>` | `QueryUnbufferedAsync`로 스트리밍 조회 (`DbConnection` 필수) |
+| `Search(spec, page, sort)` | `FinT<IO, PagedResult<TDto>>` | Offset-based pagination search (COUNT + SELECT multi-query) |
+| `SearchByCursor(spec, cursor, sort)` | `FinT<IO, CursorPagedResult<TDto>>` | Keyset-based search (`PageSize + 1` strategy for HasMore determination) |
+| `Stream(spec, sort, ct)` | `IAsyncEnumerable<TDto>` | Streaming query via `QueryUnbufferedAsync` (`DbConnection` required) |
 
 ### InMemoryQueryBase\<TEntity, TDto\>
 
-InMemory 기반 QueryAdapter의 공통 인프라입니다. `DapperQueryBase`의 InMemory 대응 베이스 클래스입니다.
+Common infrastructure for InMemory-based QueryAdapters. InMemory counterpart base class for `DapperQueryBase`.
 
 ```csharp
 namespace Functorium.Adapters.Repositories;
 
 public abstract class InMemoryQueryBase<TEntity, TDto>
 {
-    // (생성자 파라미터 없음)
+    // (No constructor parameters)
 }
 ```
 
@@ -633,21 +633,21 @@ public abstract class InMemoryQueryBase<TEntity, TDto>
 
 | Member | Type | Description |
 |------|------|------|
-| `DefaultSortField` | `string` | 기본 정렬 필드명 |
-| `GetProjectedItems(spec)` | `IEnumerable<TDto>` | 필터링 + DTO 프로젝션 (JOIN 로직 포함) |
-| `SortSelector(fieldName)` | `Func<TDto, object>` | 정렬 키 셀렉터 (필드명 → 셀렉터 함수) |
+| `DefaultSortField` | `string` | Default sort field name |
+| `GetProjectedItems(spec)` | `IEnumerable<TDto>` | Filtering + DTO projection (including JOIN logic) |
+| `SortSelector(fieldName)` | `Func<TDto, object>` | Sort key selector (field name to selector function) |
 
 #### Public Methods
 
 | Method | Return Type | Description |
 |--------|-----------|------|
 | `Search(spec, page, sort)` | `FinT<IO, PagedResult<TDto>>` | Offset-based pagination search |
-| `SearchByCursor(spec, cursor, sort)` | `FinT<IO, CursorPagedResult<TDto>>` | Keyset 기반 검색 |
-| `Stream(spec, sort, ct)` | `IAsyncEnumerable<TDto>` | 메모리 내 스트리밍 조회 |
+| `SearchByCursor(spec, cursor, sort)` | `FinT<IO, CursorPagedResult<TDto>>` | Keyset-based search |
+| `Stream(spec, sort, ct)` | `IAsyncEnumerable<TDto>` | In-memory streaming query |
 
 ### DapperSpecTranslator\<TEntity\>
 
-Specification을 SQL WHERE 절로 번역하는 레지스트리입니다. 엔티티 타입별로 한 번 구성하면 여러 Dapper 어댑터가 테이블 별칭만 달리하여 공유할 수 있습니다.
+A registry that translates Specifications to SQL WHERE clauses. Once configured per entity type, multiple Dapper adapters can share it with different table aliases.
 
 ```csharp
 namespace Functorium.Adapters.Repositories;
@@ -671,29 +671,29 @@ public sealed class DapperSpecTranslator<TEntity>
 
 | Method | Return Type | Description |
 |--------|-----------|------|
-| `WhenAll(handler)` | `DapperSpecTranslator<TEntity>` | `IsAll` (항등원) Specification 핸들러 등록 (Fluent API) |
-| `When<TSpec>(handler)` | `DapperSpecTranslator<TEntity>` | 특정 Specification 타입의 SQL 번역 핸들러 등록 (Fluent API) |
-| `Translate(spec, alias)` | `(string Where, DynamicParameters Params)` | Specification을 SQL WHERE 절로 번역 |
-| `Params(values)` | `DynamicParameters` | `DynamicParameters` 생성 헬퍼 (정적) |
-| `Prefix(tableAlias)` | `string` | 테이블 별칭 접두사 반환 (예: `"p"` → `"p."`, `""` → `""`) |
+| `WhenAll(handler)` | `DapperSpecTranslator<TEntity>` | Register `IsAll` (identity) Specification handler (Fluent API) |
+| `When<TSpec>(handler)` | `DapperSpecTranslator<TEntity>` | Register SQL translation handler for a specific Specification type (Fluent API) |
+| `Translate(spec, alias)` | `(string Where, DynamicParameters Params)` | Translates Specification to SQL WHERE clause |
+| `Params(values)` | `DynamicParameters` | `DynamicParameters` creation helper (static) |
+| `Prefix(tableAlias)` | `string` | Returns table alias prefix (e.g., `"p"` to `"p."`, `""` to `""`) |
 
 ---
 
 ## DI Registration (ObservablePortRegistration)
 
-`IObservablePort` 구현체를 DI 컨테이너에 등록하는 `IServiceCollection` 확장 메서드 모음입니다. `ActivatorUtilities.CreateInstance`를 사용하여 구현 타입의 생성자에 `ActivitySource`, `ILogger`, `IMeterFactory`를 자동 주입합니다.
+A collection of `IServiceCollection` extension methods for registering `IObservablePort` implementations in the DI container. Uses `ActivatorUtilities.CreateInstance` to auto-inject `ActivitySource`, `ILogger`, and `IMeterFactory` into implementation type constructors.
 
 ```csharp
 namespace Functorium.Abstractions.Registrations;
 
 public static class ObservablePortRegistration
 {
-    // 단일 인터페이스 등록
+    // Single interface registration
     public static IServiceCollection RegisterScopedObservablePort<TService, TImpl>(...);
     public static IServiceCollection RegisterTransientObservablePort<TService, TImpl>(...);
     public static IServiceCollection RegisterSingletonObservablePort<TService, TImpl>(...);
 
-    // 복수 인터페이스 → 단일 구현체 등록 (For 접미사)
+    // Multiple interfaces to single implementation registration (For suffix)
     public static IServiceCollection RegisterScopedObservablePortFor<T1, T2, TImpl>(...);
     public static IServiceCollection RegisterScopedObservablePortFor<T1, T2, T3, TImpl>(...);
     public static IServiceCollection RegisterScopedObservablePortFor<TImpl>(
@@ -715,29 +715,29 @@ public static class ObservablePortRegistration
 
 | Pattern | Description |
 |------|------|
-| `Register{Lifetime}ObservablePort<TService, TImpl>` | 단일 인터페이스를 하나의 구현체로 등록 |
-| `Register{Lifetime}ObservablePortFor<T1, T2, TImpl>` | 2개 인터페이스를 하나의 구현체로 등록 |
-| `Register{Lifetime}ObservablePortFor<T1, T2, T3, TImpl>` | 3개 인터페이스를 하나의 구현체로 등록 |
-| `Register{Lifetime}ObservablePortFor<TImpl>(params Type[])` | N개 인터페이스를 하나의 구현체로 등록 (4개 이상) |
+| `Register{Lifetime}ObservablePort<TService, TImpl>` | Register a single interface with one implementation |
+| `Register{Lifetime}ObservablePortFor<T1, T2, TImpl>` | Register 2 interfaces with one implementation |
+| `Register{Lifetime}ObservablePortFor<T1, T2, T3, TImpl>` | Register 3 interfaces with one implementation |
+| `Register{Lifetime}ObservablePortFor<TImpl>(params Type[])` | Register N interfaces with one implementation (4 or more) |
 
 ### Supported Lifetimes
 
-| Lifetime | 인스턴스 공유 범위 |
+| Lifetime | Instance sharing scope |
 |----------|-------------------|
-| `Scoped` | HTTP 요청당 1개 인스턴스 |
-| `Transient` | 요청될 때마다 새 인스턴스 |
-| `Singleton` | 애플리케이션 전체에서 1개 인스턴스 |
+| `Scoped` | One instance per HTTP request |
+| `Transient` | New instance per request |
+| `Singleton` | One instance for the entire application |
 
 ### Generic Constraints
 
-모든 서비스 인터페이스 타입 파라미터에는 `class, IObservablePort` 제약이 적용됩니다. `params Type[]` 오버로드는 런타임에 `IObservablePort` 구현 여부와 구현 클래스의 인터페이스 구현 여부를 검증합니다.
+All service interface type parameters have the `class, IObservablePort` constraint. The `params Type[]` overload validates `IObservablePort` implementation and interface implementation of the implementation class at runtime.
 
 ### For Suffix Behavior
 
-`For` 접미사가 붙은 메서드는 구현체를 먼저 등록한 뒤, 각 서비스 인터페이스가 `GetRequiredService<TImplementation>()`으로 동일한 인스턴스를 참조하도록 등록합니다. 이를 통해 하나의 구현체를 여러 인터페이스로 resolve할 수 있습니다.
+Methods with the `For` suffix first register the implementation, then register each service interface to reference the same instance via `GetRequiredService<TImplementation>()`. This enables resolving a single implementation through multiple interfaces.
 
 ```csharp
-// 사용 예시: IProductRepository와 IProductQuery를 동일한 Observable 구현체로 등록
+// Usage example: Register IProductRepository and IProductQuery with the same Observable implementation
 services.RegisterScopedObservablePortFor<IProductRepository, IProductQuery, ProductObservable>();
 ```
 
@@ -745,7 +745,7 @@ services.RegisterScopedObservablePortFor<IProductRepository, IProductQuery, Prod
 
 ## Options Configuration (OptionsConfigurator)
 
-FluentValidation 기반 옵션 유효성 검사를 DI에 등록하는 유틸리티입니다.
+A utility for registering FluentValidation-based options validation in DI.
 
 ```csharp
 namespace Functorium.Adapters.Abstractions.Options;
@@ -764,14 +764,14 @@ public static class OptionsConfigurator
 
 | Order | Behavior | Description |
 |------|------|------|
-| 1 | `IValidator<TOptions>` 등록 | `TValidator`를 Scoped로 DI 등록 |
-| 2 | `BindConfiguration` | `appsettings.json`의 `configurationSectionName` 섹션을 `TOptions`에 바인딩 |
-| 3 | FluentValidation 연결 | `IValidateOptions<TOptions>` 구현체를 통해 FluentValidation 검증 연결 |
-| 4 | `ValidateOnStart` | 프로그램 시작 시 옵션 유효성 검사 실행 |
-| 5 | `IStartupOptionsLogger` 자동 등록 | `TOptions`가 `IStartupOptionsLogger`를 구현하면 시작 시 옵션 값 로깅에 자동 등록 |
+| 1 | `IValidator<TOptions>` registration | Registers `TValidator` as Scoped in DI |
+| 2 | `BindConfiguration` | Binds the `configurationSectionName` section of `appsettings.json` to `TOptions` |
+| 3 | FluentValidation connection | Connects FluentValidation validation through `IValidateOptions<TOptions>` implementation |
+| 4 | `ValidateOnStart` | Run options validation at program startup |
+| 5 | `IStartupOptionsLogger` auto-registration | If `TOptions` implements `IStartupOptionsLogger`, auto-registers for options value logging at startup |
 
 ```csharp
-// 사용 예시
+// Usage example
 services.RegisterConfigureOptions<DatabaseOptions, DatabaseOptionsValidator>("Database");
 ```
 
@@ -781,7 +781,7 @@ services.RegisterConfigureOptions<DatabaseOptions, DatabaseOptionsValidator>("Da
 
 ### \[GenerateObservablePort\]
 
-Adapter 클래스에 이 어트리뷰트를 적용하면 Observable 래퍼 클래스가 소스 생성기에 의해 자동으로 생성됩니다. 생성되는 Observable은 OpenTelemetry 기반의 Tracing, Logging, Metrics를 제공합니다.
+Applying this attribute to an Adapter class causes the source generator to automatically generate an Observable wrapper class. The generated Observable provides OpenTelemetry-based Tracing, Logging, and Metrics.
 
 ```csharp
 namespace Functorium.Adapters.SourceGenerators;
@@ -790,30 +790,30 @@ namespace Functorium.Adapters.SourceGenerators;
 public sealed class GenerateObservablePortAttribute : Attribute;
 ```
 
-| 속성 | 값 | 설명 |
+| Property | Value | Description |
 |------|----|------|
-| `AttributeTargets` | `Class` | 클래스에만 적용 가능 |
-| `AllowMultiple` | `false` | 한 클래스에 한 번만 적용 |
-| `Inherited` | `false` | 파생 클래스에 상속되지 않음 |
+| `AttributeTargets` | `Class` | Can only be applied to classes |
+| `AllowMultiple` | `false` | Applied only once per class |
+| `Inherited` | `false` | Not inherited by derived classes |
 
-**사전 조건:**
-- 프로젝트에서 `Functorium.SourceGenerators` 패키지를 참조해야 합니다
-- Adapter 클래스의 인터페이스 메서드에 `virtual` 키워드가 필요합니다 (Pipeline이 override)
+**Prerequisites:**
+- The project must reference the `Functorium.SourceGenerators` package
+- Interface methods in the Adapter class require the `virtual` keyword (Pipeline overrides)
 
 ```csharp
-// 사용 예시
+// Usage example
 [GenerateObservablePort]
 public class ProductRepositoryInMemory
     : InMemoryRepositoryBase<Product, ProductId>, IProductRepository
 {
-    // virtual 메서드들...
+    // virtual methods...
 }
-// → ProductRepositoryInMemoryObservable 클래스가 자동 생성됨
+// -> ProductRepositoryInMemoryObservable class is auto-generated
 ```
 
 ### \[ObservablePortIgnore\]
 
-특정 메서드를 Observable 래퍼 생성에서 제외하는 어트리뷰트입니다. 관측성이 불필요한 헬퍼 메서드나 내부 메서드에 사용합니다.
+An attribute that excludes a specific method from Observable wrapper generation. Used for helper methods or internal methods where observability is unnecessary.
 
 ```csharp
 namespace Functorium.Adapters.SourceGenerators;
@@ -822,19 +822,19 @@ namespace Functorium.Adapters.SourceGenerators;
 public sealed class ObservablePortIgnoreAttribute : Attribute;
 ```
 
-| 속성 | 값 | 설명 |
+| Property | Value | Description |
 |------|----|------|
-| `AttributeTargets` | `Method` | 메서드에만 적용 가능 |
-| `AllowMultiple` | `false` | 한 메서드에 한 번만 적용 |
-| `Inherited` | `false` | 파생 클래스에 상속되지 않음 |
+| `AttributeTargets` | `Method` | Can only be applied to methods |
+| `AllowMultiple` | `false` | Applied only once per method |
+| `Inherited` | `false` | Not inherited by derived classes |
 
 ```csharp
-// 사용 예시
+// Usage example
 [GenerateObservablePort]
 public class ProductRepository : InMemoryRepositoryBase<Product, ProductId>, IProductRepository
 {
     [ObservablePortIgnore]
-    public virtual FinT<IO, int> GetCount() => ...;  // Observable 래퍼에서 제외
+    public virtual FinT<IO, int> GetCount() => ...;  // Excluded from Observable wrapper
 }
 ```
 
@@ -844,11 +844,11 @@ public class ProductRepository : InMemoryRepositoryBase<Product, ProductId>, IPr
 
 | Document | Description |
 |------|------|
-| [Port 아키텍처와 정의](../guides/adapter/12-ports) | Port 설계 원칙, 유형별 인터페이스 정의 패턴 가이드 |
-| [Adapter 구현](../guides/adapter/13-adapters) | Repository, External API, Query Adapter 유형별 구현 가이드 |
-| [Adapter Pipeline과 DI 등록](../guides/adapter/14a-adapter-pipeline-di) | Observable Pipeline 생성과 DI 등록 가이드 |
-| [Adapter 테스트](../guides/adapter/14b-adapter-testing) | Adapter 단위/통합 테스트 가이드 |
-| [엔티티와 애그리거트 사양](./01-entity-aggregate) | `AggregateRoot<TId>`, `IEntityId<TId>` API 사양 |
-| [에러 시스템 사양](./04-error-system) | `AdapterErrorType` (NotFound, PartialNotFound 등) API 사양 |
-| [관측 가능성 사양](./08-observability) | 3-Pillar 필드/태그 사양, Meter 정의 규칙 |
-| [소스 생성기 사양](./10-source-generators) | `ObservablePortGenerator` 소스 생성기 상세 사양 |
+| [Port Architecture and Definitions](../guides/adapter/12-ports) | Port design principles, interface definition pattern guide by type |
+| [Adapter Implementation](../guides/adapter/13-adapters) | Repository, External API, Query Adapter implementation guide by type |
+| [Adapter Pipeline and DI Registration](../guides/adapter/14a-adapter-pipeline-di) | Observable Pipeline creation and DI registration guide |
+| [Adapter Testing](../guides/adapter/14b-adapter-testing) | Adapter unit/integration testing guide |
+| [Entity and Aggregate Specification](./01-entity-aggregate) | `AggregateRoot<TId>`, `IEntityId<TId>` API specification |
+| [Error System Specification](./04-error-system) | `AdapterErrorType` (NotFound, PartialNotFound, etc.) API specification |
+| [Observability Specification](./08-observability) | 3-Pillar field/tag specification, Meter definition rules |
+| [Source Generator Specification](./10-source-generators) | `ObservablePortGenerator` source generator detailed specification |

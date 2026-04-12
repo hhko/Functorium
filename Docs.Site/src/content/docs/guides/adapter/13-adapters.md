@@ -2,42 +2,42 @@
 title: "Adapter Implementation"
 ---
 
-이 문서는 Port 인터페이스의 구현체인 Adapter를 유형별로 구현하는 가이드입니다. Port 정의는 [12-ports.md](./12-ports), Pipeline 생성과 DI 등록은 [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di)을 참조하세요.
+This document is a guide for implementing Adapters -- the implementations of Port interfaces -- by type. For Port definitions, see [12-ports.md](./12-ports); for Pipeline generation and DI registration, see [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di).
 
 ## Introduction
 
-"InMemory 구현에서 EF Core 구현으로 전환할 때 Usecase 코드를 수정해야 하는가?"
-"외부 HTTP API 호출의 예외를 어떻게 `Fin<T>` 에러로 변환하는가?"
-"`[GenerateObservablePort]`를 적용하면 로깅과 메트릭이 자동으로 생성된다는데, 어떤 구조인가?"
+"When switching from an InMemory implementation to an EF Core implementation, do we need to modify Use Case code?"
+"How do we convert exceptions from external HTTP API calls into `Fin<T>` errors?"
+"When `[GenerateObservablePort]` is applied, logging and metrics are automatically generated -- what is the structure?"
 
-Adapter는 Port 인터페이스의 구현체로, 실제 인프라 기술과 도메인 로직 사이의 다리 역할을 합니다. 이 문서는 Repository, External API, Messaging, Query Adapter의 유형별 구현 패턴과 에러 처리 전략을 다룹니다.
+An Adapter is the implementation of a Port interface, serving as a bridge between actual infrastructure technology and domain logic. This document covers implementation patterns by type -- Repository, External API, Messaging, Query Adapter -- and error handling strategies.
 
 ### What You Will Learn
 
 This document covers the following topics:
 
-1. **Adapter 공통 패턴** — `IO.lift`/`IO.liftAsync` 선택과 Mapper 패턴
-2. **Repository Adapter** — InMemory와 EF Core 구현의 비교
-3. **External API Adapter** — HTTP 상태 코드별 에러 매핑과 예외 처리
-4. **Messaging Adapter** — Request/Reply와 Fire-and-Forget 패턴
-5. **Query Adapter (CQRS Read)** — Dapper 기반 DTO 직접 반환
+1. **Common Adapter Patterns** — Choosing between `IO.lift`/`IO.liftAsync` and the Mapper pattern
+2. **Repository Adapter** — Comparison of InMemory and EF Core implementations
+3. **External API Adapter** — Error mapping by HTTP status code and exception handling
+4. **Messaging Adapter** — Request/Reply and Fire-and-Forget patterns
+5. **Query Adapter (CQRS Read)** — Direct DTO return with Dapper
 
 ### Prerequisites
 
 A basic understanding of the following concepts is needed to understand this document:
 
-- [Port 아키텍처와 정의](./12-ports) — Port 인터페이스 정의 방법
-- [에러 시스템: 기초와 네이밍](../domain/08a-error-system) — `Fin<T>`, `FinT<IO, T>` 반환 패턴
-- [Entity/Aggregate 핵심 패턴](../domain/06b-entity-aggregate-core) — `CreateFromValidated()` ORM 복원 패턴
+- [Port Architecture and Definitions](./12-ports) — How to define Port interfaces
+- [Error System: Basics and Naming](../domain/08a-error-system) — `Fin<T>`, `FinT<IO, T>` return patterns
+- [Entity/Aggregate Core Patterns](../domain/06b-entity-aggregate-core) — `CreateFromValidated()` ORM restoration pattern
 
-> **Adapter는 "순수한 비즈니스 로직"과 "인프라 기술 세부사항"을 분리하는 경계입니다.** `IO.lift`로 래핑하고 `[GenerateObservablePort]`를 적용하면, 관측성은 자동으로 따라옵니다.
+> **An Adapter is the boundary that separates "pure business logic" from "infrastructure technology details."** Wrap with `IO.lift` and apply `[GenerateObservablePort]`, and observability follows automatically.
 
 ## Summary
 
 ### Key Commands
 
 ```csharp
-// Adapter 기본 구조 (베이스 클래스 상속)
+// Basic Adapter structure (inheriting base class)
 [GenerateObservablePort]
 public class InMemoryProductRepository
     : InMemoryRepositoryBase<Product, ProductId>, IProductRepository
@@ -46,99 +46,99 @@ public class InMemoryProductRepository
 
     public override FinT<IO, Product> GetById(ProductId id)
     {
-        return IO.lift(() => { /* 비즈니스 로직 */ });
+        return IO.lift(() => { /* business logic */ });
     }
 }
 
-// 동기 작업: IO.lift
+// Synchronous operation: IO.lift
 return IO.lift(() => Fin.Succ(value));
 
-// 비동기 작업: IO.liftAsync
+// Asynchronous operation: IO.liftAsync
 return IO.liftAsync(async () => { var result = await ...; return Fin.Succ(result); });
 
-// 에러 반환
+// Error return
 return Fin.Fail<T>(AdapterError.For<TAdapter>(errorType, context, message));
 ```
 
 ### Key Procedures
 
-1. `[GenerateObservablePort]` 어트리뷰트를 클래스에 적용
-2. Port 인터페이스 구현 및 `RequestCategory` 프로퍼티 정의
-3. 모든 인터페이스 메서드에 `virtual` 키워드 추가
-4. `IO.lift()` (동기) 또는 `IO.liftAsync()` (비동기)로 비즈니스 로직 래핑
-5. 성공은 `Fin.Succ(value)`, 실패는 `AdapterError.For<T>(...)` 사용
-6. 필요 시 Mapper 클래스를 `internal`로 정의하여 도메인/기술 모델 변환
+1. Apply `[GenerateObservablePort]` attribute to the class
+2. Implement Port interface and define the `RequestCategory` property
+3. Add `virtual` keyword to all interface methods
+4. Wrap business logic with `IO.lift()` (sync) or `IO.liftAsync()` (async)
+5. Use `Fin.Succ(value)` for success, `AdapterError.For<T>(...)` for failure
+6. When needed, define Mapper classes as `internal` for domain/technical model conversion
 
 ### Key Concepts
 
 | Concept | Description |
 |------|------|
-| `[GenerateObservablePort]` | Source Generator가 Observability Pipeline을 자동 생성하는 어트리뷰트 |
-| `IO.lift` / `IO.liftAsync` | 동기/비동기 작업을 `FinT<IO, T>`로 래핑하는 메서드 |
-| `virtual` 키워드 | Pipeline이 메서드를 override하기 위해 필수 |
-| `RequestCategory` | Observability 로그에서 사용할 카테고리 (`"Repository"`, `"ExternalApi"` 등) |
-| Mapper 패턴 | 도메인 모델과 기술 모델(POCO, DTO) 간 변환을 담당하는 `internal` 클래스 |
-| `AdapterError` | Adapter 레이어 전용 에러 타입 (`For<T>`, `FromException<T>`) |
+| `[GenerateObservablePort]` | Attribute that triggers Source Generator to auto-generate Observability Pipeline |
+| `IO.lift` / `IO.liftAsync` | Methods that wrap sync/async operations into `FinT<IO, T>` |
+| `virtual` keyword | Required for Pipeline to override methods |
+| `RequestCategory` | Category used in Observability logs (`"Repository"`, `"ExternalApi"`, etc.) |
+| Mapper pattern | `internal` class responsible for conversion between domain models and technical models (POCO, DTO) |
+| `AdapterError` | Adapter layer-specific error type (`For<T>`, `FromException<T>`) |
 
 ---
 
 ## Why the Adapter Pattern
 
-애플리케이션이 데이터베이스, 외부 API, 메시징 시스템과 직접 결합되면 두 가지 문제가 발생합니다. 첫째, 인프라 기술을 변경할 때 비즈니스 로직까지 수정해야 합니다. 둘째, 단위 테스트에서 실제 데이터베이스나 외부 서비스를 준비해야 하므로 테스트가 느리고 불안정해집니다.
+When an application is directly coupled to databases, external APIs, and messaging systems, two problems arise. First, changing infrastructure technology requires modifying business logic as well. Second, unit tests become slow and unreliable because they need actual databases or external services.
 
-Adapter 패턴은 이 결합을 끊습니다. Domain과 Application 계층은 Port 인터페이스만 알고, Adapter가 해당 인터페이스의 구현을 제공합니다. 테스트 시에는 InMemory 구현체로 대체하고, 프로덕션에서는 EF Core나 Dapper 기반 구현체를 사용합니다.
+The Adapter pattern breaks this coupling. The Domain and Application layers know only the Port interface, and the Adapter provides the implementation of that interface. During testing, an InMemory implementation is substituted, while in production, EF Core or Dapper-based implementations are used.
 
-Functorium은 여기에 Observability를 더합니다. `[GenerateObservablePort]` 어트리뷰트를 적용하면 Source Generator가 Adapter에 Logging, Metrics, Tracing을 자동으로 추가하는 Observable wrapper를 생성합니다. Adapter 코드에 관측 로직을 직접 작성할 필요가 없습니다.
+Functorium adds Observability on top of this. When the `[GenerateObservablePort]` attribute is applied, the Source Generator creates an Observable wrapper that automatically adds Logging, Metrics, and Tracing to the Adapter. There is no need to write observability logic directly in Adapter code.
 
-Adapter 패턴의 필요성을 이해했으니, 이제 유형별로 실제 구현 방법을 살펴보겠습니다.
+Now that we understand the necessity of the Adapter pattern, let's examine the actual implementation methods by type.
 
 ---
 
-## Activity 2: Adapter 구현
+## Activity 2: Adapter Implementation
 
-Adapter는 Port 인터페이스의 **구현체**입니다. `[GenerateObservablePort]` 어트리뷰트를 통해 Observability Pipeline이 자동 생성됩니다.
+An Adapter is the **implementation** of a Port interface. The Observability Pipeline is automatically generated through the `[GenerateObservablePort]` attribute.
 
-> **Source Generator 참고**: `[GenerateObservablePort]`는 Roslyn Incremental Source Generator로 구현되어 있어 빌드 시 증분 생성됩니다. Adapter 수가 많은 프로젝트에서는 `obj/GeneratedFiles/`에 생성된 코드를 확인하여 Pipeline이 올바르게 생성되었는지 검증하세요. `IO.lift`/`IO.liftAsync`로 래핑된 메서드만 Pipeline 대상이 되며, `virtual` 키워드가 없으면 Pipeline이 메서드를 오버라이드할 수 없습니다.
+> **Source Generator Note**: `[GenerateObservablePort]` is implemented as a Roslyn Incremental Source Generator, enabling incremental generation at build time. For projects with many Adapters, verify that the Pipeline was correctly generated by checking the generated code in `obj/GeneratedFiles/`. Only methods wrapped with `IO.lift`/`IO.liftAsync` are Pipeline targets, and without the `virtual` keyword, the Pipeline cannot override the method.
 
-### 공통 구현 체크리스트
+### Common Implementation Checklist
 
-모든 Adapter 구현에 필수인 항목입니다.
+Items required for all Adapter implementations.
 
-- [ ] `[GenerateObservablePort]` 어트리뷰트를 클래스에 적용했는가?
-- [ ] Port 인터페이스를 구현하는가?
-- [ ] `RequestCategory` 프로퍼티를 정의했는가?
-- [ ] 모든 인터페이스 메서드에 `virtual` 키워드를 추가했는가?
-- [ ] `IO.lift()` 또는 `IO.liftAsync()` 로 비즈니스 로직을 래핑했는가?
-- [ ] Mapper 클래스가 `internal`로 선언되어 있는가? (해당 시)
+- [ ] Has the `[GenerateObservablePort]` attribute been applied to the class?
+- [ ] Does it implement a Port interface?
+- [ ] Has the `RequestCategory` property been defined?
+- [ ] Has the `virtual` keyword been added to all interface methods?
+- [ ] Is the business logic wrapped with `IO.lift()` or `IO.liftAsync()`?
+- [ ] Is the Mapper class declared as `internal`? (if applicable)
 
-### 공통 패턴
+### Common Patterns
 
-모든 Adapter 유형에 공통으로 적용되는 패턴입니다. 유형별 Adapter 구현 전에 먼저 숙지하세요.
+These are patterns that apply commonly to all Adapter types. Familiarize yourself with these before implementing type-specific Adapters.
 
-#### IO.lift vs IO.liftAsync 판단
+#### IO.lift vs IO.liftAsync Decision
 
-모든 Adapter 메서드는 `FinT<IO, T>`를 반환하며, 내부 작업 유형에 따라 래핑 방식을 선택합니다.
+All Adapter methods return `FinT<IO, T>`, and the wrapping method is chosen based on the internal operation type.
 
-| 기준 | `IO.lift(() => { ... })` | `IO.liftAsync(async () => { ... })` |
+| Criteria | `IO.lift(() => { ... })` | `IO.liftAsync(async () => { ... })` |
 |------|--------------------------|--------------------------------------|
-| 작업 유형 | 동기 (sync) | 비동기 (async/await) |
-| 대표 사례 | In-Memory 저장소, 캐시 조회 | HTTP 호출, 메시지 전송, DB 비동기 쿼리 |
-| 반환 | `Fin<T>` | `Fin<T>` |
-| 사용 유형 | Repository (동기) | External API, Messaging |
+| Operation type | Synchronous (sync) | Asynchronous (async/await) |
+| Typical cases | In-Memory store, cache lookup | HTTP calls, message sending, async DB queries |
+| Return | `Fin<T>` | `Fin<T>` |
+| Usage type | Repository (sync) | External API, Messaging |
 
-**Decision Criteria**: 내부에서 `await`를 사용해야 하는가?
-- **예** → `IO.liftAsync`
-- **아니오** → `IO.lift`
+**Decision Criteria**: Does the internal logic require `await`?
+- **Yes** → `IO.liftAsync`
+- **No** → `IO.lift`
 
-> **Note**: EF Core 등 비동기 DB 접근 시에는 Repository에서도 `IO.liftAsync`를 사용합니다.
+> **Note**: For async DB access such as EF Core, `IO.liftAsync` is used in Repositories as well.
 
-#### 데이터 변환 (Mapper 패턴)
+#### Data Conversion (Mapper Pattern)
 
-Adapter 내부에서 Port의 도메인 모델과 기술 관심사 DTO 간의 변환을 처리합니다. Mapper 클래스는 반드시 `internal`로 선언합니다.
+Handles conversion between Port domain models and technology-concern DTOs inside the Adapter. Mapper classes must be declared as `internal`.
 
 ##### Infrastructure Adapter (HTTP API)
 
-The key point to note in the following code is Mapper를 통해 Port Request를 Query Parameter로, Infrastructure DTO를 Port Response로 변환하는 ACL(Anti-Corruption Layer) 구조입니다.
+The key point to note in the following code is the ACL (Anti-Corruption Layer) structure that converts Port Request to Query Parameters and Infrastructure DTO to Port Response through the Mapper.
 
 ```csharp
 // Adapters.Infrastructure/Apis/CriteriaApi/CriteriaApiService.cs
@@ -159,10 +159,10 @@ public class CriteriaApiService : ICriteriaApiService
     {
         return IO.liftAsync(async () =>
         {
-            // 1. Port Request → Query Parameters 변환
+            // 1. Convert Port Request → Query Parameters
             var queryParams = CriteriaApiMapper.ToQueryParams(request);
 
-            // 2. HTTP 호출
+            // 2. HTTP call
             var url = QueryHelpers.AddQueryString("/api/v2/criteria/equips/history", queryParams);
             var response = await _httpClient.GetAsync(url, cancellationToken);
 
@@ -176,7 +176,7 @@ public class CriteriaApiService : ICriteriaApiService
                         $"API call failed: {response.StatusCode} - {errorContent}"));
             }
 
-            // 3. Infrastructure DTO → Port Response 변환
+            // 3. Convert Infrastructure DTO → Port Response
             var dto = await response.Content.ReadFromJsonAsync<GetEquipHistoryResponseDto>(cancellationToken);
             return dto?.Histories is not null
                 ? Fin.Succ(CriteriaApiMapper.ToResponse(dto))
@@ -186,7 +186,7 @@ public class CriteriaApiService : ICriteriaApiService
     }
 }
 
-// Mapper 클래스 (Infrastructure 내부 - internal)
+// Mapper class (Infrastructure internal - internal)
 internal static class CriteriaApiMapper
 {
     public static Dictionary<string, string?> ToQueryParams(ICriteriaApiService.Request request)
@@ -205,19 +205,19 @@ internal static class CriteriaApiMapper
             .ToSeq());
 }
 
-// Infrastructure 내부 DTO (internal - 외부 노출 안 함)
+// Infrastructure internal DTO (internal - not exposed externally)
 internal record GetEquipHistoryResponseDto(List<EquipDto> Histories);
 internal record EquipDto(string LineId, string TypeId, string ModelId, ...);
 ```
 
 ##### Persistence Adapter (Repository)
 
-Persistence Adapter는 **Persistence Model(POCO)** 과 **Mapper(확장 메서드)** 를 사용하여 도메인 엔티티와 DB 모델을 분리합니다. EF Core `HasConversion` 대신 Mapper에서 명시적으로 변환합니다.
+Persistence Adapter uses **Persistence Model (POCO)** and **Mapper (extension methods)** to separate domain entities from DB models. Instead of EF Core `HasConversion`, explicit conversion is done in the Mapper.
 
-The key point to note in the following code is `ToModel()`이 도메인을 POCO로, `ToDomain()`이 POCO를 `CreateFromValidated()`를 통해 도메인으로 복원하는 양방향 매핑입니다.
+The key point to note in the following code is the bidirectional mapping where `ToModel()` converts domain to POCO, and `ToDomain()` restores POCO to domain through `CreateFromValidated()`.
 
 ```csharp
-// Persistence Model — POCO (primitive 타입만, 도메인 의존성 없음)
+// Persistence Model — POCO (primitive types only, no domain dependencies)
 // File: {Adapters.Persistence}/Repositories/EfCore/Models/ProductModel.cs
 public class ProductModel
 {
@@ -234,7 +234,7 @@ public class ProductModel
 ```
 
 ```csharp
-// Mapper — internal static class, 확장 메서드
+// Mapper — internal static class, extension methods
 // File: {Adapters.Persistence}/Repositories/EfCore/Mappers/ProductMapper.cs
 internal static class ProductMapper
 {
@@ -274,7 +274,7 @@ internal static class ProductMapper
 ```
 
 ```csharp
-// Repository — EfCoreRepositoryBase 상속 + Mapper 확장 메서드 사용
+// Repository — inherits EfCoreRepositoryBase + uses Mapper extension methods
 // File: {Adapters.Persistence}/Repositories/EfCore/EfCoreProductRepository.cs
 [GenerateObservablePort]
 public class EfCoreProductRepository
@@ -297,101 +297,101 @@ public class EfCoreProductRepository
     protected override Product ToDomain(ProductModel model) => model.ToDomain();
     protected override ProductModel ToModel(Product aggregate) => aggregate.ToModel();
 
-    // CRUD (Create, GetById, Update, Delete 등)는 EfCoreRepositoryBase가 기본 구현 제공
-    // 도메인 전용 메서드만 오버라이드 또는 추가
+    // CRUD (Create, GetById, Update, Delete, etc.) provided by EfCoreRepositoryBase default implementation
+    // Only override or add domain-specific methods
 
     public virtual FinT<IO, bool> Exists(Specification<Product> spec)
     {
-        return ExistsBySpec(spec);  // 베이스 클래스의 BuildQuery 활용
+        return ExistsBySpec(spec);  // Leveraging base class BuildQuery
     }
 }
 ```
 
-> **핵심**: `EfCoreRepositoryBase`가 CRUD 8개 메서드(`Create`, `GetById`, `Update`, `Delete`, `CreateRange`, `GetByIds`, `UpdateRange`, `DeleteRange`)를 기본 구현하므로, 서브클래스는 `ToDomain()`/`ToModel()` 변환과 도메인 전용 메서드만 구현합니다. `IHasStringId` 인터페이스를 통해 모든 Model의 `Id` 속성이 `string` 타입임을 보장하며, `ReadQuery()`가 Include를 자동 적용하여 N+1 문제를 구조적으로 방지합니다.
+> **Key point**: Since `EfCoreRepositoryBase` provides default implementations of 8 CRUD methods (`Create`, `GetById`, `Update`, `Delete`, `CreateRange`, `GetByIds`, `UpdateRange`, `DeleteRange`), subclasses only need to implement `ToDomain()`/`ToModel()` conversion and domain-specific methods. The `IHasStringId` interface ensures all Model `Id` properties are `string` type, and `ReadQuery()` automatically applies Include to structurally prevent N+1 problems.
 
-#### 에러 처리 통합
+#### Error Handling Integration
 
-##### Error 반환 단순화
+##### Simplified Error Return
 
-LanguageExt는 `Error → Fin<T>` 암시적 변환을 제공합니다.
-따라서 `Fin.Fail<T>(error)` 대신 `error`를 직접 반환할 수 있습니다:
+LanguageExt provides implicit conversion from `Error → Fin<T>`.
+Therefore, instead of `Fin.Fail<T>(error)`, you can return `error` directly:
 
 ```csharp
-// 기존 방식 (verbose)
+// Previous approach (verbose)
 return Fin.Fail<Money>(AdapterError.For<MyAdapter>(
     new NotFound(), context, "Not found"));
 
-// 권장 방식 (implicit conversion)
+// Recommended approach (implicit conversion)
 return AdapterError.For<MyAdapter>(
     new NotFound(), context, "Not found");
 ```
 
-예외 처리에서도 동일하게 적용됩니다:
+The same applies to exception handling:
 
 ```csharp
 catch (HttpRequestException ex)
 {
-    // 기존 방식
+    // Previous approach
     return Fin.Fail<Money>(AdapterError.FromException<MyAdapter>(
         new ConnectionFailed("ServiceName"), ex));
 
-    // 권장 방식
+    // Recommended approach
     return AdapterError.FromException<MyAdapter>(
         new ConnectionFailed("ServiceName"), ex);
 }
 ```
 
-> **Note**: 메서드 반환 타입이 `Fin<T>` 또는 `FinT<IO, T>`로 명시되어 있어야
-> 암시적 변환이 작동합니다.
+> **Note**: The method return type must be explicitly `Fin<T>` or `FinT<IO, T>`
+> for the implicit conversion to work.
 
-##### FinT<IO, T>와 AdapterError 연계
+##### FinT<IO, T> and AdapterError Integration
 
 ```csharp
-// AdapterErrorType 사용 패턴
+// AdapterErrorType usage pattern
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
-// NotFound - 리소스를 찾을 수 없음
+// NotFound - Resource not found
 AdapterError.For<ProductRepository>(
     new NotFound(),
     productId.ToString(),
     "Product not found");
 
-// AlreadyExists - 리소스가 이미 존재함
+// AlreadyExists - Resource already exists
 AdapterError.For<ProductRepository>(
     new AlreadyExists(),
     productName,
     "Product already exists");
 
-// ConnectionFailed - 외부 시스템 연결 실패
+// ConnectionFailed - External system connection failure
 AdapterError.For<CriteriaApiService>(
     new ConnectionFailed("HTTP"),
     url,
     "API connection failed");
 
-// Custom - 사용자 정의 에러 타입
+// Custom - User-defined error type
 // Error type definition: public sealed record ReservationFailed : AdapterErrorType.Custom;
 AdapterError.For<InventoryRepository>(
     new ReservationFailed(),
     orderId.ToString(),
     "Failed to reserve inventory");
 
-// Exception 래핑
+// Exception wrapping
 AdapterError.FromException<ProductRepository>(
     new PipelineException(),
     exception);
 ```
 
-##### Pipeline의 자동 에러 분류
+##### Pipeline's Automatic Error Classification
 
 ```
-에러 타입                              로그 레벨      메트릭 태그
+Error Type                             Log Level      Metric Tag
 ────────────────────────────────────────────────────────────────
 IHasErrorCode + IsExpected  ────────► Warning       error.type: "expected"
 IHasErrorCode + IsExceptional ──────► Error         error.type: "exceptional"
 ManyErrors ─────────────────────────► Warning/Error error.type: "aggregate"
 ```
 
-##### 값 객체 공유 전략
+##### Value Object Sharing Strategy
 
 ```
 ┌──────────────────────────────────────────────────────────────┐

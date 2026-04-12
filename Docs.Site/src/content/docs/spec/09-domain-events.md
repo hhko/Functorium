@@ -10,21 +10,21 @@ This is the API specification for domain event related public types provided by 
 
 | Type | Namespace | Description |
 |------|-------------|------|
-| `IDomainEvent` | `Functorium.Domains.Events` | 도메인 이벤트 기본 인터페이스 (`INotification` 확장) |
-| `DomainEvent` | `Functorium.Domains.Events` | 도메인 이벤트 기반 abstract record (불변성, 값 동등성) |
-| `IHasDomainEvents` | `Functorium.Domains.Events` | Aggregate의 이벤트 조회 전용 마커 인터페이스 |
-| `IDomainEventDrain` | `Functorium.Domains.Events` | 이벤트 정리 인터페이스 (internal, 인프라 전용) |
-| `IDomainEventCollector` | `Functorium.Applications.Events` | Scoped 범위에서 Aggregate를 추적하여 이벤트를 수집 |
-| `IDomainEventPublisher` | `Functorium.Applications.Events` | 도메인 이벤트 발행자 인터페이스 (`FinT` 반환) |
-| `IDomainEventHandler<TEvent>` | `Functorium.Applications.Events` | 도메인 이벤트 핸들러 인터페이스 (`INotificationHandler` 확장) |
-| `PublishResult` | `Functorium.Applications.Events` | 다중 이벤트 발행 결과 (부분 성공/실패 추적) |
-| `ObservableDomainEventPublisher` | `Functorium.Adapters.Events` | `IDomainEventPublisher` 관찰성 데코레이터 |
-| `ObservableDomainEventNotificationPublisher` | `Functorium.Adapters.Events` | Handler 관점 관찰성을 제공하는 `INotificationPublisher` 구현체 |
-| `IUsecaseCtxEnricher<TRequest, TResponse>` | `Functorium.Abstractions.Observabilities` | Usecase 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher |
-| `IDomainEventCtxEnricher<TEvent>` | `Functorium.Abstractions.Observabilities` | 도메인 이벤트 핸들러 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher |
-| `CtxEnricherContext` | `Functorium.Abstractions.Observabilities` | LogContext Push 팩토리를 관리하는 정적 유틸리티 |
-| `CtxRootAttribute` | `Functorium.Abstractions.Observabilities` | 소스 생성기에서 ctx 루트 레벨로 승격할 필드를 지정 |
-| `CtxIgnoreAttribute` | `Functorium.Applications.Usecases` | 소스 생성기에서 CtxEnricher 자동 생성 대상에서 제외 |
+| `IDomainEvent` | `Functorium.Domains.Events` | Domain event base interface (`INotification` extension) |
+| `DomainEvent` | `Functorium.Domains.Events` | Domain event base abstract record (immutability, value equality) |
+| `IHasDomainEvents` | `Functorium.Domains.Events` | Read-only marker interface for tracking Aggregate events |
+| `IDomainEventDrain` | `Functorium.Domains.Events` | Event cleanup interface (internal, infrastructure only) |
+| `IDomainEventCollector` | `Functorium.Applications.Events` | Collects events by tracking Aggregates within Scoped scope |
+| `IDomainEventPublisher` | `Functorium.Applications.Events` | Domain event publisher interface (`FinT` return) |
+| `IDomainEventHandler<TEvent>` | `Functorium.Applications.Events` | Domain event handler interface (`INotificationHandler` extension) |
+| `PublishResult` | `Functorium.Applications.Events` | Multiple event publishing result (partial success/failure tracking) |
+| `ObservableDomainEventPublisher` | `Functorium.Adapters.Events` | `IDomainEventPublisher` observability decorator |
+| `ObservableDomainEventNotificationPublisher` | `Functorium.Adapters.Events` | `INotificationPublisher` implementation providing handler-perspective observability |
+| `IUsecaseCtxEnricher<TRequest, TResponse>` | `Functorium.Abstractions.Observabilities` | Enricher that adds business context fields to Usecase logs |
+| `IDomainEventCtxEnricher<TEvent>` | `Functorium.Abstractions.Observabilities` | Enricher that adds business context fields to domain event handler logs |
+| `CtxEnricherContext` | `Functorium.Abstractions.Observabilities` | Static utility that manages LogContext Push factory |
+| `CtxRootAttribute` | `Functorium.Abstractions.Observabilities` | Specifies fields to promote to ctx root level in source generators |
+| `CtxIgnoreAttribute` | `Functorium.Applications.Usecases` | Excludes from CtxEnricher auto-generation target in source generators |
 
 ---
 
@@ -32,7 +32,7 @@ This is the API specification for domain event related public types provided by 
 
 ### IDomainEvent
 
-도메인 이벤트의 기본 인터페이스입니다. Mediator의 `INotification`을 확장하여 Pub/Sub 통합을 제공합니다.
+The base interface for domain events. Extends Mediator's `INotification` to provide Pub/Sub integration.
 
 ```csharp
 namespace Functorium.Domains.Events;
@@ -55,7 +55,7 @@ public interface IDomainEvent : INotification
 
 ### DomainEvent
 
-도메인 이벤트의 기반 abstract record입니다. 불변성과 값 기반 동등성을 제공합니다.
+The base abstract record for domain events. Provides immutability and value-based equality.
 
 ```csharp
 namespace Functorium.Domains.Events;
@@ -79,13 +79,13 @@ public abstract record DomainEvent(
 
 | Constructor | Description |
 |--------|------|
-| `DomainEvent()` | 현재 시각과 새 `EventId`로 생성 (`CorrelationId`, `CausationId`는 `null`) |
-| `DomainEvent(string? correlationId)` | 지정된 `CorrelationId`로 생성 |
-| `DomainEvent(string? correlationId, string? causationId)` | 지정된 `CorrelationId`와 `CausationId`로 생성 |
+| `DomainEvent()` | Creates with current time and new `EventId` (`CorrelationId` and `CausationId` are `null`) |
+| `DomainEvent(string? correlationId)` | Creates with specified `CorrelationId` |
+| `DomainEvent(string? correlationId, string? causationId)` | Creates with specified `CorrelationId` and `CausationId` |
 
 ### IHasDomainEvents
 
-도메인 이벤트를 가진 Aggregate를 추적하기 위한 읽기 전용 마커 인터페이스입니다.
+A read-only marker interface for tracking Aggregates that have domain events.
 
 ```csharp
 namespace Functorium.Domains.Events;
@@ -98,11 +98,11 @@ public interface IHasDomainEvents
 
 | Property | Type | Description |
 |------|------|------|
-| `DomainEvents` | `IReadOnlyList<IDomainEvent>` | Aggregate에 등록된 Domain event list (read-only) |
+| `DomainEvents` | `IReadOnlyList<IDomainEvent>` | Domain event list registered in the Aggregate (read-only) |
 
 ### IDomainEventDrain (internal)
 
-이벤트 발행 후 Aggregate의 이벤트를 제거하는 인프라 인터페이스입니다. 도메인 계약(`IHasDomainEvents`)과 분리하여 이벤트 정리가 인프라 관심사임을 명시합니다.
+An infrastructure interface for removing Aggregate events after publishing. Separated from the domain contract (`IHasDomainEvents`) to explicitly designate event cleanup as an infrastructure concern.
 
 ```csharp
 namespace Functorium.Domains.Events;
@@ -117,12 +117,12 @@ internal interface IDomainEventDrain : IHasDomainEvents
 |--------|----------|------|
 | `ClearDomainEvents()` | `void` | Removes all domain events |
 
-> **접근 수준:** `internal`입니다. 애플리케이션 코드에서 직접 호출하지 마십시오. `AggregateRoot<TId>`가 이 인터페이스를 구현하며, 인프라 코드(Publisher)가 발행 후 자동으로 호출합니다.
+> **Access level:** `internal`. Do not call directly from application code. `AggregateRoot<TId>` implements this interface, and infrastructure code (Publisher) automatically calls it after publishing.
 
 ### Event Definition Example
 
 ```csharp
-// Aggregate 내 중첩 record로 정의
+// Defined as nested records within the Aggregate
 public class Order : AggregateRoot<OrderId>
 {
     public sealed record CreatedEvent(OrderId OrderId, Money TotalAmount) : DomainEvent;
@@ -142,7 +142,7 @@ public class Order : AggregateRoot<OrderId>
 
 ## Event Collection (IDomainEventCollector)
 
-Scoped 범위에서 Aggregate를 추적하여 도메인 이벤트를 수집하는 인터페이스입니다. Repository의 Create/Update에서 `Track()`을 호출하고, `UsecaseTransactionPipeline`에서 `GetTrackedAggregates()`로 이벤트를 수집합니다.
+An interface that collects domain events by tracking Aggregates within a Scoped scope. `Track()` is called in Repository Create/Update, and events are collected via `GetTrackedAggregates()` in `UsecaseTransactionPipeline`.
 
 ```csharp
 namespace Functorium.Applications.Events;
@@ -159,11 +159,11 @@ public interface IDomainEventCollector
 
 | Method | Return Type | Description |
 |--------|----------|------|
-| `Track(IHasDomainEvents aggregate)` | `void` | Aggregate를 추적 대상으로 등록 (이미 등록된 경우 무시) |
-| `TrackRange(IEnumerable<IHasDomainEvents> aggregates)` | `void` | 여러 Aggregate를 추적 대상으로 일괄 등록 |
-| `GetTrackedAggregates()` | `IReadOnlyList<IHasDomainEvents>` | 추적 중인 Aggregate 중 도메인 이벤트가 있는 것들을 반환 |
-| `TrackEvent(IDomainEvent domainEvent)` | `void` | Domain Service가 생성한 벌크 이벤트를 직접 추적합니다 |
-| `GetDirectlyTrackedEvents()` | `IReadOnlyList<IDomainEvent>` | Domain Service가 생성한 벌크 이벤트를 직접 추적합니다 |
+| `Track(IHasDomainEvents aggregate)` | `void` | Registers an Aggregate as a tracking target (ignored if already registered) |
+| `TrackRange(IEnumerable<IHasDomainEvents> aggregates)` | `void` | Batch registers multiple Aggregates as tracking targets |
+| `GetTrackedAggregates()` | `IReadOnlyList<IHasDomainEvents>` | Returns tracked Aggregates that have domain events |
+| `TrackEvent(IDomainEvent domainEvent)` | `void` | Directly tracks bulk events created by Domain Services |
+| `GetDirectlyTrackedEvents()` | `IReadOnlyList<IDomainEvent>` | Directly tracks bulk events created by Domain Services |
 
 ### Usage Flow
 
@@ -391,7 +391,7 @@ services.AddMediator(options =>
 
 ### IUsecaseCtxEnricher\<TRequest, TResponse\>
 
-Usecase 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher 인터페이스입니다. 내장 `UsecaseLoggingPipeline`이 Request/Response 로그 출력 시 `LogContext`에 커스텀 속성을 자동으로 Push합니다.
+Enricher that adds business context fields to Usecase logs 인터페이스입니다. 내장 `UsecaseLoggingPipeline`이 Request/Response 로그 출력 시 `LogContext`에 커스텀 속성을 자동으로 Push합니다.
 
 ```csharp
 namespace Functorium.Abstractions.Observabilities;
@@ -413,7 +413,7 @@ public interface IUsecaseCtxEnricher<in TRequest, in TResponse>
 
 ### IDomainEventCtxEnricher\<TEvent\>
 
-도메인 이벤트 핸들러 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher 인터페이스입니다. `ObservableDomainEventNotificationPublisher`가 Handler 처리 시 `LogContext`에 커스텀 속성을 자동으로 Push합니다.
+Enricher that adds business context fields to domain event handler logs 인터페이스입니다. `ObservableDomainEventNotificationPublisher`가 Handler 처리 시 `LogContext`에 커스텀 속성을 자동으로 Push합니다.
 
 ```csharp
 namespace Functorium.Abstractions.Observabilities;
@@ -441,7 +441,7 @@ public interface IDomainEventCtxEnricher
 
 ### CtxEnricherContext
 
-LogContext Push 팩토리를 관리하는 정적 유틸리티 클래스입니다. Serilog 등 로깅 프레임워크의 `LogContext.PushProperty`를 프레임워크와 연결하는 브릿지 역할을 합니다.
+Static utility that manages LogContext Push factory 클래스입니다. Serilog 등 로깅 프레임워크의 `LogContext.PushProperty`를 프레임워크와 연결하는 브릿지 역할을 합니다.
 
 ```csharp
 namespace Functorium.Abstractions.Observabilities;
@@ -486,7 +486,7 @@ public sealed class CtxRootAttribute : Attribute;
 
 ### CtxIgnoreAttribute
 
-소스 생성기에서 CtxEnricher 자동 생성 대상에서 제외할 것을 지시하는 어트리뷰트입니다.
+Excludes from CtxEnricher auto-generation target in source generators할 것을 지시하는 어트리뷰트입니다.
 
 ```csharp
 namespace Functorium.Applications.Usecases;

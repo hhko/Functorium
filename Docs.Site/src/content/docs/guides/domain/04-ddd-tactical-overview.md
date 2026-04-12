@@ -16,63 +16,63 @@ DDD tactical design is a building block system that provides consistent answers 
 
 Through this document, you will learn:
 
-1. **DDD 전술적 설계의 빌딩블록 전체 구조** - Value Object, Entity, Aggregate, Domain Event 등의 역할과 관계
-2. **Functorium 프레임워크와의 타입 매핑** - 각 빌딩블록에 대응하는 Functorium 타입과 네임스페이스
-3. **레이어 아키텍처와 빌딩블록 배치 규칙** - Domain, Application, Adapter 레이어별 책임과 의존성 방향
-4. **모듈과 프로젝트 구조** - Layer(수평) × Module(수직) 이중 축 배치 전략
-5. **유비쿼터스 언어와 네이밍 가이드** - 모든 빌딩블록의 네이밍 패턴 중앙 색인
+1. **The complete structure of DDD tactical design building blocks** - Roles and relationships of Value Object, Entity, Aggregate, Domain Event, etc.
+2. **Type mapping with the Functorium framework** - Functorium types and namespaces corresponding to each building block
+3. **Layer architecture and building block placement rules** - Responsibilities and dependency direction for Domain, Application, and Adapter layers
+4. **Modules and project structure** - Layer (horizontal) x Module (vertical) dual-axis placement strategy
+5. **Ubiquitous language and naming guide** - Central index of naming patterns for all building blocks
 
 ### Prerequisites
 
 A basic understanding of the following concepts is required to understand this document:
 
-- DDD의 전략적 설계 개념 (Bounded Context, 유비쿼터스 언어)
-- C# 기본 문법 (클래스, 인터페이스, 제네릭)
-- [프로젝트 구조 가이드](../architecture/01-project-structure)의 레이어 구조
+- DDD strategic design concepts (Bounded Context, Ubiquitous Language)
+- Basic C# syntax (classes, interfaces, generics)
+- Layer structure from the [Project Structure Guide](../architecture/01-project-structure)
 
-> The core of DDD tactical design is "decomposing domain complexity into clear building blocks and consistently maintaining the responsibilities and placement of each building block." Functorium은 이 빌딩블록을 타입 시스템으로 강제하여, 설계 결정이 코드에 직접 반영되도록 합니다.
+> The core of DDD tactical design is "decomposing domain complexity into clear building blocks and consistently maintaining the responsibilities and placement of each building block." Functorium enforces these building blocks through the type system, ensuring design decisions are directly reflected in the code.
 
 ## Summary
 
 ### Key Commands
 
 ```csharp
-// Value Object 생성
+// Value Object creation
 var email = Email.Create("user@example.com");
 
-// Entity/Aggregate 생성
+// Entity/Aggregate creation
 var order = Order.Create(productId, quantity, unitPrice, shippingAddress);
 
-// 도메인 이벤트 발행
+// Domain event publishing
 order.AddDomainEvent(new CreatedEvent(order.Id, productId, quantity, totalAmount));
 
-// Specification 조합
+// Specification composition
 var spec = priceRange & !lowStock;
 
-// Domain Service 사용 (Usecase 내)
+// Domain Service usage (within Usecase)
 private readonly OrderCreditCheckService _creditCheckService = new();
 ```
 
 ### Key Procedures
 
-1. **Value Object 정의**: `SimpleValueObject<T>` 상속, `Create()` + `Validate()` 구현
-2. **Entity/Aggregate 정의**: `AggregateRoot<TId>` 상속, `[GenerateEntityId]` 어트리뷰트 적용
-3. **도메인 이벤트 정의**: Aggregate 내 중첩 `sealed record`로 `DomainEvent` 상속
-4. **Specification 정의**: `ExpressionSpecification<T>` 상속, `ToExpression()` 구현
-5. **Domain Service 정의**: `IDomainService` 마커 인터페이스 구현, 순수 함수(기본) 또는 Repository 사용(Evans Ch.9)으로 작성
-6. **Usecase 구현**: `ICommandUsecase<T,R>` / `IQueryUsecase<T,R>` 상속, `FinT<IO, T>` LINQ 체인으로 조율
+1. **Define Value Object**: Inherit `SimpleValueObject<T>`, implement `Create()` + `Validate()`
+2. **Define Entity/Aggregate**: Inherit `AggregateRoot<TId>`, apply `[GenerateEntityId]` attribute
+3. **Define Domain Event**: Inherit `DomainEvent` as a nested `sealed record` within the Aggregate
+4. **Define Specification**: Inherit `ExpressionSpecification<T>`, implement `ToExpression()`
+5. **Define Domain Service**: Implement `IDomainService` marker interface, write as pure function (default) or with Repository usage (Evans Ch.9)
+6. **Implement Usecase**: Inherit `ICommandUsecase<T,R>` / `IQueryUsecase<T,R>`, orchestrate with `FinT<IO, T>` LINQ chain
 
 ### Key Concepts
 
-| Concept | Description | Functorium 타입 |
+| Concept | Description | Functorium Type |
 |------|------|----------------|
-| Value Object | Immutable, 값 동등성, Self-validation | `SimpleValueObject<T>`, `ValueObject` |
-| Entity / Aggregate | ID 동등성, 일관성 경계 | `Entity<TId>`, `AggregateRoot<TId>` |
-| Domain Event | 과거형, Immutable, Aggregate 간 통신 | `IDomainEvent`, `DomainEvent` |
-| Domain Service | 교차 Aggregate 도메인 로직 | `IDomainService` |
-| Specification | 비즈니스 규칙 캡슐화, 조합 | `Specification<T>`, `ExpressionSpecification<T>` |
-| Error 처리 | Railway Oriented Programming | `Fin<T>`, `Validation<Error, T>` |
-| Layer 구조 | Domain → Application → Adapter | 의존성 규칙: 안쪽 → 바깥 참조 금지 |
+| Value Object | Immutable, value equality, self-validation | `SimpleValueObject<T>`, `ValueObject` |
+| Entity / Aggregate | ID equality, consistency boundary | `Entity<TId>`, `AggregateRoot<TId>` |
+| Domain Event | Past tense, immutable, inter-Aggregate communication | `IDomainEvent`, `DomainEvent` |
+| Domain Service | Cross-Aggregate domain logic | `IDomainService` |
+| Specification | Business rule encapsulation, composition | `Specification<T>`, `ExpressionSpecification<T>` |
+| Error Handling | Railway Oriented Programming | `Fin<T>`, `Validation<Error, T>` |
+| Layer Structure | Domain -> Application -> Adapter | Dependency rule: inner layers cannot reference outer layers |
 
 ---
 
@@ -80,23 +80,23 @@ private readonly OrderCreditCheckService _creditCheckService = new();
 
 ### Managing Domain Complexity
 
-The essential complexity of software comes from the domain. DDD 전술적 설계는 이 복잡성을 **명확한 빌딩블록으로** 분해하여 관리합니다. 각 빌딩블록은 역할과 책임이 명확하여, 개발자가 "이 코드는 어디에 두어야 하는가?"라는 질문에 일관된 답을 제공합니다.
+The essential complexity of software comes from the domain. DDD tactical design manages this complexity by **decomposing it into clear building blocks.** Each building block has clear roles and responsibilities, providing developers with consistent answers to the question "Where should this code be placed?"
 
 ### Aligning Ubiquitous Language with Code
 
-DDD emphasizes that domain experts and developers should use the same language. 코드에서 `Email`, `Order`, `Product`와 같은 도메인 용어를 직접 타입으로 표현하면, 코드가 곧 도메인 모델이 됩니다.
+DDD emphasizes that domain experts and developers should use the same language. When domain terms like `Email`, `Order`, and `Product` are directly expressed as types in code, the code itself becomes the domain model.
 
 ### Explicit Expression of Business Rules
 
-"이메일 형식이 올바른가?", "재고가 충분한가?", "주문 상태 전이가 유효한가?" 같은 비즈니스 규칙이 특정 빌딩블록(Value Object, Entity, Aggregate)에 배치되어, 규칙의 위치와 책임이 명확합니다.
+Business rules like "Is the email format valid?", "Is stock sufficient?", and "Is the order status transition valid?" are placed in specific building blocks (Value Object, Entity, Aggregate), making the location and responsibility of each rule clear.
 
 ### Code Without vs With Tactical Design
 
-Without tactical design, business logic is scattered throughout the service layer. 이메일 형식 검증이 컨트롤러, 서비스, 리포지토리에서 각각 다른 방식으로 수행되고, "이 규칙은 어디서 관리하는가?"라는 질문에 답할 수 없습니다.
+Without tactical design, business logic is scattered throughout the service layer. Email format validation is performed differently in the controller, service, and repository, making it impossible to answer the question "Where is this rule managed?"
 
-When tactical design is applied, each rule is placed in a clear building block. 이메일 형식은 `Email` Value Object에, 재고 부족 검증은 `Inventory` Aggregate에, 주문 생성 조율은 Usecase에 위치하므로, 코드 구조만으로도 책임 소재가 드러납니다.
+When tactical design is applied, each rule is placed in a clear building block. Email format validation belongs to the `Email` Value Object, stock shortage validation to the `Inventory` Aggregate, and order creation orchestration to the Usecase, so the code structure alone reveals where responsibilities lie.
 
-지금까지 DDD 전술적 설계가 필요한 이유를 살펴보았습니다. 다음 섹션에서는 각 빌딩블록이 무엇인지, 그리고 Functorium 프레임워크에서 어떤 타입으로 구현되는지 알아봅니다.
+We have examined why DDD tactical design is needed. In the next section, we will explore what each building block is and which types implement them in the Functorium framework.
 
 ## DDD Tactical Design Building Blocks (WHAT)
 
@@ -129,20 +129,20 @@ block-beta
 
 | Building Block | Role | Characteristics |
 |----------|------|------|
-| **Value Object** | 도메인 개념의 값 표현 | Immutable, 값 동등성, Self-validation |
-| **Entity** | 식별자를 가진 도메인 객체 | ID 동등성, Mutable, 생명주기 |
-| **Aggregate** | 일관성 경계를 가진 객체 그룹 | 트랜잭션 단위, Immutable식 보호 |
-| **Domain Event** | 도메인에서 발생한 중요한 사건 | 과거형, Immutable, Aggregate 간 통신 |
-| **Domain Service** | 교차 Aggregate 도메인 로직 (순수 또는 Repository 사용) | Stateless, IDomainService 마커 |
-| **Factory** | Aggregate 생성/복원 | 정적 `Create()`, `CreateFromValidated()` 메서드 |
-| **Repository** | Aggregate의 영속화 | Aggregate 단위로 저장/조회 |
-| **Application Service** | 유스케이스 조율 | Command/Query, 도메인 객체 위임 |
+| **Value Object** | Value representation of domain concepts | Immutable, value equality, self-validation |
+| **Entity** | Domain object with an identifier | ID equality, mutable, lifecycle |
+| **Aggregate** | Object group with consistency boundary | Transaction unit, invariant protection |
+| **Domain Event** | Important occurrence in the domain | Past tense, immutable, inter-Aggregate communication |
+| **Domain Service** | Cross-Aggregate domain logic (pure or with Repository) | Stateless, IDomainService marker |
+| **Factory** | Aggregate creation/restoration | Static `Create()`, `CreateFromValidated()` methods |
+| **Repository** | Aggregate persistence | Store/retrieve per Aggregate unit |
+| **Application Service** | Usecase orchestration | Command/Query, delegates to domain objects |
 
 ### Functorium Type Mapping Table
 
-The following table DDD 빌딩블록과 Functorium 프레임워크 타입 간의 전체 매핑을 보여줍니다. 새로운 빌딩블록을 구현할 때 이 표에서 해당 타입과 네임스페이스를 확인하세요.
+The following table shows the complete mapping between DDD building blocks and Functorium framework types. When implementing a new building block, refer to this table for the corresponding type and namespace.
 
-| DDD 빌딩블록 | Functorium 타입 | Location |
+| DDD Building Block | Functorium Type | Location |
 |-------------|----------------|------|
 | Value Object | `SimpleValueObject<T>`, `ValueObject`, `ComparableSimpleValueObject<T>` | `Functorium.Domains.ValueObjects` |
 | Entity | `Entity<TId>` | `Functorium.Domains.Entities` |
@@ -158,40 +158,40 @@ The following table DDD 빌딩블록과 Functorium 프레임워크 타입 간의
 | Application Error | `ApplicationError`, `ApplicationErrorType` | `Functorium.Applications.Errors` |
 | Port | `IObservablePort` | `Functorium.Abstractions.Observabilities` |
 | Repository | `IRepository<TAggregate, TId>` | `Functorium.Domains.Repositories` |
-| Adapter | `[GenerateObservablePort]` | Adapter Layer 프로젝트 |
+| Adapter | `[GenerateObservablePort]` | Adapter Layer project |
 | Adapter Error | `AdapterError`, `AdapterErrorType` | `Functorium.Adapters.Errors` |
-| 검증 | `ValidationRules<T>`, `TypedValidation<T,V>` | `Functorium.Domains.ValueObjects.Validations` |
-| 결과 타입 | `Fin<T>`, `Validation<Error, T>`, `FinResponse<T>` | LanguageExt / Functorium |
+| Validation | `ValidationRules<T>`, `TypedValidation<T,V>` | `Functorium.Domains.ValueObjects.Validations` |
+| Result Type | `Fin<T>`, `Validation<Error, T>`, `FinResponse<T>` | LanguageExt / Functorium |
 
-빌딩블록의 역할과 Functorium 타입 매핑을 확인했습니다. 다음 섹션에서는 Functorium이 DDD와 함수형 프로그래밍을 어떻게 결합하는지, 그 설계 철학을 살펴봅니다.
+We have confirmed the roles of building blocks and their Functorium type mappings. In the next section, we will examine how Functorium combines DDD and functional programming, and its design philosophy.
 
 ## Functorium Design Philosophy
 
 ### Combining DDD and Functional Programming
 
-Functorium은 Domain-Driven Design(DDD)의 전술적 패턴과 함수형 프로그래밍을 결합합니다. The following table 두 패러다임의 개념이 Functorium에서 어떻게 하나로 합쳐지는지 보여줍니다.
+Functorium combines Domain-Driven Design (DDD) tactical patterns with functional programming. The following table shows how concepts from the two paradigms are unified in Functorium.
 
-| Concept | DDD | 함수형 프로그래밍 | Functorium |
+| Concept | DDD | Functional Programming | Functorium |
 |------|-----|-----------------|------------|
-| 값 객체 | Immutable 객체, Value-based equality | Immutable 데이터 구조 | `ValueObject`, `SimpleValueObject<T>` |
-| 검증 | Self-validation 객체 | 타입 안전 검증 | `ValidationRules<T>`, `TypedValidation<T,V>` |
-| 에러 처리 | 예외 vs 결과 | Railway Oriented Programming | `Fin<T>`, `Validation<Error, T>` |
+| Value Object | Immutable object, value-based equality | Immutable data structure | `ValueObject`, `SimpleValueObject<T>` |
+| Validation | Self-validation object | Type-safe validation | `ValidationRules<T>`, `TypedValidation<T,V>` |
+| Error Handling | Exception vs Result | Railway Oriented Programming | `Fin<T>`, `Validation<Error, T>` |
 
 ### Functorium Framework Philosophy
 
-1. **타입 안전성**: 컴파일 타임에 오류 방지
-2. **Immutability**: 모든 값 객체는 Cannot be changed after creation
-3. **Self-validation**: 잘못된 상태의 객체는 생성 불가
-4. **명시적 오류 처리**: 예외 대신 결과 타입 사용
+1. **Type Safety**: Prevent errors at compile time
+2. **Immutability**: All value objects cannot be changed after creation
+3. **Self-validation**: Objects in invalid states cannot be created
+4. **Explicit Error Handling**: Use result types instead of exceptions
 
 ### Core Concepts
 
-#### 값 객체 (Value Object)
+#### Value Object
 
-값 객체(Value Object)는 속성 값으로 동등성을 판단하는 Immutable 객체입니다.
+A Value Object is an immutable object whose equality is determined by its property values.
 
 ```csharp
-// 값 객체 예시: 이메일 (전체 구현은 §빠른 시작 예제 참조)
+// Value Object example: Email (see Quick Start example for full implementation)
 public sealed class Email : SimpleValueObject<string>
 {
     private Email(string value) : base(value) { }
@@ -206,22 +206,22 @@ public sealed class Email : SimpleValueObject<string>
 }
 ```
 
-**값 객체의 특성:**
+**Characteristics of Value Objects:**
 
 | Characteristics | Description |
 |------|------|
 | Immutability | Cannot be changed after creation |
-| Value-based equality | 속성 값으로 동등성 판단 |
+| Value-based equality | Equality determined by property values |
 | Self-validation | Validates at creation time |
 | Domain logic encapsulation | Includes related operations |
 
 #### Entity
 
-Entity는 고유한 식별자(ID)를 가진 도메인 객체입니다. ID가 같으면 동일한 Entity입니다.
+An Entity is a domain object with a unique identifier (ID). Entities with the same ID are considered identical.
 
 ```csharp
-// Entity 예시: 주문 (검증된 VO를 받아 Aggregate 생성)
-[GenerateEntityId]  // OrderId 자동 생성
+// Entity example: Order (receives validated VOs to create Aggregate)
+[GenerateEntityId]  // Auto-generates OrderId
 public sealed class Order : AggregateRoot<OrderId>
 {
     public ProductId ProductId { get; private set; }
@@ -232,7 +232,7 @@ public sealed class Order : AggregateRoot<OrderId>
     private Order(OrderId id, ProductId productId, Quantity quantity,
         Money unitPrice, Money totalAmount) : base(id) { /* ... */ }
 
-    // Create: 검증된 VO를 받아 새 Aggregate 생성
+    // Create: Receives validated VOs to create new Aggregate
     public static Order Create(
         ProductId productId, Quantity quantity,
         Money unitPrice, ShippingAddress shippingAddress)
@@ -249,37 +249,37 @@ public sealed class Order : AggregateRoot<OrderId>
 
 | Aspect | Entity | Value Object |
 |------|--------|--------------|
-| 식별자 | ID 기반 동등성 | Value-based equality |
-| Mutable성 | Mutable | Immutable |
-| 생명주기 | 장기 (Repository) | 단기 (일회성) |
+| Identifier | ID-based equality | Value-based equality |
+| Mutability | Mutable | Immutable |
+| Lifecycle | Long-term (Repository) | Short-term (ephemeral) |
 | Example | Order, User, Product | Money, Email, Address |
 
-#### Immutability과 Self-validation
+#### Immutability and Self-validation
 
-값 객체는 항상 유효한 상태로만 존재합니다:
+Value objects always exist only in a valid state:
 
 ```csharp
-// 유효하지 않은 이메일은 생성 불가
-var result = Email.Create("invalid");  // Fin<Email> - 실패
-var result = Email.Create("user@example.com");  // Fin<Email> - 성공
+// Invalid email cannot be created
+var result = Email.Create("invalid");  // Fin<Email> - failure
+var result = Email.Create("user@example.com");  // Fin<Email> - success
 ```
 
-#### 에러 처리 전략 (Railway Oriented Programming)
+#### Error Handling Strategy (Railway Oriented Programming)
 
-Functorium은 예외 대신 결과 타입을 사용합니다:
+Functorium uses result types instead of exceptions:
 
 ```
-입력 → [검증1] → [검증2] → [검증3] → 성공
-         ↓         ↓         ↓
-        실패      실패      실패
+Input -> [Validation1] -> [Validation2] -> [Validation3] -> Success
+              ↓                ↓                ↓
+            Failure          Failure          Failure
 ```
 
-**두 가지 결과 타입:**
+**Two Result Types:**
 
 | Type | Purpose | Features |
 |------|------|------|
-| `Fin<T>` | 최종 결과 | 성공 또는 단일 에러 |
-| `Validation<Error, T>` | 검증 결과 | 성공 또는 여러 에러 |
+| `Fin<T>` | Final result | Success or single error |
+| `Validation<Error, T>` | Validation result | Success or multiple errors |
 
 ## 타입 계층 구조
 

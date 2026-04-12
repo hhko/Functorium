@@ -1,76 +1,76 @@
 ---
-title: "일정/예약 도메인 value object"
+title: "Scheduling Domain Value Objects"
 ---
 
-일정 및 예약 시스템에서 자주 사용되는 value object 구현 예제입니다.
+Implementation examples of value objects commonly used in scheduling and reservation systems.
 
 ## Learning Objectives
 
-1. **DateRange** - 날짜 범위와 겹침 검사를 처리하는 복합 value object
-2. **TimeSlot** - 시간 슬롯과 충돌 감지를 처리하는 value object
-3. **Duration** - 기간을 다양한 단위로 표현하는 비교 가능 value object
-4. **RecurrenceRule** - 반복 일정을 표현하는 복합 value object
+1. **DateRange** - Composite value object handling date ranges and overlap detection
+2. **TimeSlot** - Value object handling time slots and conflict detection
+3. **Duration** - Comparable value object expressing durations in various units
+4. **RecurrenceRule** - Composite value object expressing recurring schedules
 
-## 실행
+## Run
 
 ```bash
 dotnet run
 ```
 
-## 예상 출력
+## Expected Output
 
 ```
-=== 일정/예약 도메인 값 객체 ===
+=== Scheduling Domain Value Objects ===
 
-1. DateRange (날짜 범위)
+1. DateRange
 ────────────────────────────────────────
-   시작: 2025-01-01
-   종료: 2025-01-10
-   기간: 10일
-   2025-01-05 포함: True
-   2025-02-01 포함: False
-   잘못된 범위: 종료일이 시작일보다 이전입니다.
-   범위 겹침: True
+   Start: 2025-01-01
+   End: 2025-01-10
+   Duration: 10 days
+   Contains 2025-01-05: True
+   Contains 2025-02-01: False
+   Invalid range: End date is before start date.
+   Range overlap: True
 
-2. TimeSlot (시간 슬롯)
+2. TimeSlot
 ────────────────────────────────────────
-   시간대: 09:00 - 10:30
-   길이: 90분
-   09:30 포함: True
-   11:00 포함: False
-   슬롯 충돌: True
+   Time range: 09:00 - 10:30
+   Length: 90 minutes
+   Contains 09:30: True
+   Contains 11:00: False
+   Slot conflict: True
 
-3. Duration (기간)
+3. Duration
 ────────────────────────────────────────
-   90분: 1시간 30분
-   시간: 1.5h
-   분: 90m
-   2시간: 2시간
-   합계: 3시간 30분
-   비교: 1시간 30분 < 2시간 = True
-   음수 기간: 기간은 0 이상이어야 합니다.
+   90 min: 1 hour 30 minutes
+   Hours: 1.5h
+   Minutes: 90m
+   2 hours: 2 hours
+   Total: 3 hours 30 minutes
+   Comparison: 1 hour 30 min < 2 hours = True
+   Negative duration: Duration must be 0 or greater.
 
-4. RecurrenceRule (반복 규칙)
+4. RecurrenceRule
 ────────────────────────────────────────
-   규칙: 매주 월, 수, 금
-   다음 5회: 2025-01-01, 2025-01-03, 2025-01-06, 2025-01-08, 2025-01-10
-   규칙: 매월 15일
-   다음 3회: 2025-01-15, 2025-02-15, 2025-03-15
-   규칙: 매주 월, 화, 수, 목, 금
-   다음 7회: 2025-01-01, 2025-01-02, 2025-01-03, 2025-01-06, 2025-01-07, 2025-01-08, 2025-01-09
+   Rule: Every Mon, Wed, Fri
+   Next 5 occurrences: 2025-01-01, 2025-01-03, 2025-01-06, 2025-01-08, 2025-01-10
+   Rule: Monthly on the 15th
+   Next 3 occurrences: 2025-01-15, 2025-02-15, 2025-03-15
+   Rule: Every Mon, Tue, Wed, Thu, Fri
+   Next 7 occurrences: 2025-01-01, 2025-01-02, 2025-01-03, 2025-01-06, 2025-01-07, 2025-01-08, 2025-01-09
 ```
 
-## value object 설명
+## Value Object Descriptions
 
 ### DateRange
 
-날짜 범위를 표현하는 복합 value object입니다.
+A composite value object representing a date range.
 
-**특징:**
-- 시작일 ≤ 종료일 불변식 보장
-- 범위 겹침(Overlaps) 검사
-- 교집합(Intersect) 계산
-- 기간(TotalDays) 계산
+**Features:**
+- Guarantees start <= end invariant
+- Overlap detection (Overlaps)
+- Intersection calculation (Intersect)
+- Duration calculation (TotalDays)
 
 ```csharp
 public sealed class DateRange : IEquatable<DateRange>

@@ -350,4 +350,4 @@ Now that we have learned patterns for persisting value objects to the database, 
 
 ---
 
-→ [3장: CQRS와 value object](../03-CQRS-Integration/)
+→ [Chapter 3: CQRS and Value Object](../03-CQRS-Integration/)

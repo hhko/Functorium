@@ -18,40 +18,40 @@ The previous two chapters covered the concept and rationale for source generator
 
 ---
 
-## ObservablePortGenerator란?
+## What Is ObservablePortGenerator?
 
-**ObservablePortGenerator**는 어댑터 클래스에 **Observability(관측 가능성)** 기능을 자동으로 추가하는 소스 생성기입니다.
+**ObservablePortGenerator** is a source generator that automatically adds **Observability** capabilities to adapter classes.
 
-### 해결하려는 문제
+### The Problem It Solves
 
-어댑터 계층(데이터베이스, 외부 API 호출 등)에서는 다음과 같은 **횡단 관심사(Cross-Cutting Concerns)를** 처리해야 합니다:
+The adapter layer (database access, external API calls, etc.) must handle the following **cross-cutting concerns**:
 
 ```
-횡단 관심사 목록
-===============
+Cross-Cutting Concerns
+======================
 
-1. 로깅 (Logging)
-   - 요청/응답 기록
-   - 파라미터 값 추적
-   - 오류 정보 기록
+1. Logging
+   - Request/response recording
+   - Parameter value tracking
+   - Error information recording
 
-2. 추적 (Tracing)
-   - 분산 추적 컨텍스트 전파
-   - Activity 생성 및 관리
-   - 요청 간 상관관계 추적
+2. Tracing
+   - Distributed tracing context propagation
+   - Activity creation and management
+   - Request correlation tracking
 
-3. 메트릭 (Metrics)
-   - 응답 시간 측정
-   - 성공/실패 카운터
-   - 리소스 사용량 측정
+3. Metrics
+   - Response time measurement
+   - Success/failure counters
+   - Resource usage measurement
 ```
 
-### 수동 구현의 문제점
+### Problems with Manual Implementation
 
-이러한 기능을 **수동으로 구현**하면 다음과 같은 문제가 발생합니다:
+**Manually implementing** these features causes the following problems:
 
 ```csharp
-// 수동 구현 - 모든 메서드에 반복되는 보일러플레이트 코드
+// Manual implementation - boilerplate code repeated in every method
 public class UserRepository : IObservablePort
 {
     private readonly ILogger<UserRepository> _logger;
@@ -61,72 +61,72 @@ public class UserRepository : IObservablePort
 
     public FinT<IO, User> GetUserAsync(int userId)
     {
-        // 시작 시간 기록
+        // Record start time
         var startTimestamp = Stopwatch.GetTimestamp();
 
-        // 요청 로깅
-        _logger.LogInformation("GetUserAsync 요청: userId={UserId}", userId);
+        // Request logging
+        _logger.LogInformation("GetUserAsync request: userId={UserId}", userId);
 
-        // 추적 Activity 생성
+        // Create tracing Activity
         using var activity = _activitySource.StartActivity("GetUserAsync");
 
         try
         {
-            // 실제 비즈니스 로직
+            // Actual business logic
             var result = await _dbContext.Users.FindAsync(userId);
 
-            // 성공 로깅
+            // Success logging
             var elapsed = CalculateElapsed(startTimestamp);
-            _logger.LogInformation("GetUserAsync 성공: {Elapsed}ms", elapsed);
+            _logger.LogInformation("GetUserAsync success: {Elapsed}ms", elapsed);
 
-            // 메트릭 기록
+            // Record metrics
             _requestCounter.Add(1);
 
             return result;
         }
         catch (Exception ex)
         {
-            // 실패 로깅
+            // Failure logging
             var elapsed = CalculateElapsed(startTimestamp);
-            _logger.LogError(ex, "GetUserAsync 실패: {Elapsed}ms", elapsed);
+            _logger.LogError(ex, "GetUserAsync failure: {Elapsed}ms", elapsed);
 
-            // 메트릭 기록
+            // Record metrics
             _durationHistogram.Record(elapsed);
 
             throw;
         }
     }
 
-    // 다른 메서드에도 동일한 패턴 반복...
-    public FinT<IO, IEnumerable<User>> GetUsersAsync() { /* 동일한 보일러플레이트 */ }
-    public FinT<IO, Unit> UpdateUserAsync(User user) { /* 동일한 보일러플레이트 */ }
-    public FinT<IO, Unit> DeleteUserAsync(int userId) { /* 동일한 보일러플레이트 */ }
+    // Same pattern repeated for other methods...
+    public FinT<IO, IEnumerable<User>> GetUsersAsync() { /* same boilerplate */ }
+    public FinT<IO, Unit> UpdateUserAsync(User user) { /* same boilerplate */ }
+    public FinT<IO, Unit> DeleteUserAsync(int userId) { /* same boilerplate */ }
 }
 ```
 
-**문제점:**
-- 메서드당 30-50줄의 **보일러플레이트 코드** 추가
-- 실수로 로깅을 빠뜨릴 가능성
-- 로깅 포맷 **일관성 유지 어려움**
-- 코드 리뷰 시 핵심 로직 파악 어려움
+**Problems:**
+- 30-50 lines of **boilerplate code** added per method
+- Possibility of accidentally omitting logging
+- **Difficult to maintain consistency** of logging formats
+- Difficult to identify core logic during code review
 
-이 문제를 해결하기 위해 런타임 AOP나 Interceptor 같은 기존 기법을 사용할 수도 있습니다. 하지만 ObservablePortGenerator는 소스 생성기를 선택했습니다. 그 이유를 구체적으로 살펴보겠습니다.
+Existing techniques such as runtime AOP or Interceptors could be used to solve this problem. However, ObservablePortGenerator chose source generators. Let's examine the specific reasons why.
 
 ---
 
-## 소스 생성기로 구현한 이유
+## Why a Source Generator?
 
-### 1. 자동화된 일관성
+### 1. Automated Consistency
 
-소스 생성기는 **모든 메서드에 동일한 패턴**을 적용합니다. 개발자가 실수로 빠뜨리는 것이 불가능합니다.
+Source generators apply **the same pattern to every method**. It is impossible for developers to accidentally omit anything.
 
 ```csharp
-// 개발자가 작성하는 코드 - 핵심 로직에만 집중
+// Code the developer writes - focus only on core logic
 [GenerateObservablePort]
 public class UserRepository(ILogger<UserRepository> logger) : IObservablePort
 {
     public FinT<IO, User> GetUserAsync(int userId) =>
-        // 순수한 비즈니스 로직만 작성
+        // Write only pure business logic
         from user in _dbContext.Users.FindAsync(userId)
         select user;
 
@@ -135,33 +135,33 @@ public class UserRepository(ILogger<UserRepository> logger) : IObservablePort
         select users;
 }
 
-// 소스 생성기가 자동으로 생성하는 코드
+// Code automatically generated by the source generator
 public class UserRepositoryObservable : UserRepository
 {
-    // 로깅, 추적, 메트릭이 모든 메서드에 자동 적용
+    // Logging, tracing, and metrics automatically applied to all methods
 }
 ```
 
-### 2. 컴파일 타임 성능
+### 2. Compile-Time Performance
 
-런타임 AOP(Aspect-Oriented Programming)나 Interceptor와 달리, **컴파일 타임에 코드가 생성**되므로:
+Unlike runtime AOP (Aspect-Oriented Programming) or Interceptors, **code is generated at compile time**, so:
 
-| 접근 방식 | 런타임 오버헤드 | AOT 지원 |
-|-----------|----------------|----------|
-| Castle DynamicProxy | 높음 | 제한적 |
-| DispatchProxy | 중간 | 제한적 |
-| 소스 생성기 | **없음** | **완벽 지원** |
+| Approach | Runtime Overhead | AOT Support |
+|----------|-----------------|-------------|
+| Castle DynamicProxy | High | Limited |
+| DispatchProxy | Medium | Limited |
+| Source Generator | **None** | **Full Support** |
 
-### 3. 디버깅 용이성
+### 3. Ease of Debugging
 
-생성된 코드는 일반 C# 코드이므로 **디버거로 스텝 인**하여 로깅 로직을 확인할 수 있습니다.
+The generated code is regular C# code, so you can **step into it with the debugger** to examine the logging logic.
 
-### 4. 고성능 로깅
+### 4. High-Performance Logging
 
-`LoggerMessage.Define`을 사용한 **고성능 로깅 코드**를 자동 생성합니다:
+Automatically generates **high-performance logging code** using `LoggerMessage.Define`:
 
 ```csharp
-// 소스 생성기가 생성하는 고성능 로깅 코드
+// High-performance logging code generated by the source generator
 internal static class UserRepositoryObservableLoggers
 {
     private static readonly Action<ILogger, string, string, string, string, int, Exception?> _logAdapterRequestDebug_UserRepository_GetUserAsync =
@@ -181,26 +181,26 @@ internal static class UserRepositoryObservableLoggers
 }
 ```
 
-### 5. 타입 안전성
+### 5. Type Safety
 
-파라미터 타입이 변경되면 **컴파일 오류**가 발생하여 즉시 알 수 있습니다.
+When parameter types change, a **compile error** occurs immediately, alerting you right away.
 
-소스 생성기를 선택한 이유를 확인했으니, 이제 ObservablePortGenerator가 어떤 설계 패턴 위에 구축되었는지 살펴보겠습니다.
+Now that we have confirmed the reasons for choosing a source generator, let's examine what design patterns ObservablePortGenerator is built upon.
 
 ---
 
-## 핵심 설계 패턴
+## Core Design Patterns
 
-### 템플릿 메서드 패턴 (Template Method Pattern)
+### Template Method Pattern
 
-`IncrementalGeneratorBase`는 **템플릿 메서드 패턴**을 적용하여 소스 생성기의 공통 흐름을 정의합니다:
+`IncrementalGeneratorBase` applies the **Template Method Pattern** to define the common flow of source generators:
 
 ```csharp
-// 템플릿 메서드 패턴 - 공통 흐름 정의
+// Template Method Pattern - common flow definition
 public abstract class IncrementalGeneratorBase<TValue>(
     Func<IncrementalGeneratorInitializationContext,
-         IncrementalValuesProvider<TValue>> registerSourceProvider,  // 1단계: 소스 제공자 등록
-    Action<SourceProductionContext, ImmutableArray<TValue>> generate, // 2단계: 코드 생성
+         IncrementalValuesProvider<TValue>> registerSourceProvider,  // Step 1: Register source provider
+    Action<SourceProductionContext, ImmutableArray<TValue>> generate, // Step 2: Code generation
     //Action<IncrementalGeneratorPostInitializationContext>? registerPostInitializationSourceOutput = null,
     bool AttachDebugger = false) : IIncrementalGenerator
 {
@@ -210,7 +210,7 @@ public abstract class IncrementalGeneratorBase<TValue>(
     private readonly Func<IncrementalGeneratorInitializationContext, IncrementalValuesProvider<TValue>> _registerSourceProvider = registerSourceProvider;
     private readonly Action<SourceProductionContext, ImmutableArray<TValue>> _generate = generate;
 
-    // 템플릿 메서드 - 고정된 알고리즘 흐름
+    // Template method - fixed algorithm flow
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
 #if DEBUG
@@ -220,11 +220,11 @@ public abstract class IncrementalGeneratorBase<TValue>(
         }
 #endif
 
-        // 1단계: 소스 코드에서 관심 대상 추출
+        // Step 1: Extract targets of interest from source code
         IncrementalValuesProvider<TValue> provider = _registerSourceProvider(context)
             .Where(static m => m is not null);
 
-        // 2단계: 추출된 정보로 코드 생성
+        // Step 2: Generate code from extracted information
         context.RegisterSourceOutput(provider.Collect(), Execute);
     }
 
@@ -236,45 +236,45 @@ public abstract class IncrementalGeneratorBase<TValue>(
 ```
 
 ```
-템플릿 메서드 패턴 구조
-=====================
+Template Method Pattern Structure
+=================================
 
-IncrementalGeneratorBase (추상 클래스)
+IncrementalGeneratorBase (abstract class)
 │
-├── Initialize()           # 템플릿 메서드 (고정)
-│   ├── registerSourceProvider()  # 추상 단계 1
-│   ├── .Where(not null)          # null 필터링
-│   └── Execute() → generate()   # 추상 단계 2
+├── Initialize()           # Template method (fixed)
+│   ├── registerSourceProvider()  # Abstract step 1
+│   ├── .Where(not null)          # Null filtering
+│   └── Execute() → generate()   # Abstract step 2
 │
-└── ObservablePortGenerator (구체 클래스)
-    ├── RegisterSourceProvider()  # 구현: [GenerateObservablePort] 클래스 필터링
-    └── Generate()                # 구현: Observable 코드 생성
+└── ObservablePortGenerator (concrete class)
+    ├── RegisterSourceProvider()  # Implementation: Filter [GenerateObservablePort] classes
+    └── Generate()                # Implementation: Generate Observable code
 ```
 
-**장점:**
-- 소스 생성기의 **공통 구조 재사용**
-- 새로운 생성기 추가 시 핵심 로직만 구현
-- 디버깅 플래그 등 **공통 기능 중앙 관리**
+**Benefits:**
+- **Reuse common structure** of source generators
+- Only implement core logic when adding new generators
+- **Centrally manage common features** such as debugging flags
 
-### 전략 패턴 (Strategy Pattern) with IObservablePort
+### Strategy Pattern with IObservablePort
 
-`IObservablePort` 인터페이스를 통해 **전략 패턴**을 구현합니다. 각 어댑터는 특정 외부 시스템과의 통신 전략을 캡슐화합니다:
+The **Strategy Pattern** is implemented through the `IObservablePort` interface. Each adapter encapsulates a communication strategy with a specific external system:
 
 ```csharp
-// IObservablePort 인터페이스 - 전략의 공통 계약
+// IObservablePort interface - common contract for strategies
 public interface IObservablePort
 {
     string RequestCategory { get; }
 }
 
-// 구체적인 전략 정의 - 사용자 저장소
+// Concrete strategy definition - user repository
 public interface IUserRepository : IObservablePort
 {
     FinT<IO, User> GetUserAsync(int id);
     FinT<IO, IEnumerable<User>> GetUsersAsync();
 }
 
-// 구체적인 전략 정의 - 주문 저장소
+// Concrete strategy definition - order repository
 public interface IOrderRepository : IObservablePort
 {
     FinT<IO, Order> GetOrderAsync(int id);
@@ -283,169 +283,169 @@ public interface IOrderRepository : IObservablePort
 ```
 
 ```
-전략 패턴 구조
-=============
+Strategy Pattern Structure
+==========================
 
-IObservablePort (전략 인터페이스)
+IObservablePort (strategy interface)
 │
-├── IUserRepository        # 사용자 관련 전략
-│   └── UserRepository     # 구체적 구현
-│       └── UserRepositoryObservable  ← 소스 생성기가 생성
+├── IUserRepository        # User-related strategy
+│   └── UserRepository     # Concrete implementation
+│       └── UserRepositoryObservable  <- Generated by source generator
 │
-├── IOrderRepository       # 주문 관련 전략
-│   └── OrderRepository    # 구체적 구현
-│       └── OrderRepositoryObservable ← 소스 생성기가 생성
+├── IOrderRepository       # Order-related strategy
+│   └── OrderRepository    # Concrete implementation
+│       └── OrderRepositoryObservable <- Generated by source generator
 │
-└── IProductRepository     # 상품 관련 전략
-    └── ProductRepository  # 구체적 구현
-        └── ProductRepositoryObservable ← 소스 생성기가 생성
+└── IProductRepository     # Product-related strategy
+    └── ProductRepository  # Concrete implementation
+        └── ProductRepositoryObservable <- Generated by source generator
 ```
 
-**소스 생성기의 역할:**
+**Role of the Source Generator:**
 
 ```csharp
-// 개발자가 작성 - 전략 구현
+// Written by the developer - strategy implementation
 [GenerateObservablePort]
 public class UserRepository(ILogger<UserRepository> logger) : IUserRepository
 {
     public FinT<IO, User> GetUserAsync(int id) =>
-        // 순수한 데이터 접근 로직
+        // Pure data access logic
         from user in _dbContext.Users.FindAsync(id)
         select user;
 }
 
-// 소스 생성기가 자동 생성 - 전략 데코레이터
+// Auto-generated by source generator - strategy decorator
 public class UserRepositoryObservable : UserRepository
 {
-    // 원본 전략을 상속받아 관찰 가능성 기능 추가
-    // 로깅, 추적, 메트릭이 자동으로 적용됨
+    // Inherits original strategy and adds observability features
+    // Logging, tracing, and metrics are automatically applied
 }
 ```
 
-**장점:**
-- 각 어댑터(전략)의 **비즈니스 로직 격리**
-- 관찰 가능성 코드의 **일관된 자동 적용**
-- DI 컨테이너에서 **Observable 클래스로 교체** 용이
+**Benefits:**
+- **Business logic isolation** for each adapter (strategy)
+- **Consistent automatic application** of observability code
+- Easy to **swap in Observable classes** in the DI container
 
 ```csharp
-// DI 등록 시 Observable 클래스 사용
+// Use Observable classes when registering with DI
 services.AddScoped<IUserRepository, UserRepositoryObservable>();
 services.AddScoped<IOrderRepository, OrderRepositoryObservable>();
 ```
 
-템플릿 메서드 패턴과 전략 패턴의 조합으로, 소스 생성기의 공통 흐름을 재사용하면서 각 어댑터의 Observability 코드를 일관되게 생성합니다. 이 설계가 실제로 어떤 효과를 가져오는지 수치로 확인해 보겠습니다.
+By combining the Template Method Pattern and the Strategy Pattern, the common flow of source generators is reused while consistently generating Observability code for each adapter. Let's verify the actual impact of this design with numbers.
 
 ---
 
-## 기대 효과
+## Expected Benefits
 
-### Before (수동 구현)
+### Before (Manual Implementation)
 
 ```
-코드량
-======
-UserRepository.cs        : 200줄 (로깅 코드 포함)
-OrderRepository.cs       : 180줄 (로깅 코드 포함)
-ProductRepository.cs     : 220줄 (로깅 코드 포함)
+Lines of Code
+==============
+UserRepository.cs        : 200 lines (including logging code)
+OrderRepository.cs       : 180 lines (including logging code)
+ProductRepository.cs     : 220 lines (including logging code)
 -----------------------------------------
-총합                      : 600줄
+Total                     : 600 lines
 
-문제점
-======
-- 비즈니스 로직과 횡단 관심사 혼재
-- 일관성 유지 어려움
-- 코드 리뷰 복잡도 증가
+Problems
+========
+- Business logic mixed with cross-cutting concerns
+- Difficult to maintain consistency
+- Increased code review complexity
 ```
 
-### After (소스 생성기)
+### After (Source Generator)
 
 ```
-코드량
-======
-UserRepository.cs        : 50줄 (순수 비즈니스 로직)
-OrderRepository.cs       : 40줄 (순수 비즈니스 로직)
-ProductRepository.cs     : 60줄 (순수 비즈니스 로직)
+Lines of Code
+==============
+UserRepository.cs        : 50 lines (pure business logic)
+OrderRepository.cs       : 40 lines (pure business logic)
+ProductRepository.cs     : 60 lines (pure business logic)
 -----------------------------------------
-총합                      : 150줄 (75% 감소)
+Total                     : 150 lines (75% reduction)
 
-+ 자동 생성되는 Observable 클래스
-  UserRepositoryObservable.g.cs    : 자동 생성
-  OrderRepositoryObservable.g.cs   : 자동 생성
-  ProductRepositoryObservable.g.cs : 자동 생성
++ Auto-generated Observable classes
+  UserRepositoryObservable.g.cs    : auto-generated
+  OrderRepositoryObservable.g.cs   : auto-generated
+  ProductRepositoryObservable.g.cs : auto-generated
 
-장점
-====
-- 비즈니스 로직만 집중
-- 100% 일관된 Observability
-- 코드 리뷰 효율성 향상
+Benefits
+========
+- Focus only on business logic
+- 100% consistent Observability
+- Improved code review efficiency
 ```
 
-이러한 효과를 달성하는 프로젝트가 실제로 어떤 디렉터리 구조로 구성되어 있는지 살펴보겠습니다.
+Let's examine the actual directory structure of the project that achieves these benefits.
 
 ---
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 Functorium/
 ├── Src/
-│   ├── Functorium.SourceGenerators/            # 소스 생성기
+│   ├── Functorium.SourceGenerators/            # Source generator
 │   │   ├── Abstractions/
-│   │   │   ├── Constants.cs                           # 공통 상수 (헤더 등)
-│   │   │   └── Selectors.cs                           # 공통 선택자
+│   │   │   ├── Constants.cs                           # Common constants (headers, etc.)
+│   │   │   └── Selectors.cs                           # Common selectors
 │   │   │
 │   │   └── Generators/
-│   │       ├── IncrementalGeneratorBase.cs             # 템플릿 메서드 패턴 기반 클래스
+│   │       ├── IncrementalGeneratorBase.cs             # Template Method Pattern base class
 │   │       │
-│   │       ├── ObservablePortGenerator/               # Observability 코드 생성기
-│   │       │   ├── ObservablePortGenerator.cs          # 메인 소스 생성기
-│   │       │   ├── ObservableGeneratorConstants.cs     # 생성기 전용 상수
-│   │       │   ├── ObservableClassInfo.cs              # 클래스 정보 레코드
-│   │       │   ├── MethodInfo.cs                       # 메서드 정보
-│   │       │   ├── ParameterInfo.cs                    # 파라미터 정보
-│   │       │   ├── TypeExtractor.cs                    # 타입 추출 유틸리티
-│   │       │   ├── CollectionTypeHelper.cs             # 컬렉션 타입 판별
-│   │       │   ├── SymbolDisplayFormats.cs             # 타입 문자열 포맷
-│   │       │   ├── ConstructorParameterExtractor.cs    # 생성자 분석
-│   │       │   └── ParameterNameResolver.cs            # 이름 충돌 해결
+│   │       ├── ObservablePortGenerator/               # Observability code generator
+│   │       │   ├── ObservablePortGenerator.cs          # Main source generator
+│   │       │   ├── ObservableGeneratorConstants.cs     # Generator-specific constants
+│   │       │   ├── ObservableClassInfo.cs              # Class info record
+│   │       │   ├── MethodInfo.cs                       # Method info
+│   │       │   ├── ParameterInfo.cs                    # Parameter info
+│   │       │   ├── TypeExtractor.cs                    # Type extraction utility
+│   │       │   ├── CollectionTypeHelper.cs             # Collection type detection
+│   │       │   ├── SymbolDisplayFormats.cs             # Type string format
+│   │       │   ├── ConstructorParameterExtractor.cs    # Constructor analysis
+│   │       │   └── ParameterNameResolver.cs            # Name conflict resolution
 │   │       │
-│   │       ├── EntityIdGenerator/                     # Entity ID 자동 생성기
-│   │       │   ├── EntityIdGenerator.cs                # Ulid 기반 ID 구조체 생성
-│   │       │   └── EntityIdInfo.cs                     # Entity 정보 레코드
+│   │       ├── EntityIdGenerator/                     # Entity ID auto-generator
+│   │       │   ├── EntityIdGenerator.cs                # Ulid-based ID struct generation
+│   │       │   └── EntityIdInfo.cs                     # Entity info record
 │   │       │
-│   │       └── UnionTypeGenerator/                    # Union Type 생성기
-│   │           ├── UnionTypeGenerator.cs               # Match/Switch 메서드 생성
-│   │           └── UnionTypeInfo.cs                    # Union 정보 레코드
+│   │       └── UnionTypeGenerator/                    # Union Type generator
+│   │           ├── UnionTypeGenerator.cs               # Match/Switch method generation
+│   │           └── UnionTypeInfo.cs                    # Union info record
 │   │
-│   ├── Functorium/                                    # 핵심 도메인 라이브러리
+│   ├── Functorium/                                    # Core domain library
 │   │   └── Domains/
 │   │       └── Observabilities/
-│   │           └── IObservablePort.cs                  # 관측 가능성 마커 인터페이스
+│   │           └── IObservablePort.cs                  # Observability marker interface
 │   │
-│   ├── Functorium.Adapters/                           # 어댑터 라이브러리
+│   ├── Functorium.Adapters/                           # Adapter library
 │   │   ├── SourceGenerators/
-│   │   │   └── GenerateObservablePortAttribute.cs     # [GenerateObservablePort] 속성
+│   │   │   └── GenerateObservablePortAttribute.cs     # [GenerateObservablePort] attribute
 │   │   └── Observabilities/
 │   │       └── Naming/
-│   │           ├── ObservabilityNaming.cs              # 관측 가능성 네이밍 규칙
-│   │           ├── ObservabilityNaming.Events.cs       # 이벤트 ID 정의
-│   │           └── ObservabilityNaming.Attributes.cs   # 속성 키 정의
+│   │           ├── ObservabilityNaming.cs              # Observability naming rules
+│   │           ├── ObservabilityNaming.Events.cs       # Event ID definitions
+│   │           └── ObservabilityNaming.Attributes.cs   # Attribute key definitions
 │   │
-│   └── Functorium.Testing/                            # 테스트 유틸리티
+│   └── Functorium.Testing/                            # Test utilities
 │       └── Actions/
 │           └── SourceGenerators/
-│               └── SourceGeneratorTestRunner.cs        # 테스트 러너
+│               └── SourceGeneratorTestRunner.cs        # Test runner
 │
 └── Tests/
     └── Functorium.Tests.Unit/
         └── AdaptersTests/
             └── SourceGenerators/
-                ├── ObservablePortGeneratorTests.cs              # 31개 스냅샷 테스트
-                ├── ObservablePortObservabilityTests.cs          # 태그 구조 규격 검증
-                ├── ObservablePortLoggingStructureTests.cs       # 로깅 필드 구조 검증
-                ├── ObservablePortMetricsStructureTests.cs       # 메트릭 태그 구조 검증
-                ├── ObservablePortTracingStructureTests.cs       # Tracing 태그 구조 검증
-                └── Snapshots/                                   # 스냅샷 파일
+                ├── ObservablePortGeneratorTests.cs              # 31 snapshot tests
+                ├── ObservablePortObservabilityTests.cs          # Tag structure verification
+                ├── ObservablePortLoggingStructureTests.cs       # Logging field structure verification
+                ├── ObservablePortMetricsStructureTests.cs       # Metrics tag structure verification
+                ├── ObservablePortTracingStructureTests.cs       # Tracing tag structure verification
+                └── Snapshots/                                   # Snapshot files
                     ├── ObservablePortGenerator/
                     ├── ObservablePortLoggingStructure/
                     ├── ObservablePortMetricsStructure/
@@ -454,95 +454,95 @@ Functorium/
 
 ---
 
-## 핵심 컴포넌트
+## Core Components
 
 ### 1. ObservablePortGenerator
 
-메인 소스 생성기 클래스입니다. 2단계 파이프라인으로 동작합니다:
+The main source generator class. It operates as a 2-stage pipeline:
 
 ```
-1단계: 대상 클래스 필터링
-========================
-Functorium 라이브러리에 미리 정의된
-[GenerateObservablePort] 속성이 붙고
-IObservablePort를 구현한 클래스만 선택
+Stage 1: Target Class Filtering
+================================
+Selects only classes that have the
+[GenerateObservablePort] attribute (predefined
+in the Functorium library) and implement IObservablePort
 
-2단계: Observable 클래스 생성
-===========================
-각 메서드에 대해 로깅, 추적, 메트릭 코드를
-포함한 래퍼 메서드 생성
+Stage 2: Observable Class Generation
+=====================================
+Generates wrapper methods that include logging,
+tracing, and metrics code for each method
 ```
 
 ### 2. IncrementalGeneratorBase
 
-증분 소스 생성기의 **템플릿 패턴**을 제공합니다. 구현 코드는 [핵심 설계 패턴 > 템플릿 메서드 패턴](#템플릿-메서드-패턴-template-method-pattern) 섹션을 참고하세요.
+Provides the **Template Pattern** for incremental source generators. See the [Core Design Patterns > Template Method Pattern](#template-method-pattern) section for implementation code.
 
-### 3. 헬퍼 클래스들
+### 3. Helper Classes
 
-| 클래스 | 역할 |
-|--------|------|
-| `TypeExtractor` | `FinT<IO, User>` → `User` 타입 추출 |
-| `CollectionTypeHelper` | `List<T>`, `IEnumerable<T>` 등 컬렉션 감지 |
-| `SymbolDisplayFormats` | 결정적 타입 문자열 생성 |
-| `ConstructorParameterExtractor` | 생성자 파라미터 분석 |
-| `ParameterNameResolver` | `logger` → `baseLogger` 이름 충돌 해결 |
+| Class | Role |
+|-------|------|
+| `TypeExtractor` | `FinT<IO, User>` -> `User` type extraction |
+| `CollectionTypeHelper` | `List<T>`, `IEnumerable<T>` etc. collection detection |
+| `SymbolDisplayFormats` | Deterministic type string generation |
+| `ConstructorParameterExtractor` | Constructor parameter analysis |
+| `ParameterNameResolver` | `logger` -> `baseLogger` name conflict resolution |
 
 ---
 
-## 학습 로드맵
+## Learning Roadmap
 
 ```
-Part 0: 서론
-============
-- Source Generator 개념, Hello World, 프로젝트 개요
+Part 0: Introduction
+====================
+- Source Generator concept, Hello World, project overview
 
-Part 1: 기초
-============
-- 개발 환경 설정
-- Roslyn 아키텍처 (Syntax API, Semantic API, Symbol)
+Part 1: Fundamentals
+====================
+- Development environment setup
+- Roslyn Architecture (Syntax API, Semantic API, Symbol)
 
-Part 2: 핵심 개념
-=================
+Part 2: Core Concepts
+=====================
 - IIncrementalGenerator, Provider Pattern
-- ForAttributeWithMetadataName, 심볼 분석
-- StringBuilder 코드 생성, 결정적 출력
+- ForAttributeWithMetadataName, symbol analysis
+- StringBuilder code generation, deterministic output
 
-Part 3: 고급
-============
-- Constructor, Generic, Collection 처리
-- LoggerMessage.Define 6개 파라미터 제한
-- 스냅샷 테스트, 31개 테스트 시나리오
+Part 3: Advanced
+================
+- Constructor, Generic, Collection handling
+- LoggerMessage.Define 6-parameter limit
+- Snapshot testing, 31 test scenarios
 
-Part 4: 개발 절차서
-===================
-- Entity ID, EF Core Value Converter, Validation 생성기
-- 커스텀 Generator 템플릿
+Part 4: Cookbook
+===============
+- Entity ID, EF Core Value Converter, Validation generators
+- Custom Generator template
 ```
 
 ---
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-**ObservablePortGenerator**는 어댑터 계층에 반복되는 로깅, 추적, 메트릭 코드를 자동으로 생성하여 제거합니다. 소스 생성기를 선택한 이유는 일관성, 성능, 타입 안전성, AOT 지원이라는 네 가지 요구사항을 동시에 충족하기 때문입니다. 템플릿 메서드 패턴과 전략 패턴을 결합한 설계로, 개발자가 작성하는 코드량을 약 75% 줄이면서 100% 일관된 관측 가능성을 보장합니다.
+**ObservablePortGenerator** automatically generates and eliminates repetitive logging, tracing, and metrics code in the adapter layer. The reason for choosing a source generator is that it simultaneously meets four requirements: consistency, performance, type safety, and AOT support. With a design combining the Template Method Pattern and the Strategy Pattern, it reduces the amount of code developers write by approximately 75% while guaranteeing 100% consistent observability.
 
 ---
 
 ## FAQ
 
-### Q1: `IncrementalGeneratorBase<TValue>`를 사용하면 어떤 이점이 있나요?
-**A**: 디버거 연결, null 필터링, `Collect()`를 통한 배치 처리 같은 공통 로직을 한 곳에서 관리합니다. 새로운 소스 생성기를 추가할 때 `registerSourceProvider`와 `generate` 두 함수만 구현하면 되므로, 파이프라인 구성 코드의 중복을 제거할 수 있습니다.
+### Q1: What are the benefits of using `IncrementalGeneratorBase<TValue>`?
+**A**: It manages common logic such as debugger attachment, null filtering, and batch processing via `Collect()` in a single place. When adding a new source generator, you only need to implement the `registerSourceProvider` and `generate` functions, eliminating duplication of pipeline configuration code.
 
-### Q2: `IObservablePort` 인터페이스가 전략 패턴에서 수행하는 역할은 무엇인가요?
-**A**: `IObservablePort`는 소스 생성기가 코드를 생성할 대상을 식별하는 마커 역할을 합니다. 이 인터페이스를 구현한 클래스만 `[GenerateObservablePort]` 속성의 대상이 되며, 각 어댑터는 `RequestCategory` 프로퍼티로 자신의 관측 가능성 카테고리를 정의합니다.
+### Q2: What role does the `IObservablePort` interface play in the Strategy Pattern?
+**A**: `IObservablePort` serves as a marker to identify targets for which the source generator should generate code. Only classes implementing this interface become targets for the `[GenerateObservablePort]` attribute, and each adapter defines its observability category through the `RequestCategory` property.
 
-### Q3: 소스 생성기 도입 전후로 코드량이 75% 감소한다는 수치의 근거는 무엇인가요?
-**A**: 수동 구현 시 각 메서드에 로깅, 추적, 메트릭을 위한 30-50줄의 보일러플레이트가 추가됩니다. 소스 생성기 도입 후에는 순수 비즈니스 로직만 남고 횡단 관심사 코드가 전부 자동 생성되므로, 실제 프로젝트 측정치 기반으로 약 75%의 코드 감소 효과를 보입니다.
+### Q3: What is the basis for the claim that code volume decreases by 75% after introducing the source generator?
+**A**: With manual implementation, 30-50 lines of boilerplate for logging, tracing, and metrics are added per method. After introducing the source generator, only pure business logic remains and all cross-cutting concern code is auto-generated, resulting in approximately 75% code reduction based on actual project measurements.
 
-### Q4: `TypeExtractor`, `CollectionTypeHelper` 같은 헬퍼 클래스들은 왜 별도로 분리되어 있나요?
-**A**: 각 헬퍼는 독립적인 책임(타입 추출, 컬렉션 감지, 이름 충돌 해결 등)을 담당합니다. 단일 책임 원칙에 따라 분리하면 개별 로직을 독립적으로 테스트할 수 있고, 다른 소스 생성기에서도 재사용할 수 있습니다.
+### Q4: Why are helper classes like `TypeExtractor` and `CollectionTypeHelper` separated into distinct classes?
+**A**: Each helper handles an independent responsibility (type extraction, collection detection, name conflict resolution, etc.). Separating them according to the Single Responsibility Principle allows individual logic to be tested independently and reused across other source generators.
 
 ---
 
-프로젝트의 전체 그림을 파악했으니, 이제 실제로 소스 생성기를 개발하기 위한 환경을 설정할 차례입니다.
+Now that we have grasped the overall picture of the project, it is time to set up the environment for actually developing source generators.
 
-→ [Part 1의 1장. 개발 환경](../Part1-Fundamentals/01-development-environment.md)
+-> [Part 1, Chapter 1. Development Environment](../Part1-Fundamentals/01-development-environment.md)

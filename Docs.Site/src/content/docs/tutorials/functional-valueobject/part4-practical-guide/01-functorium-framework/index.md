@@ -365,4 +365,4 @@ The next chapter covers patterns for persisting the value objects implemented he
 
 ---
 
-→ [2장: ORM 통합 패턴](../02-ORM-Integration/)
+→ [Chapter 2: ORM Integration Patterns](../02-ORM-Integration/)
