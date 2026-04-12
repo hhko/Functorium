@@ -1,114 +1,114 @@
 ---
-title: ".NET 도구 가이드"
+title: ".NET Tools Guide"
 ---
 
-이 문서는 프로젝트에서 사용하는 .NET 도구의 상세 사용법을 다룹니다. CLI 도구, 소스 생성기, .NET 10 파일 기반 프로그램의 세 가지 카테고리로 분류하여 설명합니다.
+This document covers the detailed usage of .NET tools used in the project. They are categorized into three groups: CLI tools, source generators, and .NET 10 file-based programs.
 
 ## Introduction
 
-"코드 커버리지 리포트를 매번 수동으로 생성하고 있지는 않은가?"
-"스냅샷 테스트 결과를 일일이 승인하는 데 시간을 소비하고 있지는 않은가?"
-"EF Core 스키마 변경 시 ER 다이어그램을 수동으로 업데이트하고 있지는 않은가?"
+"Are you manually generating code coverage reports every time?"
+"Are you spending time individually approving snapshot test results?"
+"Are you manually updating ER diagrams when EF Core schemas change?"
 
-코드 커버리지 리포트 생성, 스냅샷 테스트 승인, ER 다이어그램 생성, 느린 테스트 분석 등 반복적인 개발 작업은 .NET 도구로 자동화할 수 있습니다. 적절한 도구를 빌드 파이프라인에 통합하면 수동 작업을 줄이고 개발 흐름에 집중할 수 있습니다.
+Repetitive development tasks such as generating code coverage reports, approving snapshot tests, generating ER diagrams, and analyzing slow tests can be automated with .NET tools. Integrating the right tools into the build pipeline reduces manual work and lets you focus on the development flow.
 
 ### What You Will Learn
 
 This document covers the following topics:
 
-1. **CLI 도구 관리와 사용법** - ReportGenerator, Verify.Tool, Siren의 파라미터와 실행 방법
-2. **소스 생성기 활용** - EntityIdGenerator, ObservablePortGenerator의 트리거와 생성 결과
-3. **Source Generator 디버깅** - 테스트 프로젝트 기반 디버깅과 Debugger.Launch() 방법
-4. **.NET 10 파일 기반 프로그램** - SummarizeSlowestTests, ApiGenerator 등 스크립트 실행
-5. **새 도구 추가 체크리스트** - CLI 도구, 소스 생성기, 스크립트별 추가 절차
+1. **CLI tool management and usage** - Parameters and execution methods for ReportGenerator, Verify.Tool, and Siren
+2. **Source generator usage** - Triggers and generated output for EntityIdGenerator and ObservablePortGenerator
+3. **Source Generator debugging** - Test project-based debugging and the Debugger.Launch() method
+4. **.NET 10 file-based programs** - Running scripts like SummarizeSlowestTests and ApiGenerator
+5. **New tool addition checklist** - Addition procedures for CLI tools, source generators, and scripts
 
-> **.NET 도구 활용의 핵심은** 반복적인 개발 작업을 CLI 도구와 소스 생성기로 자동화하여, 빌드 파이프라인에 통합하는 것입니다.
+> **The key to leveraging .NET tools is** automating repetitive development tasks with CLI tools and source generators, and integrating them into the build pipeline.
 
 ## Summary
 
 ### Key Commands
 
 ```powershell
-# 도구 복원 (클론 후)
+# Restore tools (after clone)
 dotnet tool restore
 
-# 커버리지 리포트 생성
+# Generate coverage report
 dotnet reportgenerator -reports:**/*.cobertura.xml -targetdir:.coverage/reports/html -reporttypes:"Html;Cobertura"
 
-# Verify 스냅샷 승인
+# Approve Verify snapshots
 dotnet verify accept -y
 
-# ER 다이어그램 생성
+# Generate ER diagram
 dotnet siren-gen -a bin/Release/net10.0/MyApp.Persistence.dll -o ER-Diagram.md
 
-# 느린 테스트 분석
+# Analyze slow tests
 dotnet .coverage/scripts/SummarizeSlowestTests.cs --glob "**/*.trx" --threshold 30
 ```
 
 ### Key Procedures
 
-**1. 새 CLI 도구 추가:**
-1. `dotnet tool install <package-name>` (매니페스트에 자동 등록)
-2. `rollForward` 설정 확인 (도구 대상 프레임워크가 현재 SDK보다 낮으면 `true`)
-3. 관련 문서 업데이트
+**1. Adding a new CLI tool:**
+1. `dotnet tool install <package-name>` (automatically registered in manifest)
+2. Check `rollForward` setting (set to `true` if tool target framework is lower than current SDK)
+3. Update related documentation
 
-**2. Source Generator 디버깅:**
-1. 테스트 프로젝트에서 브레이크포인트 설정 (권장)
-2. Test Explorer에서 Debug 실행
-3. F11로 Generator 내부 진입
+**2. Source Generator debugging:**
+1. Set breakpoints in the test project (recommended)
+2. Run Debug from Test Explorer
+3. Step into Generator internals with F11
 
 ### Key Concepts
 
-| 카테고리 | 도구 | 용도 |
+| Category | Tool | Purpose |
 |---------|------|------|
-| CLI 도구 | ReportGenerator | 코드 커버리지 HTML 리포트 |
-| CLI 도구 | Verify.Tool | 스냅샷 테스트 승인 |
-| CLI 도구 | Siren | EF Core → Mermaid ER 다이어그램 |
-| 소스 생성기 | EntityIdGenerator | Ulid 기반 EntityId 자동 생성 |
-| 소스 생성기 | ObservablePortGenerator | Observability 래핑 Pipeline 생성 |
-| 소스 생성기 | UnionTypeGenerator | Union 타입 Match/Switch 메서드 자동 생성 |
-| .NET 10 스크립트 | SummarizeSlowestTests | 느린 테스트 분석 리포트 |
+| CLI tool | ReportGenerator | Code coverage HTML report |
+| CLI tool | Verify.Tool | Snapshot test approval |
+| CLI tool | Siren | EF Core to Mermaid ER diagram |
+| Source generator | EntityIdGenerator | Ulid-based EntityId auto-generation |
+| Source generator | ObservablePortGenerator | Observability wrapping Pipeline generation |
+| Source generator | UnionTypeGenerator | Auto-generation of Match/Switch methods for union types |
+| .NET 10 script | SummarizeSlowestTests | Slow test analysis report |
 
 ---
 
-## 개요
+## Overview
 
-이 가이드는 프로젝트에서 사용하는 .NET 도구의 **상세 사용법**을 다룹니다. 도구는 세 가지 카테고리로 분류됩니다.
+This guide covers the **detailed usage** of .NET tools used in the project. Tools are classified into three categories.
 
-다음 테이블은 도구 카테고리별 특성과 대표 도구를 정리한 것입니다.
+The following table summarizes the characteristics and representative tools for each tool category.
 
-| 카테고리 | 설명 | 예시 |
+| Category | Description | Examples |
 |---------|------|------|
-| CLI 도구 | `dotnet tool` 매니페스트 관리 | ReportGenerator, Verify.Tool, Siren |
-| 소스 생성기 | 컴파일 시 코드 자동 생성 | EntityIdGenerator, ObservablePortGenerator |
-| .NET 10 스크립트 | `.cs` 파일 직접 실행 | SummarizeSlowestTests, ApiGenerator |
+| CLI tools | `dotnet tool` manifest management | ReportGenerator, Verify.Tool, Siren |
+| Source generators | Automatic code generation at compile time | EntityIdGenerator, ObservablePortGenerator |
+| .NET 10 scripts | Direct execution of `.cs` files | SummarizeSlowestTests, ApiGenerator |
 
-> **02-solution-configuration.md와의 관계**: `dotnet-tools.json` 매니페스트 생성/관리 방법과 빌드 스크립트 파이프라인 개요는 [02-solution-configuration.md](./02-solution-configuration)를 참조하세요. 이 문서는 각 도구의 목적, 명령어, 파라미터, 실행 예시를 다룹니다.
+> **Relationship with 02-solution-configuration.md**: For `dotnet-tools.json` manifest creation/management methods and build script pipeline overview, see [02-solution-configuration.md](./02-solution-configuration). This document covers the purpose, commands, parameters, and execution examples for each tool.
 
-## CLI 도구 (.config/dotnet-tools.json)
+## CLI Tools (.config/dotnet-tools.json)
 
-### 도구 관리 기본
+### Tool Management Basics
 
-CLI 도구는 `.config/dotnet-tools.json` 매니페스트로 관리됩니다. 매니페스트 생성, 도구 설치/복원 방법은 [02-solution-configuration.md §.config/dotnet-tools.json](./02-solution-configuration#configdotnet-toolsjson)을 참조하세요.
+CLI tools are managed via the `.config/dotnet-tools.json` manifest. For manifest creation and tool installation/restoration methods, see [02-solution-configuration.md §.config/dotnet-tools.json](./02-solution-configuration#configdotnet-toolsjson).
 
-**rollForward 설정:**
+**rollForward setting:**
 
-| 값 | 동작 | 사용 시기 |
+| Value | Behavior | When to Use |
 |----|------|----------|
-| `false` (기본) | 도구의 대상 프레임워크와 정확히 일치하는 런타임 필요 | 도구와 SDK 버전이 일치할 때 |
-| `true` | 상위 버전 런타임에서 실행 허용 | 도구가 이전 버전 대상일 때 (예: .NET 9 도구를 .NET 10 SDK에서 실행) |
+| `false` (default) | Requires runtime exactly matching the tool's target framework | When tool and SDK versions match |
+| `true` | Allows execution on higher version runtimes | When the tool targets an older version (e.g., running .NET 9 tool on .NET 10 SDK) |
 
-> `Build-Local.ps1` Step 1에서 `dotnet tool restore`를 자동으로 수행합니다.
+> `Build-Local.ps1` Step 1 automatically performs `dotnet tool restore`.
 
-### ReportGenerator (코드 커버리지)
+### ReportGenerator (Code Coverage)
 
-| 항목 | 값 |
+| Item | Value |
 |------|-----|
-| 패키지 | `dotnet-reportgenerator-globaltool` |
-| 명령 | `reportgenerator` |
-| 용도 | Cobertura XML → HTML/Markdown 커버리지 리포트 변환 |
+| Package | `dotnet-reportgenerator-globaltool` |
+| Command | `reportgenerator` |
+| Purpose | Cobertura XML to HTML/Markdown coverage report conversion |
 
-**독립 실행:**
+**Standalone execution:**
 
 ```powershell
 dotnet reportgenerator `
@@ -117,170 +117,170 @@ dotnet reportgenerator `
   -reporttypes:"Html;Cobertura;MarkdownSummaryGithub"
 ```
 
-**주요 파라미터:**
+**Key parameters:**
 
-| 파라미터 | 설명 | 예시 |
+| Parameter | Description | Example |
 |---------|------|------|
-| `-reports` | 입력 커버리지 파일 (glob) | `**/*.cobertura.xml` |
-| `-targetdir` | 출력 디렉토리 | `.coverage/reports/html` |
-| `-reporttypes` | 리포트 형식 | `Html;Cobertura;MarkdownSummaryGithub` |
-| `-assemblyfilters` | 어셈블리 포함/제외 | `+MyApp*;-*.Tests*` |
-| `-filefilters` | 소스 파일 포함/제외 | `-**/AssemblyReference.cs` |
+| `-reports` | Input coverage files (glob) | `**/*.cobertura.xml` |
+| `-targetdir` | Output directory | `.coverage/reports/html` |
+| `-reporttypes` | Report formats | `Html;Cobertura;MarkdownSummaryGithub` |
+| `-assemblyfilters` | Assembly include/exclude | `+MyApp*;-*.Tests*` |
+| `-filefilters` | Source file include/exclude | `-**/AssemblyReference.cs` |
 
-> `Build-Local.ps1` Step 7에서 자동으로 HTML + Cobertura + Markdown 리포트를 생성합니다.
+> `Build-Local.ps1` Step 7 automatically generates HTML + Cobertura + Markdown reports.
 
-### Verify.Tool (스냅샷 관리)
+### Verify.Tool (Snapshot Management)
 
-| 항목 | 값 |
+| Item | Value |
 |------|-----|
-| 패키지 | `verify.tool` |
-| 명령 | `dotnet-verify` |
-| 용도 | Verify.Xunit 스냅샷 `.received` → `.verified` 승인 |
+| Package | `verify.tool` |
+| Command | `dotnet-verify` |
+| Purpose | Approve Verify.Xunit snapshot `.received` to `.verified` |
 
-**실행:**
+**Execution:**
 
 ```powershell
 dotnet verify accept -y
 ```
 
-**사용 시기:**
-- 스냅샷 테스트 실행 후 `*.received.*` 파일이 생성되었을 때
-- 의도적으로 출력이 변경되어 새 스냅샷을 승인해야 할 때
+**When to use:**
+- When `*.received.*` files are generated after running snapshot tests
+- When output has intentionally changed and the new snapshot needs to be approved
 
-> `Build-VerifyAccept.ps1`이 이 명령을 자동으로 수행합니다.
+> `Build-VerifyAccept.ps1` automatically performs this command.
 
-### Siren (ER 다이어그램)
+### Siren (ER Diagrams)
 
-| 항목 | 값 |
+| Item | Value |
 |------|-----|
-| 패키지 | `gman.siren` |
-| 명령 | `siren-gen` |
-| 용도 | EF Core DbContext → Mermaid ER 다이어그램 생성 |
-| rollForward | `true` (.NET 9 도구를 .NET 10에서 실행) |
+| Package | `gman.siren` |
+| Command | `siren-gen` |
+| Purpose | EF Core DbContext to Mermaid ER diagram generation |
+| rollForward | `true` (running .NET 9 tool on .NET 10) |
 
-**입력 모드:**
+**Input modes:**
 
-| 모드 | 플래그 | 설명 |
+| Mode | Flag | Description |
 |------|--------|------|
-| 어셈블리 | `-a <dll 경로>` | Migration이 포함된 어셈블리에서 스키마 추출 |
-| 연결 문자열 | `-c <connection string>` | 기존 데이터베이스에서 스키마 읽기 |
+| Assembly | `-a <dll path>` | Extract schema from assembly containing Migrations |
+| Connection string | `-c <connection string>` | Read schema from existing database |
 
-**실행 예시:**
+**Execution examples:**
 
 ```powershell
-# 어셈블리 모드 (Migration 사용 프로젝트)
+# Assembly mode (project using Migrations)
 dotnet siren-gen `
   -a bin/Release/net10.0/MyApp.Persistence.dll `
   -o ER-Diagram.md
 
-# 연결 문자열 모드 (기존 DB)
+# Connection string mode (existing DB)
 dotnet siren-gen `
   -c "Data Source=myapp.db" `
   -o ER-Diagram.md
 ```
 
-**주요 파라미터:**
+**Key parameters:**
 
-| 파라미터 | 설명 |
+| Parameter | Description |
 |---------|------|
-| `-o, --outputPath` | 출력 Markdown 파일 경로 (필수) |
-| `-a, --assemblyPath` | Migration 어셈블리 DLL 경로 |
-| `-c, --connectionString` | 데이터베이스 연결 문자열 |
-| `-f, --filterEntities` | 포함할 Entity 이름 필터 (쉼표 구분) |
-| `-s, --skipEntities` | 제외할 Entity 이름 (쉼표 구분) |
-| `-h, --filterSchemas` | 포함할 스키마 필터 |
-| `-x, --skipSchemas` | 제외할 스키마 |
-| `-t, --template` | 렌더링 템플릿 (기본: `default`) |
+| `-o, --outputPath` | Output Markdown file path (required) |
+| `-a, --assemblyPath` | Migration assembly DLL path |
+| `-c, --connectionString` | Database connection string |
+| `-f, --filterEntities` | Entity name filter to include (comma-separated) |
+| `-s, --skipEntities` | Entity names to exclude (comma-separated) |
+| `-h, --filterSchemas` | Schema filter to include |
+| `-x, --skipSchemas` | Schemas to exclude |
+| `-t, --template` | Rendering template (default: `default`) |
 
-**제약 사항:**
-- 어셈블리 모드(`-a`): EF Core Migrations 필수. `EnsureCreated()` 패턴 프로젝트에서는 동작하지 않음
-- 연결 문자열 모드(`-c`): SQL Server 전용. SQLite/InMemory 미지원
+**Constraints:**
+- Assembly mode (`-a`): Requires EF Core Migrations. Does not work with `EnsureCreated()` pattern projects
+- Connection string mode (`-c`): SQL Server only. SQLite/InMemory not supported
 
-> Siren은 Mermaid 다이어그램을 이미지로 렌더링하는 범용 도구이지만, 여기서는 EF Core → Mermaid ER 다이어그램 생성 기능만 사용합니다.
+> Siren is a general-purpose tool for rendering Mermaid diagrams to images, but here we only use the EF Core to Mermaid ER diagram generation feature.
 
-이 제약으로 인해 프로젝트에서는 `Build-ERDiagram.ps1` 스크립트(§Build-ERDiagram.ps1 참조)로 EF Core Configuration 기반 Mermaid ER 다이어그램을 직접 생성합니다. 예시: [Tests.Hosts/01-SingleHost/ER-Diagram.md](../../Tests.Hosts/01-SingleHost/ER-Diagram.md)
+Due to these constraints, the project uses the `Build-ERDiagram.ps1` script (see §Build-ERDiagram.ps1) to directly generate Mermaid ER diagrams based on EF Core Configuration. Example: [Tests.Hosts/01-SingleHost/ER-Diagram.md](../../Tests.Hosts/01-SingleHost/ER-Diagram.md)
 
-### Build-ERDiagram.ps1 (ER 다이어그램 직접 생성)
+### Build-ERDiagram.ps1 (Direct ER Diagram Generation)
 
-| 항목 | 값 |
+| Item | Value |
 |------|-----|
-| 위치 | `Tests.Hosts/01-SingleHost/Build-ERDiagram.ps1` |
-| 용도 | EF Core Configuration 기반 Mermaid ER 다이어그램 생성 |
-| 출력 | `Tests.Hosts/01-SingleHost/ER-Diagram.md` |
+| Location | `Tests.Hosts/01-SingleHost/Build-ERDiagram.ps1` |
+| Purpose | Mermaid ER diagram generation based on EF Core Configuration |
+| Output | `Tests.Hosts/01-SingleHost/ER-Diagram.md` |
 
-Siren 도구의 제약(Migration 필수 또는 SQL Server 전용)을 우회하여, 스크립트 내부에 정의된 ER 다이어그램 템플릿을 `ER-Diagram.md`로 출력합니다. 스키마 변경 시 스크립트 내부의 `$erDiagram` 변수를 수동으로 업데이트해야 합니다.
+This script bypasses Siren tool constraints (requiring Migrations or SQL Server only) by outputting ER diagram templates defined within the script to `ER-Diagram.md`. When schemas change, the `$erDiagram` variable inside the script must be manually updated.
 
-**실행:**
+**Execution:**
 
 ```powershell
-# Tests.Hosts/01-SingleHost/ 디렉토리에서 실행
+# Run in Tests.Hosts/01-SingleHost/ directory
 ./Build-ERDiagram.ps1
 
-# 도움말
+# Help
 ./Build-ERDiagram.ps1 -Help
 ```
 
-**참조 파일**: EF Core Configuration 변경 시 다음 파일을 참고하여 스크립트를 업데이트하세요:
+**Reference files**: When EF Core Configuration changes, refer to the following files to update the script:
 - `Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/Configurations/`
 
-CLI 도구가 빌드 파이프라인에서 독립적으로 실행된다면, 소스 생성기는 컴파일 시점에 자동으로 코드를 생성합니다.
+While CLI tools run independently in the build pipeline, source generators automatically generate code at compile time.
 
-## 소스 생성기
+## Source Generators
 
-### Functorium.SourceGenerators (자체)
+### Functorium.SourceGenerators (Internal)
 
-| 항목 | 값 |
+| Item | Value |
 |------|-----|
-| 프로젝트 | `Src/Functorium.SourceGenerators` |
-| 대상 | `netstandard2.0` (Roslyn 요구사항) |
-| NuGet 패키징 | `analyzers/dotnet/cs` 경로에 배치 |
+| Project | `Src/Functorium.SourceGenerators` |
+| Target | `netstandard2.0` (Roslyn requirement) |
+| NuGet packaging | Placed in `analyzers/dotnet/cs` path |
 
-**제공 생성기:**
+**Provided generators:**
 
-다음 테이블은 Functorium이 제공하는 소스 생성기와 각각이 생성하는 코드를 정리한 것입니다.
+The following table summarizes the source generators provided by Functorium and the code each generates.
 
-| 생성기 | 트리거 어트리뷰트 | 생성 결과 |
+| Generator | Trigger Attribute | Generated Output |
 |--------|------------------|----------|
 | `EntityIdGenerator` | `[GenerateEntityId]` | EntityId struct + EF Core Converter/Comparer |
-| `ObservablePortGenerator` | `[GenerateObservablePort]` | Observability 래핑 Pipeline 클래스 |
-| `UnionTypeGenerator` | `[UnionType]` | `abstract partial record`에 대한 `Match`/`Switch` 메서드 자동 생성 |
+| `ObservablePortGenerator` | `[GenerateObservablePort]` | Observability wrapping Pipeline class |
+| `UnionTypeGenerator` | `[UnionType]` | Auto-generated `Match`/`Switch` methods for `abstract partial record` |
 
 #### EntityIdGenerator
 
-`[GenerateEntityId]`를 Entity/AggregateRoot 클래스에 적용하면 Ulid 기반 EntityId를 자동 생성합니다.
+Applying `[GenerateEntityId]` to an Entity/AggregateRoot class automatically generates a Ulid-based EntityId.
 
 ```csharp
 [GenerateEntityId]
 public sealed class Product : AggregateRoot<ProductId> { ... }
 ```
 
-**생성되는 코드:**
-- `ProductId` record struct — `IEntityId<ProductId>`, `IParsable<ProductId>` 구현
-- `ProductIdConverter` — EF Core `ValueConverter<ProductId, string>`
-- `ProductIdComparer` — EF Core `ValueComparer<ProductId>`
-- JSON 직렬화/역직렬화 (`JsonConverter`)
-- 비교 연산자 (`<`, `>`, `<=`, `>=`)
+**Generated code:**
+- `ProductId` record struct -- implements `IEntityId<ProductId>`, `IParsable<ProductId>`
+- `ProductIdConverter` -- EF Core `ValueConverter<ProductId, string>`
+- `ProductIdComparer` -- EF Core `ValueComparer<ProductId>`
+- JSON serialization/deserialization (`JsonConverter`)
+- Comparison operators (`<`, `>`, `<=`, `>=`)
 
 #### ObservablePortGenerator
 
-`[GenerateObservablePort]`을 IObservablePort 구현 클래스에 적용하면 Observability 래핑 Pipeline을 자동 생성합니다.
+Applying `[GenerateObservablePort]` to an IObservablePort implementation class automatically generates an Observability wrapping Pipeline.
 
 ```csharp
 [GenerateObservablePort]
 public class EfCoreProductRepository : IProductRepository { ... }
 ```
 
-**생성되는 코드:**
-- `EfCoreProductRepositoryPipeline` 클래스 — 원본 클래스를 상속
-- 각 메서드를 override하여 추가:
-  - `ActivitySource` 분산 추적 (span 생성)
-  - `ILogger` 구조화된 로깅 (요청/응답/에러)
-  - `IMeterFactory` 메트릭 (카운터, 히스토그램)
-  - 에러 분류 (Expected vs Exceptional)
+**Generated code:**
+- `EfCoreProductRepositoryPipeline` class -- inherits from the original class
+- Overrides each method to add:
+  - `ActivitySource` distributed tracing (span creation)
+  - `ILogger` structured logging (request/response/error)
+  - `IMeterFactory` metrics (counters, histograms)
+  - Error classification (Expected vs Exceptional)
 
 #### UnionTypeGenerator
 
-`[UnionType]`을 `abstract partial record`에 적용하면 패턴 매칭 메서드를 자동 생성합니다.
+Applying `[UnionType]` to an `abstract partial record` automatically generates pattern matching methods.
 
 ```csharp
 [UnionType]
@@ -291,74 +291,74 @@ public abstract partial record Shape
 }
 ```
 
-**생성되는 코드:**
-- `Match<TResult>(...)` — 모든 파생 타입에 대한 exhaustive 패턴 매칭
-- `Switch(...)` — void 반환 버전의 패턴 매칭
+**Generated code:**
+- `Match<TResult>(...)` -- exhaustive pattern matching for all derived types
+- `Switch(...)` -- void-returning version of pattern matching
 
 ### Mediator.SourceGenerator
 
-| 항목 | 값 |
+| Item | Value |
 |------|-----|
-| 패키지 | `Mediator.SourceGenerator` (v3.0.1) |
-| 용도 | Mediator 패턴 핸들러 코드 자동 생성 |
+| Package | `Mediator.SourceGenerator` (v3.0.1) |
+| Purpose | Auto-generation of Mediator pattern handler code |
 
-**주의 사항:** 테스트 프로젝트에서 호스트 프로젝트를 참조할 때, Mediator.SourceGenerator가 중복 실행되어 빌드 오류가 발생할 수 있습니다. 이 경우 호스트 프로젝트 참조에 `ExcludeAssets="analyzers"`를 추가합니다.
+**Note:** When referencing the host project from a test project, Mediator.SourceGenerator may run in duplicate, causing build errors. In this case, add `ExcludeAssets="analyzers"` to the host project reference.
 
 ```xml
 <ProjectReference Include="..." ExcludeAssets="analyzers" />
 ```
 
-## Source Generator 디버깅
+## Source Generator Debugging
 
-### 디버깅 방법 비교
+### Debugging Method Comparison
 
-| 방법 | 안정성 | 반복성 | 권장 |
+| Method | Stability | Repeatability | Recommended |
 |------|--------|--------|------|
-| 테스트 프로젝트에서 디버깅 | 높음 | 높음 | 권장 |
-| `Debugger.Launch()` 사용 | 중간 | 중간 | 긴급 시 |
-| Attach to Process | 낮음 | 낮음 | 비권장 |
+| Debugging from test project | High | High | Recommended |
+| Using `Debugger.Launch()` | Medium | Medium | For emergencies |
+| Attach to Process | Low | Low | Not recommended |
 
-### 방법 1: 테스트 프로젝트에서 디버깅 (권장)
+### Method 1: Debugging from Test Project (Recommended)
 
-기존 단위 테스트를 활용하여 소스 생성기를 디버깅합니다.
+Debug the source generator using existing unit tests.
 
-1. 테스트 파일에서 브레이크포인트 설정 (예: `_sut.Generate(input)` 호출 지점)
-2. 소스 생성기 코드에도 브레이크포인트 설정
-3. Visual Studio Test Explorer에서 **Debug** 또는 코드 위 **Debug Test** 클릭
-4. F11 (Step Into)로 소스 생성기 내부로 진입
+1. Set breakpoints in the test file (e.g., at the `_sut.Generate(input)` call site)
+2. Also set breakpoints in the source generator code
+3. Click **Debug** in Visual Studio Test Explorer or **Debug Test** above the code
+4. Step into the source generator internals with F11 (Step Into)
 
-**장점:** 컴파일러 프로세스 타이밍 문제 없음, 같은 입력으로 여러 번 테스트 가능, 전체 빌드 불필요
+**Advantages:** No compiler process timing issues, can test multiple times with the same input, full build not required
 
-### 방법 2: Debugger.Launch() 사용
+### Method 2: Using Debugger.Launch()
 
-컴파일 시작 시 자동으로 디버거 연결 대화상자를 표시합니다.
+Automatically displays the debugger attach dialog when compilation starts.
 
-1. Generator 클래스의 `AttachDebugger` 파라미터를 `true`로 설정:
+1. Set the Generator class's `AttachDebugger` parameter to `true`:
    ```csharp
    [Generator(LanguageNames.CSharp)]
    public sealed class ObservablePortGenerator()
        : IncrementalGeneratorBase<ObservableClassInfo>(
            RegisterSourceProvider,
            Generate,
-           AttachDebugger: true)  // 디버깅 활성화
+           AttachDebugger: true)  // Enable debugging
    ```
-2. Visual Studio 완전히 재시작
-3. 소스 생성기를 사용하는 프로젝트 빌드
-4. Just-In-Time Debugger 대화상자에서 현재 VS 인스턴스 선택
-5. **디버깅 종료 후 반드시 `AttachDebugger: false`로 되돌리기** (커밋 금지)
+2. Completely restart Visual Studio
+3. Build a project that uses the source generator
+4. Select the current VS instance in the Just-In-Time Debugger dialog
+5. **After debugging, make sure to revert to `AttachDebugger: false`** (do not commit)
 
-### 디버깅 팁
+### Debugging Tips
 
-**생성된 코드 확인:** Solution Explorer > Dependencies > Analyzers > `Functorium.SourceGenerators` 하위에서 생성된 `.g.cs` 파일 확인
+**Check generated code:** In Solution Explorer > Dependencies > Analyzers > `Functorium.SourceGenerators`, check the generated `.g.cs` files
 
-**빌드 로그에서 확인:**
+**Check from build log:**
 
 ```powershell
 dotnet build Observability.Adapters.Infrastructure -v:diag > build.log
-# build.log에서 "SourceGenerator" 검색
+# Search for "SourceGenerator" in build.log
 ```
 
-**Watch 창 유용한 표현식:**
+**Useful Watch window expressions:**
 
 ```csharp
 classSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
@@ -366,41 +366,41 @@ classSymbol.AllInterfaces.Select(i => i.Name).ToArray()
 method.Parameters.Select(p => p.Type.ToDisplayString()).ToArray()
 ```
 
-**조건부 브레이크포인트:** 브레이크포인트 우클릭 > Conditions에서 `className == "RepositoryIo"` 등 조건 설정
+**Conditional breakpoints:** Right-click breakpoint > Conditions, set conditions like `className == "RepositoryIo"`
 
-### 문제 해결
+### Troubleshooting
 
-| 증상 | 원인 | 해결 |
+| Symptom | Cause | Solution |
 |------|------|------|
-| 디버거 연결 안 됨 | VS 관리자 권한 부족 | 관리자 권한으로 VS 실행 |
-| 브레이크포인트 속이 빈 원 | 심볼 미로드 | VS 재시작 + bin/obj 삭제 후 재빌드 |
-| 코드 변경 미반영 | 빌드 캐시 | VS 종료 → bin/obj 삭제 → VS 재시작 → Clean → Rebuild |
-| 테스트 디버깅 불가 | ProjectReference 설정 | `OutputItemType="Analyzer" ReferenceOutputAssembly="true"` 확인 |
+| Debugger not attached | Insufficient VS administrator privileges | Run VS as administrator |
+| Breakpoint shows hollow circle | Symbols not loaded | Restart VS + delete bin/obj and rebuild |
+| Code changes not reflected | Build cache | Close VS -> delete bin/obj -> restart VS -> Clean -> Rebuild |
+| Cannot debug test | ProjectReference setting | Check `OutputItemType="Analyzer" ReferenceOutputAssembly="true"` |
 
-소스 생성기가 컴파일 시점에 동작한다면, .NET 10 파일 기반 프로그램은 별도 빌드 없이 `.cs` 파일을 직접 실행합니다.
+While source generators operate at compile time, .NET 10 file-based programs execute `.cs` files directly without a separate build.
 
-## .NET 10 파일 기반 프로그램
+## .NET 10 File-Based Programs
 
-.NET 10은 `.cs` 파일을 직접 실행하는 "파일 기반 프로그램"을 지원합니다. NuGet 의존성은 `#:package` 지시문으로 선언합니다.
+.NET 10 supports "file-based programs" that execute `.cs` files directly. NuGet dependencies are declared with the `#:package` directive.
 
-> 각 스크립트 폴더에는 루트 `Directory.Build.props`의 Source Link 의존성을 차단하는 자체 `Directory.Build.props`가 있습니다. 자세한 내용은 [02-solution-configuration.md §중첩 구성 파일](./02-solution-configuration#중첩-구성-파일)을 참조하세요.
+> Each script folder has its own `Directory.Build.props` that blocks the root `Directory.Build.props` Source Link dependency. For details, see [02-solution-configuration.md §Nested configuration files](./02-solution-configuration#nested-configuration-files).
 
 ### SummarizeSlowestTests.cs
 
-| 항목 | 값 |
+| Item | Value |
 |------|-----|
-| 위치 | `.coverage/scripts/SummarizeSlowestTests.cs` |
-| 용도 | TRX 테스트 결과에서 느린 테스트 분석 리포트 생성 |
+| Location | `.coverage/scripts/SummarizeSlowestTests.cs` |
+| Purpose | Generate slow test analysis report from TRX test results |
 | NuGet | `System.CommandLine`, `Microsoft.Extensions.FileSystemGlobbing` |
 
-**생성하는 리포트:**
-- 전체 테스트 통계 (passed, failed, skipped)
-- 테스트 프로젝트별 실행 시간 분포
-- 상위 100개 느린 테스트 목록
-- 실패 테스트 요약
-- 백분위 분석 (50th, 90th, 95th, 99th)
+**Generated reports:**
+- Overall test statistics (passed, failed, skipped)
+- Execution time distribution per test project
+- Top 100 slowest test list
+- Failed test summary
+- Percentile analysis (50th, 90th, 95th, 99th)
 
-**실행:**
+**Execution:**
 
 ```powershell
 dotnet .coverage/scripts/SummarizeSlowestTests.cs `
@@ -409,30 +409,30 @@ dotnet .coverage/scripts/SummarizeSlowestTests.cs `
   --output .coverage/reports
 ```
 
-**주요 파라미터:**
+**Key parameters:**
 
-| 파라미터 | 설명 | 기본값 |
+| Parameter | Description | Default |
 |---------|------|--------|
-| `--glob` | TRX 파일 검색 패턴 | — |
-| `--threshold` | 느린 테스트 판단 기준 (초) | 30 |
-| `--output` | 리포트 출력 디렉토리 | — |
+| `--glob` | TRX file search pattern | -- |
+| `--threshold` | Slow test threshold (seconds) | 30 |
+| `--output` | Report output directory | -- |
 
-> `Build-Local.ps1` Step 9에서 자동으로 수행됩니다.
+> Automatically performed in `Build-Local.ps1` Step 9.
 
 ### ApiGenerator.cs
 
-| 항목 | 값 |
+| Item | Value |
 |------|-----|
-| 위치 | `.release-notes/scripts/ApiGenerator.cs` |
-| 용도 | 컴파일된 DLL에서 Public API 표면 텍스트 생성 |
+| Location | `.release-notes/scripts/ApiGenerator.cs` |
+| Purpose | Generate Public API surface text from compiled DLLs |
 | NuGet | `PublicApiGenerator` |
 
-**동작:**
-1. 지정된 DLL의 Public API를 추출
-2. .NET 10 / ASP.NET Core 참조 어셈블리를 자동으로 해석
-3. 텍스트 또는 파일로 API 정의 출력
+**Behavior:**
+1. Extracts Public API from the specified DLL
+2. Automatically resolves .NET 10 / ASP.NET Core reference assemblies
+3. Outputs API definitions as text or file
 
-**실행:**
+**Execution:**
 
 ```powershell
 dotnet .release-notes/scripts/ApiGenerator.cs `
@@ -442,82 +442,82 @@ dotnet .release-notes/scripts/ApiGenerator.cs `
 
 ### ExtractApiChanges.cs
 
-| 항목 | 값 |
+| Item | Value |
 |------|-----|
-| 위치 | `.release-notes/scripts/ExtractApiChanges.cs` |
-| 용도 | 브랜치 간 API 변경 사항 추출 (릴리스 노트용) |
+| Location | `.release-notes/scripts/ExtractApiChanges.cs` |
+| Purpose | Extract API changes between branches (for release notes) |
 | NuGet | `System.CommandLine`, `Spectre.Console` |
 
-**동작:**
-1. Functorium 소스 프로젝트를 검색 (테스트 제외)
-2. 각 프로젝트를 Release 모드로 publish
-3. `ApiGenerator.cs`를 호출하여 API 파일 생성
-4. 전체 API를 하나의 uber 파일로 병합
-5. Git diff로 변경 사항 추출
-6. 요약 리포트 생성
+**Behavior:**
+1. Search Functorium source projects (excluding tests)
+2. Publish each project in Release mode
+3. Call `ApiGenerator.cs` to generate API files
+4. Merge all APIs into a single uber file
+5. Extract changes via Git diff
+6. Generate summary report
 
-**출력:** `.analysis-output/api-changes-build-current/`
+**Output:** `.analysis-output/api-changes-build-current/`
 
-개별 도구의 상세 사용법을 살펴보았으므로, 마지막으로 전체 도구를 한눈에 조망합니다.
+Now that we have reviewed the detailed usage of individual tools, let us finally take an overall view of all tools.
 
-## 도구 전체 맵
+## Complete Tool Map
 
-### CLI 도구
+### CLI Tools
 
-다음 테이블은 CLI 도구, 소스 생성기, 스크립트를 카테고리별로 정리한 전체 맵입니다.
+The following table provides a complete map of CLI tools, source generators, and scripts organized by category.
 
-| 패키지 | 명령 | 용도 | Build-Local.ps1 단계 |
+| Package | Command | Purpose | Build-Local.ps1 Step |
 |--------|------|------|---------------------|
-| `dotnet-reportgenerator-globaltool` | `reportgenerator` | 커버리지 리포트 | Step 7 |
-| `verify.tool` | `dotnet-verify` | 스냅샷 승인 | Build-VerifyAccept.ps1 |
-| `gman.siren` | `siren-gen` | ER 다이어그램 | 수동 실행 |
+| `dotnet-reportgenerator-globaltool` | `reportgenerator` | Coverage report | Step 7 |
+| `verify.tool` | `dotnet-verify` | Snapshot approval | Build-VerifyAccept.ps1 |
+| `gman.siren` | `siren-gen` | ER diagram | Manual execution |
 
-### 소스 생성기
+### Source Generators
 
-| 생성기 | 어트리뷰트 | 프로젝트 |
+| Generator | Attribute | Project |
 |--------|-----------|---------|
 | EntityIdGenerator | `[GenerateEntityId]` | Functorium.SourceGenerators |
 | ObservablePortGenerator | `[GenerateObservablePort]` | Functorium.SourceGenerators |
 | UnionTypeGenerator | `[UnionType]` | Functorium.SourceGenerators |
-| Mediator.SourceGenerator | 인터페이스 기반 | NuGet (v3.0.1) |
+| Mediator.SourceGenerator | Interface-based | NuGet (v3.0.1) |
 
-### .NET 10 파일 기반 프로그램
+### .NET 10 File-Based Programs
 
-| 파일 | 용도 | Build-Local.ps1 단계 |
+| File | Purpose | Build-Local.ps1 Step |
 |------|------|---------------------|
-| `.coverage/scripts/SummarizeSlowestTests.cs` | 느린 테스트 분석 | Step 9 |
-| `.release-notes/scripts/ApiGenerator.cs` | Public API 표면 생성 | 수동/릴리스 |
-| `.release-notes/scripts/ExtractApiChanges.cs` | API 변경 사항 추출 | 수동/릴리스 |
+| `.coverage/scripts/SummarizeSlowestTests.cs` | Slow test analysis | Step 9 |
+| `.release-notes/scripts/ApiGenerator.cs` | Public API surface generation | Manual/Release |
+| `.release-notes/scripts/ExtractApiChanges.cs` | API change extraction | Manual/Release |
 
-## 새 도구 추가 체크리스트
+## New Tool Addition Checklist
 
-### CLI 도구 추가
+### Adding a CLI Tool
 
-1. `dotnet tool install <package-name>` (매니페스트에 자동 등록)
-2. `.config/dotnet-tools.json`에서 `rollForward` 설정 확인 (도구 대상 프레임워크가 현재 SDK보다 낮으면 `true`)
-3. [02-solution-configuration.md](./02-solution-configuration)의 도구 목록 테이블 업데이트
-4. 이 문서에 상세 사용법 섹션 추가
+1. `dotnet tool install <package-name>` (automatically registered in manifest)
+2. Check `rollForward` setting in `.config/dotnet-tools.json` (set to `true` if tool target framework is lower than current SDK)
+3. Update the tool list table in [02-solution-configuration.md](./02-solution-configuration)
+4. Add a detailed usage section in this document
 
-### 소스 생성기 추가
+### Adding a Source Generator
 
-1. `Directory.Packages.props`에 `<PackageVersion>` 추가
-2. 사용 프로젝트 `.csproj`에 `<PackageReference>` 추가
-3. 테스트 프로젝트 참조 시 `ExcludeAssets="analyzers"` 필요 여부 확인
+1. Add `<PackageVersion>` to `Directory.Packages.props`
+2. Add `<PackageReference>` to the using project's `.csproj`
+3. Check whether `ExcludeAssets="analyzers"` is needed for test project references
 
-### .NET 10 스크립트 추가
+### Adding a .NET 10 Script
 
-1. 적절한 디렉토리에 `.cs` 파일 생성
-2. `#:package` 지시문으로 NuGet 의존성 선언
-3. 해당 폴더에 `Directory.Build.props` 존재 여부 확인 (루트 props 차단 필요 시 생성)
-4. `Build-CleanRunFileCache.ps1`의 대상 패턴 업데이트 고려
+1. Create a `.cs` file in the appropriate directory
+2. Declare NuGet dependencies with the `#:package` directive
+3. Check whether a `Directory.Build.props` exists in the folder (create if root props blocking is needed)
+4. Consider updating the target pattern in `Build-CleanRunFileCache.ps1`
 
 ## Troubleshooting
 
-### rollForward 관련 오류
+### rollForward Related Error
 
-**증상:** `dotnet tool restore` 시 "The tool ... is not supported on the current .NET SDK" 오류
+**Symptom:** "The tool ... is not supported on the current .NET SDK" error during `dotnet tool restore`
 
-**Resolution:** `.config/dotnet-tools.json`에서 해당 도구의 `rollForward`를 `true`로 설정합니다.
+**Resolution:** Set the tool's `rollForward` to `true` in `.config/dotnet-tools.json`.
 
 ```json
 "tool-name": {
@@ -527,95 +527,95 @@ dotnet .release-notes/scripts/ApiGenerator.cs `
 }
 ```
 
-### .NET 10 스크립트 패키지 로딩 오류
+### .NET 10 Script Package Loading Error
 
-**증상:** `System.CommandLine` 등 패키지가 로드되지 않거나, 이전 버전 캐시가 사용됨
+**Symptom:** Packages like `System.CommandLine` are not loaded, or a previous version cache is used
 
-**Resolution:** `Build-CleanRunFileCache.ps1`로 runfile 캐시를 정리합니다.
+**Resolution:** Clean the runfile cache with `Build-CleanRunFileCache.ps1`.
 
 ```powershell
-# 특정 스크립트 캐시 정리
+# Clean specific script cache
 ./Build-CleanRunFileCache.ps1
 
-# 모든 runfile 캐시 정리
+# Clean all runfile cache
 ./Build-CleanRunFileCache.ps1 -Pattern "All"
 
-# 삭제 대상만 확인
+# Check deletion targets only
 ./Build-CleanRunFileCache.ps1 -WhatIf
 ```
 
-캐시 위치: `%TEMP%\dotnet\runfile\`
+Cache location: `%TEMP%\dotnet\runfile\`
 
-### Source Generator CS0436 타입 충돌 경고
+### Source Generator CS0436 Type Conflict Warning
 
-**증상:** `warning CS0436: 'AssemblyReference' 형식이 충돌합니다`
+**Symptom:** `warning CS0436: The type 'AssemblyReference' conflicts`
 
-**Cause:** 프로젝트 A가 Source Generator를 사용하고, 프로젝트 B가 A를 참조하면서 동일한 Source Generator를 사용할 때 발생합니다. `InternalsVisibleTo` 설정이 있으면 internal 생성 타입이 충돌합니다.
+**Cause:** Occurs when Project A uses a Source Generator and Project B references A while using the same Source Generator. If `InternalsVisibleTo` is configured, internal generated types conflict.
 
-**해결 방법 (3가지 조합 가능):**
+**Resolution (3 combinable approaches):**
 
-1. **NoWarn 추가 (권장):**
+1. **Add NoWarn (recommended):**
    ```xml
    <PropertyGroup>
      <NoWarn>$(NoWarn);CS0436</NoWarn>
    </PropertyGroup>
    ```
 
-2. **Generator 비활성화 (Mediator 예시):**
+2. **Disable Generator (Mediator example):**
    ```xml
    <PropertyGroup>
      <Mediator_DisableGenerator>true</Mediator_DisableGenerator>
    </PropertyGroup>
    ```
 
-3. **ExcludeAssets 설정:**
+3. **ExcludeAssets setting:**
    ```xml
    <ProjectReference Include="..\ProjectA\ProjectA.csproj">
      <ExcludeAssets>analyzers</ExcludeAssets>
    </ProjectReference>
    ```
 
-**영향받는 라이브러리:** Mediator, CommunityToolkit.Maui, StronglyTypedId, xUnit 등 Source Generator 패턴을 사용하는 라이브러리에서 공통적으로 발생합니다.
+**Affected libraries:** Commonly occurs in libraries using Source Generator patterns such as Mediator, CommunityToolkit.Maui, StronglyTypedId, xUnit, etc.
 
-> CS0436 경고는 기능에 영향을 주지 않으며 `NoWarn`으로 안전하게 억제할 수 있습니다. 단, `TreatWarningsAsErrors`가 활성화된 프로젝트에서는 빌드 실패를 유발하므로 반드시 처리하세요.
+> The CS0436 warning does not affect functionality and can be safely suppressed with `NoWarn`. However, in projects with `TreatWarningsAsErrors` enabled, it causes build failures and must be addressed.
 
-### Siren 어셈블리 모드 실패
+### Siren Assembly Mode Failure
 
-**증상:** `siren-gen -a <dll>` 실행 시 NullReferenceException 또는 빈 결과
+**Symptom:** NullReferenceException or empty result when running `siren-gen -a <dll>`
 
-**Cause:** EF Core Migrations를 사용하지 않는 프로젝트(`EnsureCreated()` 패턴)에서는 어셈블리 모드가 동작하지 않을 수 있습니다.
+**Cause:** Assembly mode may not work in projects that do not use EF Core Migrations (`EnsureCreated()` pattern).
 
 **Resolution:**
-1. 연결 문자열 모드 사용: 먼저 DB를 생성한 후 `siren-gen -c "Data Source=..."` 실행
-2. Mermaid ER 다이어그램 직접 작성 (수동 대안)
+1. Use connection string mode: First create the DB, then run `siren-gen -c "Data Source=..."`
+2. Write the Mermaid ER diagram manually (manual alternative)
 
 ## FAQ
 
-### Q1. CLI 도구와 소스 생성기의 차이점은 무엇인가요?
+### Q1. What is the difference between CLI tools and source generators?
 
-CLI 도구는 `dotnet tool` 매니페스트로 관리되며 명령줄에서 독립 실행됩니다. 소스 생성기는 NuGet 패키지로 참조되어 컴파일 시 코드를 자동 생성합니다. CLI 도구는 빌드 파이프라인에서, 소스 생성기는 개발 중 실시간으로 동작합니다.
+CLI tools are managed via the `dotnet tool` manifest and run independently from the command line. Source generators are referenced as NuGet packages and automatically generate code at compile time. CLI tools operate in the build pipeline, while source generators operate in real-time during development.
 
-### Q2. rollForward를 true로 설정해야 하는 경우는 언제인가요?
+### Q2. When should rollForward be set to true?
 
-도구의 대상 프레임워크가 현재 SDK 버전보다 낮을 때 설정합니다. 예를 들어 .NET 9 대상 도구를 .NET 10 SDK에서 실행하려면 `rollForward: true`가 필요합니다. 현재 `gman.siren`이 이 설정을 사용합니다.
+Set it when the tool's target framework is lower than the current SDK version. For example, running a .NET 9 target tool on a .NET 10 SDK requires `rollForward: true`. Currently `gman.siren` uses this setting.
 
-### Q3. .NET 10 파일 기반 프로그램에서 패키지 오류가 발생하면 어떻게 하나요?
+### Q3. What should I do when a package error occurs in .NET 10 file-based programs?
 
-`Build-CleanRunFileCache.ps1`로 runfile 캐시를 정리합니다. 캐시 위치는 `%TEMP%\dotnet\runfile\`이며, `-Pattern "All"` 옵션으로 모든 캐시를 정리하거나 기본값으로 특정 스크립트 캐시만 정리할 수 있습니다.
+Clean the runfile cache with `Build-CleanRunFileCache.ps1`. The cache location is `%TEMP%\dotnet\runfile\`, and you can clean all caches with the `-Pattern "All"` option or clean only specific script caches with the default.
 
-### Q4. Source Generator가 생성한 코드를 확인하는 방법은 무엇인가요?
+### Q4. How can I check the code generated by Source Generators?
 
-Visual Studio의 Solution Explorer에서 Dependencies > Analyzers > `Functorium.SourceGenerators` 하위에서 생성된 `.g.cs` 파일을 확인할 수 있습니다. 또는 `dotnet build -v:diag > build.log`로 빌드 로그를 생성한 후 "SourceGenerator"를 검색합니다.
+In Visual Studio's Solution Explorer, check the generated `.g.cs` files under Dependencies > Analyzers > `Functorium.SourceGenerators`. Alternatively, generate a build log with `dotnet build -v:diag > build.log` and search for "SourceGenerator".
 
-### Q5. Siren 도구로 ER 다이어그램이 생성되지 않는 경우 대안은 무엇인가요?
+### Q5. What is the alternative when the Siren tool fails to generate ER diagrams?
 
-Siren의 어셈블리 모드는 EF Core Migrations가 필수이고, 연결 문자열 모드는 SQL Server 전용입니다. 이 제약을 우회하기 위해 `Build-ERDiagram.ps1` 스크립트를 사용하여 EF Core Configuration 기반으로 Mermaid ER 다이어그램을 직접 생성합니다.
+Siren's assembly mode requires EF Core Migrations, and connection string mode is SQL Server only. To bypass these constraints, use the `Build-ERDiagram.ps1` script to directly generate Mermaid ER diagrams based on EF Core Configuration.
 
 ---
 
 ## References
 
-- [02-solution-configuration.md](./02-solution-configuration) — dotnet-tools.json 관리, 빌드 스크립트 파이프라인
-- [01-project-structure.md](./01-project-structure) — 프로젝트 구조 및 의존성
-- [15a-unit-testing.md](../testing/15a-unit-testing) — 단위 테스트 (Verify.Xunit 스냅샷 포함)
-- [16-testing-library.md](../testing/16-testing-library) — Functorium.Testing 라이브러리 (소스 생성기 테스트 포함)
+- [02-solution-configuration.md](./02-solution-configuration) -- dotnet-tools.json management, build script pipeline
+- [01-project-structure.md](./01-project-structure) -- Project structure and dependencies
+- [15a-unit-testing.md](../testing/15a-unit-testing) -- Unit testing (including Verify.Xunit snapshots)
+- [16-testing-library.md](../testing/16-testing-library) -- Functorium.Testing library (including source generator testing)

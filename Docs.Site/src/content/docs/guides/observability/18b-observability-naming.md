@@ -20,7 +20,7 @@ This document covers the following topics:
 2. **Logger 메서드 네이밍** - `Log{Context}{Phase}{Status}` 패턴과 적용 예시
 3. **일관된 계측 식별자** - Configurator, Pipeline, Options, Extensions 등 클래스 유형별 명명 패턴
 
-> **핵심 원칙:** Signal 이름(`Logging`, `Tracing`, `Metrics`)은 설정/활동 대상에 접두사로, Component 유형(`Logger`, `Span`, `Metric`)은 구체적 객체에 접미사로 사용합니다. 내부 일관성이 외부 표준 준수보다 우선합니다.
+> **Core principle:** Signal 이름(`Logging`, `Tracing`, `Metrics`)은 설정/활동 대상에 접두사로, Component 유형(`Logger`, `Span`, `Metric`)은 구체적 객체에 접미사로 사용합니다. 내부 일관성이 외부 표준 준수보다 우선합니다.
 
 ## Summary
 
@@ -48,7 +48,7 @@ LogUsecaseRequest, LogUsecaseResponseSuccess, LogUsecaseResponseError
 
 ### Key Concepts
 
-| 개념 | 규칙 | 예시 |
+| Concept | Rule | Example |
 |------|------|------|
 | Signal 접두사 | 설정/활동 대상 | `LoggingConfigurator`, `TracingEndpoint` |
 | Component 접미사 | 구체적 객체 | `StartupLogger`, `ISpanFactory` |
@@ -664,7 +664,7 @@ services
 
 ### 용어 정리표
 
-| 용도 | Logging | Tracing | Metrics | 비고 |
+| Purpose | Logging | Tracing | Metrics | Note |
 |------|---------|---------|---------|------|
 | **Configurator** | `LoggingConfigurator` | `TracingConfigurator` | `MetricsConfigurator` | 내부 일관성 우선 |
 | **Endpoint** | `LoggingEndpoint` | `TracingEndpoint` | `MetricsEndpoint` | 동명사 형태 |
@@ -692,7 +692,7 @@ Log{Context}{Phase}{Status}
 
 ### 구성 요소
 
-| 요소 | 설명 | 값 |
+| 요소 | Description | Value |
 |------|------|-----|
 | `Context` | 로깅 대상 컨텍스트 | `Usecase`, `DomainEventHandler`, `DomainEventPublisher`, `DomainEventsPublisher` |
 | `Phase` | 요청/응답 단계 | `Request`, `Response` |
@@ -705,7 +705,7 @@ Log{Context}{Phase}{Status}
 - `Response`: 작업 완료 시점 로그 (Status 필수)
 
 #### Status 규칙
-| Status | 로그 레벨 | 용도 |
+| Status | 로그 레벨 | Purpose |
 |--------|-----------|------|
 | `Success` | Information | 정상 완료 |
 | `Warning` | Warning | 예상된 에러 (Expected Error) |

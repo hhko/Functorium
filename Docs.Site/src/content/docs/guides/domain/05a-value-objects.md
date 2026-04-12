@@ -121,20 +121,20 @@ Value Objects cannot be changed after creation, making them thread-safe and pred
 원시 타입만 사용하면 다음과 같은 문제가 발생합니다:
 
 ```csharp
-// 문제점 1: 의미가 불명확함
+// Problem 1: 의미가 불명확함
 public void ProcessOrder(string email, decimal price, string currency);
 
-// 문제점 2: 잘못된 값 전달 가능 (컴파일 오류 없음)
+// Problem 2: 잘못된 값 전달 가능 (컴파일 오류 없음)
 ProcessOrder(currency, price, email);  // 순서 착각 - 런타임에야 발견
 
-// 문제점 3: 유효하지 않은 값이 시스템 전체로 퍼짐
+// Problem 3: 유효하지 않은 값이 시스템 전체로 퍼짐
 var email = "not-an-email";  // 아무 문자열이나 이메일로 사용 가능
 ```
 
 값 객체는 이 문제들을 해결합니다:
 
 ```csharp
-// 해결책: 타입으로 의미를 표현
+// Solution: 타입으로 의미를 표현
 public void ProcessOrder(Email email, Price price, Currency currency);
 
 // 컴파일 오류로 실수 방지
@@ -787,7 +787,7 @@ public static Validation<Error, (DateTime Min, DateTime Max)> Validate(DateTime 
 
 `Validation<Error, T>` 또는 `TypedValidation<TValueObject, T>` 튜플에 대한 Apply 오버로드를 제공합니다. `.As()` 없이 사용할 수 있습니다.
 
-> **참고**: Apply 확장 메서드는 루트 `Validations` 네임스페이스에 있으므로, Apply 패턴 사용 시 해당 네임스페이스를 추가해야 합니다.
+> **Note**: Apply 확장 메서드는 루트 `Validations` 네임스페이스에 있으므로, Apply 패턴 사용 시 해당 네임스페이스를 추가해야 합니다.
 
 ```csharp
 // Validation 튜플 - .As() 불필요
@@ -1046,7 +1046,7 @@ public static Validation<Error, int> Validate(string value) => ...
 | `Func<T, Validation<Error, T>>` | `MustSatisfyValidation` | 불필요 (타입 추론) |
 | `Func<TIn, Validation<Error, TOut>>` | `MustSatisfyValidationOf` | 필요 (`<TRequest, TIn, TOut>`) |
 
-> **참고**: `MustSatisfyValidationOf`에서 타입을 명시해야 하는 이유는 C# 14의 extension members가 추가 제네릭 타입 파라미터가 있을 때 타입 추론을 지원하지 않기 때문입니다.
+> **Note**: `MustSatisfyValidationOf`에서 타입을 명시해야 하는 이유는 C# 14의 extension members가 추가 제네릭 타입 파라미터가 있을 때 타입 추론을 지원하지 않기 때문입니다.
 
 ---
 
@@ -1299,7 +1299,7 @@ public Fin<Money> Add(Money other) =>
 
 이렇게 분리하면 **Validate 메서드를 다른 곳(FluentValidation 파이프라인 등)에서 재사용할** 수 있습니다.
 
-> **참고**: Entity도 동일한 Create/Validate 분리 패턴을 따릅니다. 자세한 내용은 [Entity 구현 가이드 - 생성 패턴](./06b-entity-aggregate-core#생성-패턴)을 참고하세요.
+> **Note**: Entity도 동일한 Create/Validate 분리 패턴을 따릅니다. 자세한 내용은 [Entity 구현 가이드 - 생성 패턴](./06b-entity-aggregate-core#생성-패턴)을 참고하세요.
 
 ### CreateFromValidated: ORM/Repository 복원용 팩토리
 
@@ -1380,7 +1380,7 @@ public static Validation<Error, (decimal Amount, string Currency)> Validate(deci
         .Apply((a, c) => (Amount: a, Currency: c));
 ```
 
-> **참고**: Apply 패턴 사용 시 `Functorium.Domains.ValueObjects.Validations` 네임스페이스가 필요합니다.
+> **Note**: Apply 패턴 사용 시 `Functorium.Domains.ValueObjects.Validations` 네임스페이스가 필요합니다.
 > (`ValidationApplyExtensions`가 해당 네임스페이스에 위치)
 
 ### 혼합 패턴 (Apply + Bind)

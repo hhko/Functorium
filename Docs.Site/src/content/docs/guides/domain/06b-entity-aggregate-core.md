@@ -382,7 +382,7 @@ The core of Entity implementation is **separation of validation responsibilities
 | **Create** | 원시 값 받음 | **Value Object를 직접 받음** |
 | **검증 책임** | 자신의 값 검증 | VO 간 관계/규칙 검증 |
 
-> **참고**: Value Object의 검증 패턴은 [값 객체 구현 가이드 - 구현 패턴](./05a-value-objects#구현-패턴)을 참고하세요.
+> **Note**: Value Object의 검증 패턴은 [값 객체 구현 가이드 - 구현 패턴](./05a-value-objects#구현-패턴)을 참고하세요.
 
 ### Create / CreateFromValidated 패턴
 
@@ -802,7 +802,7 @@ public sealed class OrderLine : Entity<OrderLineId>
 }
 ```
 
-> **참고**: 실전 코드는 `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Orders/OrderLine.cs`를 참조하세요.
+> **Note**: 실전 코드는 `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Orders/OrderLine.cs`를 참조하세요.
 
 ### Having Its Own Identifier
 
@@ -845,7 +845,7 @@ public Product AddTag(Tag tag)
 
 Domain events represent significant occurrences in the domain. AggregateRoot에서만 발행할 수 있습니다.
 
-> **참고**: 도메인 이벤트의 전체 설계(`IDomainEvent`/`DomainEvent` 정의, Pub/Sub, 핸들러 구독/등록, 트랜잭션 고려사항)는 [도메인 이벤트 가이드](./07-domain-events)를 참조하세요.
+> **Note**: 도메인 이벤트의 전체 설계(`IDomainEvent`/`DomainEvent` 정의, Pub/Sub, 핸들러 구독/등록, 트랜잭션 고려사항)는 [도메인 이벤트 가이드](./07-domain-events)를 참조하세요.
 
 ### Event Definition Location
 

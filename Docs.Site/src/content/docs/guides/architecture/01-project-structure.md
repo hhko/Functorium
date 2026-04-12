@@ -647,7 +647,7 @@ The primary objective folder name of an Adapter varies depending on the implemen
 └── Using.cs
 ```
 
-> **참고**: `Repositories/EfCore/`와 `Abstractions/Options/`는 EF Core 기반 영속화를 사용할 때 추가합니다. InMemory만 사용하는 경우 `Repositories/InMemory/`와 `Abstractions/Registrations/`만 있으면 됩니다. EF Core 사용 시 `Models/`(Persistence Model)과 `Mappers/`(도메인 ↔ Model 변환)가 함께 추가됩니다.
+> **Note**: `Repositories/EfCore/`와 `Abstractions/Options/`는 EF Core 기반 영속화를 사용할 때 추가합니다. InMemory만 사용하는 경우 `Repositories/InMemory/`와 `Abstractions/Registrations/`만 있으면 됩니다. EF Core 사용 시 `Models/`(Persistence Model)과 `Mappers/`(도메인 ↔ Model 변환)가 함께 추가됩니다.
 
 ### Adapters.Infrastructure 구조
 
@@ -687,7 +687,7 @@ public static IServiceCollection RegisterAdapterInfrastructure(this IServiceColl
 public static IApplicationBuilder UseAdapterInfrastructure(this IApplicationBuilder app) { ... }
 ```
 
-> **참고**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [14a-adapter-pipeline-di.md §4.6](../adapter/14a-adapter-pipeline-di#options-패턴-optionsconfigurator)을 참조하세요.
+> **Note**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [14a-adapter-pipeline-di.md §4.6](../adapter/14a-adapter-pipeline-di#options-패턴-optionsconfigurator)을 참조하세요.
 
 Now that we understand the folder structure of each layer, let us examine the Host project that assembles all layers.
 

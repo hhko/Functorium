@@ -496,7 +496,7 @@ new StockDepleted()      // 재고 소진
 
 다음 표는 각 레이어에서 흔히 정의되는 Custom 에러의 예시입니다.
 
-| 레이어 | Custom 에러 예시 | 설명 |
+| 레이어 | Custom 에러 예시 | Description |
 |--------|-----------------|------|
 | Domain | `AlreadyShipped`, `NotVerified`, `Expired` | 도메인 규칙 위반 |
 | Application | `PaymentDeclined`, `QuotaExceeded`, `MaintenanceMode` | 비즈니스 프로세스 실패 |

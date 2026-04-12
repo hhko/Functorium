@@ -185,18 +185,18 @@ public Fin<Unit> DeductStock(Quantity quantity)
 Entity가 없으면 다음과 같은 문제가 발생합니다:
 
 ```csharp
-// 문제점 1: 식별자가 명확하지 않음
+// Problem 1: 식별자가 명확하지 않음
 public class Order
 {
     public Guid Id { get; set; }  // Guid? int? string?
     public decimal Amount { get; set; }
 }
 
-// 문제점 2: 다른 타입의 ID와 혼동 가능
+// Problem 2: 다른 타입의 ID와 혼동 가능
 void ProcessOrder(Guid orderId, Guid customerId);
 ProcessOrder(customerId, orderId);  // 순서 착각 - 컴파일 오류 없음!
 
-// 문제점 3: 동등성 비교가 명확하지 않음
+// Problem 3: 동등성 비교가 명확하지 않음
 var order1 = GetOrder(id);
 var order2 = GetOrder(id);
 order1 == order2;  // false? (참조 비교)
@@ -205,7 +205,7 @@ order1 == order2;  // false? (참조 비교)
 Entity는 이 문제들을 해결합니다:
 
 ```csharp
-// 해결책: 타입 안전한 ID와 ID 기반 동등성
+// Solution: 타입 안전한 ID와 ID 기반 동등성
 [GenerateEntityId]
 public class Order : Entity<OrderId>
 {
@@ -389,7 +389,7 @@ public class Order : AggregateRoot<OrderId>
 여러 Aggregate에 걸친 비즈니스 규칙은 **도메인 이벤트를** 통해 최종 일관성(Eventual Consistency)으로 처리합니다.
 
 ```csharp
-// 주문 생성 시 재고 차감은 별도 Aggregate(Product) 변경
+// Create order 시 재고 차감은 별도 Aggregate(Product) 변경
 // → 도메인 이벤트로 비동기 처리
 
 // Order Aggregate에서 이벤트 발행
@@ -614,7 +614,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 
 **Split Signals** — 다음 중 하나라도 해당하면 분할을 검토합니다. 가장 흔한 신호는 동시성 충돌의 빈번한 발생입니다.
 
-| 신호 | 증상 | 예시 |
+| 신호 | Symptom | Example |
 |------|------|------|
 | 동시성 충돌 빈번 | `DbUpdateConcurrencyException` 반복 | 주문마다 Product 전체 락 |
 | 변경 빈도 불균형 | 일부 속성만 고빈도 변경 | 카탈로그(저빈도) vs 재고(고빈도) |
@@ -622,7 +622,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 
 **Merge Signals** — 다음 조건이 **모두** 해당하면 병합을 검토:
 
-| 신호 | 증상 | 예시 |
+| 신호 | Symptom | Example |
 |------|------|------|
 | 항상 함께 변경 | 두 Aggregate가 같은 Usecase에서 항상 동시 수정 | A 수정 시 B도 반드시 수정 |
 | 상호 불변식 의존 | A의 불변식이 B의 상태에 의존 | 합계 제약 조건 |
@@ -663,7 +663,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 
 **Pattern Classification:**
 
-| 패턴 | 허용 | 예시 | 근거 |
+| Pattern | 허용 | Example | 근거 |
 |------|------|------|------|
 | 단일 Aggregate 변경 | ✅ | `DeductStockCommand`: Inventory만 변경 | 원칙 준수 |
 | 읽기 + 단일 Aggregate 변경 | ✅ | `CreateOrderCommand`: Product 읽기 → Order 생성 | 읽기는 트랜잭션 경합 없음 |

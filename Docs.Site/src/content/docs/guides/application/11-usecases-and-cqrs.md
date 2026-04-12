@@ -523,7 +523,7 @@ using static Functorium.Applications.Errors.ApplicationErrorType;
 namespace LayeredArch.Application.Usecases.Products;
 
 /// <summary>
-/// 상품 생성 Command - Apply 패턴 + LINQ 구현
+/// Create product Command - Apply 패턴 + LINQ 구현
 /// </summary>
 public sealed class CreateProductCommand
 {
@@ -833,7 +833,7 @@ public sealed class SearchProductsQuery
 }
 ```
 
-> **참고**: Specification 패턴의 정의, 조합, Repository 통합에 대한 상세는 [10-specifications.md](../domain/10-specifications)를 참조하세요.
+> **Note**: Specification 패턴의 정의, 조합, Repository 통합에 대한 상세는 [10-specifications.md](../domain/10-specifications)를 참조하세요.
 
 ### 전체 조회 (필터 없음)
 
@@ -1000,7 +1000,7 @@ services
 
 ### 핵심 원칙
 
-| 원칙 | Description |
+| Principle | Description |
 |------|------|
 | SaveChanges 호출 위치 | **파이프라인이** 자동 처리 (Usecase에서 호출하지 않음) |
 | Repository 역할 | 엔티티 변경 + `IDomainEventCollector.Track()` 호출 |
@@ -1159,7 +1159,7 @@ public sealed class Validator : AbstractValidator<Request>
 }
 ```
 
-> **참고**: `MustSatisfyValidationOf`는 C#14 extension members의 타입 추론 제한으로 `IRuleBuilderInitial`에서 추가 제네릭 파라미터 해결이 안 되는 경우, 전통적인 확장 메서드 오버로드(`MustSatisfyValidationOf<TRequest, TProperty, TValueObject>`)도 제공됩니다.
+> **Note**: `MustSatisfyValidationOf`는 C#14 extension members의 타입 추론 제한으로 `IRuleBuilderInitial`에서 추가 제네릭 파라미터 해결이 안 되는 경우, 전통적인 확장 메서드 오버로드(`MustSatisfyValidationOf<TRequest, TProperty, TValueObject>`)도 제공됩니다.
 
 ### EntityId / OneOf / PairedRange 검증 확장 메서드
 

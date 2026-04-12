@@ -280,7 +280,7 @@ Product.CreateFromValidated(
 
 #### 왜 Soft Delete인가 — 5가지 원칙
 
-| # | 가치 | 설명 |
+| # | 가치 | Description |
 |---|------|------|
 | 1 | **참조 무결성** | Cross-Aggregate 참조 보존. 예: `OrderLine → ProductId` 참조가 존재하므로 물리 삭제 불가 |
 | 2 | **비즈니스 의미 분리** | "단종"은 도메인 개념이지 데이터 소멸이 아님. `Delete()`/`Restore()` + 도메인 이벤트로 명시적 모델링 |
@@ -932,7 +932,7 @@ return factory;
 
 ### 성능 비교
 
-| 패턴 | 해시 계산 | 버킷 조회 | 총 연산 |
+| Pattern | 해시 계산 | 버킷 조회 | 총 연산 |
 |------|----------|----------|--------|
 | `ContainsKey` + `[key]` | 2회 | 2회 | 4 |
 | `TryGetValue` | 1회 | 1회 | 2 |

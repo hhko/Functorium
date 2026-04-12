@@ -2,41 +2,41 @@
 title: "Integration Testing"
 ---
 
-이 문서는 Functorium 프로젝트의 통합 테스트 작성을 위한 `HostTestFixture<TProgram>` 클래스를 설명합니다.
+This document explains the `HostTestFixture<TProgram>` class for writing integration tests in Functorium projects.
 
 ## Introduction
 
-"DI 컨테이너에 등록된 서비스가 실제로 올바르게 해석되는지 어떻게 검증하는가?"
-"Options 바인딩이 `appsettings.json`과 정확히 일치하는지 어떻게 확인하는가?"
-"테스트 환경에서 Host 프로젝트의 전체 파이프라인을 재현하려면 무엇이 필요한가?"
+"How do you verify that services registered in the DI container are actually resolved correctly?"
+"How do you confirm that Options binding matches `appsettings.json` exactly?"
+"What is needed to reproduce the full pipeline of a Host project in a test environment?"
 
-단위 테스트는 개별 클래스의 동작을 검증하지만, DI 등록, 설정 바인딩, HTTP 파이프라인처럼 여러 레이어가 조합되는 영역은 통합 테스트로만 확인할 수 있습니다. `HostTestFixture<TProgram>`은 `WebApplicationFactory`를 래핑하여 이러한 통합 테스트를 간결하게 작성할 수 있도록 합니다.
+Unit tests verify the behavior of individual classes, but areas where multiple layers are combined -- such as DI registration, configuration binding, and HTTP pipelines -- can only be verified through integration tests. `HostTestFixture<TProgram>` wraps `WebApplicationFactory` to enable concise writing of such integration tests.
 
 ### What You Will Learn
 
 This document covers the following topics:
 
-1. **`HostTestFixture<TProgram>`의 구조와 생명주기** - 초기화부터 정리까지의 흐름
-2. **서비스 등록 검증 패턴** - DI 컨테이너와 Options 바인딩 확인 방법
-3. **환경별 설정 파일 구성** - `appsettings.{환경}.json` 로드 순서와 오버라이드
-4. **HTTP API 통합 테스트** - `HttpClient`를 통한 엔드포인트 검증
-5. **확장 포인트 활용** - `ConfigureHost`, `InitializeAsync` 오버라이드
+1. **Structure and lifecycle of `HostTestFixture<TProgram>`** - Flow from initialization to cleanup
+2. **Service registration verification patterns** - How to check DI container and Options binding
+3. **Environment-specific configuration file setup** - `appsettings.{Environment}.json` load order and overrides
+4. **HTTP API integration testing** - Endpoint verification via `HttpClient`
+5. **Extension point usage** - `ConfigureHost`, `InitializeAsync` overrides
 
 ### Prerequisites
 
 A basic understanding of the following concepts is needed to understand this document:
 
-- [단위 테스트 가이드](./15a-unit-testing) - 테스트 명명 규칙, AAA 패턴
-- ASP.NET Core의 DI(Dependency Injection) 개념
-- `IClassFixture`와 xUnit 생명주기
+- [Unit testing guide](./15a-unit-testing) - Test naming conventions, AAA pattern
+- ASP.NET Core DI (Dependency Injection) concepts
+- `IClassFixture` and xUnit lifecycle
 
-> **핵심 원칙:** `HostTestFixture<TProgram>`은 실제 Host 프로젝트의 DI 컨테이너와 설정 파이프라인을 테스트 환경에서 그대로 재현합니다. 서비스 등록, Options 바인딩, HTTP 엔드포인트를 단일 Fixture로 검증할 수 있습니다.
+> **Core principle:** `HostTestFixture<TProgram>` reproduces the actual Host project's DI container and configuration pipeline as-is in the test environment. Service registration, Options binding, and HTTP endpoints can be verified with a single Fixture.
 
 ## Summary
 
-### 주요 코드
+### Key Code
 
-**기본 테스트 Fixture 정의:**
+**Basic test Fixture definition:**
 ```csharp
 public class MyTestFixture : HostTestFixture<Program>
 {
@@ -44,7 +44,7 @@ public class MyTestFixture : HostTestFixture<Program>
 }
 ```
 
-**테스트 클래스 작성:**
+**Writing a test class:**
 ```csharp
 public class MyIntegrationTests : IClassFixture<MyTestFixture>
 {
@@ -68,30 +68,30 @@ public class MyIntegrationTests : IClassFixture<MyTestFixture>
 
 | Concept | Description |
 |------|------|
-| `HostTestFixture<TProgram>` | 호스트 통합 테스트용 기본 Fixture (`TProgram : class`) |
-| `EnvironmentName` | 로드할 환경 이름 (기본값: `"Test"`) |
-| `Services` | DI 컨테이너 (`IServiceProvider`) |
-| `Client` | HTTP 요청용 `HttpClient` |
-| `ConfigureHost` | Host 추가 설정 확장 포인트 (비어있는 `virtual` 메서드) |
-| `GetTestProjectPath` | 테스트 프로젝트 경로 (`AppContext.BaseDirectory`에서 3단계 상위) |
+| `HostTestFixture<TProgram>` | Base Fixture for host integration testing (`TProgram : class`) |
+| `EnvironmentName` | Environment name to load (default: `"Test"`) |
+| `Services` | DI container (`IServiceProvider`) |
+| `Client` | `HttpClient` for HTTP requests |
+| `ConfigureHost` | Host additional configuration extension point (empty `virtual` method) |
+| `GetTestProjectPath` | Test project path (3 levels up from `AppContext.BaseDirectory`) |
 
-### 테스트 작성 규칙
+### Test Writing Rules
 
-통합 테스트 작성 시 기본적인 테스트 명명 규칙, 변수 명명 규칙, AAA 패턴 등은 [단위 테스트 가이드](./15a-unit-testing)를 준수합니다.
+When writing integration tests, basic test naming conventions, variable naming conventions, AAA pattern, etc. follow the [unit testing guide](./15a-unit-testing).
 
-| 규칙 | 참조 |
+| Rule | Reference |
 |------|------|
-| 테스트 명명 (T1_T2_T3) | [테스트 명명 규칙](./15a-unit-testing#테스트-명명-규칙) |
-| 변수 명명 (`sut`, `actual` 등) | [변수 명명 규칙](./15a-unit-testing#변수-명명-규칙) |
-| AAA 패턴 | [AAA 패턴](./15a-unit-testing#aaa-패턴) |
+| Test naming (T1_T2_T3) | [Test naming conventions](./15a-unit-testing#test-naming-conventions) |
+| Variable naming (`sut`, `actual`, etc.) | [Variable naming conventions](./15a-unit-testing#variable-naming-conventions) |
+| AAA pattern | [AAA pattern](./15a-unit-testing#aaa-pattern) |
 
 ---
 
-## HostTestFixture 구조
+## HostTestFixture Structure
 
-### 클래스 정의
+### Class Definition
 
-소스 위치: `Src/Functorium.Testing/Arrangements/Hosting/HostTestFixture.cs`
+Source location: `Src/Functorium.Testing/Arrangements/Hosting/HostTestFixture.cs`
 
 ```csharp
 public class HostTestFixture<TProgram> : IAsyncDisposable, IAsyncLifetime where TProgram : class
@@ -107,46 +107,46 @@ public class HostTestFixture<TProgram> : IAsyncDisposable, IAsyncLifetime where 
 }
 ```
 
-### 생명주기
+### Lifecycle
 
 ```
-IClassFixture<T> 적용
+IClassFixture<T> applied
     ↓
-InitializeAsync() 호출 (ValueTask)
+InitializeAsync() called (ValueTask)
     ↓
-WebApplicationFactory 생성
+WebApplicationFactory created
     ↓
 UseEnvironment(EnvironmentName)
     ↓
 UseContentRoot(GetTestProjectPath())
     ↓
-ConfigureHost(builder) 호출
+ConfigureHost(builder) called
     ↓
-CreateClient() - 앱 시작
+CreateClient() - app starts
     ↓
-테스트 실행
+Tests execute
     ↓
-DisposeAsync() - HttpClient, WebApplicationFactory 정리
+DisposeAsync() - HttpClient, WebApplicationFactory cleanup
 ```
 
-### 설정 파일 로드 순서
+### Configuration File Load Order
 
 ```
-1. TProgram 프로젝트의 appsettings.json (기본 설정)
-2. 테스트 프로젝트의 appsettings.json (덮어씀)
-3. 테스트 프로젝트의 appsettings.{EnvironmentName}.json (병합)
+1. TProgram project's appsettings.json (default settings)
+2. Test project's appsettings.json (overrides)
+3. Test project's appsettings.{EnvironmentName}.json (merged)
 ```
 
 
 
 
-Fixture의 구조와 생명주기를 이해했으면, 이제 실제 테스트 코드를 작성해봅니다.
+Now that we understand the Fixture's structure and lifecycle, let us write actual test code.
 
-## 테스트 작성
+## Writing Tests
 
 ### Basic Structure
 
-`IClassFixture<T>`를 구현하고 Fixture를 생성자 주입으로 받는 패턴에 note this point.
+Note the pattern of implementing `IClassFixture<T>` and receiving the Fixture via constructor injection.
 
 ```csharp
 using Functorium.Testing.Arrangements.Hosting;
@@ -187,7 +187,7 @@ public class MyServiceIntegrationTests : IClassFixture<MyServiceIntegrationTests
         options.PropertyName.ShouldBe("ExpectedValue");
     }
 
-    // Fixture 정의 (중첩 클래스)
+    // Fixture definition (nested class)
     public class MyTestFixture : HostTestFixture<Program>
     {
         protected override string EnvironmentName => "MyTest";
@@ -195,9 +195,9 @@ public class MyServiceIntegrationTests : IClassFixture<MyServiceIntegrationTests
 }
 ```
 
-### 서비스 검증 패턴
+### Service Verification Patterns
 
-**DI 등록 확인:**
+**DI registration check:**
 ```csharp
 [Fact]
 public void Service_ShouldBeRegistered()
@@ -207,7 +207,7 @@ public void Service_ShouldBeRegistered()
 }
 ```
 
-**Options 바인딩 확인:**
+**Options binding check:**
 ```csharp
 [Fact]
 public void Options_ShouldBeBound()
@@ -221,7 +221,7 @@ public void Options_ShouldBeBound()
 }
 ```
 
-### HTTP API 테스트
+### HTTP API Testing
 
 ```csharp
 [Fact]
@@ -247,22 +247,22 @@ public async Task PostEndpoint_ShouldCreateResource()
 
 
 
-테스트 작성 패턴을 익혔으면, 다음으로 테스트 환경마다 다른 설정을 적용하는 방법을 살펴봅니다.
+Now that we have learned the test writing patterns, let us examine how to apply different configurations per test environment.
 
-## 환경별 설정
+## Environment-Specific Configuration
 
-### 설정 파일 구조
+### Configuration File Structure
 
 ```
 Tests/MyProject.Tests.Integration/
-├── appsettings.json                 # 기본 설정 (모든 Options에 유효한 값)
-├── appsettings.MyTest.json          # MyTest 환경 (테스트별 오버라이드)
-└── appsettings.AnotherTest.json     # AnotherTest 환경
+├── appsettings.json                 # Default settings (valid values for all Options)
+├── appsettings.MyTest.json          # MyTest environment (per-test overrides)
+└── appsettings.AnotherTest.json     # AnotherTest environment
 ```
 
-### appsettings.json (기본)
+### appsettings.json (Default)
 
-모든 Options에 유효한 기본값을 설정합니다:
+Set valid default values for all Options:
 
 ```json
 {
@@ -281,11 +281,11 @@ Tests/MyProject.Tests.Integration/
 }
 ```
 
-> **Note**: `OpenTelemetry` 설정의 `ServiceName`, `ServiceNamespace`, `CollectorEndpoint`는 필수 항목입니다.
+> **Note**: `ServiceName`, `ServiceNamespace`, and `CollectorEndpoint` in the `OpenTelemetry` settings are required fields.
 
-### appsettings.{환경}.json (오버라이드)
+### appsettings.{Environment}.json (Override)
 
-테스트에 필요한 설정만 오버라이드합니다:
+Override only the settings needed for the test:
 
 ```json
 {
@@ -297,7 +297,7 @@ Tests/MyProject.Tests.Integration/
 }
 ```
 
-### csproj 설정
+### csproj Configuration
 
 ```xml
 <ItemGroup>
@@ -311,19 +311,19 @@ Tests/MyProject.Tests.Integration/
 </ItemGroup>
 ```
 
-### Fixture에서 환경 지정
+### Specifying Environment in Fixture
 
 ```csharp
 public class FtpTestFixture : HostTestFixture<Program>
 {
-    // appsettings.FtpTest.json 로드
+    // Loads appsettings.FtpTest.json
     protected override string EnvironmentName => "FtpTest";
 }
 ```
 
-### 호스트 프로젝트 참조 시 주의사항
+### Precautions When Referencing Host Projects
 
-통합 테스트 프로젝트에서 호스트 프로젝트를 참조할 때, SourceGenerator 중복 실행을 방지하려면 `ExcludeAssets=analyzers`를 추가합니다:
+When referencing host projects from integration test projects, add `ExcludeAssets=analyzers` to prevent duplicate SourceGenerator execution:
 
 ```xml
 <ProjectReference Include="..\..\Src\MyHost\MyHost.csproj"
@@ -333,13 +333,13 @@ public class FtpTestFixture : HostTestFixture<Program>
 
 
 
-기본 설정으로 부족한 경우, Fixture의 확장 포인트를 통해 Host 동작을 커스터마이즈할 수 있습니다.
+When the default configuration is insufficient, you can customize Host behavior through the Fixture's extension points.
 
-## 확장 포인트
+## Extension Points
 
-### ConfigureHost 오버라이드
+### ConfigureHost Override
 
-추가적인 Host 설정이 필요한 경우, `ConfigureHost`를 오버라이드하여 서비스를 교체하거나 설정을 추가합니다.
+When additional Host configuration is needed, override `ConfigureHost` to replace services or add configuration.
 
 ```csharp
 public class CustomTestFixture : HostTestFixture<Program>
@@ -350,13 +350,13 @@ public class CustomTestFixture : HostTestFixture<Program>
     {
         builder.ConfigureServices(services =>
         {
-            // 테스트용 서비스 교체
+            // Replace with test service
             services.AddSingleton<IExternalService, MockExternalService>();
         });
 
         builder.ConfigureAppConfiguration((context, config) =>
         {
-            // 추가 설정 소스
+            // Additional configuration source
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Custom:Setting"] = "TestValue"
@@ -366,25 +366,25 @@ public class CustomTestFixture : HostTestFixture<Program>
 }
 ```
 
-### GetTestProjectPath 오버라이드
+### GetTestProjectPath Override
 
-테스트 프로젝트 경로가 다른 경우:
+When the test project path differs:
 
 ```csharp
 public class CustomPathFixture : HostTestFixture<Program>
 {
     protected override string GetTestProjectPath()
     {
-        // 기본: AppContext.BaseDirectory에서 3단계 상위 (bin/Debug/net10.0)
+        // Default: 3 levels up from AppContext.BaseDirectory (bin/Debug/net10.0)
         var baseDirectory = AppContext.BaseDirectory;
         return Path.GetFullPath(Path.Combine(baseDirectory, "..", "..", "..", ".."));
     }
 }
 ```
 
-### InitializeAsync 오버라이드
+### InitializeAsync Override
 
-초기화 로직 추가:
+Adding initialization logic:
 
 ```csharp
 public class ExtendedTestFixture : HostTestFixture<Program>
@@ -395,7 +395,7 @@ public class ExtendedTestFixture : HostTestFixture<Program>
     {
         await base.InitializeAsync();
 
-        // 추가 초기화
+        // Additional initialization
         TestLogger = Services.GetRequiredService<ILogger<ExtendedTestFixture>>();
     }
 }
@@ -406,18 +406,18 @@ public class ExtendedTestFixture : HostTestFixture<Program>
 
 ## Troubleshooting
 
-### Options 유효성 검사 실패
+### Options Validation Failure
 
-**증상:**
+**Symptom:**
 ```
 OptionsValidationException: Option Validation failed for 'MyOptions.Property': Property is required.
 ```
 
-**Cause:** 기본 appsettings.json에 해당 Options의 유효한 값이 없습니다.
+**Cause:** The default appsettings.json does not contain valid values for the corresponding Options.
 
 **Resolution:**
 ```json
-// appsettings.json에 유효한 기본값 추가
+// Add valid default values to appsettings.json
 {
   "MyOptions": {
     "Property": "ValidDefaultValue"
@@ -425,16 +425,16 @@ OptionsValidationException: Option Validation failed for 'MyOptions.Property': P
 }
 ```
 
-### Fixture 초기화 실패
+### Fixture Initialization Failure
 
-**증상:**
+**Symptom:**
 ```
 InvalidOperationException: Fixture not initialized
 ```
 
-**Cause:** `InitializeAsync`가 완료되기 전에 `Services`에 접근했습니다.
+**Cause:** `Services` was accessed before `InitializeAsync` completed.
 
-**Resolution:** `IClassFixture`를 올바르게 구현하고 있는지 확인:
+**Resolution:** Verify that `IClassFixture` is correctly implemented:
 ```csharp
 public class MyTests : IClassFixture<MyTestFixture>
 {
@@ -447,13 +447,13 @@ public class MyTests : IClassFixture<MyTestFixture>
 }
 ```
 
-### 설정 파일이 로드되지 않음
+### Configuration File Not Loaded
 
-**증상:** Options 값이 기본값으로 설정됩니다.
+**Symptom:** Options values are set to defaults.
 
 **Cause:**
-1. csproj에 `CopyToOutputDirectory`가 설정되지 않음
-2. `EnvironmentName`이 파일명과 일치하지 않음
+1. `CopyToOutputDirectory` not set in csproj
+2. `EnvironmentName` does not match the filename
 
 **Resolution:**
 ```xml
@@ -464,20 +464,20 @@ public class MyTests : IClassFixture<MyTestFixture>
 ```
 
 ```csharp
-// Fixture - EnvironmentName과 파일명 일치 확인
+// Fixture - Verify EnvironmentName matches filename
 protected override string EnvironmentName => "MyTest";  // → appsettings.MyTest.json
 ```
 
-### OTLP 연결 실패
+### OTLP Connection Failure
 
-**증상:**
+**Symptom:**
 ```
 Grpc.Core.RpcException: Error starting gRPC call
 ```
 
-**Cause:** 테스트 환경에서 실제 OTLP 엔드포인트에 연결을 시도합니다.
+**Cause:** The test environment attempts to connect to the actual OTLP endpoint.
 
-**Resolution:** 개별 엔드포인트를 빈 문자열로 설정하여 비활성화:
+**Resolution:** Disable by setting individual endpoints to empty strings:
 ```json
 {
   "OpenTelemetry": {
@@ -488,17 +488,17 @@ Grpc.Core.RpcException: Error starting gRPC call
 }
 ```
 
-### Seq 직렬화 오류
+### Seq Serialization Error
 
-**증상:** `System.Text.Json`으로 응답을 역직렬화할 때 `Seq<T>` 타입이 실패합니다.
+**Symptom:** Deserialization of responses with `System.Text.Json` fails for `Seq<T>` types.
 
-**Resolution:** 테스트 DTO에서 `Seq<T>` 대신 `List<T>`를 사용합니다.
+**Resolution:** Use `List<T>` instead of `Seq<T>` in test DTOs.
 
-### SourceGenerator 중복 오류
+### SourceGenerator Duplicate Error
 
-**증상:** Mediator SourceGenerator 등이 호스트 프로젝트와 테스트 프로젝트에서 중복 실행됩니다.
+**Symptom:** Mediator SourceGenerator and others run in duplicate across host and test projects.
 
-**Resolution:** 호스트 프로젝트 참조에 `ExcludeAssets=analyzers` 추가:
+**Resolution:** Add `ExcludeAssets=analyzers` to the host project reference:
 ```xml
 <ProjectReference Include="..\..\Src\MyHost\MyHost.csproj"
                   ExcludeAssets="analyzers" />
@@ -509,20 +509,20 @@ Grpc.Core.RpcException: Error starting gRPC call
 
 ## FAQ
 
-### Q1. HostTestFixture와 WebApplicationFactory의 차이점은 무엇인가요?
+### Q1. What is the difference between HostTestFixture and WebApplicationFactory?
 
-`HostTestFixture`는 `WebApplicationFactory`를 래핑하여 다음을 제공합니다:
+`HostTestFixture` wraps `WebApplicationFactory` and provides the following:
 
-| 기능 | WebApplicationFactory | HostTestFixture |
+| Feature | WebApplicationFactory | HostTestFixture |
 |------|----------------------|-----------------|
-| 환경 설정 | 수동 설정 | `EnvironmentName` 프로퍼티 |
-| ContentRoot | 수동 설정 | 자동 계산 (`GetTestProjectPath`) |
-| 확장 포인트 | `WithWebHostBuilder` | `ConfigureHost` 메서드 |
-| 생명주기 | 수동 관리 | `IAsyncLifetime` 구현 |
+| Environment configuration | Manual setup | `EnvironmentName` property |
+| ContentRoot | Manual setup | Auto-calculated (`GetTestProjectPath`) |
+| Extension points | `WithWebHostBuilder` | `ConfigureHost` method |
+| Lifecycle | Manual management | `IAsyncLifetime` implementation |
 
-### Q2. 테스트마다 다른 환경을 사용하려면 어떻게 하나요?
+### Q2. How do I use different environments per test?
 
-각 테스트 클래스에 별도의 Fixture를 정의하세요:
+Define a separate Fixture for each test class:
 
 ```csharp
 public class FtpTests : IClassFixture<FtpTests.FtpTestFixture>
@@ -542,9 +542,9 @@ public class OtelTests : IClassFixture<OtelTests.OtelTestFixture>
 }
 ```
 
-### Q3. Mock 서비스를 주입하려면 어떻게 하나요?
+### Q3. How do I inject mock services?
 
-`ConfigureHost`를 오버라이드하여 서비스를 교체하세요:
+Override `ConfigureHost` to replace services:
 
 ```csharp
 public class MockTestFixture : HostTestFixture<Program>
@@ -564,9 +564,9 @@ public class MockTestFixture : HostTestFixture<Program>
 }
 ```
 
-### Q4. 여러 테스트 클래스에서 같은 Fixture를 공유할 수 있나요?
+### Q4. Can the same Fixture be shared across multiple test classes?
 
-네, Fixture 클래스를 별도 파일로 분리하면 됩니다:
+Yes, separate the Fixture class into its own file:
 
 ```csharp
 // Fixtures/SharedTestFixture.cs
@@ -582,7 +582,7 @@ public class TestA : IClassFixture<SharedTestFixture> { }
 public class TestB : IClassFixture<SharedTestFixture> { }
 ```
 
-xUnit Collection Fixture를 사용하면 여러 테스트 클래스에서 하나의 호스트 인스턴스를 공유할 수 있습니다:
+Using xUnit Collection Fixture, multiple test classes can share a single host instance:
 
 ```csharp
 [CollectionDefinition("IntegrationTests")]
@@ -595,21 +595,21 @@ public class TestA { }
 public class TestB { }
 ```
 
-### Q5. HttpClient로 API 테스트 시 BaseAddress는 무엇인가요?
+### Q5. What is the BaseAddress when testing APIs with HttpClient?
 
-`HostTestFixture.Client`의 BaseAddress는 테스트 서버의 주소입니다. 상대 경로로 요청하면 됩니다:
+The BaseAddress of `HostTestFixture.Client` is the test server's address. Use relative paths for requests:
 
 ```csharp
-// 올바른 사용
+// Correct usage
 var response = await _fixture.Client.GetAsync("/api/health");
 
-// 절대 URL 불필요
+// Absolute URL unnecessary
 // var response = await _fixture.Client.GetAsync("http://localhost/api/health");
 ```
 
 ## References
 
-- [단위 테스트 가이드](./15a-unit-testing) - 테스트 명명 규칙, AAA 패턴 등 기본 테스트 작성 규칙
-- [테스트 라이브러리](./16-testing-library) - Functorium.Testing 라이브러리 가이드
+- [Unit testing guide](./15a-unit-testing) - Test naming conventions, AAA pattern, and other basic test writing rules
+- [Testing library](./16-testing-library) - Functorium.Testing library guide
 - [Microsoft.AspNetCore.Mvc.Testing](https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests)
 - [xUnit Class Fixtures](https://xunit.net/docs/shared-context#class-fixture)

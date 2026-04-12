@@ -2,25 +2,25 @@
 title: "DTO Strategy"
 ---
 
-레이어 간 데이터를 전송할 때 DTO가 무질서하게 증가하는 것은 흔한 문제입니다. 이 가이드는 레이어별 DTO 소유권을 정의하고, 재사용이 허용되는 조건을 명시하여 DTO 급증 문제를 방지합니다.
+When transferring data between layers, the uncontrolled proliferation of DTOs is a common problem. This guide defines DTO ownership per layer and specifies the conditions under which reuse is permitted, preventing DTO explosion.
 
 ## Introduction
 
-- DTO를 어느 레이어가 소유하고, 레이어 간 전달 시 어떤 규칙을 따라야 하는가?
-- DTO가 무분별하게 공유되면 레이어 간 결합도가 높아지는데, 어떻게 방지하는가?
-- 읽기 전용 시나리오에서 Application DTO를 재사용해도 괜찮은 기준은 무엇인가?
+- Which layer owns a DTO, and what rules should be followed when passing DTOs between layers?
+- How do we prevent increased coupling between layers when DTOs are shared indiscriminately?
+- What criteria determine whether it is acceptable to reuse Application DTOs in read-only scenarios?
 
-이러한 문제를 해결하기 위해 레이어별 DTO 소유권 원칙과 변환 패턴을 정립합니다.
+To address these problems, we establish per-layer DTO ownership principles and transformation patterns.
 
 ### What You Will Learn
 
 This document covers the following topics:
 
-1. **레이어별 DTO 소유권 규칙** - Presentation, Application, Persistence 각 레이어의 DTO 형태와 소유 위치
-2. **DTO 재사용 vs 분리 기준** - Application DTO 재사용이 허용되는 4가지 조건
-3. **변환 패턴과 매핑 전략** - Mapper 패턴, 컬렉션 타입 변환, VO 암시적 변환
+1. **Per-layer DTO ownership rules** - DTO forms and ownership locations for Presentation, Application, and Persistence layers
+2. **DTO reuse vs separation criteria** - 4 conditions under which Application DTO reuse is permitted
+3. **Transformation patterns and mapping strategies** - Mapper pattern, collection type conversion, VO implicit conversion
 
-> **DTO 전략의 핵심은** 각 레이어가 자신의 DTO를 소유하고, 경계를 넘을 때 명시적으로 변환하는 것입니다.
+> **The core of the DTO strategy is** that each layer owns its own DTOs and explicitly transforms them when crossing boundaries.
 
 ## Summary
 
@@ -42,55 +42,55 @@ internal static class ProductMapper
     public static Product ToDomain(this ProductModel model) => Product.CreateFromValidated(...);
 }
 
-// 컬렉션 변환
-result.Map(r => new Response(r.Products));  // PagedResult.Items는 이미 IReadOnlyList<T>
+// Collection conversion
+result.Map(r => new Response(r.Products));  // PagedResult.Items is already IReadOnlyList<T>
 return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));  // List → Seq
 ```
 
 ### Key Procedures
 
-**1. DTO 설계:**
-1. 각 레이어별 DTO 소유권 확인 (Presentation, Application, Persistence)
-2. Usecase nested record으로 Request/Response 정의
-3. Mapper로 레이어 간 변환 구현
+**1. DTO Design:**
+1. Verify DTO ownership per layer (Presentation, Application, Persistence)
+2. Define Request/Response as Usecase nested records
+3. Implement cross-layer transformation with Mappers
 
-**2. Application DTO 재사용 판단:**
-1. 읽기 전용 Query 응답인지 확인
-2. 필드가 동일하여 identity mapping인지 확인
-3. Presentation 고유 필드가 불필요한지 확인
-4. 컬렉션 타입 변환이 최소한인지 확인 (`PagedResult.Items`는 이미 `IReadOnlyList<T>`)
-5. 4가지 조건 모두 충족 시 재사용 허용
+**2. Application DTO Reuse Decision:**
+1. Verify it is a read-only Query response
+2. Verify fields are identical, resulting in identity mapping
+3. Verify Presentation-specific fields are unnecessary
+4. Verify collection type conversion is minimal (`PagedResult.Items` is already `IReadOnlyList<T>`)
+5. Allow reuse when all 4 conditions are met
 
 ### Key Concepts
 
 | Concept | Description |
 |------|------|
-| 레이어별 DTO 소유권 | 각 레이어가 자신의 데이터 표현을 소유하여 독립적 진화 보장 |
-| Usecase nested record | Command/Query 클래스 내부에 Request/Response를 중첩 정의 |
-| Persistence Model | primitive 타입만 사용하는 POCO, 도메인 의존성 없음 |
-| Mapper 패턴 | `internal static` 확장 메서드로 Domain ↔ Model 양방향 변환 |
-| `Seq<T>` vs `List<T>` | Application 도메인 컬렉션은 `Seq<T>`, Presentation/Persistence는 `List<T>` 사용. `PagedResult.Items`는 `IReadOnlyList<T>` |
+| Per-layer DTO ownership | Each layer owns its own data representation, ensuring independent evolution |
+| Usecase nested record | Request/Response defined as nested types inside Command/Query classes |
+| Persistence Model | POCO using only primitive types, no domain dependencies |
+| Mapper pattern | Bidirectional Domain <-> Model conversion via `internal static` extension methods |
+| `Seq<T>` vs `List<T>` | Application domain collections use `Seq<T>`, Presentation/Persistence use `List<T>`. `PagedResult.Items` is `IReadOnlyList<T>` |
 
 ---
 
-## 왜 레이어별 DTO가 필요한가
+## Why Per-Layer DTOs Are Needed
 
-Hexagonal Architecture에서 각 레이어(Port/Adapter)는 자신만의 데이터 표현을 소유합니다. 이는 레이어 간 독립적 진화를 보장합니다.
+In Hexagonal Architecture, each layer (Port/Adapter) owns its own data representation. This ensures independent evolution between layers.
 
-아래 표는 공유 DTO와 레이어별 DTO 사용 시 각 변경 시나리오에서의 영향 범위를 비교합니다.
+The following table compares the impact scope of each change scenario when using shared DTOs versus per-layer DTOs.
 
-| 문제 상황 | 공유 DTO 사용 | 레이어별 DTO 사용 |
+| Problem Scenario | Using Shared DTOs | Using Per-Layer DTOs |
 |----------|-------------|-----------------|
-| API 필드 추가 | Application도 수정 | Presentation만 수정 |
-| DB 컬럼 변경 | Domain에 영향 | Persistence Adapter만 수정 |
-| 직렬화 포맷 변경 | 전 레이어 영향 | Adapter만 수정 |
-| 타입 시스템 차이 | 타협 필요 (`Seq` vs `List`) | 각 레이어 최적 타입 사용 |
+| API field addition | Application also needs modification | Only Presentation is modified |
+| DB column change | Affects Domain | Only Persistence Adapter is modified |
+| Serialization format change | Affects all layers | Only Adapter is modified |
+| Type system differences | Compromise needed (`Seq` vs `List`) | Each layer uses optimal types |
 
-레이어별 DTO의 필요성을 이해했다면, 이제 각 레이어가 어떤 형태의 DTO를 소유하고, 데이터가 레이어를 통과하며 어떻게 변환되는지 살펴봅니다.
+Now that we understand the need for per-layer DTOs, let us examine what form of DTO each layer owns and how data is transformed as it passes through layers.
 
 ---
 
-## 레이어별 DTO 소유권 (WHAT)
+## Per-Layer DTO Ownership (WHAT)
 
 ```
 HTTP Request
@@ -108,24 +108,24 @@ Database
           → HTTP Response
 ```
 
-아래 표는 레이어별 DTO의 형태, 타입 특성, 소유 위치를 정리한 것입니다.
+The following table summarizes the DTO form, type characteristics, and ownership location per layer.
 
-| 레이어 | DTO 형태 | 타입 특성 | 소유 위치 |
+| Layer | DTO Form | Type Characteristics | Ownership Location |
 |--------|----------|----------|----------|
-| Presentation | Endpoint nested record | primitive (JSON 직렬화) | Endpoint 클래스 내부 |
-| Application | Usecase nested record | primitive (직렬화 가능) | Usecase 클래스 내부 |
-| Application (공유) | 독립 record | primitive | Query Port 파일 또는 `Usecases/{Aggregate}/Dtos/` |
-| Persistence | Model (POCO) | primitive (DB 매핑) | `Repositories/EfCore/Models/` |
+| Presentation | Endpoint nested record | primitive (JSON serialization) | Inside Endpoint class |
+| Application | Usecase nested record | primitive (serializable) | Inside Usecase class |
+| Application (shared) | Independent record | primitive | Query Port file or `Usecases/{Aggregate}/Dtos/` |
+| Persistence | Model (POCO) | primitive (DB mapping) | `Repositories/EfCore/Models/` |
 
-소유권 구조를 이해했다면, 이제 각 레이어에서 DTO를 실제로 어떻게 구현하는지 코드로 확인합니다.
+Now that we understand the ownership structure, let us examine how DTOs are actually implemented in each layer with code.
 
 ---
 
-## 레이어별 DTO 구현 (HOW)
+## Per-Layer DTO Implementation (HOW)
 
 ### Presentation Layer
 
-**기본**: Endpoint nested record — 각 Endpoint가 자신의 Request/Response를 소유합니다.
+**Default**: Endpoint nested record -- Each Endpoint owns its own Request/Response.
 
 ```csharp
 // CreateProductEndpoint.cs
@@ -134,13 +134,13 @@ public sealed class CreateProductEndpoint
 {
     public override async Task HandleAsync(Request req, CancellationToken ct)
     {
-        // [변환 A] Endpoint Request → Usecase Request
+        // [Transform A] Endpoint Request → Usecase Request
         var usecaseRequest = new CreateProductCommand.Request(
             req.Name, req.Description, req.Price, req.StockQuantity);
 
         var result = await _mediator.Send(usecaseRequest, ct);
 
-        // [변환 B] Usecase Response → Endpoint Response
+        // [Transform B] Usecase Response → Endpoint Response
         var mapped = result.Map(r => new Response(
             r.ProductId, r.Name, r.Description, r.Price, r.StockQuantity, r.CreatedAt));
 
@@ -153,10 +153,10 @@ public sealed class CreateProductEndpoint
 }
 ```
 
-**예외**: Application DTO 재사용 — [허용 조건](#application-dto-재사용-허용-조건)을 충족하면 Endpoint Response에서 Application DTO를 직접 사용할 수 있습니다.
+**Exception**: Application DTO reuse -- If the [permitted conditions](#application-dto-reuse-permitted-conditions) are met, Application DTOs can be used directly in Endpoint Response.
 
 ```csharp
-// GetAllProductsEndpoint.cs — Application DTO 재사용 예시
+// GetAllProductsEndpoint.cs — Application DTO reuse example
 using LayeredArch.Application.Usecases.Products.Ports;
 
 public sealed class GetAllProductsEndpoint
@@ -165,19 +165,19 @@ public sealed class GetAllProductsEndpoint
     public override async Task HandleAsync(CancellationToken ct)
     {
         var result = await _mediator.Send(new GetAllProductsQuery.Request(), ct);
-        // Seq → List 변환만 수행, DTO 자체는 재사용
+        // Only Seq → List conversion is performed, the DTO itself is reused
         var mapped = result.Map(r => new Response(r.Products.ToList()));
         await this.SendFinResponseAsync(mapped, ct);
     }
 
-    // Response가 Application의 ProductSummaryDto를 직접 참조
+    // Response directly references Application's ProductSummaryDto
     public new sealed record Response(List<ProductSummaryDto> Products);
 }
 ```
 
 ### Application Layer
 
-**기본**: Usecase nested record — 각 Command/Query가 자신의 Request/Response를 소유합니다.
+**Default**: Usecase nested record -- Each Command/Query owns its own Request/Response.
 
 ```csharp
 // CreateProductCommand.cs
@@ -191,17 +191,17 @@ public sealed class CreateProductCommand
 }
 ```
 
-**공유 DTO**: 여러 Usecase에서 동일한 DTO가 필요하면 Query Port 인터페이스 파일에 함께 정의하거나, `Dtos/` 폴더에 독립 record로 분리합니다.
+**Shared DTOs**: When multiple Usecases need the same DTO, define it alongside the Query Port interface file or separate it as an independent record in the `Dtos/` folder.
 
 ```
 Application/Usecases/Products/
-├── IProductQuery.cs              ← Query Port + ProductSummaryDto 정의
-├── GetAllProductsQuery.cs        ← Response에서 ProductSummaryDto 참조
-└── SearchProductsQuery.cs        ← Response에서 ProductSummaryDto 참조
+├── IProductQuery.cs              ← Query Port + ProductSummaryDto definition
+├── GetAllProductsQuery.cs        ← Response references ProductSummaryDto
+└── SearchProductsQuery.cs        ← Response references ProductSummaryDto
 ```
 
 ```csharp
-// IProductQuery.cs — Query Port와 공유 DTO를 함께 정의
+// IProductQuery.cs — Query Port and shared DTO defined together
 namespace LayeredArch.Application.Usecases.Products.Ports;
 
 public interface IProductQuery : IQueryPort<Product, ProductSummaryDto> { }
@@ -212,17 +212,17 @@ public sealed record ProductSummaryDto(
     decimal Price);
 ```
 
-**도메인 → Application DTO 변환**: Value Object의 `implicit operator`를 통해 자연스럽게 primitive로 변환됩니다.
+**Domain to Application DTO conversion**: Value Object `implicit operator` provides natural conversion to primitives.
 
 ```csharp
-// Usecase 내부 — VO → primitive 암시적 변환
+// Inside Usecase — VO → primitive implicit conversion
 new ProductSummaryDto(p.Id.ToString(), p.Name, p.Price)
 //                     ↑ Ulid→string    ↑ ProductName→string  ↑ Money→decimal
 ```
 
 ### Persistence Layer
 
-**Model(POCO)**: primitive 타입만 사용하며, 도메인 의존성이 없습니다.
+**Model (POCO)**: Uses only primitive types with no domain dependencies.
 
 ```csharp
 // Models/ProductModel.cs
@@ -236,7 +236,7 @@ public class ProductModel
 }
 ```
 
-**Mapper**: `internal static class`, 확장 메서드로 양방향 변환을 제공합니다.
+**Mapper**: Provides bidirectional conversion via `internal static class` extension methods.
 
 ```csharp
 // Mappers/ProductMapper.cs
@@ -252,31 +252,31 @@ internal static class ProductMapper
 
     public static Product ToDomain(this ProductModel model)
     {
-        var product = Product.CreateFromValidated(   // 검증 없이 복원
+        var product = Product.CreateFromValidated(   // Restore without validation
             ProductId.Create(model.Id),
             ProductName.CreateFromValidated(model.Name),
             // ...
         );
-        product.ClearDomainEvents();  // 복원 부산물 이벤트 제거
+        product.ClearDomainEvents();  // Remove side-effect events from restoration
         return product;
     }
 }
 ```
 
-| 설계 포인트 | 설명 |
+| Design Point | Description |
 |------------|------|
-| `internal` 접근 제한 | Mapper는 Persistence Adapter의 구현 세부사항 |
-| Extension method | 자연스러운 호출 문법 (`product.ToModel()`) |
-| `CreateFromValidated` | DB에서 복원 시 검증 스킵으로 성능 확보 |
-| `ClearDomainEvents()` | 복원 과정의 부산물 이벤트 제거 (DDD 원칙) |
+| `internal` access restriction | Mapper is an implementation detail of the Persistence Adapter |
+| Extension method | Natural call syntax (`product.ToModel()`) |
+| `CreateFromValidated` | Skips validation during DB restoration for performance |
+| `ClearDomainEvents()` | Removes side-effect events from the restoration process (DDD principle) |
 
-레이어별 구현 패턴을 확인했다면, 이제 레이어 간 데이터 전달 시 자주 발생하는 컬렉션 타입 변환 문제를 정리합니다.
+Now that we have reviewed the per-layer implementation patterns, let us address the collection type conversion issues that frequently arise during cross-layer data transfer.
 
 ---
 
-## 컬렉션 타입 변환
+## Collection Type Conversion
 
-Application Layer의 도메인 컬렉션은 `Seq<T>` (LanguageExt FP 타입), Presentation/Persistence는 `List<T>` (JSON 직렬화/EF Core 호환)를 사용합니다. 단, `PagedResult<T>.Items`는 `IReadOnlyList<T>`이므로 Presentation에서 별도 변환 없이 사용할 수 있습니다.
+Application Layer domain collections use `Seq<T>` (LanguageExt FP type), while Presentation/Persistence use `List<T>` (JSON serialization/EF Core compatible). However, `PagedResult<T>.Items` is `IReadOnlyList<T>`, so it can be used in Presentation without additional conversion.
 
 ```
 Application (Seq<T>) ──.ToList()──→ Presentation (List<T>)
@@ -285,55 +285,55 @@ Persistence (List<T>) ──toSeq()───→ Application  (Seq<T>)
 ```
 
 ```csharp
-// Presentation: PagedResult.Items는 IReadOnlyList<T> — 변환 불필요
+// Presentation: PagedResult.Items is IReadOnlyList<T> — no conversion needed
 var mapped = result.Map(r => new Response(r.Products));
 
-// 도메인 Seq<T> 컬렉션: Seq → List (Endpoint에서 변환)
+// Domain Seq<T> collection: Seq → List (converted in Endpoint)
 var mapped = result.Map(r => new Response(r.Items.ToList()));  // Seq<T> → List<T>
 
-// Persistence: List → Seq (Repository에서 변환)
+// Persistence: List → Seq (converted in Repository)
 return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
 ```
 
-> **Note**: `Seq<T>`는 System.Text.Json으로 직렬화할 수 없으므로, Presentation 경계에서 반드시 `List<T>`로 변환해야 합니다.
+> **Note**: `Seq<T>` cannot be serialized with System.Text.Json, so it must be converted to `List<T>` at the Presentation boundary.
 
 ---
 
-## Application DTO 재사용 허용 조건
+## Application DTO Reuse Permitted Conditions
 
-기본 원칙은 각 레이어가 자신의 DTO를 소유하는 것입니다. 아래 4가지 조건은 이 원칙의 실용적 예외를 정의합니다. 그러나 다음 **4가지 조건을 모두** 충족하면 Presentation에서 Application DTO를 직접 재사용할 수 있습니다:
+The default principle is that each layer owns its own DTOs. The following 4 conditions define practical exceptions to this principle. When **all 4 conditions** are met, Application DTOs can be directly reused in Presentation:
 
-| # | 조건 | 근거 |
+| # | Condition | Rationale |
 |---|------|------|
-| 1 | **읽기 전용 Query** 응답이다 | Command 결과는 레이어별 진화 가능성이 높음 |
-| 2 | **필드가 동일하여** identity mapping이 발생한다 | 필드 추가/제거 예정이면 분리 유지 |
-| 3 | Presentation 고유 필드(HATEOAS link 등)가 **불필요하다** | 고유 필드가 필요하면 Endpoint DTO 필요 |
-| 4 | **컬렉션 타입 변환이 최소한이다** | `PagedResult.Items`는 `IReadOnlyList<T>`이므로 변환 불필요. 도메인 `Seq<T>`만 `List<T>`로 변환 |
+| 1 | It is a **read-only Query** response | Command results have a high potential for per-layer evolution |
+| 2 | **Fields are identical**, resulting in identity mapping | If field additions/removals are planned, maintain separation |
+| 3 | Presentation-specific fields (HATEOAS links, etc.) are **not needed** | If specific fields are needed, Endpoint DTO is required |
+| 4 | **Collection type conversion is minimal** | `PagedResult.Items` is `IReadOnlyList<T>`, so no conversion needed. Only domain `Seq<T>` requires `List<T>` conversion |
 
-**적용 예시**: `GetAllProductsEndpoint`는 `ProductSummaryDto`를 직접 참조하되, Response wrapper에서 `Seq → List` 변환만 수행합니다.
+**Application example**: `GetAllProductsEndpoint` directly references `ProductSummaryDto`, performing only `Seq → List` conversion in the Response wrapper.
 
-**해제 시점**: 4가지 조건 중 하나라도 깨지면 Endpoint 전용 DTO로 전환합니다.
+**Disengagement point**: When any of the 4 conditions breaks, switch to a dedicated Endpoint DTO.
 
 ---
 
 ## Troubleshooting
 
-### `Seq<T>` JSON 직렬화 실패
+### `Seq<T>` JSON Serialization Failure
 
-**Cause:** `Seq<T>`는 LanguageExt의 FP 타입으로, `System.Text.Json`으로 직렬화할 수 없습니다. Presentation Layer에서 `Seq<T>`를 포함한 Response를 직접 반환하면 직렬화 오류가 발생합니다.
+**Cause:** `Seq<T>` is a LanguageExt FP type that cannot be serialized with `System.Text.Json`. Directly returning a Response containing `Seq<T>` in the Presentation Layer causes a serialization error.
 
-**Resolution:** Presentation 경계에서 반드시 `List<T>`로 변환하세요.
+**Resolution:** Always convert to `List<T>` at the Presentation boundary.
 
 ```csharp
-// Endpoint에서 Seq → List 변환
+// Seq → List conversion in Endpoint
 var mapped = result.Map(r => new Response(r.Products.ToList()));
 ```
 
-### Persistence Mapper에서 도메인 이벤트가 중복 발생
+### Duplicate Domain Events in Persistence Mapper
 
-**Cause:** DB에서 Entity를 복원할 때 `Create()` 팩토리를 사용하면, 생성 이벤트가 발행됩니다. 이미 존재하는 데이터를 복원하는 것이므로 이벤트가 발행되면 안 됩니다.
+**Cause:** When restoring an Entity from the DB using the `Create()` factory, a creation event is published. Since we are restoring existing data, the event should not be published.
 
-**Resolution:** Mapper의 `ToDomain()`에서는 `CreateFromValidated()`를 사용하고, 복원 후 `ClearDomainEvents()`를 호출하여 부산물 이벤트를 제거하세요.
+**Resolution:** Use `CreateFromValidated()` in the Mapper's `ToDomain()`, and call `ClearDomainEvents()` after restoration to remove side-effect events.
 
 ```csharp
 public static Product ToDomain(this ProductModel model)
@@ -344,38 +344,38 @@ public static Product ToDomain(this ProductModel model)
 }
 ```
 
-### Endpoint와 Usecase의 Response 필드가 계속 동기화 필요
+### Endpoint and Usecase Response Fields Require Constant Synchronization
 
-**Cause:** Presentation과 Application의 DTO가 동일한 필드를 가지면서 별도로 정의되어, 한쪽 변경 시 다른 쪽도 수정해야 하는 identity mapping이 발생하고 있습니다.
+**Cause:** Presentation and Application DTOs are defined separately with identical fields, resulting in identity mapping where changing one side requires modifying the other.
 
-**Resolution:** Application DTO 재사용 허용 조건(읽기 전용 Query, 동일 필드, Presentation 고유 필드 불필요, 컬렉션 변환만 필요)을 모두 충족하면 Application DTO를 직접 재사용하세요. 조건이 깨지면 Endpoint 전용 DTO로 전환합니다.
+**Resolution:** If all Application DTO reuse permitted conditions are met (read-only Query, identical fields, no Presentation-specific fields needed, only collection conversion required), directly reuse the Application DTO. When any condition breaks, switch to a dedicated Endpoint DTO.
 
 ---
 
 ## FAQ
 
-### Q: Usecase Request/Response는 왜 primitive 타입을 사용하나요?
+### Q: Why do Usecase Request/Response use primitive types?
 
-Usecase의 Request/Response는 **외부 API 경계**(Presentation에서 호출)에 위치합니다. JSON 직렬화 호환성과 외부 계약 안정성을 위해 primitive 타입(`string`, `decimal`, `int`)을 사용합니다. 반면, Port 인터페이스는 **내부 계약**(Application ↔ Adapter)이므로 도메인 Value Object를 사용합니다.
+Usecase Request/Response are located at the **external API boundary** (called from Presentation). Primitive types (`string`, `decimal`, `int`) are used for JSON serialization compatibility and external contract stability. In contrast, Port interfaces are **internal contracts** (Application <-> Adapter), so domain Value Objects are used.
 
-### Q: Application DTO 재사용은 Hexagonal Architecture 위반 아닌가요?
+### Q: Is Application DTO reuse a violation of Hexagonal Architecture?
 
-원칙적으로는 각 레이어가 독립적 DTO를 소유해야 합니다. 그러나 identity mapping(동일 필드를 1:1 복사)이 발생하는 읽기 전용 시나리오에서는 실용적 판단으로 재사용을 허용합니다. 이는 의존성 방향(Presentation → Application)과 일치하므로 아키텍처 규칙을 위반하지 않습니다.
+In principle, each layer should own independent DTOs. However, in read-only scenarios where identity mapping (1:1 copy of identical fields) occurs, reuse is permitted as a pragmatic decision. Since this aligns with the dependency direction (Presentation -> Application), it does not violate architecture rules.
 
-### Q: Persistence Model에서 `HasConversion` 대신 Mapper를 쓰는 이유는?
+### Q: Why use Mapper instead of `HasConversion` in Persistence Models?
 
-EF Core `HasConversion`은 도메인 Entity에 직접 적용되어, 도메인이 ORM에 결합됩니다. Mapper 패턴은 도메인 Entity와 Persistence Model(POCO)을 완전히 분리하여 **Persistence Ignorance를** 보장합니다.
+EF Core `HasConversion` is applied directly to domain Entities, coupling the domain to the ORM. The Mapper pattern completely separates domain Entities from Persistence Models (POCOs), ensuring **Persistence Ignorance.**
 
-### Q: 공유 DTO(`Dtos/` 폴더)는 언제 만드나요?
+### Q: When should shared DTOs (`Dtos/` folder) be created?
 
-2개 이상의 Usecase가 동일한 DTO를 사용할 때입니다. 단일 Usecase에서만 사용되면 Usecase nested record로 유지합니다.
+When 2 or more Usecases need the same DTO. If only a single Usecase uses it, keep it as a Usecase nested record.
 
 ---
 
 ## References
 
-- [11-usecases-and-cqrs.md](./11-usecases-and-cqrs) — Usecase Request/Response 패턴
-- [12-ports.md §1.4](../adapter/12-ports) — Port Request/Response 설계
-- [13-adapters.md §2.6](../adapter/13-adapters) — 데이터 변환 (Mapper 패턴)
-- [01-project-structure.md](../architecture/01-project-structure) — Dtos/ 폴더 위치 규칙
-- [dto-strategy-review.md](../../.claude/dto-strategy-review.md) — DTO 매핑 전략 리뷰 (DDD & Hexagonal 관점)
+- [11-usecases-and-cqrs.md](./11-usecases-and-cqrs) -- Usecase Request/Response pattern
+- [12-ports.md §1.4](../adapter/12-ports) -- Port Request/Response design
+- [13-adapters.md §2.6](../adapter/13-adapters) -- Data transformation (Mapper pattern)
+- [01-project-structure.md](../architecture/01-project-structure) -- Dtos/ folder location rules
+- [dto-strategy-review.md](../../.claude/dto-strategy-review.md) -- DTO mapping strategy review (DDD & Hexagonal perspective)

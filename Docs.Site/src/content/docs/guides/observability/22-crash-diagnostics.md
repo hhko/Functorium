@@ -1,169 +1,169 @@
 ---
-title: "크래시 덤프 핸들러 가이드"
+title: "Crash Dump Handler Guide"
 ---
 
-프로덕션 환경의 크래시는 로그와 메트릭만으로 원인을 파악하기 어려운 경우가 있습니다. 이 가이드는 `Functorium.Abstractions.Diagnostics.CrashDumpHandler`를 사용하여 .NET 애플리케이션의 크래시 덤프를 생성하고 분석하는 방법을 설명합니다.
+Crashes in production environments can sometimes be difficult to diagnose with logs and metrics alone. This guide explains how to generate and analyze crash dumps for .NET applications using `Functorium.Abstractions.Diagnostics.CrashDumpHandler`.
 
 ## Introduction
 
-프로덕션에서 프로세스가 예고 없이 종료되었는데, 로그에는 아무런 흔적이 없는 상황을 경험한 적이 있나요? `StackOverflowException`이나 `AccessViolationException`처럼 `try-catch`로 잡을 수 없는 예외는 Observability 파이프라인이 동작하기 전에 프로세스를 종료시킵니다.
+Have you ever experienced a situation where a process terminated unexpectedly in production, but there was no trace in the logs? Exceptions like `StackOverflowException` or `AccessViolationException` that cannot be caught by `try-catch` terminate the process before the Observability pipeline can operate.
 
 ### What You Will Learn
 
-1. **CrashDumpHandler의 역할과 초기화 방법** - CSE(Corrupted State Exception) 처리 원리
-2. **프로덕션 환경별 배포 설정** - Docker, Kubernetes, Windows 서비스
-3. **덤프 파일 분석 방법** - dotnet-dump, Visual Studio, WinDbg 활용
-4. **Observability와의 관계** - 로그/메트릭/트레이싱과 크래시 덤프의 역할 분담
+1. **Role and initialization of CrashDumpHandler** - CSE (Corrupted State Exception) handling principles
+2. **Deployment configuration per production environment** - Docker, Kubernetes, Windows services
+3. **Dump file analysis methods** - Using dotnet-dump, Visual Studio, WinDbg
+4. **Relationship with Observability** - Role separation between logs/metrics/tracing and crash dumps
 
 ### Prerequisites
 
-- .NET 런타임 예외 처리의 기본 개념
-- Docker/Kubernetes 기본 사용법 (프로덕션 배포 시)
-- [08-observability.md](../../spec/08-observability) — Observability 3-Pillar 사양
+- Basic understanding of .NET runtime exception handling
+- Basic Docker/Kubernetes usage (for production deployment)
+- [08-observability.md](../../spec/08-observability) -- Observability 3-Pillar specification
 
-> **핵심 원칙:** 크래시 덤프는 Observability 3-Pillar(Logging, Metrics, Tracing)로 진단할 수 없는 CSE(Corrupted State Exception)를 사후 분석하는 최후 수단입니다. `CrashDumpHandler.Initialize()`를 `Program.cs` 첫 줄에서 호출하여 모든 시점의 크래시를 캡처합니다.
+> **Core principle:** Crash dumps are a last resort for post-mortem analysis of CSE (Corrupted State Exception) that cannot be diagnosed with Observability 3-Pillar (Logging, Metrics, Tracing). Call `CrashDumpHandler.Initialize()` on the first line of `Program.cs` to capture crashes at all points in time.
 
 ## Summary
 
 ### Key Commands
 
 ```csharp
-// Program.cs 첫 줄에서 초기화
+// Initialize on the first line of Program.cs
 CrashDumpHandler.Initialize();
 
-// 커스텀 경로 지정
+// Specify custom path
 CrashDumpHandler.Initialize("/var/log/myapp/dumps");
 
-// 덤프 경로 조회
+// Query dump path
 Console.WriteLine(CrashDumpHandler.DumpDirectory);
 ```
 
 ```bash
-# dotnet-dump 설치 및 분석
+# Install and analyze with dotnet-dump
 dotnet tool install -g dotnet-dump
 dotnet-dump analyze crash.dmp
 
-# 주요 분석 명령어
-> clrstack          # 스택 트레이스
-> pe                # 예외 정보
-> dumpheap -stat    # 힙 통계
+# Key analysis commands
+> clrstack          # Stack trace
+> pe                # Exception information
+> dumpheap -stat    # Heap statistics
 ```
 
 ### Key Procedures
 
-**1. 설정:**
-1. `Program.cs` 첫 줄에 `CrashDumpHandler.Initialize()` 추가
-2. 필요 시 덤프 경로 커스터마이징 (환경 변수 또는 직접 지정)
+**1. Setup:**
+1. Add `CrashDumpHandler.Initialize()` on the first line of `Program.cs`
+2. Customize dump path if needed (environment variable or direct specification)
 
-**2. 프로덕션 배포:**
-1. 덤프 디렉토리 권한 설정 및 볼륨 마운트
-2. Docker: `cap_add: SYS_PTRACE` 추가
-3. Kubernetes: `securityContext.capabilities.add: ["SYS_PTRACE"]` 추가
+**2. Production Deployment:**
+1. Set dump directory permissions and volume mount
+2. Docker: Add `cap_add: SYS_PTRACE`
+3. Kubernetes: Add `securityContext.capabilities.add: ["SYS_PTRACE"]`
 
-**3. 덤프 분석:**
-1. `.dmp` 파일 수집
-2. `dotnet-dump analyze` 또는 Visual Studio로 분석
-3. `clrstack`, `pe`, `dumpheap` 등으로 원인 파악
+**3. Dump Analysis:**
+1. Collect `.dmp` files
+2. Analyze with `dotnet-dump analyze` or Visual Studio
+3. Identify root cause with `clrstack`, `pe`, `dumpheap`, etc.
 
 ### Key Concepts
 
 | Concept | Description |
 |------|------|
-| CSE (Corrupted State Exception) | `try-catch`로 잡을 수 없는 예외 (AccessViolation, StackOverflow 등) |
-| 크래시 덤프 | 프로세스 종료 시점의 메모리 스냅샷 |
-| `MiniDumpWriteDump` | Windows에서 덤프 생성에 사용하는 API |
-| `createdump` | Linux/macOS에서 .NET 덤프 생성 도구 |
-| Source Link | PDB 없이도 소스 코드 수준 디버깅을 가능하게 하는 기술 |
+| CSE (Corrupted State Exception) | Exceptions that cannot be caught by `try-catch` (AccessViolation, StackOverflow, etc.) |
+| Crash dump | Memory snapshot at the point of process termination |
+| `MiniDumpWriteDump` | API used for dump generation on Windows |
+| `createdump` | .NET dump generation tool on Linux/macOS |
+| Source Link | Technology enabling source code-level debugging without PDB files |
 
 ---
 
-## CrashDumpHandler 개요
+## CrashDumpHandler Overview
 
-`CrashDumpHandler`는 `AccessViolationException`과 같은 **Corrupted State Exception(CSE)** 을 처리합니다. CSE는 `try-catch`로 잡을 수 없으며, `AppDomain.UnhandledException` 이벤트를 통해 프로세스 종료 직전에 덤프를 생성합니다.
+`CrashDumpHandler` handles **Corrupted State Exceptions (CSE)** such as `AccessViolationException`. CSEs cannot be caught by `try-catch`, and the handler creates dumps just before process termination via the `AppDomain.UnhandledException` event.
 
-| 예외 유형 | try-catch 가능 | CrashDumpHandler 처리 |
+| Exception Type | Catchable by try-catch | CrashDumpHandler Handles |
 |-----------|:--------------:|:---------------------:|
-| 일반 예외 (Exception) | O | O |
+| General Exception | O | O |
 | AccessViolationException | X | O |
 | StackOverflowException | X | O |
 | ExecutionEngineException | X | O |
 
-### 소스 위치
+### Source Location
 
 ```
 Src/Functorium/Abstractions/Diagnostics/CrashDumpHandler.cs
 ```
 
-## Program.cs 설정
+## Program.cs Configuration
 
-`CrashDumpHandler.Initialize()`는 **반드시 `Program.cs`의 첫 번째 줄**에서 호출해야 합니다.
+`CrashDumpHandler.Initialize()` **must be called on the very first line** of `Program.cs`.
 
 ```csharp
 using Functorium.Abstractions.Diagnostics;
 
-// 가장 먼저 초기화 (다른 코드보다 앞에)
+// Initialize first (before any other code)
 CrashDumpHandler.Initialize();
 
 var builder = WebApplication.CreateBuilder(args);
-// ... 나머지 코드
+// ... rest of the code
 ```
 
-### 커스텀 경로 지정
+### Custom Path Specification
 
 ```csharp
-// 명시적 경로 지정 (Linux/macOS)
+// Explicit path specification (Linux/macOS)
 CrashDumpHandler.Initialize("/var/log/myapp/dumps");
 
-// 명시적 경로 지정 (Windows)
+// Explicit path specification (Windows)
 CrashDumpHandler.Initialize(@"C:\Logs\MyApp\Dumps");
 
-// 환경 변수 사용
+// Using environment variable
 var dumpDir = Environment.GetEnvironmentVariable("CRASH_DUMP_DIR");
 CrashDumpHandler.Initialize(dumpDir);
 ```
 
-### 기본 덤프 경로
+### Default Dump Path
 
-`dumpDirectory` 파라미터를 생략하면 `{LocalApplicationData}/{EntryAssemblyName}/CrashDumps`를 사용합니다.
+When the `dumpDirectory` parameter is omitted, `{LocalApplicationData}/{EntryAssemblyName}/CrashDumps` is used.
 
-| 플랫폼 | 기본 경로 예시 |
+| Platform | Default Path Example |
 |--------|---------------|
 | Windows | `%LOCALAPPDATA%\MyApp\CrashDumps\` |
 | Linux | `~/.local/share/MyApp/CrashDumps/` |
 | macOS | `~/Library/Application Support/MyApp/CrashDumps/` |
 
-### DumpDirectory 프로퍼티
+### DumpDirectory Property
 
-초기화 후 `CrashDumpHandler.DumpDirectory`로 경로를 조회할 수 있습니다.
+After initialization, the path can be queried via `CrashDumpHandler.DumpDirectory`.
 
 ```csharp
 CrashDumpHandler.Initialize();
 Console.WriteLine(CrashDumpHandler.DumpDirectory);
 ```
 
-## 생성되는 파일
+## Generated Files
 
-### 미니 덤프 파일 (`.dmp`)
+### Mini Dump File (`.dmp`)
 
 ```
 crash_AccessViolationException_20240115_143052.dmp
 ```
 
-- 파일명 형식: `crash_{예외타입}_{날짜시간}.dmp`
+- Filename format: `crash_{ExceptionType}_{DateTime}.dmp`
 - Windows: `MiniDumpWriteDump` (Full Memory)
-- Linux/macOS: `createdump` 도구 사용
+- Linux/macOS: Uses `createdump` tool
 
-### 예외 정보 파일 (`.txt`)
+### Exception Information File (`.txt`)
 
 ```
 crash_info_20240115_143052.txt
 ```
 
-프로세스 정보, 예외 상세, 스택 트레이스, Inner Exception을 텍스트로 저장합니다.
+Saves process information, exception details, stack traces, and Inner Exceptions as text.
 
-로컬 개발 환경에서 CrashDumpHandler 설정을 완료했습니다. 이제 실제 프로덕션 환경(Docker, Kubernetes, Windows 서비스)에서 덤프를 안전하게 수집하기 위한 배포 설정을 알아봅니다.
+With CrashDumpHandler setup complete in the local development environment, let us now learn about deployment configuration for safely collecting dumps in actual production environments (Docker, Kubernetes, Windows services).
 
-## 프로덕션 배포
+## Production Deployment
 
 ### Docker
 
@@ -188,7 +188,7 @@ services:
     volumes:
       - crash-dumps:/app/dumps
     cap_add:
-      - SYS_PTRACE  # createdump에 필요
+      - SYS_PTRACE  # Required for createdump
 ```
 
 ### Kubernetes
@@ -212,10 +212,10 @@ spec:
       claimName: dump-pvc
 ```
 
-### Windows 서비스 (WER)
+### Windows Service (WER)
 
 ```powershell
-# Windows Error Reporting 자동 덤프 설정
+# Configure Windows Error Reporting automatic dump
 $werKey = "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\MyApp.exe"
 New-Item -Path $werKey -Force
 Set-ItemProperty -Path $werKey -Name "DumpFolder" -Value "C:\Dumps\MyApp"
@@ -223,55 +223,55 @@ Set-ItemProperty -Path $werKey -Name "DumpType" -Value 2  # Full dump
 Set-ItemProperty -Path $werKey -Name "DumpCount" -Value 10
 ```
 
-덤프 파일이 수집되면 다음 도구를 사용하여 크래시 원인을 분석할 수 있습니다.
+Once dump files are collected, you can use the following tools to analyze the crash cause.
 
-## 덤프 분석 도구
+## Dump Analysis Tools
 
-| 도구 | 플랫폼 | 용도 |
+| Tool | Platform | Purpose |
 |------|--------|------|
-| Visual Studio | Windows | GUI 기반 분석, .NET 네이티브 지원 |
-| WinDbg | Windows | 고급 디버깅, 스크립트 지원 |
-| dotnet-dump | Cross-platform | CLI 기반, 컨테이너 환경에 적합 |
-| lldb | Linux/macOS | 네이티브 디버깅 |
+| Visual Studio | Windows | GUI-based analysis, native .NET support |
+| WinDbg | Windows | Advanced debugging, script support |
+| dotnet-dump | Cross-platform | CLI-based, suitable for container environments |
+| lldb | Linux/macOS | Native debugging |
 
-### dotnet-dump 주요 명령어
+### dotnet-dump Key Commands
 
 ```bash
-# 설치
+# Installation
 dotnet tool install -g dotnet-dump
 
-# 분석 시작
+# Start analysis
 dotnet-dump analyze crash.dmp
 
-# 주요 명령어
-> clrstack          # 현재 스레드 스택 트레이스
-> clrstack -all     # 모든 스레드 스택 트레이스
-> pe                # 예외 정보 확인
-> dumpheap -stat    # 힙 통계
-> dumpobj <addr>    # 특정 객체 덤프
-> gcroot <addr>     # GC 루트 찾기
-> threads           # 스레드 목록
-> syncblk           # 동기화 블록 (데드락 분석)
+# Key commands
+> clrstack          # Current thread stack trace
+> clrstack -all     # All threads stack trace
+> pe                # View exception information
+> dumpheap -stat    # Heap statistics
+> dumpobj <addr>    # Dump specific object
+> gcroot <addr>     # Find GC roots
+> threads           # Thread list
+> syncblk           # Synchronization blocks (deadlock analysis)
 ```
 
-### Visual Studio 분석
+### Visual Studio Analysis
 
-1. `File > Open > File` 에서 `.dmp` 파일 열기
-2. "Debug with Managed Only" 클릭
-3. Call Stack 창에서 예외 발생 위치 확인
-4. Locals/Watch 창에서 변수 값 확인
+1. Open `.dmp` file from `File > Open > File`
+2. Click "Debug with Managed Only"
+3. Check exception location in Call Stack window
+4. Check variable values in Locals/Watch window
 
-### 심볼(PDB) 관리
+### Symbol (PDB) Management
 
-| 분석 수준 | PDB 필요 |
+| Analysis Level | PDB Required |
 |-----------|:--------:|
-| 기본 스택 트레이스 (메서드명만) | X |
-| 메서드명 + 라인 번호 | O |
-| 소스 코드 보며 디버깅 | O + 소스 |
-| 변수/파라미터 값 | O |
-| 힙/메모리 분석 | X |
+| Basic stack trace (method names only) | X |
+| Method name + line number | O |
+| Debugging with source code | O + source |
+| Variable/parameter values | O |
+| Heap/memory analysis | X |
 
-Source Link 사용을 권장합니다:
+Source Link usage is recommended:
 
 ```xml
 <PropertyGroup>
@@ -286,65 +286,65 @@ Source Link 사용을 권장합니다:
 
 ## Troubleshooting
 
-### 덤프 파일이 생성되지 않음
+### Dump File Not Generated
 
-| 원인 | 해결 |
+| Cause | Solution |
 |------|------|
-| 권한 부족 | `chmod 755 /var/log/myapp/dumps` |
-| 디스크 공간 부족 | 오래된 덤프 정리: `find ... -mtime +7 -delete` |
-| 핸들러 초기화 전 크래시 | `Program.cs` 첫 줄에서 `Initialize()` 호출 |
+| Insufficient permissions | `chmod 755 /var/log/myapp/dumps` |
+| Insufficient disk space | Clean old dumps: `find ... -mtime +7 -delete` |
+| Crash before handler initialization | Call `Initialize()` on the first line of `Program.cs` |
 
-### 덤프 파일을 열 수 없음
+### Cannot Open Dump File
 
-| 원인 | 해결 |
+| Cause | Solution |
 |------|------|
-| 비트니스 불일치 | 64비트 덤프는 64비트 디버거 사용 |
-| 심볼 파일 없음 | `dotnet publish -c Release -p:DebugType=full` |
+| Bitness mismatch | Use 64-bit debugger for 64-bit dumps |
+| Missing symbol files | `dotnet publish -c Release -p:DebugType=full` |
 
-### 컨테이너에서 덤프 생성 실패
+### Dump Generation Failure in Container
 
 Docker: `cap_add: SYS_PTRACE` + `security_opt: seccomp:unconfined`
 Kubernetes: `securityContext.capabilities.add: ["SYS_PTRACE"]`
 
-## Observability와의 관계
+## Relationship with Observability
 
-Observability(Logging, Metrics, Tracing)는 **실행 중인** 프로세스의 동작을 관찰하는 도구입니다. 크래시 덤프는 프로세스가 **비정상 종료된 후**의 사후 분석 도구로, 성격이 다릅니다.
+Observability (Logging, Metrics, Tracing) is a tool for observing the behavior of a **running** process. Crash dumps are a post-mortem analysis tool for after a process **terminates abnormally**, which is fundamentally different in nature.
 
-문제 진단 시 권장하는 순서:
+Recommended order for problem diagnosis:
 
-1. **Logging** -- 구조화된 로그로 오류 코드와 컨텍스트 확인
-2. **Metrics** -- 에러율, 응답 시간 등 추이 변화 확인
-3. **Tracing** -- 분산 요청 흐름에서 병목/실패 지점 추적
-4. **크래시 덤프** -- 위 도구로 해결할 수 없는 프로세스 크래시 분석 (최후 수단)
+1. **Logging** -- Check error codes and context with structured logs
+2. **Metrics** -- Check trend changes in error rates, response times, etc.
+3. **Tracing** -- Track bottlenecks/failure points in distributed request flows
+4. **Crash dumps** -- Analyze process crashes that cannot be resolved with the above tools (last resort)
 
-> Observability 사양은 [08-observability.md](../../spec/08-observability)을 참조하세요.
+> For Observability specifications, see [08-observability.md](../../spec/08-observability).
 
 ## FAQ
 
-### Q1. `CrashDumpHandler.Initialize()`는 왜 Program.cs 첫 줄이어야 하나요?
+### Q1. Why must `CrashDumpHandler.Initialize()` be on the first line of Program.cs?
 
-CSE(Corrupted State Exception)는 애플리케이션 초기화 과정에서도 발생할 수 있습니다. DI 컨테이너 구성이나 미들웨어 설정 도중 크래시가 발생하면, 핸들러가 등록되지 않은 상태에서는 덤프를 생성할 수 없습니다. 첫 줄에서 초기화해야 모든 시점의 크래시를 캡처할 수 있습니다.
+CSE (Corrupted State Exception) can occur during application initialization. If a crash occurs during DI container configuration or middleware setup, dumps cannot be generated if the handler has not been registered. Initializing on the first line ensures crashes at all points in time can be captured.
 
-### Q2. 크래시 덤프 파일의 크기는 얼마나 되나요?
+### Q2. How large are crash dump files?
 
-Full Memory 덤프이므로 프로세스의 메모리 사용량에 비례합니다. 일반적으로 수백 MB에서 수 GB까지 될 수 있습니다. 프로덕션 환경에서는 디스크 공간 모니터링과 오래된 덤프 자동 정리를 설정하는 것을 권장합니다.
+Since they are Full Memory dumps, the size is proportional to the process's memory usage. Typically they can range from hundreds of MB to several GB. In production environments, it is recommended to set up disk space monitoring and automatic cleanup of old dumps.
 
-### Q3. Observability(로그, 메트릭, 트레이싱)로 충분하지 않나요?
+### Q3. Are Observability tools (logs, metrics, tracing) not sufficient?
 
-Observability 도구는 실행 중인 프로세스를 관찰합니다. `AccessViolationException`이나 `StackOverflowException`처럼 프로세스가 비정상 종료되는 경우에는 로그나 트레이스가 남지 않을 수 있습니다. 크래시 덤프는 이런 상황에서 프로세스 종료 시점의 상태를 사후 분석하는 최후 수단입니다.
+Observability tools observe running processes. In cases where processes terminate abnormally, such as `AccessViolationException` or `StackOverflowException`, logs or traces may not be recorded. Crash dumps are a last resort for post-mortem analysis of the process state at the point of termination in such situations.
 
-### Q4. Docker 컨테이너에서 `SYS_PTRACE` 권한이 필요한 이유는?
+### Q4. Why is `SYS_PTRACE` permission required in Docker containers?
 
-Linux에서 `createdump` 도구는 다른 프로세스의 메모리를 읽어 덤프를 생성합니다. 이를 위해 `ptrace` 시스템 콜 권한이 필요하며, Docker는 기본적으로 이 권한을 차단합니다. `cap_add: SYS_PTRACE`를 추가해야 덤프 생성이 가능합니다.
+On Linux, the `createdump` tool reads another process's memory to generate dumps. This requires `ptrace` system call permission, which Docker blocks by default. `cap_add: SYS_PTRACE` must be added to enable dump generation.
 
-### Q5. PDB 파일 없이도 덤프를 분석할 수 있나요?
+### Q5. Can dumps be analyzed without PDB files?
 
-기본 스택 트레이스(메서드명)와 힙/메모리 분석은 PDB 없이 가능합니다. 그러나 라인 번호, 소스 코드 수준 디버깅, 변수/파라미터 값 확인에는 PDB가 필요합니다. Source Link 설정을 권장하며, `DebugType=embedded`로 PDB를 어셈블리에 포함할 수 있습니다.
+Basic stack traces (method names) and heap/memory analysis are possible without PDB files. However, line numbers, source code-level debugging, and variable/parameter value inspection require PDB files. Source Link configuration is recommended, and `DebugType=embedded` can be used to include PDB in the assembly.
 
 ---
 
 ## References
 
-- 원본 상세 문서: `Tests.Hosts/01-SingleHost/CRASH-DUMP.md`
+- Original detailed document: `Tests.Hosts/01-SingleHost/CRASH-DUMP.md`
 - [Microsoft: Collect and analyze memory dumps](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dumps)
-- [dotnet-dump 공식 문서](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-dump)
+- [dotnet-dump official documentation](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-dump)

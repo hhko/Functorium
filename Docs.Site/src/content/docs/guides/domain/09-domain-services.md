@@ -95,7 +95,7 @@ from _ in _emailCheckService.ValidateEmailUnique(email, excludeId)
 
 ---
 
-## 왜 도메인 서비스인가
+## Why Domain Services
 
 도메인 서비스는 DDD(Domain-Driven Design)에서 **여러 Aggregate에 걸친 도메인 로직을** 배치하는 빌딩블록입니다.
 
@@ -139,7 +139,7 @@ Domain Service(도메인 로직)와 Application Service(Usecase, I/O 조율)의 
 
 다음 표는 위 트리의 결과를 요약한 것입니다.
 
-| 배치 위치 | 기준 | 예시 |
+| 배치 위치 | 기준 | Example |
 |----------|------|------|
 | **Entity 메서드** | 단일 Aggregate 내부 상태 변경 | `Product.DeductStock()` |
 | **Value Object** | 값의 검증, 변환, 연산 | `Money.Add()` |
@@ -192,7 +192,7 @@ public interface IDomainService { }
 
 아래 표는 Domain Service와 Application Service의 핵심 차이를 정리한 것입니다.
 
-| 구분 | Domain Service | Application Service (Usecase) |
+| Category | Domain Service | Application Service (Usecase) |
 |------|---------------|-------------------------------|
 | **위치** | Domain Layer | Application Layer |
 | **I/O** | 없음 (순수 패턴) 또는 Repository만 (Evans 패턴) | 있음 (Repository, Event 발행) |
@@ -579,7 +579,7 @@ services.AddScoped<ContactEmailCheckService>();
 
 ### IObservablePort와의 차이
 
-| 구분 | Domain Service (순수) | Domain Service (Repository) | Adapter (IObservablePort) |
+| Category | Domain Service (순수) | Domain Service (Repository) | Adapter (IObservablePort) |
 |------|---------------------|---------------------------|-------------------|
 | **생성 방식** | `new()` 직접 생성 | DI `AddScoped<>()` | DI `RegisterScopedObservablePort<I, P>()` |
 | **Pipeline** | 불필요 | 불필요 | 자동 생성 (관찰 가능성) |

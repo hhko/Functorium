@@ -130,7 +130,7 @@ Git 태그 기반 자동 버전 관리와 CI/CD 파이프라인을 통해 안정
 
 ### 생성되는 패키지
 
-| 패키지 | 설명 |
+| 패키지 | Description |
 |--------|------|
 | `Functorium` | .NET용 함수형 도메인 프레임워크 |
 | `Functorium.Testing` | Functorium 테스트 유틸리티 |
@@ -644,7 +644,7 @@ CI 환경에서 재현 가능한 빌드를 위한 설정입니다.
 
 다음 테이블은 심볼 패키지와 SourceLink가 디버깅에서 각각 어떤 정보를 제공하는지 비교합니다.
 
-| 기능 | 역할 | 제공 정보 |
+| Feature | 역할 | 제공 정보 |
 |------|------|----------|
 | **심볼 패키지 (.snupkg)** | "어디서" 실행 중인지 | 메서드 이름, 라인 번호, 변수 이름 |
 | **SourceLink** | "무엇을" 실행 중인지 | 실제 소스 코드 내용 |
@@ -786,7 +786,7 @@ dotnet build
 
 ### GitHub Secrets
 
-| Secret | 용도 | 필수 여부 | 획득 방법 |
+| Secret | Purpose | 필수 여부 | 획득 방법 |
 |--------|------|----------|----------|
 | `NUGET_API_KEY` | NuGet.org 배포 | Release 시 필수 | NuGet.org > Account > API Keys |
 | `CODECOV_TOKEN` | Codecov 업로드 | 선택 (현재 비활성화) | Codecov.io |
@@ -860,7 +860,7 @@ MinVer는 Git 태그를 기반으로 .NET 프로젝트의 버전을 자동으로
 
 ### 요소별 설명
 
-| 요소 | 설명 | 변경 방식 |
+| 요소 | Description | 변경 방식 |
 |------|------|----------|
 | **Major** | 호환성을 깨는 변경 시 증가 | 수동 (태그) |
 | **Minor** | 새로운 기능 추가 시 증가 | 수동 (태그) |
@@ -973,7 +973,7 @@ dotnet build -p:MinVerVerbosity=diagnostic
 
 ### MinVerVerbosity
 
-| 값 | 출력 내용 | 사용 시기 |
+| Value | 출력 내용 | 사용 시기 |
 |----|---------|----------|
 | `minimal` | 경고/오류만 | 일반 빌드 |
 | `normal` | 버전 계산 과정 | 버전 확인 |
@@ -1001,7 +1001,7 @@ dotnet build -p:MinVerVerbosity=diagnostic
 
 RTM 태그 후 자동 증가 단위:
 
-| 값 | 동작 | 예시 |
+| Value | 동작 | Example |
 |----|------|------|
 | `patch` (기본값) | Patch 버전 +1 표시 | v1.0.0 → 1.0.1-alpha.0.1 |
 | `minor` | Minor 버전 +1 표시 | v1.0.0 → 1.1.0-alpha.0.1 |
@@ -1177,7 +1177,7 @@ v1.1.0: AssemblyVersion=1.1.0.0, FileVersion=1.1.0.0  # Minor 변경 - 재컴파
 
 ### MSBuild 속성
 
-| 속성 | 값 예시 | 설명 |
+| 속성 | 값 예시 | Description |
 |------|---------|------|
 | `$(MinVerVersion)` | 1.0.0 | 전체 SemVer 버전 |
 | `$(MinVerMajor)` | 1 | Major 버전 |
@@ -1207,7 +1207,7 @@ v1.1.0: AssemblyVersion=1.1.0.0, FileVersion=1.1.0.0  # Minor 변경 - 재컴파
 
 ### 버전 증가 규칙 (Conventional Commits)
 
-| 커밋 타입 | 버전 증가 | 예시 |
+| 커밋 타입 | 버전 증가 | Example |
 |-----------|-----------|------|
 | `feat!`, `BREAKING CHANGE` | Major | v1.0.0 → v2.0.0 |
 | `feat` | Minor | v1.0.0 → v1.1.0 |
@@ -1242,7 +1242,7 @@ v1.1.0: AssemblyVersion=1.1.0.0, FileVersion=1.1.0.0  # Minor 변경 - 재컴파
 
 ### 프리릴리스 지원
 
-| 타입 | 설명 | 버전 예시 |
+| Type | Description | 버전 예시 |
 |------|------|----------|
 | `alpha` | 알파 버전 (초기 개발 단계) | v1.3.0-alpha.0 |
 | `beta` | 베타 버전 (기능 완료, 테스트 단계) | v1.3.0-beta.0 |
@@ -1271,7 +1271,7 @@ dotnet build -v detailed | grep Version
 
 ### NuGet 배포 실패
 
-| 원인 | 해결 |
+| Cause | Solution |
 |------|------|
 | API Key 없음 | GitHub Secrets에 `NUGET_API_KEY` 확인 |
 | 패키지 이름 중복 | 프로젝트 이름 변경 또는 패키지 소유자에게 권한 요청 |
@@ -1301,7 +1301,7 @@ csproj에 Pack 설정 추가:
 
 ### 버전이 0.0.0-alpha.0.N으로 표시될 때
 
-| 원인 | 해결 |
+| Cause | Solution |
 |------|------|
 | Git 태그 없음 | `git tag -a v0.1.0 -m "Initial version"` |
 | 태그 접두사 불일치 | `<MinVerTagPrefix>` 설정 확인 |
@@ -1433,7 +1433,7 @@ dotnet add package Functorium --prerelease
 
 **A:**
 
-| 항목 | MinVer | GitVersion |
+| Item | MinVer | GitVersion |
 |------|--------|-----------|
 | 복잡도 | 단순 (태그만) | 복잡 (브랜치 전략) |
 | 설정 | 최소 설정 | 상세 설정 파일 필요 |
@@ -1509,7 +1509,7 @@ BREAKING CHANGE: 응답이 배열에서 객체로 변경됨
 
 ## References
 
-| 문서 | 설명 |
+| 문서 | Description |
 |------|------|
 | [GitHub Actions 문서](https://docs.github.com/actions) | GitHub Actions 공식 문서 |
 | [NuGet 배포 가이드](https://learn.microsoft.com/nuget/nuget-org/publish-a-package) | NuGet.org 배포 공식 가이드 |

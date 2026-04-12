@@ -1,81 +1,81 @@
 ---
-title: "Adapter 연결 -- 단위 테스트"
+title: "Adapter Integration -- Unit Testing"
 ---
 
-이 문서는 Adapter의 단위 테스트 작성, End-to-End Walkthrough, 아키텍처 부록을 다루는 가이드입니다. Pipeline 생성과 DI 등록은 [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di), Port 정의는 [12-ports.md](./12-ports), Adapter 구현은 [13-adapters.md](./13-adapters)을 참조하세요.
+This document is a guide covering unit test authoring for Adapters, End-to-End Walkthroughs, and an architecture appendix. For Pipeline creation and DI registration, see [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di); for Port definitions, see [12-ports.md](./12-ports); for Adapter implementation, see [13-adapters.md](./13-adapters).
 
 ## Introduction
 
-"Adapter 레이어의 단위 테스트를 어떻게 구성하고, Port 의존성을 어떻게 격리할 것인가?"
-"Pipeline이 아닌 원본 Adapter를 직접 테스트해야 하는 이유는 무엇인가?"
-"`FinT<IO, T>` 반환값을 테스트에서 어떻게 실행하고 검증하는가?"
+"How should unit tests for the Adapter layer be organized, and how should Port dependencies be isolated?"
+"Why should we directly test the original Adapter rather than the Pipeline?"
+"How do we execute and verify `FinT<IO, T>` return values in tests?"
 
-Adapter 단위 테스트는 비즈니스 로직의 정확성을 검증하는 마지막 관문입니다. Pipeline(Observable)이 아닌 원본 Adapter 클래스를 직접 테스트하여, 관측성 래핑 없이 순수한 로직을 검증합니다. 이 문서는 유형별 테스트 전략과 End-to-End Walkthrough를 다룹니다.
+Adapter unit testing is the final gate for verifying the correctness of business logic. By directly testing the original Adapter class rather than the Pipeline (Observable), we verify pure logic without observability wrapping. This document covers type-specific test strategies and End-to-End Walkthroughs.
 
 ### What You Will Learn
 
 This document covers the following topics:
 
-1. **Adapter 단위 테스트 구조** — 원본 Adapter 직접 테스트, AAA 패턴, IO 실행 패턴
-2. **Mock/Stub 전략** — Repository(직접 인스턴스), External API(MockHttpMessageHandler), Messaging(NSubstitute)
-3. **E2E 워크스루** — Repository, External API, Messaging, Query Adapter의 전체 구현 과정 요약
+1. **Adapter unit test structure** -- Direct testing of the original Adapter, AAA pattern, IO execution pattern
+2. **Mock/Stub strategy** -- Repository (direct instance), External API (MockHttpMessageHandler), Messaging (NSubstitute)
+3. **E2E walkthrough** -- Summary of the full implementation process for Repository, External API, Messaging, and Query Adapter
 
 ### Prerequisites
 
 A basic understanding of the following concepts is needed to understand this document:
 
-- [Adapter 구현](./13-adapters) — Adapter 유형별 구현 패턴
-- [Pipeline과 DI](./14a-adapter-pipeline-di) — Pipeline 생성과 DI 등록
-- [단위 테스트 작성 가이드](../testing/15a-unit-testing) — 테스트 네이밍, AAA 패턴, Shouldly
+- [Adapter implementation](./13-adapters) -- Type-specific Adapter implementation patterns
+- [Pipeline and DI](./14a-adapter-pipeline-di) -- Pipeline creation and DI registration
+- [Unit testing guide](../testing/15a-unit-testing) -- Test naming, AAA pattern, Shouldly
 
-> **테스트 대상은 Pipeline이 아닌 원본 Adapter입니다.** Pipeline은 관측성만 추가하므로, 비즈니스 로직 검증은 원본 클래스에서 수행합니다.
+> **The test target is the original Adapter, not the Pipeline.** Since Pipeline only adds observability, business logic verification is performed on the original class.
 
 ## Summary
 
 ### Key Commands
 
 ```csharp
-// 테스트에서 IO 실행
+// Execute IO in tests
 var result = await Task.Run(() => adapter.GetById(id).Run().RunAsync());
 ```
 
 ### Key Procedures
 
-1. 원본 Adapter 클래스를 직접 인스턴스화하여 테스트 (Pipeline이 아님)
-2. AAA (Arrange-Act-Assert) 패턴으로 테스트 작성
-3. `.Run().RunAsync()` 또는 `Task.Run(() => ioResult.Run())`으로 IO 실행
-4. 성공/실패 케이스 모두 테스트
+1. Directly instantiate the original Adapter class for testing (not the Pipeline)
+2. Write tests using the AAA (Arrange-Act-Assert) pattern
+3. Execute IO with `.Run().RunAsync()` or `Task.Run(() => ioResult.Run())`
+4. Test both success and failure cases
 
 ### Key Concepts
 
 | Concept | Description |
 |------|------|
-| IO 실행 패턴 | 테스트에서 `adapter.Method().Run().RunAsync()`로 IO 실행 |
-| 테스트 대상 | 원본 Adapter 클래스 (Pipeline 아님) |
-| Mock 전략 | Repository: 직접 인스턴스, External API: MockHttpMessageHandler, Messaging: NSubstitute |
+| IO execution pattern | Execute IO in tests with `adapter.Method().Run().RunAsync()` |
+| Test target | Original Adapter class (not Pipeline) |
+| Mock strategy | Repository: direct instance, External API: MockHttpMessageHandler, Messaging: NSubstitute |
 
-먼저 Adapter 단위 테스트의 원칙과 IO 실행 패턴을 살펴본 뒤, 유형별(Repository, External API, Messaging, Query) 테스트 예제를 확인합니다.
+First we examine the principles of Adapter unit testing and the IO execution pattern, then review type-specific (Repository, External API, Messaging, Query) test examples.
 
 ---
 
-## Activity 5: 단위 테스트
+## Activity 5: Unit Testing
 
-Adapter의 단위 테스트는 **원본 클래스를 직접 테스트**합니다 (Pipeline이 아님).
+Adapter unit tests **directly test the original class** (not the Pipeline).
 
-### 테스트 원칙 / IO 실행 패턴
+### Test Principles / IO Execution Pattern
 
-| 원칙 | 설명 |
+| Principle | Description |
 |------|------|
-| 테스트 대상 | 원본 Adapter 클래스 (Pipeline 아님) |
-| 패턴 | AAA (Arrange-Act-Assert) |
-| 네이밍 | `T1_T2_T3` (메서드명_시나리오_기대결과) |
-| 실행 | `.Run().RunAsync()` 또는 `Task.Run(() => ioResult.Run())` |
-| 단언 라이브러리 | Shouldly |
-| Mock 라이브러리 | NSubstitute |
+| Test target | Original Adapter class (not Pipeline) |
+| Pattern | AAA (Arrange-Act-Assert) |
+| Naming | `T1_T2_T3` (MethodName_Scenario_ExpectedResult) |
+| Execution | `.Run().RunAsync()` or `Task.Run(() => ioResult.Run())` |
+| Assertion library | Shouldly |
+| Mock library | NSubstitute |
 
-> **Note**: 테스트 규칙 상세는 [15a-unit-testing.md](../testing/15a-unit-testing)를 참조하세요.
+> **Note**: For detailed testing rules, see [15a-unit-testing.md](../testing/15a-unit-testing).
 
-**IO 실행 패턴** - `FinT<IO, T>` 반환값을 테스트에서 실행하는 패턴:
+**IO execution pattern** - Pattern for executing `FinT<IO, T>` return values in tests:
 
 ```csharp
 // Act
@@ -87,12 +87,12 @@ var result = await Task.Run(() => ioResult.Run());  // Fin<T> 실행
 result.IsSucc.ShouldBeTrue();
 ```
 
-### Repository 테스트
+### Repository Testing
 
-Repository Adapter는 외부 의존성이 없으므로 (In-Memory 구현의 경우) 직접 인스턴스를 생성하여 테스트합니다.
+Repository Adapters have no external dependencies (in the case of In-Memory implementation), so they are tested by creating direct instances.
 
 ```csharp
-// 파일: Tests/{Project}.Tests.Unit/LayerTests/Adapters/ProductRepositoryInMemoryTests.cs
+// File: Tests/{Project}.Tests.Unit/LayerTests/Adapters/ProductRepositoryInMemoryTests.cs
 
 public sealed class ProductRepositoryInMemoryTests
 {
@@ -102,8 +102,8 @@ public sealed class ProductRepositoryInMemoryTests
         // Arrange
         var repository = new ProductRepositoryInMemory();
         var product = Product.Create(
-            ProductName.Create("테스트 상품").ThrowIfFail(),
-            ProductDescription.Create("설명").ThrowIfFail(),
+            ProductName.Create("Test Product").ThrowIfFail(),
+            ProductDescription.Create("Description").ThrowIfFail(),
             Money.Create(10000m).ThrowIfFail());
 
         // Act
@@ -140,14 +140,14 @@ public sealed class ProductRepositoryInMemoryTests
 }
 ```
 
-### External API 테스트
+### External API Testing
 
-External API Adapter는 `HttpClient`를 Mock하여 테스트합니다.
+External API Adapters are tested by mocking `HttpClient`.
 
-`MockHttpMessageHandler`로 HTTP 응답을 제어하고, 성공/실패 시나리오를 분리하여 테스트하는 패턴.
+A pattern that controls HTTP responses with `MockHttpMessageHandler` and separates success/failure scenarios for testing.
 
 ```csharp
-// 파일: Tests/{Project}.Tests.Unit/LayerTests/Adapters/ExternalPricingApiServiceTests.cs
+// File: Tests/{Project}.Tests.Unit/LayerTests/Adapters/ExternalPricingApiServiceTests.cs
 
 public sealed class ExternalPricingApiServiceTests
 {
@@ -198,7 +198,7 @@ public sealed class ExternalPricingApiServiceTests
         result.IsFail.ShouldBeTrue();
     }
 
-    // HttpClient Mock을 위한 도우미 클래스
+    // Helper class for HttpClient mock
     private sealed class MockHttpMessageHandler : HttpMessageHandler
     {
         private readonly HttpStatusCode _statusCode;
@@ -226,12 +226,12 @@ public sealed class ExternalPricingApiServiceTests
 }
 ```
 
-### Messaging 테스트
+### Messaging Testing
 
-Messaging Adapter는 `IMessageBus`를 NSubstitute로 Mock하여 테스트합니다.
+Messaging Adapters are tested by mocking `IMessageBus` with NSubstitute.
 
 ```csharp
-// 파일: Tests/{Project}.Tests.Unit/LayerTests/Adapters/RabbitMqInventoryMessagingTests.cs
+// File: Tests/{Project}.Tests.Unit/LayerTests/Adapters/RabbitMqInventoryMessagingTests.cs
 
 public sealed class RabbitMqInventoryMessagingTests
 {
@@ -298,12 +298,12 @@ public sealed class RabbitMqInventoryMessagingTests
 
 > **Reference**: `Tutorials/Cqrs06Services/Tests/OrderService.Tests.Unit/LayerTests/Adapters/RabbitMqInventoryMessagingTests.cs`
 
-### Query Adapter 테스트
+### Query Adapter Testing
 
-Query Adapter는 InMemory 구현을 직접 인스턴스화하여 테스트합니다. Repository 테스트와 동일한 IO 실행 패턴을 사용합니다.
+Query Adapters are tested by directly instantiating the InMemory implementation. They use the same IO execution pattern as Repository tests.
 
 ```csharp
-// 파일: Tests/{Project}.Tests.Unit/Application/Products/SearchProductsQueryTests.cs
+// File: Tests/{Project}.Tests.Unit/Application/Products/SearchProductsQueryTests.cs
 
 [Fact]
 public async Task Search_ReturnsPagedResult_WhenProductsExist()
@@ -323,62 +323,62 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 
 > **Reference**: `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Application/Products/SearchProductsQueryTests.cs`
 
-> **Note**: Dapper Query Adapter의 SQL 실행 테스트는 통합 테스트에서 수행합니다. 단위 테스트에서는 InMemory 구현을 사용하여 Query 로직을 검증합니다.
+> **Note**: SQL execution tests for Dapper Query Adapters are performed in integration tests. In unit tests, the InMemory implementation is used to verify Query logic.
 
-유형별 테스트 패턴을 익혔다면, 이제 각 Adapter의 전체 구현 과정을 End-to-End로 확인합니다.
+Now that you have learned the type-specific test patterns, let us review the full implementation process for each Adapter end-to-end.
 
 ---
 
 ## End-to-End Walkthroughs
 
-각 Adapter 유형의 전체 구현 과정을 요약합니다. 각 단계의 상세 코드는 해당 Activity 섹션을 참조하세요.
+This section summarizes the full implementation process for each Adapter type. Refer to the corresponding Activity section for detailed code at each step.
 
 ### Repository (01-SingleHost IProductRepository)
 
-| Step | Activity | 파일 | 핵심 작업 |
+| Step | Activity | File | Key Task |
 |------|----------|------|----------|
-| 1 | Port 정의 | `LayeredArch.Domain/Repositories/IProductRepository.cs` | `: IObservablePort`, `FinT<IO, T>` 반환, 도메인 VO 매개변수 |
-| 2 | Adapter 구현 | `LayeredArch.Adapters.Persistence/Repositories/Products/ProductRepositoryInMemory.cs` | `[GenerateObservablePort]`, `virtual`, `IO.lift`, `AdapterError.For<T>` |
-| 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Repositories.ProductRepositoryInMemoryObservable.g.cs` | 빌드 후 자동 생성 |
-| 4 | DI 등록 | `AdapterPersistenceRegistration.cs` -> `Program.cs` | `RegisterScopedObservablePort<IProductRepository, ...Observable>()` |
-| 5 | 테스트 | `ProductRepositoryInMemoryTests.cs` | 원본 클래스 직접 테스트, [Repository 테스트](#repository-테스트) 참조 |
+| 1 | Port definition | `LayeredArch.Domain/Repositories/IProductRepository.cs` | `: IObservablePort`, `FinT<IO, T>` return, domain VO parameters |
+| 2 | Adapter implementation | `LayeredArch.Adapters.Persistence/Repositories/Products/ProductRepositoryInMemory.cs` | `[GenerateObservablePort]`, `virtual`, `IO.lift`, `AdapterError.For<T>` |
+| 3 | Pipeline verification | `obj/GeneratedFiles/.../Repositories.ProductRepositoryInMemoryObservable.g.cs` | Auto-generated after build |
+| 4 | DI registration | `AdapterPersistenceRegistration.cs` -> `Program.cs` | `RegisterScopedObservablePort<IProductRepository, ...Observable>()` |
+| 5 | Testing | `ProductRepositoryInMemoryTests.cs` | Direct testing of original class, see [Repository Testing](#repository-testing) |
 
 ### External API (01-SingleHost IExternalPricingService)
 
-| Step | Activity | 파일 | 핵심 작업 |
+| Step | Activity | File | Key Task |
 |------|----------|------|----------|
-| 1 | Port 정의 | `LayeredArch.Application/Ports/IExternalPricingService.cs` | `CancellationToken` 포함, `Async` 접미사 |
-| 2 | Adapter 구현 | `LayeredArch.Adapters.Infrastructure/ExternalApis/ExternalPricingApiService.cs` | `IO.liftAsync`, `HandleHttpError<T>`, try/catch 패턴 |
-| 3 | Pipeline 확인 | `obj/GeneratedFiles/.../ExternalApis.ExternalPricingApiServiceObservable.g.cs` | 빌드 후 자동 생성 |
-| 4 | DI 등록 | `AdapterInfrastructureRegistration.cs` -> `Program.cs` | `AddHttpClient<...Observable>()` + `RegisterScopedObservablePort` |
-| 5 | 테스트 | `ExternalPricingApiServiceTests.cs` | `MockHttpMessageHandler` 사용, [External API 테스트](#external-api-테스트) 참조 |
+| 1 | Port definition | `LayeredArch.Application/Ports/IExternalPricingService.cs` | Includes `CancellationToken`, `Async` suffix |
+| 2 | Adapter implementation | `LayeredArch.Adapters.Infrastructure/ExternalApis/ExternalPricingApiService.cs` | `IO.liftAsync`, `HandleHttpError<T>`, try/catch pattern |
+| 3 | Pipeline verification | `obj/GeneratedFiles/.../ExternalApis.ExternalPricingApiServiceObservable.g.cs` | Auto-generated after build |
+| 4 | DI registration | `AdapterInfrastructureRegistration.cs` -> `Program.cs` | `AddHttpClient<...Observable>()` + `RegisterScopedObservablePort` |
+| 5 | Testing | `ExternalPricingApiServiceTests.cs` | Uses `MockHttpMessageHandler`, see [External API Testing](#external-api-testing) |
 
 ### Messaging (Cqrs06Services IInventoryMessaging)
 
-| Step | Activity | 파일 | 핵심 작업 |
+| Step | Activity | File | Key Task |
 |------|----------|------|----------|
-| 1 | Port 정의 | `OrderService/Adapters/Messaging/IInventoryMessaging.cs` | Request/Reply + Fire-and-Forget |
-| 2 | Adapter 구현 | `OrderService/Adapters/Messaging/RabbitMqInventoryMessaging.cs` | `IMessageBus` 주입, `InvokeAsync` / `SendAsync` |
-| 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Messaging.RabbitMqInventoryMessagingObservable.g.cs` | 빌드 후 자동 생성 |
-| 4 | DI 등록 | `OrderService/Program.cs` (57행) | `RegisterScopedObservablePort`, MessageBus는 Wolverine 별도 등록 |
-| 5 | 테스트 | `RabbitMqInventoryMessagingTests.cs` | NSubstitute로 `IMessageBus` Mock, [Messaging 테스트](#messaging-테스트) 참조 |
+| 1 | Port definition | `OrderService/Adapters/Messaging/IInventoryMessaging.cs` | Request/Reply + Fire-and-Forget |
+| 2 | Adapter implementation | `OrderService/Adapters/Messaging/RabbitMqInventoryMessaging.cs` | `IMessageBus` injection, `InvokeAsync` / `SendAsync` |
+| 3 | Pipeline verification | `obj/GeneratedFiles/.../Messaging.RabbitMqInventoryMessagingObservable.g.cs` | Auto-generated after build |
+| 4 | DI registration | `OrderService/Program.cs` (line 57) | `RegisterScopedObservablePort`, MessageBus registered separately via Wolverine |
+| 5 | Testing | `RabbitMqInventoryMessagingTests.cs` | Mock `IMessageBus` with NSubstitute, see [Messaging Testing](#messaging-testing) |
 
 ### Query Adapter (01-SingleHost IProductQuery)
 
-| Step | Activity | 파일 | 핵심 작업 |
+| Step | Activity | File | Key Task |
 |------|----------|------|----------|
-| 1 | Port 정의 | `LayeredArch.Application/Usecases/Products/Ports/IProductQuery.cs` | `: IQueryPort<Product, ProductSummaryDto>` |
-| 2a | Dapper 구현 | `LayeredArch.Adapters.Persistence/Repositories/Products/Queries/ProductQueryDapper.cs` | `DapperQueryBase` 상속, `[GenerateObservablePort]`, SQL 선언만 담당 |
-| 2b | InMemory 구현 | `LayeredArch.Adapters.Persistence/Repositories/Products/Queries/ProductQueryInMemory.cs` | `[GenerateObservablePort]`, Repository 위임 |
-| 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Repositories.ProductQueryDapperObservable.g.cs` | 빌드 후 자동 생성 |
-| 4 | DI 등록 | `AdapterPersistenceRegistration.cs` -> `Program.cs` | Sqlite: Dapper Observable, InMemory: InMemory Observable |
-| 5 | 테스트 | `SearchProductsQueryTests.cs` | InMemory Query Adapter 직접 테스트, [Query Adapter 테스트](#query-adapter-테스트) 참조 |
+| 1 | Port definition | `LayeredArch.Application/Usecases/Products/Ports/IProductQuery.cs` | `: IQueryPort<Product, ProductSummaryDto>` |
+| 2a | Dapper implementation | `LayeredArch.Adapters.Persistence/Repositories/Products/Queries/ProductQueryDapper.cs` | Inherits `DapperQueryBase`, `[GenerateObservablePort]`, handles only SQL declarations |
+| 2b | InMemory implementation | `LayeredArch.Adapters.Persistence/Repositories/Products/Queries/ProductQueryInMemory.cs` | `[GenerateObservablePort]`, delegates to Repository |
+| 3 | Pipeline verification | `obj/GeneratedFiles/.../Repositories.ProductQueryDapperObservable.g.cs` | Auto-generated after build |
+| 4 | DI registration | `AdapterPersistenceRegistration.cs` -> `Program.cs` | Sqlite: Dapper Observable, InMemory: InMemory Observable |
+| 5 | Testing | `SearchProductsQueryTests.cs` | Direct testing of InMemory Query Adapter, see [Query Adapter Testing](#query-adapter-testing) |
 
 ---
 
-## 부록
+## Appendix
 
-### A. Clean Architecture 전체 흐름
+### A. Clean Architecture Full Flow
 
 ```
 +-------------------------------------------------------------------+
@@ -391,8 +391,8 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 |                       Application Layer                           |
 |  ┌─────────────────────────────────────────────────────────────┐  |
 |  │ CreateProductCommand.Usecase                                │  |
-|  │   - IProductRepository (Port Interface 의존)                │  |
-|  │   - 비즈니스 로직 구현                                       │  |
+|  │   - IProductRepository (depends on Port Interface)           │  |
+|  │   - Business logic implementation                            │  |
 |  └─────────────────────────────────────────────────────────────┘  |
 |  ┌─────────────────────────────────────────────────────────────┐  |
 |  │ IProductRepository : IRepository<Product, ProductId> (Port Interface) │  |
@@ -408,19 +408,19 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 |  │ [GenerateObservablePort]                                          │  |
 |  │ ProductRepositoryInMemory : IProductRepository              │  |
 |  │   - RequestCategory => "Repository"                         │  |
-|  │   - 실제 데이터 접근 구현                                    │  |
+|  │   - Actual data access implementation                        │  |
 |  └─────────────────────────────────────────────────────────────┘  |
 |                              |                                    |
 |                              v (Source Generator)                 |
 |  ┌─────────────────────────────────────────────────────────────┐  |
-|  │ ProductRepositoryInMemoryObservable (자동 생성)               │  |
-|  │   - 트레이싱, 로깅, 메트릭 자동 추가                         │  |
-|  │   - DI에서 IProductRepository로 등록                        │  |
+|  │ ProductRepositoryInMemoryObservable (auto-generated)          │  |
+|  │   - Tracing, logging, metrics automatically added             │  |
+|  │   - Registered as IProductRepository in DI                   │  |
 |  └─────────────────────────────────────────────────────────────┘  |
 +-------------------------------------------------------------------+
 ```
 
-**Usecase에서 Adapter 사용 예시:**
+**Example of using an Adapter in a Usecase:**
 
 ```csharp
 // Application/Usecases/GetProductByIdQuery.cs
@@ -451,46 +451,46 @@ public sealed class GetProductByIdQuery
 }
 ```
 
-### D. Quick Reference 체크리스트
+### D. Quick Reference Checklist
 
-#### Port 인터페이스
+#### Port Interface
 
-- [ ] `IObservablePort` 상속
-- [ ] 반환 타입: `FinT<IO, T>`
-- [ ] 도메인 VO 사용 (Repository)
+- [ ] Inherits `IObservablePort`
+- [ ] Return type: `FinT<IO, T>`
+- [ ] Uses domain VOs (Repository)
 - [ ] `CancellationToken` (External API)
-- [ ] 위치: Repository -> Domain, External API/Query Adapter -> Application
+- [ ] Location: Repository -> Domain, External API/Query Adapter -> Application
 
-#### Adapter 구현
+#### Adapter Implementation
 
-- [ ] `[GenerateObservablePort]` 어트리뷰트
-- [ ] Port 인터페이스 구현
-- [ ] `RequestCategory` 프로퍼티
-- [ ] 모든 메서드에 `virtual`
-- [ ] `IO.lift` (동기) 또는 `IO.liftAsync` (비동기)
-- [ ] 성공: `Fin.Succ(value)`
-- [ ] 실패: `AdapterError.For<T>(errorType, context, message)`
-- [ ] 예외: `AdapterError.FromException<T>(errorType, ex)`
+- [ ] `[GenerateObservablePort]` attribute
+- [ ] Implements Port interface
+- [ ] `RequestCategory` property
+- [ ] `virtual` on all methods
+- [ ] `IO.lift` (synchronous) or `IO.liftAsync` (asynchronous)
+- [ ] Success: `Fin.Succ(value)`
+- [ ] Failure: `AdapterError.For<T>(errorType, context, message)`
+- [ ] Exception: `AdapterError.FromException<T>(errorType, ex)`
 
 #### DI Registration
 
-- [ ] Registration 클래스 생성 (`Adapter{Layer}Registration`)
+- [ ] Create Registration class (`Adapter{Layer}Registration`)
 - [ ] `RegisterScopedObservablePort<IObservablePort, ObservablePort>()`
-- [ ] HttpClient 등록 (External API)
-- [ ] Query Adapter Observable 등록 (Dapper 또는 InMemory)
-- [ ] `Program.cs`에서 Registration 호출
+- [ ] HttpClient registration (External API)
+- [ ] Query Adapter Observable registration (Dapper or InMemory)
+- [ ] Call Registration from `Program.cs`
 
-#### 단위 테스트
+#### Unit Testing
 
-- [ ] 원본 Adapter 클래스 테스트 (Pipeline 아님)
-- [ ] AAA 패턴
-- [ ] `T1_T2_T3` 네이밍
-- [ ] `.Run()` -> `Task.Run(() => ioResult.Run())` 실행
-- [ ] 성공/실패 케이스 모두 테스트
+- [ ] Test original Adapter class (not Pipeline)
+- [ ] AAA pattern
+- [ ] `T1_T2_T3` naming
+- [ ] Execution: `.Run()` -> `Task.Run(() => ioResult.Run())`
+- [ ] Test both success and failure cases
 
-### E. Observability 상세 사양 요약
+### E. Observability Detailed Specification Summary
 
-Pipeline이 자동 제공하는 Observability 기능의 요약입니다. 상세 사양은 [08-observability.md](../../spec/08-observability)를 참조하세요.
+This is a summary of the Observability features automatically provided by the Pipeline. For detailed specifications, see [08-observability.md](../../spec/08-observability).
 
 **Span 이름 패턴**: `{layer} {category} {handler}.{method}`
 
@@ -499,23 +499,23 @@ Pipeline이 자동 제공하는 Observability 기능의 요약입니다. 상세 
 | Tag Key | Success | Failure |
 |---------|---------|---------|
 | `request.layer` | "adapter" | "adapter" |
-| `request.category.name` | 카테고리명 | 카테고리명 |
-| `request.handler.name` | 핸들러명 | 핸들러명 |
-| `request.handler.method` | 메서드명 | 메서드명 |
+| `request.category.name` | category name | category name |
+| `request.handler.name` | handler name | handler name |
+| `request.handler.method` | method name | method name |
 | `response.status` | "success" | "failure" |
-| `response.elapsed` | 초(s) | 초(s) |
+| `response.elapsed` | seconds (s) | seconds (s) |
 | `error.type` | - | "expected" / "exceptional" / "aggregate" |
-| `error.code` | - | 에러 코드 |
+| `error.code` | - | error code |
 
-**메트릭 Instruments:**
+**Metric Instruments:**
 
-| Instrument | 이름 패턴 | 타입 | Unit |
+| Instrument | Name Pattern | Type | Unit |
 |------------|----------|------|------|
 | requests | `adapter.{category}.requests` | Counter | `{request}` |
 | responses | `adapter.{category}.responses` | Counter | `{response}` |
 | duration | `adapter.{category}.duration` | Histogram | `s` |
 
-**에러 객체 (`@error`) 구조:**
+**Error object (`@error`) structure:**
 
 ```json
 // Expected Error
@@ -532,11 +532,11 @@ Pipeline이 자동 제공하는 Observability 기능의 요약입니다. 상세 
 
 ## Troubleshooting
 
-### 테스트에서 `FinT<IO, T>` 실행 방법을 모르겠음
+### Unable to determine how to execute `FinT<IO, T>` in tests
 
-**Cause:** `FinT<IO, T>` 반환값은 IO 모나드를 감싸고 있어 직접 실행이 필요합니다.
+**Cause:** `FinT<IO, T>` return values wrap the IO monad and require explicit execution.
 
-**Resolution:** `.Run().RunAsync()` 패턴을 사용합니다.
+**Resolution:** Use the `.Run().RunAsync()` pattern.
 
 ```csharp
 var ioFin = adapter.MethodUnderTest(args);   // FinT<IO, T> 반환
@@ -548,38 +548,38 @@ var result = await Task.Run(() => ioResult.Run());  // Fin<T> 실행
 
 ## FAQ
 
-### Q3. 테스트에서 Pipeline 없이 원본 클래스를 테스트할 수 있나요?
+### Q3. Can I test the original class without Pipeline in tests?
 
-네, 원본 클래스를 직접 인스턴스화하여 테스트할 수 있습니다. [Activity 5](#activity-5-단위-테스트) 섹션의 테스트 예제를 참조하세요.
+Yes, you can directly instantiate the original class for testing. Refer to the test examples in the [Activity 5](#activity-5-unit-testing) section.
 
-### Q6. Repository와 Query Adapter를 언제 구분하나요?
+### Q6. When should I distinguish between Repository and Query Adapter?
 
-**Decision Criteria**: 조회 결과로 Aggregate를 재구성할 필요가 있는가?
+**Decision Criteria**: Does the query result need to reconstruct an Aggregate?
 
-- **Aggregate 필요** (도메인 불변식 검증, Create/Update/Delete) -> **Repository** (`IRepository<T, TId>`, Domain Layer, EF Core)
-- **DTO 직접 반환** (읽기 전용, 페이지네이션/정렬) -> **Query Adapter** (`IQueryPort<TEntity, TDto>`, Application Layer, Dapper)
+- **Aggregate needed** (domain invariant validation, Create/Update/Delete) -> **Repository** (`IRepository<T, TId>`, Domain Layer, EF Core)
+- **Direct DTO return** (read-only, pagination/sorting) -> **Query Adapter** (`IQueryPort<TEntity, TDto>`, Application Layer, Dapper)
 
-> 상세 판단 기준은 [Query Adapter](./13-adapters#query-adapter-cqrs-read-측)의 비교 테이블을 참조하세요.
+> For detailed decision criteria, refer to the comparison table in [Query Adapter](./13-adapters#query-adapter-cqrs-read-side).
 
 ---
 
 ## References
 
-| 문서 | 설명 |
+| Document | Description |
 |------|------|
-| [04-ddd-tactical-overview.md](../domain/04-ddd-tactical-overview) | 도메인 모델링 전체 개요 |
-| [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) | 유스케이스 구현 (CQRS Command/Query) |
-| [08a-error-system.md](../domain/08a-error-system) | 에러 시스템: 기초와 네이밍 |
-| [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) | 에러 시스템: Domain/Application 에러 |
-| [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) | 에러 시스템: Adapter 에러와 테스트 |
-| [12-ports.md](./12-ports) | Port 정의 가이드 |
-| [13-adapters.md](./13-adapters) | Adapter 구현 가이드 |
-| [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di) | Pipeline 생성, DI 등록, Options 패턴 |
-| [15a-unit-testing.md](../testing/15a-unit-testing) | 단위 테스트 작성 가이드 |
-| [08-observability.md](../../spec/08-observability) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
-| [01-project-structure.md](../architecture/01-project-structure) | 서비스 프로젝트 구조 가이드 |
+| [04-ddd-tactical-overview.md](../domain/04-ddd-tactical-overview) | Domain modeling complete overview |
+| [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) | Usecase implementation (CQRS Command/Query) |
+| [08a-error-system.md](../domain/08a-error-system) | Error system: Fundamentals and naming |
+| [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) | Error system: Domain/Application errors |
+| [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) | Error system: Adapter errors and testing |
+| [12-ports.md](./12-ports) | Port definition guide |
+| [13-adapters.md](./13-adapters) | Adapter implementation guide |
+| [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di) | Pipeline creation, DI registration, Options pattern |
+| [15a-unit-testing.md](../testing/15a-unit-testing) | Unit testing guide |
+| [08-observability.md](../../spec/08-observability) | Observability specification (tracing, logging, metrics details) |
+| [01-project-structure.md](../architecture/01-project-structure) | Service project structure guide |
 
-**외부 참고:**
+**External references:**
 
-- [OpenTelemetry .NET](https://opentelemetry.io/docs/languages/net/) - 분산 트레이싱
-- [LanguageExt](https://github.com/louthy/language-ext) - 함수형 프로그래밍 라이브러리
+- [OpenTelemetry .NET](https://opentelemetry.io/docs/languages/net/) - Distributed tracing
+- [LanguageExt](https://github.com/louthy/language-ext) - Functional programming library

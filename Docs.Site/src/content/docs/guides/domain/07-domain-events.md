@@ -36,10 +36,10 @@ A basic understanding of the following concepts is needed to understand this doc
 ### Key Commands
 
 ```csharp
-// 도메인 이벤트 정의 (Aggregate 내 중첩 record)
+// Domain event definition (Aggregate 내 중첩 record)
 public sealed record CreatedEvent(OrderId OrderId, Money TotalAmount) : DomainEvent;
 
-// 이벤트 발행 (AggregateRoot 내부)
+// Event publishing (AggregateRoot 내부)
 AddDomainEvent(new CreatedEvent(Id, totalAmount));
 
 // Event Handler 구현
@@ -70,7 +70,7 @@ services.RegisterDomainEventHandlersFromAssembly(AssemblyReference.Assembly);
 
 ---
 
-## 왜 도메인 이벤트인가
+## Why Domain Events
 
 도메인 이벤트는 DDD(Domain-Driven Design)에서 **"도메인에서 발생한 중요한 사건"을** 명시적으로 표현하는 전술 패턴입니다.
 
@@ -116,7 +116,7 @@ Now that we understand the problems domain events solve, let us examine what typ
 The key point to note in the following code is `IDomainEvent`가 `INotification`을 확장하여 Mediator Pub/Sub과 자연스럽게 통합된다는 것입니다.
 
 ```csharp
-// 인터페이스 — Mediator.INotification 확장으로 Pub/Sub 통합
+// Interface — Mediator.INotification 확장으로 Pub/Sub 통합
 public interface IDomainEvent : INotification
 {
     DateTimeOffset OccurredAt { get; }
@@ -125,7 +125,7 @@ public interface IDomainEvent : INotification
     string? CausationId { get; }
 }
 
-// 기반 record
+// Base record
 public abstract record DomainEvent(
     DateTimeOffset OccurredAt,
     Ulid EventId,
@@ -159,7 +159,7 @@ HTTP Request
 
 두 식별자의 역할은 다음과 같이 구분됩니다.
 
-| 식별자 | 수준 | 용도 |
+| 식별자 | 수준 | Purpose |
 |--------|------|------|
 | `CorrelationId` | 비즈니스 | 동일 요청에서 발생한 이벤트 그룹핑 |
 | OpenTelemetry `TraceId` | 인프라 | 분산 시스템 간 요청 추적 (span 기반) |
@@ -421,7 +421,7 @@ public sealed class OnProductCreated : IDomainEventHandler<Product.CreatedEvent>
 
 ### Naming Conventions
 
-| 핸들러 유형 | 명명 패턴 | 예시 |
+| 핸들러 유형 | 명명 패턴 | Example |
 |------------|----------|------|
 | Command/Query Handler | `{Command/Query}Handler` | `CreateProductHandler`, `GetProductHandler` |
 | Domain Event Handler | `On{EventName}` | `OnProductCreated`, `OnOrderConfirmed` |

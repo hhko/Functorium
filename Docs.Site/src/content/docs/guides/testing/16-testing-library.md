@@ -1,5 +1,5 @@
 ---
-title: "Functorium.Testing 라이브러리 가이드"
+title: "Functorium.Testing Library Guide"
 ---
 
 테스트 코드는 프로덕션 코드와 동일한 수준의 일관성이 필요합니다. 프로젝트가 성장하면 로그 캡처, 아키텍처 규칙 검증, 소스 생성기 테스트 등 반복적인 테스트 인프라 코드가 각 프로젝트에 중복됩니다.
@@ -31,7 +31,7 @@ A basic understanding of the following concepts is needed to understand this doc
 - LanguageExt의 `Fin<T>`, `FinT<IO, T>` 타입 기본 개념
 - Serilog 구조화된 로깅의 기본 원리
 
-> **핵심 원칙:** `Functorium.Testing`은 구조화된 로그 캡처, 아키텍처 규칙 검증, 소스 생성기 테스트, Mock 반환값 생성 등 반복적인 테스트 인프라를 단일 라이브러리로 통합하여 프로젝트 간 일관성을 보장합니다.
+> **Core principle:** `Functorium.Testing`은 구조화된 로그 캡처, 아키텍처 규칙 검증, 소스 생성기 테스트, Mock 반환값 생성 등 반복적인 테스트 인프라를 단일 라이브러리로 통합하여 프로젝트 간 일관성을 보장합니다.
 
 ## Summary
 
@@ -109,7 +109,7 @@ _repository.GetById(Arg.Any<ProductId>())
 
 ### 다른 가이드에 문서화된 기능
 
-| 기능 | 참조 가이드 |
+| Feature | 참조 가이드 |
 |---|---|
 | `HostTestFixture<TProgram>` — HTTP 엔드포인트 통합 테스트 | [15b-integration-testing.md](./15b-integration-testing), [01-project-structure.md](../architecture/01-project-structure) |
 | `ShouldBeDomainError`, `ShouldBeApplicationError` 등 에러 Assertion | [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app), [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) |
@@ -178,7 +178,7 @@ _repository.GetById(Arg.Any<ProductId>())
 </ItemGroup>
 ```
 
-| 참조 방식 | 용도 |
+| 참조 방식 | Purpose |
 |---|---|
 | 일반 `ProjectReference` | 생성기 타입을 `new EntityIdGenerator()`처럼 인스턴스화 |
 | `OutputItemType="Analyzer"` | 빌드 시 `[GenerateEntityId]` 등의 어트리뷰트로 코드 생성 활성화 |
@@ -211,7 +211,7 @@ using Functorium.Testing.Arrangements.Effects;
 
 ### API
 
-| 메서드 | 반환 타입 | 설명 |
+| 메서드 | 반환 타입 | Description |
 |--------|----------|------|
 | `FinTFactory.Succ<T>(T value)` | `FinT<IO, T>` | 성공 값을 래핑한 `FinT` 생성 |
 | `FinTFactory.Fail<T>(Error error)` | `FinT<IO, T>` | 실패 에러를 래핑한 `FinT` 생성 |
@@ -356,7 +356,7 @@ var value = factory.CreatePropertyValue("test-value");
 
 **타입별 처리 로직:**
 
-| 타입 | 처리 방식 | 결과 |
+| Type | 처리 방식 | 결과 |
 |------|----------|------|
 | `ScalarValue` | `.Value` (null이면 `"null"` 문자열) | 원시 값 (`string`, `int`, `bool` 등) |
 | `SequenceValue` | `.Elements.Select(ExtractValue).ToList()` | `List<object>` |
@@ -572,7 +572,7 @@ public static ValidationResultSummary ValidateAllClasses(
 
 재사용 가능한 아키텍처 규칙을 정의하는 인터페이스입니다.
 
-| 타입 | 설명 |
+| Type | Description |
 |---|---|
 | `IArchRule<TType>` | 규칙 인터페이스. `Description`과 `Validate()` 메서드 제공 |
 | `DelegateArchRule<TType>` | 람다 기반 규칙 구현 |
@@ -661,7 +661,7 @@ public sealed class DomainArchitectureRuleTests : DomainArchitectureTestSuite
 }
 ```
 
-| override 속성 | 기본값 | 용도 |
+| override 속성 | Default | Purpose |
 |---|---|---|
 | `ValueObjectExcludeFromFactoryMethods` | `[]` | Create/Validate 팩토리 검사에서 제외할 VO 타입. Union VO처럼 팩토리 없이 직접 생성하는 타입에 사용 |
 | `DomainServiceAllowedFieldTypes` | `[]` | DomainService 필드 타입 허용 목록. Repository를 주입받는 DomainService에 사용 |
@@ -861,7 +861,7 @@ using Functorium.Testing.Arrangements.ScheduledJobs;
 
 #### 주요 속성
 
-| 속성 | 타입 | 설명 |
+| 속성 | Type | Description |
 |---|---|---|
 | `Services` | `IServiceProvider` | DI 컨테이너 |
 | `Scheduler` | `IScheduler` | Quartz 스케줄러 |
@@ -895,7 +895,7 @@ public class MyJobTestFixture : QuartzTestFixture<Program>
     {
         builder.ConfigureServices(services =>
         {
-            // 테스트용 서비스 교체
+            // Replace with test service
         });
     }
 }
@@ -937,7 +937,7 @@ Task<JobExecutionResult> ExecuteJobOnceAsync<TJob>(
 
 Job 실행 결과를 나타내는 record입니다.
 
-| 속성 | 타입 | 설명 |
+| 속성 | Type | Description |
 |---|---|---|
 | `JobName` | `string` | Job 이름 |
 | `Success` | `bool` | 성공 여부 |

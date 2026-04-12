@@ -464,7 +464,7 @@ Configuration 규칙:
 
 #### 전체 비교표
 
-| 연산 | 구분 | Change Tracker | 도메인 변환 | 이벤트 추적 | ReadQuery | 실행 방식 |
+| 연산 | Category | Change Tracker | 도메인 변환 | 이벤트 추적 | ReadQuery | 실행 방식 |
 |------|------|:-:|:-:|:-:|:-:|------|
 | **Create** | 단건 | O | O (ToModel) | O (Track) | - | `DbSet.Add` |
 | **CreateRange** | 벌크 | O | O (ToModel) | O (TrackRange) | - | `DbSet.AddRange` |
@@ -529,7 +529,7 @@ Repository(Write Side) 구현을 완료했다면, 이제 읽기 전용 조회를
 
 아래 표는 Query 유형별 베이스 클래스와 인터페이스를 정리한 것입니다.
 
-| 유형 | 베이스 클래스 | 인터페이스 | 예시 |
+| 유형 | 베이스 클래스 | 인터페이스 | Example |
 |------|-------------|-----------|------|
 | 검색 (페이징) | `DapperQueryBase` / `InMemoryQueryBase` | `IQueryPort<TEntity, TDto>` | `IProductQuery` |
 | 단건 조회 | 직접 구현 | `IQueryPort` (비제네릭) | `IProductDetailQuery` |
@@ -685,7 +685,7 @@ public class ProductWithStockQueryDapper
 }
 ```
 
-> **핵심:** JOIN 시 `DefaultOrderBy`, `AllowedSortColumns` 모두에서 테이블 별칭(`p.`, `i.`)을 사용해야 합니다. `DapperSpecTranslator`에 별칭을 전달하면 WHERE 절에도 자동으로 별칭이 적용됩니다.
+> **Key point:** JOIN 시 `DefaultOrderBy`, `AllowedSortColumns` 모두에서 테이블 별칭(`p.`, `i.`)을 사용해야 합니다. `DapperSpecTranslator`에 별칭을 전달하면 WHERE 절에도 자동으로 별칭이 적용됩니다.
 
 #### LEFT JOIN 예시 (ProductWithOptionalStockQueryDapper)
 
@@ -894,7 +894,7 @@ protected override Func<CustomerOrderSummaryDto, object> SortSelector(string fie
 `IQueryPort`(비제네릭 마커)만 상속하고, `GetById` 메서드를 직접 정의합니다:
 
 ```csharp
-// 인터페이스
+// Interface
 public interface IProductDetailQuery : IQueryPort
 {
     FinT<IO, ProductDetailDto> GetById(ProductId id);
@@ -947,7 +947,7 @@ FinT<IO, CursorPagedResult<TDto>> SearchByCursor(
 
 #### 요청/응답 타입
 
-| 타입 | 속성 | 설명 |
+| Type | 속성 | Description |
 |------|------|------|
 | `CursorPageRequest` | `After` | 이 커서 이후의 데이터 조회 (forward) |
 | | `Before` | 이 커서 이전의 데이터 조회 (backward) |
@@ -972,7 +972,7 @@ FinT<IO, CursorPagedResult<TDto>> SearchByCursor(
 
 #### Offset vs Cursor 비교
 
-| 항목 | Offset (`Search`) | Cursor (`SearchByCursor`) |
+| Item | Offset (`Search`) | Cursor (`SearchByCursor`) |
 |------|-------------------|---------------------------|
 | 총 건수 | O (COUNT 쿼리) | X (불필요) |
 | 페이지 점프 | O (임의 페이지 이동) | X (순차 탐색만) |

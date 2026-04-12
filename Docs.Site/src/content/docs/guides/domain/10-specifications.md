@@ -72,7 +72,7 @@ _productRepository.FindAll(spec);
 
 ---
 
-## 왜 Specification 패턴인가
+## Why the Specification Pattern
 
 Specification 패턴은 DDD에서 **비즈니스 규칙을 캡슐화하고 조합 가능하게** 만드는 빌딩블록입니다.
 

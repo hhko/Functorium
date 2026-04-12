@@ -2,7 +2,7 @@
 title: "Error System: Fundamentals and Naming"
 ---
 
-This document covers the fundamental principles of error handling, the Fin pattern, and error naming rules. Domain/Application/Event 에러는 [08b-error-system-domain-app.md](./08b-error-system-domain-app), Adapter 에러와 테스트 패턴은 [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing)을 참고하세요.
+This document covers the fundamental principles of error handling, the Fin pattern, and error naming rules. For Domain/Application/Event errors, see [08b-error-system-domain-app.md](./08b-error-system-domain-app); for Adapter errors and test patterns, see [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing).
 
 ## Introduction
 
@@ -10,59 +10,59 @@ This document covers the fundamental principles of error handling, the Fin patte
 "What are the benefits of using result types instead of throwing exceptions?"
 "Are there rules for naming error codes consistently?"
 
-Error handling is a core concern that covers various failure scenarios from domain rule violations to external system failures. 이 문서는 Functorium의 `Fin<T>` 패턴, 레이어별 에러 팩토리, 에러 네이밍 규칙(R1~R8)을 다룹니다.
+Error handling is a core concern that covers various failure scenarios from domain rule violations to external system failures. This document covers Functorium's `Fin<T>` pattern, per-layer error factories, and error naming rules (R1-R8).
 
 ### What You Will Learn
 
 Through this document, you will learn:
 
-1. **예외 vs 결과 타입의 차이** — 왜 명시적 에러 처리를 Optional하는지
-2. **`Fin<T>`와 암시적 변환** — 에러를 간결하게 반환하는 패턴
-3. **레이어별 에러 팩토리** — `DomainError`, `ApplicationError`, `AdapterError`의 사용법
-4. **에러 네이밍 규칙 R1~R8** — 일관된 에러 코드 작성을 위한 플로우차트
+1. **Exception vs Result type differences** -- Why explicit error handling is preferred
+2. **`Fin<T>` and implicit conversion** -- Pattern for returning errors concisely
+3. **Per-layer error factories** -- Usage of `DomainError`, `ApplicationError`, `AdapterError`
+4. **Error naming rules R1-R8** -- Flowchart for writing consistent error codes
 
 ### Prerequisites
 
 A basic understanding of the following concepts is required to understand this document:
 
-- LanguageExt의 `Fin<T>` 타입 기본 개념
-- [값 객체 구현 가이드](./05a-value-objects) — Value Object에서의 `Validation<Error, T>` 사용
+- Basic understanding of LanguageExt's `Fin<T>` type
+- [Value Object implementation guide](./05a-value-objects) -- Usage of `Validation<Error, T>` in Value Objects
 
-> Functorium makes failures explicit in the type system using `Fin<T>` and `Validation<Error, T>` instead of exceptions. 레이어별 에러 팩토리(`DomainError`, `ApplicationError`, `AdapterError`)로 에러 출처를 구분하고, R1~R8 네이밍 규칙으로 에러 코드의 일관성을 보장합니다.
+> Functorium makes failures explicit in the type system using `Fin<T>` and `Validation<Error, T>` instead of exceptions. Per-layer error factories (`DomainError`, `ApplicationError`, `AdapterError`) distinguish error origins, and R1-R8 naming rules ensure consistency of error codes.
 
 ## Summary
 
 ### Key Commands
 
 ```csharp
-// 에러 반환 (암시적 변환 권장)
-return DomainError.For<Email>(new Empty(), "", "이메일은 비어있을 수 없습니다");
-return ApplicationError.For<CreateProductCommand>(new AlreadyExists(), code, "이미 존재합니다");
-return AdapterError.For<ProductRepository>(new NotFound(), id, "찾을 수 없습니다");
+// Error return (implicit conversion recommended)
+return DomainError.For<Email>(new Empty(), "", "Email cannot be empty");
+return ApplicationError.For<CreateProductCommand>(new AlreadyExists(), code, "Already exists");
+return AdapterError.For<ProductRepository>(new NotFound(), id, "Not found");
 
-// 예외 래핑
+// Exception wrapping
 return AdapterError.FromException<MyAdapter>(new ConnectionFailed("DB"), exception);
 
-// 성공 반환
+// Success return
 return Fin.Succ(product);
 ```
 
 ### Key Procedures
 
-1. 에러 네이밍 규칙 플로우차트(R1~R8) 순서대로 적합한 규칙 Optional
-2. 표준 에러 타입으로 표현 가능한지 확인, 불가능하면 `Custom` sealed record 정의
-3. 레이어에 맞는 팩토리(`DomainError`, `ApplicationError`, `AdapterError`) 사용
-4. `Fin.Fail<T>()` 래핑 대신 암시적 변환으로 직접 반환
+1. Follow the error naming rules flowchart (R1-R8) in order to select the appropriate rule
+2. Check if it can be expressed with standard error types; if not, define a `Custom` sealed record
+3. Use the factory matching the layer (`DomainError`, `ApplicationError`, `AdapterError`)
+4. Return directly via implicit conversion instead of wrapping with `Fin.Fail<T>()`
 
 ### Key Concepts
 
 | Concept | Description |
 |------|------|
-| `Fin<T>` | 단일 에러 반환. Entity 메서드, Usecase에서 사용 |
-| `Validation<Error, T>` | 여러 에러 누적. Value Object 검증에서 사용 |
-| 레이어별 에러 팩토리 | `DomainError`, `ApplicationError`, `AdapterError`로 에러 출처 구분 |
-| 암시적 변환 | `Error → Fin<T>` 자동 변환. `Fin.Fail<T>(error)` 래핑 불필요 |
-| 네이밍 규칙 R1~R8 | 상태 자명(R1) → 기준 비교(R2) → 기대 불충족(R3) → ... → 작업 실패(R8) |
+| `Fin<T>` | Single error return. Used in Entity methods and Usecases |
+| `Validation<Error, T>` | Multiple error accumulation. Used in Value Object validation |
+| Per-layer error factories | Distinguish error origin with `DomainError`, `ApplicationError`, `AdapterError` |
+| Implicit conversion | Automatic `Error -> Fin<T>` conversion. No `Fin.Fail<T>(error)` wrapping needed |
+| Naming rules R1-R8 | Self-evident state (R1) -> Criteria comparison (R2) -> Unmet expectation (R3) -> ... -> Operation failure (R8) |
 
 ---
 
@@ -567,7 +567,7 @@ Error (LanguageExt.Common)
 | `ErrorCodeExpected<T1, T2, T3>` | `true` | `false` | internal |
 | `ErrorCodeExceptional` | `false` | `true` | internal |
 
-> **참고**: `DomainError.For<TDomain, T1, T2, T3>()` 3-값 오버로드도 지원됩니다. 상세 시그니처와 사용 예제는 [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app)를 참조하세요.
+> **Note**: `DomainError.For<TDomain, T1, T2, T3>()` 3-값 오버로드도 지원됩니다. 상세 시그니처와 사용 예제는 [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app)를 참조하세요.
 
 ### Error Creation Flow
 
