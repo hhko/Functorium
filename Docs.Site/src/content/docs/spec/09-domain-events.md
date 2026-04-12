@@ -167,15 +167,15 @@ public interface IDomainEventCollector
 
 ### Usage Flow
 
-1. **Repository에서** Create/Update 시 `IDomainEventCollector.Track(aggregate)` 호출
-2. **UsecaseTransactionPipeline에서** SaveChanges 후 `GetTrackedAggregates()`로 이벤트가 있는 Aggregate 조회
-3. **IDomainEventPublisher를** 통해 수집된 이벤트 발행
+1. **In Repository,** call `IDomainEventCollector.Track(aggregate)` during Create/Update
+2. **In UsecaseTransactionPipeline,** after SaveChanges, query Aggregates with events via `GetTrackedAggregates()`
+3. **Publish collected events** via `IDomainEventPublisher`
 
 ---
 
 ## Event Publishing (IDomainEventPublisher)
 
-도메인 이벤트 발행자 인터페이스입니다. Repository/Port와 동일한 `FinT` 반환 패턴을 사용합니다.
+The domain event publisher interface. Uses the same `FinT` return pattern as Repository/Port.
 
 ```csharp
 namespace Functorium.Applications.Events;
@@ -197,11 +197,11 @@ public interface IDomainEventPublisher
 | `Publish<TEvent>(TEvent, CancellationToken)` | `FinT<IO, Unit>` | Publishes a single domain event |
 | `PublishTrackedEvents(CancellationToken)` | `FinT<IO, Seq<PublishResult>>` | Publishes events from all Aggregates tracked by `IDomainEventCollector` and clears them |
 
-**제네릭 제약 조건:** `TEvent`는 `IDomainEvent`를 구현해야 합니다.
+**Generic constraint:** `TEvent` must implement `IDomainEvent`.
 
 ### PublishResult
 
-다중 이벤트 발행 시 부분 성공/실패를 추적하는 결과 record입니다.
+A result record that tracks partial success/failure when publishing multiple events.
 
 ```csharp
 namespace Functorium.Applications.Events;
@@ -242,7 +242,7 @@ public sealed record PublishResult(
 
 ## Event Handler (IDomainEventHandler\<TEvent\>)
 
-도메인 이벤트 핸들러 인터페이스입니다. Mediator의 `INotificationHandler<TEvent>`를 확장하여 소스 생성기 호환을 제공합니다.
+The domain event handler interface. Extends Mediator's `INotificationHandler<TEvent>` to provide source generator compatibility.
 
 ```csharp
 namespace Functorium.Applications.Events;
@@ -250,16 +250,16 @@ namespace Functorium.Applications.Events;
 public interface IDomainEventHandler<in TEvent> : INotificationHandler<TEvent>
     where TEvent : IDomainEvent
 {
-    // INotificationHandler<TEvent>에서 상속:
+    // Inherited from INotificationHandler<TEvent>:
     // ValueTask Handle(TEvent notification, CancellationToken cancellationToken)
 }
 ```
 
-**제네릭 제약 조건:** `TEvent`는 `IDomainEvent`를 구현해야 합니다.
+**Generic constraint:** `TEvent` must implement `IDomainEvent`.
 
 | Inherited Method | Return Type | Description |
 |------------|----------|------|
-| `Handle(TEvent notification, CancellationToken cancellationToken)` | `ValueTask` | 도메인 이벤트를 처리 (`INotificationHandler<TEvent>`에서 상속) |
+| `Handle(TEvent notification, CancellationToken cancellationToken)` | `ValueTask` | Processes domain events (inherited from `INotificationHandler<TEvent>`) |
 
 ### Usage Example
 
@@ -268,7 +268,7 @@ public sealed class OnOrderCreated : IDomainEventHandler<Order.CreatedEvent>
 {
     public async ValueTask Handle(Order.CreatedEvent notification, CancellationToken cancellationToken)
     {
-        // 재고 차감, 알림 발송 등 부수 효과 처리
+        // Handle side effects such as inventory deduction, notification dispatch, etc.
     }
 }
 ```
@@ -279,7 +279,7 @@ public sealed class OnOrderCreated : IDomainEventHandler<Order.CreatedEvent>
 
 ### ObservableDomainEventPublisher
 
-관찰성(로깅, 추적, 메트릭)이 통합된 `IDomainEventPublisher` 데코레이터입니다. Adapter Layer에서 이벤트 발행에 대한 관찰 가능성을 제공합니다.
+An `IDomainEventPublisher` decorator with integrated observability (logging, tracing, metrics). Provides observability for event publishing in the Adapter Layer.
 
 ```csharp
 namespace Functorium.Adapters.Events;
@@ -312,21 +312,21 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
 | `inner` | `IDomainEventPublisher` | Actual publisher to decorate |
 | `collector` | `IDomainEventCollector` | Collector for calculating tracked event counts |
 | `logger` | `ILogger<ObservableDomainEventPublisher>` | Logger |
-| `meterFactory` | `IMeterFactory` | Meter 팩토리 |
-| `openTelemetryOptions` | `IOptions<OpenTelemetryOptions>` | OpenTelemetry 설정 |
+| `meterFactory` | `IMeterFactory` | Meter factory |
+| `openTelemetryOptions` | `IOptions<OpenTelemetryOptions>` | OpenTelemetry configuration |
 
-**관찰성 항목:**
+**Observability items:**
 
 | Item | Name Pattern | Description |
 |------|----------|------|
-| Meter | `{ServiceNamespace}.adapter.event` | Adapter Layer 이벤트 Meter |
-| Counter (Request) | `adapter.event.requests` | 이벤트 발행 요청 수 |
-| Counter (Response) | `adapter.event.responses` | 이벤트 발행 응답 수 |
-| Histogram (Duration) | `adapter.event.duration` | 이벤트 발행 처리 시간 (초) |
+| Meter | `{ServiceNamespace}.adapter.event` | Adapter Layer event Meter |
+| Counter (Request) | `adapter.event.requests` | Event publish request count |
+| Counter (Response) | `adapter.event.responses` | Event publish response count |
+| Histogram (Duration) | `adapter.event.duration` | Event publish processing time (seconds) |
 
 ### ObservableDomainEventNotificationPublisher
 
-도메인 이벤트 핸들러에 대한 Handler 관점 관찰성(로깅, 추적, 메트릭)을 제공하는 `INotificationPublisher` 구현체입니다.
+An `INotificationPublisher` implementation that provides handler-perspective observability (logging, tracing, metrics) for domain event handlers.
 
 ```csharp
 namespace Functorium.Adapters.Events;
@@ -353,26 +353,26 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
 | Constructor Parameter | Type | Description |
 |----------------|------|------|
 | `activitySource` | `ActivitySource` | ActivitySource for distributed tracing (DI injected) |
-| `loggerFactory` | `ILoggerFactory` | 핸들러별 Logger 생성용 팩토리 |
-| `meterFactory` | `IMeterFactory` | Meter 팩토리 |
-| `openTelemetryOptions` | `IOptions<OpenTelemetryOptions>` | OpenTelemetry 설정 |
+| `loggerFactory` | `ILoggerFactory` | Factory for creating per-handler Loggers |
+| `meterFactory` | `IMeterFactory` | Meter factory |
+| `openTelemetryOptions` | `IOptions<OpenTelemetryOptions>` | OpenTelemetry configuration |
 | `serviceProvider` | `IServiceProvider` | DI container for resolving `IDomainEventCtxEnricher` |
 
-**동작 방식:**
-- `IDomainEvent`인 Notification에만 관찰성을 적용합니다.
-- `IDomainEvent`가 아닌 Notification은 관찰성 없이 기본 ForeachAwait 방식으로 발행합니다.
-- 핸들러 처리 전 `IDomainEventCtxEnricher<TEvent>`를 DI에서 해석하여 LogContext에 커스텀 속성을 자동 Push합니다.
+**Behavior:**
+- Applies observability only to Notifications that are `IDomainEvent`.
+- Notifications that are not `IDomainEvent` are published via default ForeachAwait without observability.
+- Before handler processing, resolves `IDomainEventCtxEnricher<TEvent>` from DI and automatically pushes custom properties to LogContext.
 
-**관찰성 항목:**
+**Observability items:**
 
 | Item | Name Pattern | Description |
 |------|----------|------|
 | Meter | `{ServiceNamespace}.application` | Application Layer Meter |
-| Counter (Request) | `application.usecase.event.requests` | 핸들러 요청 수 |
-| Counter (Response) | `application.usecase.event.responses` | 핸들러 응답 수 |
-| Histogram (Duration) | `application.usecase.event.duration` | 핸들러 처리 시간 (초) |
+| Counter (Request) | `application.usecase.event.requests` | Handler request count |
+| Counter (Response) | `application.usecase.event.responses` | Handler response count |
+| Histogram (Duration) | `application.usecase.event.duration` | Handler processing time (seconds) |
 
-> **Mediator 3.0 제약:** Mediator 3.0은 `INotification`에 `IPipelineBehavior`를 지원하지 않으며, 소스 생성기가 `INotificationPublisher` 인터페이스가 아닌 구체 타입을 직접 사용합니다. 따라서 Scrutor의 Decorate 패턴이 동작하지 않으며, `NotificationPublisherType` 설정을 사용해야 합니다.
+> **Mediator 3.0 constraint:** Mediator 3.0 does not support `IPipelineBehavior` for `INotification`, and the source generator directly uses concrete types rather than the `INotificationPublisher` interface. Therefore, Scrutor's Decorate pattern does not work, and `NotificationPublisherType` configuration must be used.
 
 ### DI Registration
 
@@ -382,7 +382,7 @@ services.AddMediator(options =>
     options.NotificationPublisherType = typeof(ObservableDomainEventNotificationPublisher);
 });
 
-// RegisterDomainEventHandlersFromAssembly가 핸들러를 스캔합니다.
+// RegisterDomainEventHandlersFromAssembly scans for handlers.
 ```
 
 ---
@@ -391,7 +391,7 @@ services.AddMediator(options =>
 
 ### IUsecaseCtxEnricher\<TRequest, TResponse\>
 
-Enricher that adds business context fields to Usecase logs 인터페이스입니다. 내장 `UsecaseLoggingPipeline`이 Request/Response 로그 출력 시 `LogContext`에 커스텀 속성을 자동으로 Push합니다.
+The interface for enrichers that add business context fields to Usecase logs. The built-in `UsecaseLoggingPipeline` automatically pushes custom properties to `LogContext` when outputting Request/Response logs.
 
 ```csharp
 namespace Functorium.Abstractions.Observabilities;
@@ -406,14 +406,14 @@ public interface IUsecaseCtxEnricher<in TRequest, in TResponse>
 
 | Method | Return Type | Description |
 |--------|----------|------|
-| `EnrichRequestLog(TRequest request)` | `IDisposable?` | Request 로그 출력 전 LogContext에 속성 Push |
-| `EnrichResponseLog(TRequest request, TResponse response)` | `IDisposable?` | Response 로그 출력 전 LogContext에 속성 Push |
+| `EnrichRequestLog(TRequest request)` | `IDisposable?` | Push properties to LogContext before Request log output |
+| `EnrichResponseLog(TRequest request, TResponse response)` | `IDisposable?` | Push properties to LogContext before Response log output |
 
-**제네릭 제약 조건:** `TResponse`는 `IFinResponse`를 구현해야 합니다.
+**Generic constraint:** `TResponse` must implement `IFinResponse`.
 
 ### IDomainEventCtxEnricher\<TEvent\>
 
-Enricher that adds business context fields to domain event handler logs 인터페이스입니다. `ObservableDomainEventNotificationPublisher`가 Handler 처리 시 `LogContext`에 커스텀 속성을 자동으로 Push합니다.
+The interface for enrichers that add business context fields to domain event handler logs. `ObservableDomainEventNotificationPublisher` automatically pushes custom properties to `LogContext` during Handler processing.
 
 ```csharp
 namespace Functorium.Abstractions.Observabilities;
@@ -430,18 +430,18 @@ public interface IDomainEventCtxEnricher
 }
 ```
 
-| 인터페이스 | Method | Description |
+| Interface | Method | Description |
 |-----------|--------|------|
-| `IDomainEventCtxEnricher<TEvent>` | `EnrichLog(TEvent domainEvent)` | 타입 안전한 이벤트 로그 Enrichment |
-| `IDomainEventCtxEnricher` (비제네릭) | `EnrichLog(IDomainEvent domainEvent)` | 런타임 타입 해석 후 호출에 사용하는 브릿지 인터페이스 |
+| `IDomainEventCtxEnricher<TEvent>` | `EnrichLog(TEvent domainEvent)` | Type-safe event log Enrichment |
+| `IDomainEventCtxEnricher` (non-generic) | `EnrichLog(IDomainEvent domainEvent)` | Bridge interface used for runtime type resolution and invocation |
 
-> **구현 규칙:** `IDomainEventCtxEnricher`(비제네릭)를 직접 구현하지 마십시오. `IDomainEventCtxEnricher<TEvent>`를 구현하면 Default Interface Method로 비제네릭 브릿지가 자동 제공됩니다.
+> **Implementation rule:** `IDomainEventCtxEnricher`(non-generic) directly. `IDomainEventCtxEnricher<TEvent>` automatically provides the non-generic bridge via Default Interface Method.
 
-**제네릭 제약 조건:** `TEvent`는 `IDomainEvent`를 구현해야 합니다.
+**Generic constraint:** `TEvent` must implement `IDomainEvent`.
 
 ### CtxEnricherContext
 
-Static utility that manages LogContext Push factory 클래스입니다. Serilog 등 로깅 프레임워크의 `LogContext.PushProperty`를 프레임워크와 연결하는 브릿지 역할을 합니다.
+A static utility class that manages the LogContext Push factory. Serves as a bridge connecting `LogContext.PushProperty` from logging frameworks like Serilog to the framework.
 
 ```csharp
 namespace Functorium.Abstractions.Observabilities;
@@ -455,10 +455,10 @@ public static class CtxEnricherContext
 
 | Method | Return Type | Description |
 |--------|----------|------|
-| `SetPushPropertyFactory(Func<string, object?, IDisposable>)` | `void` | LogContext Push 팩토리 설정 (애플리케이션 시작 시 1회 호출) |
-| `PushProperty(string name, object? value)` | `IDisposable` | 지정된 이름과 값으로 LogContext에 속성 Push |
+| `SetPushPropertyFactory(Func<string, object?, IDisposable>)` | `void` | Set LogContext Push factory (called once at application startup) |
+| `PushProperty(string name, object? value)` | `IDisposable` | Push property to LogContext with specified name and value |
 
-> **초기화:** 팩토리가 설정되지 않으면 `PushProperty`는 아무 동작도 하지 않는 `NullDisposable`을 반환합니다.
+> **Initialization:** If the factory is not set, `PushProperty` returns a no-op `NullDisposable`.
 
 ---
 
@@ -466,7 +466,7 @@ public static class CtxEnricherContext
 
 ### CtxRootAttribute
 
-소스 생성기에서 CtxEnricher 생성 시 해당 필드를 `ctx` 루트 레벨(`ctx.{field}`)로 승격할 것을 지시하는 어트리뷰트입니다.
+An attribute that instructs the source generator to promote the field to `ctx` root level (`ctx.{field}`) when generating CtxEnricher.
 
 ```csharp
 namespace Functorium.Abstractions.Observabilities;
@@ -480,13 +480,13 @@ public sealed class CtxRootAttribute : Attribute;
 
 | Target | Behavior |
 |------|------|
-| `Interface` | 해당 인터페이스를 구현하는 모든 Request/Response에서 해당 필드가 `ctx.{field}`로 승격 |
-| `Property` | 해당 프로퍼티가 `ctx.{field}`로 승격 |
-| `Parameter` | record 생성자 파라미터가 `ctx.{field}`로 승격 |
+| `Interface` | The field is promoted to `ctx.{field}` in all Request/Response implementing this interface |
+| `Property` | The property is promoted to `ctx.{field}` |
+| `Parameter` | The record constructor parameter is promoted to `ctx.{field}` |
 
 ### CtxIgnoreAttribute
 
-Excludes from CtxEnricher auto-generation target in source generators할 것을 지시하는 어트리뷰트입니다.
+An attribute that instructs the source generator to exclude from CtxEnricher auto-generation target.
 
 ```csharp
 namespace Functorium.Applications.Usecases;
@@ -500,24 +500,24 @@ public sealed class CtxIgnoreAttribute : Attribute;
 
 | Target | Behavior |
 |------|------|
-| `Class` | 해당 Request record 전체가 CtxEnricher 자동 생성에서 제외 |
-| `Property` | 해당 프로퍼티가 CtxEnricher 자동 생성에서 제외 |
-| `Parameter` | record 생성자 파라미터가 CtxEnricher 자동 생성에서 제외 |
+| `Class` | The entire Request record is excluded from CtxEnricher auto-generation |
+| `Property` | The property is excluded from CtxEnricher auto-generation |
+| `Parameter` | The record constructor parameter is excluded from CtxEnricher auto-generation |
 
 ### Attribute Usage Example
 
 ```csharp
-// 인터페이스에 [CtxRoot] 적용 — 구현하는 모든 Request에서 승격
+// Apply [CtxRoot] to interface — promoted in all implementing Requests
 [CtxRoot]
 public interface IHasOrderId
 {
     OrderId OrderId { get; }
 }
 
-// 개별 프로퍼티에 적용
+// Apply to individual properties
 public sealed record CreateOrderCommand(
-    [property: CtxRoot] OrderId OrderId,    // ctx.OrderId로 승격
-    [property: CtxIgnore] string Payload,    // Enricher에서 제외
+    [property: CtxRoot] OrderId OrderId,    // Promoted to ctx.OrderId
+    [property: CtxIgnore] string Payload,    // Excluded from Enricher
     Money TotalAmount) : ICommandRequest<CreateOrderResponse>;
 ```
 
@@ -525,6 +525,6 @@ public sealed record CreateOrderCommand(
 
 ## Related Documents
 
-- [도메인 이벤트 가이드](../guides/domain/07-domain-events) — 설계 원칙, 구현 패턴, UsecaseTransactionPipeline 통합
-- [엔티티와 애그리거트 사양](./01-entity-aggregate) — `AggregateRoot<TId>`의 `AddDomainEvent()`, `IHasDomainEvents`
-- [Observability 사양](./08-observability) — 관찰성 필드/태그 표준, Meter 정의 규칙
+- [Domain Events Guide](../guides/domain/07-domain-events) -- Design principles, implementation patterns, UsecaseTransactionPipeline integration
+- [Entity and Aggregate Specification](./01-entity-aggregate) -- `AggregateRoot<TId>`'s `AddDomainEvent()`, `IHasDomainEvents`
+- [Observability Specification](./08-observability) -- Observability field/tag standards, Meter definition rules

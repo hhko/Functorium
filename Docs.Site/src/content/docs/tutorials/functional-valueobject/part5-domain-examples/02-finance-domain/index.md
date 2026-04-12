@@ -3,40 +3,40 @@ title: "Finance Domain"
 ---
 ## Overview
 
-이자율 5%와 0.05를 혼동하면 금액이 100배 달라집니다. "USD/KRW = 1350"이 1달러당 1350원인지 1원당 1350달러인지 모호하면 환전 오류가 발생합니다. 계좌번호가 로그에 평문으로 출력되면 보안 사고로 이어집니다. 금융 시스템에서 원시 타입은 이런 위험을 그대로 노출합니다.
+Confusing interest rate 5% with 0.05 results in amounts differing by 100 times. If "USD/KRW = 1350" is ambiguous whether it means 1350 KRW per dollar or 1350 dollars per won, exchange errors occur. Account numbers printed in plain text in logs lead to security incidents. Primitive types in financial systems expose these risks directly.
 
-In this chapter, 금융 도메인의 핵심 개념 4가지를 value object로 구현하여, 계산 오류와 보안 위험을 타입 시스템으로 방지합니다.
+In this chapter, we implement 4 core financial domain concepts as value objects to prevent calculation errors and security risks through the type system.
 
-- **AccountNumber**: 은행 코드와 계좌번호를 파싱하고 마스킹하는 value object
-- **InterestRate**: 이자율을 표현하며 단리/복리 계산 기능을 제공
-- **ExchangeRate**: 통화 쌍과 환율을 관리하며 변환/역변환 기능 제공
-- **TransactionType**: 거래 유형(입금/출금)을 표현하는 타입 안전 enumeration
+- **AccountNumber**: Value object that parses bank code and account number with masking
+- **InterestRate**: Represents interest rates with simple/compound interest calculation
+- **ExchangeRate**: Manages currency pairs and rates with conversion/inverse conversion
+- **TransactionType**: Type-safe enumeration representing transaction types (deposit/withdrawal)
 
 ## Learning Objectives
 
-### **핵심 학습 목표**
-- InterestRate에서 단리/복리 이자 계산을 value object 내부에 **캡슐화할 수** 있습니다.
-- ExchangeRate에서 Invert() 메서드로 **역환율을 계산할 수** 있습니다.
-- AccountNumber에서 계좌번호를 **마스킹하여 보안을 강화할 수** 있습니다.
-- TransactionType에서 입금/출금 구분 속성을 가진 **타입 안전 enumeration을 구현할 수** 있습니다.
+### **Core Learning Objectives**
+- You can **encapsulate** simple/compound interest calculations within the InterestRate value object.
+- You can **calculate inverse exchange rates** with the Invert() method in ExchangeRate.
+- You can **mask account numbers to enhance security** in AccountNumber.
+- You can **implement a type-safe enumeration** with deposit/withdrawal classification properties in TransactionType.
 
-### **실습을 통해 확인할 내용**
-- AccountNumber의 은행 코드 파싱과 마스킹
-- InterestRate의 단리/복리 계산
-- ExchangeRate의 통화 변환과 역환율 계산
-- TransactionType의 입금/출금 분류
+### **What You Will Verify Through Practice**
+- AccountNumber's bank code parsing and masking
+- InterestRate's simple/compound interest calculation
+- ExchangeRate's currency conversion and inverse rate calculation
+- TransactionType's deposit/withdrawal classification
 
 ## Why Is This Needed?
 
-금융 시스템은 정확성과 보안이 특히 중요합니다. 원시 타입으로 금융 데이터를 다루면 여러 위험이 발생합니다.
+Financial systems require particularly high accuracy and security. Handling financial data with primitive types creates several risks.
 
-이자율 계산에서 백분율(5%)과 소수(0.05)를 혼동하면 금액 오류가 발생하는데, InterestRate value object는 Percentage와 Decimal 속성을 명확히 구분하여 provides. ExchangeRate는 BaseCurrency와 QuoteCurrency를 명시적으로 관리하여 환율 방향 혼동을 원천 차단합니다. 계좌번호를 로그에 그대로 출력하는 보안 문제도, AccountNumber의 Masked 속성으로 안전한 표시를 지원하여 resolves.
+Confusing percentage (5%) and decimal (0.05) in interest rate calculations causes amount errors, which the InterestRate value object prevents by clearly distinguishing Percentage and Decimal properties. ExchangeRate explicitly manages BaseCurrency and QuoteCurrency, fundamentally preventing exchange rate direction confusion. The security issue of printing account numbers directly in logs is resolved by AccountNumber's Masked property supporting safe display.
 
 ## Core Concepts
 
-### AccountNumber (계좌번호)
+### AccountNumber (Account Number)
 
-AccountNumber는 은행 계좌번호를 검증하고 파싱합니다. 은행 코드 추출과 마스킹 기능을 provides.
+AccountNumber validates and parses bank account numbers. It provides bank code extraction and masking functionality.
 
 ```csharp
 public sealed class AccountNumber : SimpleValueObject<string>
@@ -63,11 +63,11 @@ public sealed class AccountNumber : SimpleValueObject<string>
 }
 ```
 
-`ToString()`은 전체 계좌번호를 반환하지만, `Masked`는 중간 부분을 가려서 로그나 화면 표시에 사용할 수 있습니다. 민감 정보의 안전한 표시 패턴입니다.
+`ToString()`은 전체 계좌번호를 반환하지만, `Masked`는 중간 부분을 가려서 로그나 화면 표시에 사용할 수 있습니다. 민감 정보의 안전한 표시 Pattern입니다.
 
-### InterestRate (이자율)
+### InterestRate (Interest Rate)
 
-InterestRate는 이자율을 백분율로 저장하고, 단리/복리 이자 계산 기능을 provides.
+InterestRate stores interest rates as percentages and provides simple/compound interest calculation functionality.
 
 ```csharp
 public sealed class InterestRate : ComparableSimpleValueObject<decimal>
@@ -84,11 +84,11 @@ public sealed class InterestRate : ComparableSimpleValueObject<decimal>
         ValidationRules<InterestRate>.NonNegative(value)
             .ThenAtMost(100m);
 
-    // 단리: 원금 x 이율 x 기간
+    // Simple interest: principal x rate x period
     public decimal CalculateSimpleInterest(decimal principal, int years) =>
         principal * Decimal * years;
 
-    // 복리: 원금 x ((1 + 이율)^기간 - 1)
+    // Compound interest: principal x ((1 + rate)^period - 1)
     public decimal CalculateCompoundInterest(decimal principal, int years) =>
         principal * ((decimal)Math.Pow((double)(1 + Decimal), years) - 1);
 
@@ -96,11 +96,11 @@ public sealed class InterestRate : ComparableSimpleValueObject<decimal>
 }
 ```
 
-이자 계산 공식이 value object 내부에 있으므로 어디서든 일관된 계산을 guarantees. Percentage와 Decimal 속성을 분리하여 백분율/소수 혼동을 방지합니다.
+Since interest calculation formulas are within the value object, consistent calculations are guaranteed everywhere. Separating Percentage and Decimal properties prevents percentage/decimal confusion.
 
-### ExchangeRate (환율)
+### ExchangeRate (Exchange Rate)
 
-ExchangeRate는 통화 쌍(USD/KRW)과 환율을 관리합니다. 변환과 역환율 계산 기능을 provides.
+ExchangeRate manages currency pairs (USD/KRW) and exchange rates. It provides conversion and inverse rate calculation functionality.
 
 ```csharp
 public sealed class ExchangeRate : ValueObject
@@ -144,28 +144,28 @@ public sealed class ExchangeRate : ValueObject
 }
 ```
 
-`Convert()`는 기준 통화에서 견적 통화로, `ConvertBack()`은 반대 방향으로, `Invert()`는 역환율 객체를 returns. 양방향 변환이 명시적으로 표현됩니다.
+`Convert()` converts from base to quote currency, `ConvertBack()` in the reverse direction, and `Invert()` returns an inverse exchange rate object. Bidirectional conversion is explicitly expressed.
 
-### TransactionType (거래 유형)
+### TransactionType (Transaction Type)
 
-TransactionType은 SmartEnum을 사용하여 입금/출금을 구분합니다.
+TransactionType uses SmartEnum to distinguish deposits from withdrawals.
 
 ```csharp
 public sealed class TransactionType : SmartEnum<TransactionType, string>
 {
-    public static readonly TransactionType Deposit = new("DEPOSIT", "입금", isCredit: true);
-    public static readonly TransactionType Withdrawal = new("WITHDRAWAL", "출금", isCredit: false);
-    public static readonly TransactionType Transfer = new("TRANSFER", "이체", isCredit: false);
-    public static readonly TransactionType Interest = new("INTEREST", "이자", isCredit: true);
-    public static readonly TransactionType Fee = new("FEE", "수수료", isCredit: false);
+    public static readonly TransactionType Deposit = new("DEPOSIT", "Deposit", isCredit: true);
+    public static readonly TransactionType Withdrawal = new("WITHDRAWAL", "Withdrawal", isCredit: false);
+    public static readonly TransactionType Transfer = new("TRANSFER", "Transfer", isCredit: false);
+    public static readonly TransactionType Interest = new("INTEREST", "Interest", isCredit: true);
+    public static readonly TransactionType Fee = new("FEE", "Fee", isCredit: false);
 
     public string DisplayName { get; }
-    public bool IsCredit { get; }    // 입금 계열
-    public bool IsDebit => !IsCredit;  // 출금 계열
+    public bool IsCredit { get; }    // Deposit 계열
+    public bool IsDebit => !IsCredit;  // Withdrawal 계열
 }
 ```
 
-`IsCredit` 속성으로 잔액 계산 시 더하기/빼기를 결정할 수 있습니다. The following code 이 분류 속성을 활용한 잔액 갱신 예시입니다.
+The `IsCredit` property can determine addition/subtraction for balance calculations. The following code is an example of balance update utilizing this classification property.
 
 ```csharp
 decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
@@ -184,13 +184,13 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
    은행 코드: 110
    마스킹: 110-****7890
 
-2. InterestRate (이자율)
+2. InterestRate (Interest율)
 ────────────────────────────────────────
    연이율: 5.50%
    원금: 1,000,000원
    기간: 3년
-   단리 이자: 165,000원
-   복리 이자: 174,241원
+   단리 Interest: 165,000원
+   복리 Interest: 174,241원
 
 3. ExchangeRate (환율)
 ────────────────────────────────────────
@@ -201,11 +201,11 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
 4. TransactionType (거래 유형)
 ────────────────────────────────────────
    모든 거래 유형:
-      - DEPOSIT: 입금 (입금)
-      - WITHDRAWAL: 출금 (출금)
-      - TRANSFER: 이체 (출금)
-      - INTEREST: 이자 (입금)
-      - FEE: 수수료 (출금)
+      - DEPOSIT: Deposit (Deposit)
+      - WITHDRAWAL: Withdrawal (Withdrawal)
+      - TRANSFER: Transfer (Withdrawal)
+      - INTEREST: Interest (Deposit)
+      - FEE: Fee (Withdrawal)
 ```
 
 ## Project Description
@@ -214,12 +214,12 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
 ```
 02-Finance-Domain/
 ├── FinanceDomain/
-│   ├── Program.cs              # 메인 실행 파일 (4개 값 객체 구현)
-│   └── FinanceDomain.csproj    # 프로젝트 파일
-└── README.md                   # 프로젝트 문서
+│   ├── Program.cs              # Main executable (4개 값 객체 구현)
+│   └── FinanceDomain.csproj    # Project file
+└── README.md                   # Project documentation
 ```
 
-### 의존성
+### Dependencies
 ```xml
 <ItemGroup>
   <ProjectReference Include="..\..\..\..\..\Src\Functorium\Functorium.csproj" />
@@ -230,46 +230,46 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
 </ItemGroup>
 ```
 
-### value object별 프레임워크 타입
+### value object별 Framework Type
 
-각 value object가 상속하는 프레임워크 타입과 주요 특징을 정리한 것입니다.
+각 value object가 상속하는 Framework Type과 주요 Characteristics을 정리한 것입니다.
 
-| value object | 프레임워크 타입 | 특징 |
+| value object | Framework Type | Characteristics |
 |--------|---------------|------|
-| AccountNumber | SimpleValueObject\<string\> | ValidationRules 체인, 파싱, 마스킹 |
-| InterestRate | ComparableSimpleValueObject\<decimal\> | ValidationRules 체인, 단리/복리 계산 |
-| ExchangeRate | ValueObject | 병렬 검증 + Bind, 통화 쌍 관리, 변환 |
-| TransactionType | SmartEnum | 입금/출금 분류 |
+| AccountNumber | SimpleValueObject\<string\> | ValidationRules chain, parsing, masking |
+| InterestRate | ComparableSimpleValueObject\<decimal\> | ValidationRules chain, simple/compound calculation |
+| ExchangeRate | ValueObject | Parallel validation + Bind, currency pair management, conversion |
+| TransactionType | SmartEnum | Deposit/withdrawal classification |
 
 ## Summary at a Glance
 
-### 금융 value object 요약
+### Finance Value Object Summary
 
-각 value object의 속성, 검증 규칙, 도메인 연산을 한눈에 비교할 수 있습니다.
+각 value object의 속성, Validation Rules, Domain Operations을 한눈에 비교할 수 있습니다.
 
-| value object | 주요 속성 | 검증 규칙 | 도메인 연산 |
+| value object | Key Properties | Validation Rules | Domain Operations |
 |--------|----------|----------|------------|
-| AccountNumber | Value | NNN-NNNNNNNNNN 형식 | BankCode, Masked |
-| InterestRate | Value | 0~100% 범위 | 단리/복리 계산 |
-| ExchangeRate | Base, Quote, Rate | 3자리 통화, 양수 환율 | Convert, Invert |
-| TransactionType | Value, IsCredit | 정의된 유형만 | 없음 |
+| AccountNumber | Value | NNN-NNNNNNNNNN format | BankCode, Masked |
+| InterestRate | Value | 0-100% range | Simple/compound calculation |
+| ExchangeRate | Base, Quote, Rate | 3-character currency, positive rate | Convert, Invert |
+| TransactionType | Value, IsCredit | Defined types only | None |
 
-### 금융 도메인 패턴
+### 금융 도메인 Pattern
 
-금융 도메인에서 활용된 설계 패턴을 유형별로 분류하면 다음과 같습니다.
+금융 도메인에서 활용된 설계 Pattern을 유형별로 분류하면 다음과 같습니다.
 
-| 패턴 | value object | Description |
+| Pattern | value object | Description |
 |------|--------|------|
-| 민감 정보 마스킹 | AccountNumber | 일부 정보를 가려서 안전하게 표시 |
-| 도메인 계산 캡슐화 | InterestRate | 이자 계산 공식을 value object 내부에 구현 |
-| 양방향 변환 | ExchangeRate | 정방향/역방향 변환 메서드 제공 |
-| 분류 속성 | TransactionType | IsCredit/IsDebit으로 동작 결정 |
+| Sensitive information masking | AccountNumber | Safely display by hiding partial information |
+| Domain calculation encapsulation | InterestRate | Interest calculation formulas implemented within value object |
+| Bidirectional conversion | ExchangeRate | Provides forward/reverse conversion methods |
+| Classification properties | TransactionType | Determines behavior via IsCredit/IsDebit |
 
 ## FAQ
 
-### Q1: InterestRate에서 월복리나 일복리를 계산하려면?
+### Q1: How to calculate monthly or daily compound interest in InterestRate?
 
-복리 기간을 매개변수로 추가하거나 별도 메서드를 provides.
+Add compounding period as a parameter or provide separate methods.
 
 ```csharp
 public decimal CalculateCompoundInterest(
@@ -291,9 +291,9 @@ public decimal CalculateCompoundInterest(
 }
 ```
 
-### Q2: ExchangeRate에서 여러 통화 간 체인 환전을 하려면?
+### Q2: How to perform chain conversion between multiple currencies in ExchangeRate?
 
-별도의 ExchangeRateService를 만들어 환율 체인을 관리합니다.
+Create a separate ExchangeRateService to manage exchange rate chains.
 
 ```csharp
 public class ExchangeRateService
@@ -305,7 +305,7 @@ public class ExchangeRateService
         if (_rates.TryGetValue($"{from}/{to}", out var directRate))
             return directRate.Convert(amount);
 
-        // USD를 중간 통화로 사용하여 변환
+        // Convert using USD as intermediate currency
         var toUsd = _rates[$"{from}/USD"];
         var fromUsd = _rates[$"USD/{to}"];
         return fromUsd.Convert(toUsd.Convert(amount));
@@ -313,9 +313,9 @@ public class ExchangeRateService
 }
 ```
 
-### Q3: AccountNumber에서 국가별 다른 형식을 지원하려면?
+### Q3: How to support different formats per country in AccountNumber?
 
-국가 코드를 매개변수로 받아 다른 검증 패턴을 적용합니다.
+국가 코드를 매개변수로 받아 다른 검증 Pattern을 적용합니다.
 
 ```csharp
 public static Fin<AccountNumber> Create(string value, string countryCode = "KR")
@@ -323,49 +323,49 @@ public static Fin<AccountNumber> Create(string value, string countryCode = "KR")
     var pattern = countryCode switch
     {
         "KR" => @"^\d{3}-\d{10,14}$",
-        "US" => @"^\d{9}-\d{12}$",  // 라우팅 번호 + 계좌번호
-        "GB" => @"^\d{6}-\d{8}$",   // 정렬 코드 + 계좌번호
-        _ => throw new ArgumentException("지원하지 않는 국가 코드")
+        "US" => @"^\d{9}-\d{12}$",  // Routing number + account number
+        "GB" => @"^\d{6}-\d{8}$",   // Sort code + account number
+        _ => throw new ArgumentException("Unsupported country code")
     };
 
-    // 검증 로직...
+    // Validation logic...
 }
 ```
 
-금융 도메인의 value object 구현을 살펴보았습니다. Next chapter에서는 이메일, 비밀번호, 전화번호 등 보안과 데이터 품질이 특히 중요한 사용자 관리 도메인의 value object를 implements.
+We have explored the value object implementation for the finance domain. In the next chapter, we implement value objects for the user management domain where security and data quality are particularly important, including email, password, and phone number.
 
 ---
 
-## 테스트
+## Tests
 
-이 프로젝트에는 단위 테스트가 포함되어 있습니다.
+This project includes unit tests.
 
-### 테스트 실행
+### Tests 실행
 ```bash
 cd FinanceDomain.Tests.Unit
 dotnet test
 ```
 
-### 테스트 구조
+### Tests 구조
 ```
 FinanceDomain.Tests.Unit/
-├── AccountNumberTests.cs     # 계좌번호 형식 검증 테스트
-├── InterestRateTests.cs      # 이자율 범위 검증 테스트
-├── ExchangeRateTests.cs      # 환율 변환 테스트
-└── TransactionTypeTests.cs   # 거래 유형 SmartEnum 테스트
+├── AccountNumberTests.cs     # Account number format validation tests
+├── InterestRateTests.cs      # Interest rate range validation tests
+├── ExchangeRateTests.cs      # Exchange rate conversion tests
+└── TransactionTypeTests.cs   # Transaction type SmartEnum tests
 ```
 
-### 주요 테스트 케이스
+### Key Test Cases
 
-| 테스트 클래스 | 테스트 내용 |
+| Test Class | Test Content |
 |-------------|-----------|
-| AccountNumberTests | 형식 검증, 은행 코드/계좌번호 파싱 |
-| InterestRateTests | 범위 검증, 소수점 변환, 비교 연산 |
-| ExchangeRateTests | 환율 검증, 통화 변환 계산 |
-| TransactionTypeTests | 입금/출금 분류, IsCredit/IsDebit |
+| AccountNumberTests | Format validation, bank code/account number parsing |
+| InterestRateTests | Range validation, decimal conversion, comparison operations |
+| ExchangeRateTests | Exchange rate validation, currency conversion calculation |
+| TransactionTypeTests | Deposit/withdrawal classification, IsCredit/IsDebit |
 
 ---
 
-금융 도메인의 value object를 구현했습니다. Next chapter에서는 사용자 관리 도메인에서 이메일, 비밀번호, 전화번호 등 개인정보 보호가 중요한 value object를 다룹니다.
+We have implemented the finance domain value objects. In the next chapter, we cover value objects in the user management domain where personal information protection is important, including email, password, and phone number.
 
 → [3장: 사용자 관리 도메인](../03-User-Management-Domain/)

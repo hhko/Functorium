@@ -94,7 +94,7 @@ public sealed class DateRange : IEquatable<DateRange>
 
 시간 슬롯을 표현하는 value object입니다.
 
-**특징:**
+**Characteristics:**
 - 시작 시간 < 종료 시간 불변식
 - 시간 포함 여부 검사
 - 슬롯 충돌(Conflicts) 감지
@@ -117,7 +117,7 @@ public sealed class TimeSlot : IEquatable<TimeSlot>
 
 기간을 표현하는 비교 가능 value object입니다.
 
-**특징:**
+**Characteristics:**
 - 분/시간/일 단위 생성
 - 음수 기간 방지
 - 최대 기간 제한 (1년)
@@ -145,8 +145,8 @@ public sealed class Duration : IComparable<Duration>
 
 반복 규칙을 표현하는 복합 value object입니다.
 
-**특징:**
-- 일간/주간/월간 반복 패턴
+**Characteristics:**
+- 일간/주간/월간 반복 Pattern
 - factory method로 생성
 - 다음 발생일 계산
 - 요일/날짜 기반 반복
@@ -169,7 +169,7 @@ public sealed class RecurrenceRule : IEquatable<RecurrenceRule>
 }
 ```
 
-## 핵심 패턴
+## 핵심 Pattern
 
 ### 1. 범위 검사 (Range Validation)
 
@@ -208,7 +208,7 @@ public double TotalHours => TotalMinutes / 60.0;
 public double TotalDays => TotalMinutes / (24.0 * 60.0);
 ```
 
-### 4. factory method 패턴 (Factory Methods)
+### 4. factory method Pattern (Factory Methods)
 
 용도별로 명확한 생성 메서드를 provides.
 
@@ -253,6 +253,6 @@ public IEnumerable<DateOnly> GetOccurrences(DateOnly from, int count)
 
 ---
 
-Part 5에서 다양한 도메인의 value object 적용 사례를 모두 살펴보았습니다. 부록에서는 LanguageExt 주요 타입 참조, 프레임워크 타입 선택 가이드, 용어집 등을 확인할 수 있습니다.
+Part 5에서 다양한 도메인의 value object 적용 사례를 모두 살펴보았습니다. 부록에서는 LanguageExt 주요 타입 참조, Framework Type 선택 가이드, 용어집 등을 확인할 수 있습니다.
 
 → [부록 A: LanguageExt 주요 타입 참조](../../../Appendix/A-languageext-reference.md)
