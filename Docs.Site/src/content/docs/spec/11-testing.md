@@ -31,7 +31,7 @@ This is the public API specification for the test utility library provided by th
 
 ---
 
-## FinTFactory (Mock 반환값)
+## FinTFactory (Mock Return Values)
 
 A static helper for generating `FinT<IO, T>` return values of Port/Adapter in Application layer Usecase tests.
 
@@ -387,7 +387,7 @@ A CRTP-based abstract base class shared by `ClassValidator` and `InterfaceValida
 
 Inherits `TypeValidator<Interface, InterfaceValidator>`. Uses only the common methods from `TypeValidator`.
 
-### IArchRule\<TType\>과 ImmutabilityRule
+### IArchRule\<TType\> and ImmutabilityRule
 
 ```csharp
 public interface IArchRule<in TType> where TType : IType

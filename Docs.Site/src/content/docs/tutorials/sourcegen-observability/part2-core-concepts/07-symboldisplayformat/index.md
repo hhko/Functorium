@@ -2,76 +2,76 @@
 title: "SymbolDisplayFormat"
 ---
 
-## 개요
+## Overview
 
-앞 장에서 `IMethodSymbol`의 `ReturnType`과 `Parameters`에서 타입 문자열을 추출할 때 `ToDisplayString`을 사용했습니다. 그런데 같은 `User` 타입이 컨텍스트에 따라 `"User"`, `"MyApp.User"`, `"global::MyApp.User"` 등 서로 다른 문자열로 표현될 수 있다는 점이 문제입니다. 증분 캐싱에서 이 차이는 곧 캐시 미스를 의미합니다. **SymbolDisplayFormat은** 타입을 문자열로 변환하는 규칙을 정의하여, 동일한 타입이 항상 동일한 문자열로 표현되도록 보장합니다. Functorium 프로젝트는 이 문제를 해결하기 위해 `SymbolDisplayFormats.GlobalQualifiedFormat`이라는 커스텀 포맷을 정의하고, 모든 타입 변환에 일관되게 사용합니다.
+In the previous chapter, we used `ToDisplayString` to extract type strings from the `ReturnType` and `Parameters` of `IMethodSymbol`. However, the problem is that the same `User` type can be represented as different strings depending on context: `"User"`, `"MyApp.User"`, `"global::MyApp.User"`, and so on. In incremental caching, these differences translate directly to cache misses. **SymbolDisplayFormat** defines the rules for converting types to strings, ensuring that the same type is always represented as the same string. The Functorium project addresses this by defining a custom format called `SymbolDisplayFormats.GlobalQualifiedFormat` and using it consistently across all type conversions.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **SymbolDisplayFormat의** 역할과 결정적 출력과의 관계를 이해한다
-   - 왜 기본 `ToDisplayString()`으로는 부족한지
-2. **Functorium의 GlobalQualifiedFormat이** 각 옵션을 왜 선택했는지 파악한다
-   - `UseSpecialTypes`, `EscapeKeywordIdentifiers`, `IncludeNullableReferenceTypeModifier`의 이유
-3. **프로젝트 전체에서** 일관된 포맷을 사용하는 패턴을 습득한다
+### Core Learning Objectives
+1. **Understand the role of SymbolDisplayFormat** and its relationship to deterministic output
+   - Why the default `ToDisplayString()` is insufficient
+2. **Understand why Functorium's GlobalQualifiedFormat** chose each option
+   - The rationale behind `UseSpecialTypes`, `EscapeKeywordIdentifiers`, and `IncludeNullableReferenceTypeModifier`
+3. **Learn the pattern** of using a consistent format across the entire project
 
 ---
 
-## 왜 SymbolDisplayFormat이 중요한가?
+## Why Is SymbolDisplayFormat Important?
 
-동일한 타입이 **다르게 표현**될 수 있습니다:
+The same type can be **represented differently**:
 
 ```csharp
-// 모두 같은 타입이지만 다른 문자열
+// All the same type but different strings
 "User"
 "MyApp.User"
 "MyApp.Models.User"
 "global::MyApp.Models.User"
 
-// 문제: 캐싱 무효화
-// 빌드 A에서: "User" → UserObservable.g.cs 생성
-// 빌드 B에서: "MyApp.User" → 다른 파일로 인식 → 캐시 미스
+// Problem: Cache invalidation
+// In Build A: "User" → generates UserObservable.g.cs
+// In Build B: "MyApp.User" → recognized as a different file → cache miss
 ```
 
-**SymbolDisplayFormat**을 사용하면 **항상 동일한 형식**의 문자열을 얻을 수 있습니다.
+By using **SymbolDisplayFormat**, you can always obtain strings in **the same format**.
 
 ---
 
-## 기본 사용법
+## Basic Usage
 
 ### ToDisplayString()
 
 ```csharp
 ITypeSymbol type = ...;
 
-// 기본 포맷 (컨텍스트에 따라 다름)
+// Default format (varies by context)
 string name1 = type.ToDisplayString();
-// "User" 또는 "MyApp.User" (상황에 따라)
+// "User" or "MyApp.User" (depending on context)
 
-// 전체 한정 포맷 (권장)
+// Fully qualified format (recommended)
 string name2 = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 // "global::MyApp.Models.User"
 
-// 최소 한정 포맷
+// Minimally qualified format
 string name3 = type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
 // "User"
 ```
 
 ---
 
-## 기본 제공 포맷
+## Built-in Formats
 
 ### FullyQualifiedFormat
 
 ```csharp
 SymbolDisplayFormat.FullyQualifiedFormat
 
-// 특징:
-// - global:: 접두사 포함
-// - 전체 네임스페이스 포함
-// - 제네릭 타입 파라미터 포함
+// Characteristics:
+// - Includes global:: prefix
+// - Includes full namespace
+// - Includes generic type parameters
 
-// 예시:
+// Examples:
 // List<int> → "global::System.Collections.Generic.List<global::System.Int32>"
 // User → "global::MyApp.Models.User"
 ```
@@ -81,11 +81,11 @@ SymbolDisplayFormat.FullyQualifiedFormat
 ```csharp
 SymbolDisplayFormat.MinimallyQualifiedFormat
 
-// 특징:
-// - 가장 짧은 형태
-// - using 문에 따라 달라질 수 있음
+// Characteristics:
+// - Shortest form
+// - May vary depending on using directives
 
-// 예시:
+// Examples:
 // List<int> → "List<int>"
 // User → "User"
 ```
@@ -95,65 +95,65 @@ SymbolDisplayFormat.MinimallyQualifiedFormat
 ```csharp
 SymbolDisplayFormat.CSharpErrorMessageFormat
 
-// 특징:
-// - 에러 메시지에 적합한 형태
-// - 사람이 읽기 좋은 형태
+// Characteristics:
+// - Suitable for error messages
+// - Human-readable form
 
-// 예시:
+// Examples:
 // List<int> → "System.Collections.Generic.List<int>"
 ```
 
 ---
 
-## 커스텀 포맷 구성
+## Custom Format Configuration
 
-기본 제공 포맷이 프로젝트의 요구사항과 정확히 일치하지 않을 때, 옵션을 조합하여 커스텀 포맷을 만들 수 있습니다. Functorium의 `GlobalQualifiedFormat`도 이렇게 만들어졌습니다. 아래에서 각 옵션 범주를 살펴본 뒤, 프로젝트의 실제 선택 이유를 확인합니다.
+When the built-in formats do not exactly match the project's requirements, you can combine options to create a custom format. Functorium's `GlobalQualifiedFormat` was created this way. Below, we examine each option category and then review the rationale behind the project's actual choices.
 
-### SymbolDisplayFormat 생성자
+### SymbolDisplayFormat Constructor
 
 ```csharp
 var customFormat = new SymbolDisplayFormat(
-    globalNamespaceStyle: ...,       // global:: 접두사
-    typeQualificationStyle: ...,     // 네임스페이스 표시 방식
-    genericsOptions: ...,            // 제네릭 표시 방식
-    memberOptions: ...,              // 멤버 표시 방식
-    parameterOptions: ...,           // 파라미터 표시 방식
-    miscellaneousOptions: ...        // 기타 옵션
+    globalNamespaceStyle: ...,       // global:: prefix
+    typeQualificationStyle: ...,     // Namespace display style
+    genericsOptions: ...,            // Generics display style
+    memberOptions: ...,              // Member display style
+    parameterOptions: ...,           // Parameter display style
+    miscellaneousOptions: ...        // Miscellaneous options
 );
 ```
 
 ### GlobalNamespaceStyle
 
 ```csharp
-// global:: 접두사 제어
-SymbolDisplayGlobalNamespaceStyle.Omitted      // 생략
-SymbolDisplayGlobalNamespaceStyle.Included     // 포함 (권장)
+// global:: prefix control
+SymbolDisplayGlobalNamespaceStyle.Omitted      // Omit
+SymbolDisplayGlobalNamespaceStyle.Included     // Include (recommended)
 SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining
 ```
 
 ### TypeQualificationStyle
 
 ```csharp
-// 네임스페이스 표시 방식
+// Namespace display style
 SymbolDisplayTypeQualificationStyle.NameOnly
 // "User"
 
 SymbolDisplayTypeQualificationStyle.NameAndContainingTypes
-// "Models.User" (중첩 클래스인 경우)
+// "Models.User" (for nested classes)
 
 SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces
-// "MyApp.Models.User" (권장)
+// "MyApp.Models.User" (recommended)
 ```
 
 ### GenericsOptions
 
 ```csharp
-// 제네릭 표시 방식
+// Generics display style
 SymbolDisplayGenericsOptions.None
-// "List" (타입 파라미터 생략)
+// "List" (type parameters omitted)
 
 SymbolDisplayGenericsOptions.IncludeTypeParameters
-// "List<T>" 또는 "List<int>"
+// "List<T>" or "List<int>"
 
 SymbolDisplayGenericsOptions.IncludeTypeConstraints
 // "List<T> where T : class"
@@ -165,22 +165,22 @@ SymbolDisplayGenericsOptions.IncludeVariance
 ### MiscellaneousOptions
 
 ```csharp
-// 기타 옵션
+// Miscellaneous options
 SymbolDisplayMiscellaneousOptions.UseSpecialTypes
-// "int" 대신 "System.Int32" (또는 반대)
+// "int" instead of "System.Int32" (or vice versa)
 
 SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers
-// 키워드를 이스케이프 (@class, @event 등)
+// Escapes keywords (@class, @event, etc.)
 
 SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
-// "string?" 표시
+// Displays "string?"
 ```
 
 ---
 
-## Functorium의 GlobalQualifiedFormat
+## Functorium's GlobalQualifiedFormat
 
-이제 위 옵션들이 우리 프로젝트에서 어떻게 조합되었는지 살펴봅니다. 각 옵션의 선택 이유를 코드 주석에 명시한 것이 핵심입니다. `global::` 접두사로 네임스페이스 충돌을 방지하고, `UseSpecialTypes`로 `int`, `string` 같은 C# 키워드를 사용하여 생성 코드의 가독성을 높이며, `IncludeNullableReferenceTypeModifier`로 nullable 정보를 보존합니다.
+Now let's examine how the above options are combined in our project. The key point is that the rationale for each option choice is documented in code comments. The `global::` prefix prevents namespace conflicts, `UseSpecialTypes` improves readability of generated code by using C# keywords like `int` and `string`, and `IncludeNullableReferenceTypeModifier` preserves nullable information.
 
 ### SymbolDisplayFormats.cs
 
@@ -188,96 +188,96 @@ SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
 namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
-/// 결정적 코드 생성을 위한 SymbolDisplayFormat 정의
+/// SymbolDisplayFormat definition for deterministic code generation
 /// </summary>
 public static class SymbolDisplayFormats
 {
     /// <summary>
-    /// 전역 한정 포맷 - 결정적 코드 생성에 사용
+    /// Global qualified format - used for deterministic code generation
     /// </summary>
     public static readonly SymbolDisplayFormat GlobalQualifiedFormat = new(
-        // global:: 접두사 포함
+        // Include global:: prefix
         globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
 
-        // 전체 네임스페이스 포함
+        // Include full namespace
         typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
 
-        // 제네릭 타입 파라미터 포함
+        // Include generic type parameters
         genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
 
-        // 기타 옵션
+        // Miscellaneous options
         miscellaneousOptions:
-            SymbolDisplayMiscellaneousOptions.UseSpecialTypes |      // int, string 등 사용
-            SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers |  // 키워드 이스케이프
-            SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier  // ? 표시
+            SymbolDisplayMiscellaneousOptions.UseSpecialTypes |      // Use int, string, etc.
+            SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers |  // Escape keywords
+            SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier  // Display ?
     );
 }
 ```
 
-### 사용 예
+### Usage Example
 
 ```csharp
-// 파라미터 타입
+// Parameter type
 string paramType = param.Type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat);
-// "global::System.Int32" 또는 "int" (UseSpecialTypes 때문에)
+// "global::System.Int32" or "int" (due to UseSpecialTypes)
 
-// 반환 타입
+// Return type
 string returnType = method.ReturnType.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat);
 // "global::LanguageExt.FinT<global::LanguageExt.IO, global::MyApp.Models.User>"
 ```
 
 ---
 
-## 특수 타입 처리
+## Special Type Handling
 
-### UseSpecialTypes 옵션
+### UseSpecialTypes Option
 
 ```csharp
-// UseSpecialTypes 있음 (기본)
+// With UseSpecialTypes (default)
 "int"
 "string"
 "bool"
 "object"
 
-// UseSpecialTypes 없음
+// Without UseSpecialTypes
 "global::System.Int32"
 "global::System.String"
 "global::System.Boolean"
 "global::System.Object"
 ```
 
-### Nullable 타입
+### Nullable Types
 
 ```csharp
-// IncludeNullableReferenceTypeModifier 있음
+// With IncludeNullableReferenceTypeModifier
 "global::System.String?"
 "global::MyApp.Models.User?"
 
-// IncludeNullableReferenceTypeModifier 없음
+// Without IncludeNullableReferenceTypeModifier
 "global::System.String"
 "global::MyApp.Models.User"
 ```
 
 ---
 
-## 결정적 출력 검증
+## Deterministic Output Verification
 
-### 동일 타입의 일관된 출력
+### Consistent Output for the Same Type
 
 ```csharp
-// 다양한 컨텍스트에서 같은 타입
+// Same type in different contexts
 var type1 = compilation1.GetTypeByMetadataName("MyApp.Models.User");
 var type2 = compilation2.GetTypeByMetadataName("MyApp.Models.User");
 
 string name1 = type1.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat);
 string name2 = type2.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat);
 
-// 항상 동일해야 함
+// Must always be identical
 Debug.Assert(name1 == name2);
 // → "global::MyApp.Models.User"
 ```
 
-### 테스트로 검증
+### Verification via Tests
 
 ```csharp
 [Fact]
@@ -289,7 +289,7 @@ public void TypeDisplayString_Should_Be_Deterministic()
         public class User { }
         """;
 
-    // Act - 두 번 컴파일
+    // Act - Compile twice
     var type1 = CompileAndGetType(sourceCode, "MyApp.Models.User");
     var type2 = CompileAndGetType(sourceCode, "MyApp.Models.User");
 
@@ -301,22 +301,22 @@ public void TypeDisplayString_Should_Be_Deterministic()
 
 ---
 
-## 주의사항
+## Caveats
 
-가장 흔한 실수는 코드의 서로 다른 지점에서 서로 다른 포맷을 혼용하는 것입니다. 파라미터 타입은 기본 포맷으로, 반환 타입은 `FullyQualifiedFormat`으로 변환하면 동일한 타입이 다르게 표현되어 캐싱이 무효화될 수 있습니다.
+The most common mistake is mixing different formats at different points in the code. If you convert parameter types with the default format and return types with `FullyQualifiedFormat`, the same type may be represented differently, which can invalidate caching.
 
-### 1. 일관된 포맷 사용
+### 1. Use a Consistent Format
 
 ```csharp
-// ❌ 혼용 금지
+// ❌ Do not mix formats
 var paramTypes = method.Parameters
-    .Select(p => p.Type.ToDisplayString())  // 기본 포맷
+    .Select(p => p.Type.ToDisplayString())  // Default format
     .ToList();
 
 var returnType = method.ReturnType.ToDisplayString(
-    SymbolDisplayFormat.FullyQualifiedFormat);  // 다른 포맷
+    SymbolDisplayFormat.FullyQualifiedFormat);  // Different format
 
-// ✅ 항상 동일한 포맷
+// ✅ Always use the same format
 var format = SymbolDisplayFormats.GlobalQualifiedFormat;
 
 var paramTypes = method.Parameters
@@ -326,54 +326,54 @@ var paramTypes = method.Parameters
 var returnType = method.ReturnType.ToDisplayString(format);
 ```
 
-### 2. 재사용 가능한 상수로 정의
+### 2. Define as a Reusable Constant
 
 ```csharp
-// ✅ 상수로 정의하여 재사용
+// ✅ Define as a constant for reuse
 public static class SymbolDisplayFormats
 {
     public static readonly SymbolDisplayFormat GlobalQualifiedFormat = ...;
 }
 
-// 사용
+// Usage
 type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat);
 ```
 
 ---
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-`SymbolDisplayFormat`은 결정적 코드 생성의 기반 도구입니다. Functorium 프로젝트에서는 `global::` 접두사로 네임스페이스 충돌을 방지하고, `UseSpecialTypes`로 가독성을 확보하며, `IncludeNullableReferenceTypeModifier`로 nullable 정보를 보존하는 커스텀 포맷을 정의했습니다. 가장 중요한 원칙은 프로젝트 전체에서 이 포맷을 일관되게 사용하는 것입니다.
+`SymbolDisplayFormat` is a foundational tool for deterministic code generation. The Functorium project defines a custom format that prevents namespace conflicts with the `global::` prefix, ensures readability with `UseSpecialTypes`, and preserves nullable information with `IncludeNullableReferenceTypeModifier`. The most important principle is to use this format consistently throughout the entire project.
 
-| 포맷 | 결과 예시 | 용도 |
-|------|-----------|------|
-| 기본 | "User" | 표시용 (비권장) |
-| FullyQualifiedFormat | "global::MyApp.User" | 결정적 출력 |
-| MinimallyQualifiedFormat | "User" | 간결한 표시 |
-| 커스텀 GlobalQualifiedFormat | "global::MyApp.User" | **소스 생성기 권장** |
+| Format | Example Output | Purpose |
+|--------|---------------|---------|
+| Default | "User" | Display only (not recommended) |
+| FullyQualifiedFormat | "global::MyApp.User" | Deterministic output |
+| MinimallyQualifiedFormat | "User" | Concise display |
+| Custom GlobalQualifiedFormat | "global::MyApp.User" | **Recommended for source generators** |
 
-| 옵션 | 설명 |
-|------|------|
-| `GlobalNamespaceStyle.Included` | global:: 접두사 |
-| `TypeQualificationStyle.NameAndContainingTypesAndNamespaces` | 전체 경로 |
-| `GenericsOptions.IncludeTypeParameters` | 제네릭 파라미터 |
-| `MiscellaneousOptions.UseSpecialTypes` | int, string 등 |
+| Option | Description |
+|--------|-------------|
+| `GlobalNamespaceStyle.Included` | global:: prefix |
+| `TypeQualificationStyle.NameAndContainingTypesAndNamespaces` | Full path |
+| `GenericsOptions.IncludeTypeParameters` | Generic parameters |
+| `MiscellaneousOptions.UseSpecialTypes` | int, string, etc. |
 
 ---
 
 ## FAQ
 
-### Q1: `FullyQualifiedFormat`과 Functorium의 `GlobalQualifiedFormat`은 무엇이 다른가요?
-**A**: `FullyQualifiedFormat`은 `int`를 `System.Int32`로 표시하지만, Functorium의 `GlobalQualifiedFormat`은 `UseSpecialTypes` 옵션으로 `int`를 그대로 유지합니다. 또한 `IncludeNullableReferenceTypeModifier`를 추가하여 `string?` 같은 nullable 정보를 보존합니다. 결과적으로 생성 코드가 더 자연스러운 C# 문법을 따릅니다.
+### Q1: What is the difference between `FullyQualifiedFormat` and Functorium's `GlobalQualifiedFormat`?
+**A**: `FullyQualifiedFormat` displays `int` as `System.Int32`, whereas Functorium's `GlobalQualifiedFormat` keeps `int` as-is through the `UseSpecialTypes` option. It also adds `IncludeNullableReferenceTypeModifier` to preserve nullable information like `string?`. As a result, the generated code follows more natural C# syntax.
 
-### Q2: 프로젝트 전체에서 하나의 `SymbolDisplayFormat`을 공유해야 하는 이유는 무엇인가요?
-**A**: 동일한 타입을 서로 다른 포맷으로 변환하면 `"int"`와 `"global::System.Int32"` 같은 불일치가 생깁니다. 이 불일치가 데이터 모델에 들어가면 `Equals` 비교가 달라져 증분 캐싱이 무효화되고, 생성 코드 내에서도 동일 타입이 다르게 표현되는 일관성 문제가 발생합니다.
+### Q2: Why should a single `SymbolDisplayFormat` be shared across the entire project?
+**A**: Converting the same type with different formats creates inconsistencies like `"int"` vs `"global::System.Int32"`. When these inconsistencies enter the data model, `Equals` comparisons differ, invalidating incremental caching, and creating consistency issues where the same type is represented differently within the generated code.
 
-### Q3: `EscapeKeywordIdentifiers` 옵션은 어떤 상황에서 필요한가요?
-**A**: C# 키워드와 동일한 이름의 식별자(예: `@class`, `@event`)를 타입 이름이나 네임스페이스에서 사용하는 경우, 이 옵션이 `@` 접두사를 자동으로 추가하여 컴파일 가능한 코드를 생성합니다. 이 옵션 없이는 생성된 코드가 키워드와 충돌하여 컴파일 오류가 발생할 수 있습니다.
+### Q3: In what situations is the `EscapeKeywordIdentifiers` option needed?
+**A**: When identifiers with names identical to C# keywords (e.g., `@class`, `@event`) are used in type names or namespaces, this option automatically adds the `@` prefix to generate compilable code. Without this option, the generated code may conflict with keywords and cause compilation errors.
 
 ---
 
-`SymbolDisplayFormat`으로 타입을 일관된 문자열로 변환하는 방법을 이해했습니다. 그런데 `FinT<IO, User>`라는 반환 타입에서 실제로 필요한 것은 두 번째 타입 파라미터인 `User`뿐입니다. 다음 장에서는 이 제네릭 타입에서 특정 타입 파라미터를 추출하는 기법을 살펴봅니다.
+Now we understand how to convert types to consistent strings using `SymbolDisplayFormat`. However, from a return type like `FinT<IO, User>`, what we actually need is only the second type parameter, `User`. In the next chapter, we will explore techniques for extracting specific type parameters from generic types.
 
-→ [08. 타입 추출](../08-Type-Extraction/)
+→ [08. Type Extraction](../08-Type-Extraction/)
