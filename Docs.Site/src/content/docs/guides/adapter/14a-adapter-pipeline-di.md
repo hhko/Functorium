@@ -64,7 +64,7 @@ ls {Project}/obj/GeneratedFiles/Functorium.SourceGenerators/.../*.g.cs
 | Registration class | Static class that groups DI registrations per Adapter project |
 | Options pattern | Strongly-typed configuration binding with `OptionsConfigurator<T>` |
 
-> **Note**: `UsecaseCachingPipeline`은 `IMemoryCache`에 의존합니다. `UseCaching()` 사용 시 `services.AddMemoryCache()`를 DI에 등록해야 합니다.
+> **Note**: `UsecaseCachingPipeline` depends on `IMemoryCache`. When using `UseCaching()`, you must register `services.AddMemoryCache()` in the DI container.
 
 First, let's verify how Pipelines are generated, then proceed sequentially through DI registration and the Options pattern.
 
@@ -113,7 +113,7 @@ After building, verify the generated files at the following path.
           └── {Namespace}.{ClassName}Observable.g.cs
 ```
 
-**예시**:
+**Example**:
 ```
 LayeredArch.Adapters.Persistence/obj/GeneratedFiles/.../
   └── Repositories.ProductRepositoryInMemoryObservable.g.cs
@@ -252,7 +252,7 @@ public static class AdapterPersistenceRegistration
 
 > **Reference**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Abstractions/Registrations/AdapterPersistenceRegistration.cs`
 
-> **Note**: Adapter에 Options 패턴이 필요한 경우, Registration 메서드에 `IConfiguration` 파라미터를 추가합니다. [4.6 Options 패턴](#options-패턴-optionsconfigurator) 참조.
+> **Note**: If an Adapter requires the Options pattern, add an `IConfiguration` parameter to the Registration method. See [4.6 Options Pattern](#options-pattern-optionsconfigurator).
 
 ### Registration Patterns by Type
 
@@ -294,9 +294,9 @@ services.RegisterScopedObservablePort<
     ExternalPricingApiServiceObservable>();
 ```
 
-> **Note**: `HttpClient`는 Observable 클래스 타입으로 등록합니다. Observable이 원본 Adapter를 상속하므로 생성자의 `HttpClient` 매개변수를 그대로 받습니다.
+> **Note**: Register `HttpClient` with the Observable class type. Since Observable inherits from the original Adapter, it receives the constructor's `HttpClient` parameter as-is.
 
-> **HttpClient Lifetime 관리**: `AddHttpClient<T>()`는 내부적으로 `IHttpClientFactory`를 사용하여 `HttpClient`의 수명을 관리합니다. `HttpClient`를 직접 `new`하면 소켓 고갈(socket exhaustion) 문제가 발생할 수 있으므로 반드시 `IHttpClientFactory`를 통해 생성해야 합니다. `IHttpClientFactory`는 내부 `HttpMessageHandler`의 풀링과 수명 관리(기본 2분 순환)를 자동으로 처리하여 DNS 변경 반영과 커넥션 풀링을 최적화합니다.
+> **HttpClient Lifetime Management**: `AddHttpClient<T>()` internally uses `IHttpClientFactory` to manage the lifetime of `HttpClient`. Creating `HttpClient` directly via `new` can cause socket exhaustion issues, so you must always create it through `IHttpClientFactory`. `IHttpClientFactory` automatically handles pooling and lifetime management of internal `HttpMessageHandler` (default 2-minute rotation), optimizing DNS change reflection and connection pooling.
 
 #### Messaging Registration
 ```csharp
@@ -306,7 +306,7 @@ services.RegisterScopedObservablePort<
     RabbitMqInventoryMessagingObservable>();
 ```
 
-> **Reference**: `Tutorials/Cqrs06Services/Src/OrderService/Program.cs` (57행)
+> **Reference**: `Tutorials/Cqrs06Services/Src/OrderService/Program.cs` (line 57)
 
 #### Query Adapter Registration
 
@@ -322,7 +322,7 @@ services.RegisterScopedObservablePort<
     ProductQueryDapperObservable>();
 ```
 
-> **Note**: Query Adapter는 Repository와 동일한 `RegisterScopedObservablePort` API를 사용합니다. Provider 분기 패턴([4.6](#options-패턴-optionsconfigurator))에서 InMemory는 InMemory Query Adapter를, Sqlite는 Dapper Query Adapter를 등록합니다.
+> **Note**: Query Adapters use the same `RegisterScopedObservablePort` API as Repositories. In the Provider branching pattern ([4.6](#options-pattern-optionsconfigurator)), InMemory registers the InMemory Query Adapter, while Sqlite registers the Dapper Query Adapter.
 
 #### Ctx Enricher Registration
 
@@ -360,7 +360,7 @@ services.AddMediator(options =>
 services.RegisterDomainEventPublisher();
 ```
 
-> **Reference**: [도메인 이벤트 §핸들러 등록](../domain/07-domain-events#핸들러-등록), [Logging 매뉴얼 §IDomainEventCtxEnricher](../observability/19-observability-logging#idomaineventctxenrichertvent--이벤트-핸들러-로그-enrichment)
+> **Reference**: [Domain Events - Handler Registration](../domain/07-domain-events#handler-registration), [Logging Manual - IDomainEventCtxEnricher](../observability/19-observability-logging#idomaineventctxenrichertvent--event-handler-log-enrichment)
 
 ### Multiple Interface Registration
 
@@ -378,7 +378,7 @@ services.RegisterScopedObservablePortFor<MyServiceObservable>(
     typeof(IService1), typeof(IService2), typeof(IService3), typeof(IService4));
 ```
 
-> **Note**: `For` 접미사 메서드는 Scoped, Transient, Singleton 세 가지 Lifetime 모두 지원합니다 (예: `RegisterTransientObservablePortFor`, `RegisterSingletonObservablePortFor`).
+> **Note**: The `For` suffix methods support all three Lifetimes: Scoped, Transient, and Singleton (e.g., `RegisterTransientObservablePortFor`, `RegisterSingletonObservablePortFor`).
 
 ### DI Lifetime Selection Guide
 
@@ -439,9 +439,9 @@ app.Run();
 
 > **Note**: Registration order is irrelevant to DI container dependency resolution; Domain -> Adapter -> Infrastructure order is recommended for readability.
 
-> **Note**: For the rationale behind registration order and environment-specific configuration branching, see [01-project-structure.md -- Host Project](../architecture/01-project-structure#등록-순서-근거).
+> **Note**: For the rationale behind registration order and environment-specific configuration branching, see [01-project-structure.md -- Host Project](../architecture/01-project-structure#registration-order-rationale).
 
-### Options 패턴 (OptionsConfigurator)
+### Options Pattern (OptionsConfigurator)
 
 Now that you understand the basic DI registration patterns, let's learn how to inject configuration options into Adapters. The `OptionsConfigurator` pattern is used. It reads settings from `appsettings.json`, validates with FluentValidation at startup, and automatically outputs to StartupLogger.
 
@@ -520,7 +520,7 @@ Items automatically handled by `RegisterConfigureOptions`:
 | `ValidateOnStart()` | Validates at program startup (terminates immediately on failure) |
 | `IStartupOptionsLogger` auto-registration | Checks `typeof(IStartupOptionsLogger).IsAssignableFrom(typeof(TOptions))`, auto-outputs to StartupLogger when implemented |
 
-**API 시그니처:**
+**API Signature:**
 
 ```csharp
 public static OptionsBuilder<TOptions> RegisterConfigureOptions<TOptions, TValidator>(
@@ -710,7 +710,7 @@ public FinT<IO, Product> GetById(Guid id) { ... }
 services.RegisterScopedObservablePort<IXxx, XxxObservable>();
 ```
 
-> For the complete problem-symptom-resolution list, see [Appendix Quick Reference Checklist](#d-quick-reference-체크리스트).
+> For the complete problem-symptom-resolution list, see [Appendix Quick Reference Checklist](#d-quick-reference-checklist).
 
 ---
 
@@ -792,39 +792,39 @@ public class MyAdapter : IMyPort
 - Logging, metrics, and tracing will not be recorded when these methods are called.
 - Use for internal utility methods or methods where Observability is unnecessary.
 
-### Q7. RequestCategory 값은 어떻게 정하나요?
+### Q7. How do you determine the RequestCategory value?
 
-`RequestCategory`는 Observability Pipeline의 메트릭/트레이싱에서 사용하는 분류 태그입니다. 프레임워크가 정한 예약어는 없으며, 팀 내 일관된 네이밍이 중요합니다.
+`RequestCategory` is a classification tag used in the Observability Pipeline's metrics/tracing. There are no reserved keywords defined by the framework; consistent naming within the team is what matters.
 
-| 권장 값 | Purpose |
+| Recommended Value | Purpose |
 |---------|------|
-| `"Repository"` | Aggregate CRUD 영속화 |
-| `"UnitOfWork"` | 트랜잭션 커밋 |
-| `"QueryAdapter"` | 읽기 전용 조회 (DTO 직접 반환) |
-| `"ExternalApi"` | 외부 HTTP API 호출 |
-| `"Messaging"` | 메시지 큐 통신 |
+| `"Repository"` | Aggregate CRUD persistence |
+| `"UnitOfWork"` | Transaction commit |
+| `"QueryAdapter"` | Read-only queries (direct DTO return) |
+| `"ExternalApi"` | External HTTP API calls |
+| `"Messaging"` | Message queue communication |
 
 ---
 
 ## References
 
-| 문서 | Description |
+| Document | Description |
 |------|------|
-| [04-ddd-tactical-overview.md](../domain/04-ddd-tactical-overview) | 도메인 모델링 전체 개요 |
-| [05a-value-objects.md](../domain/05a-value-objects) | Value Object 구현 가이드 |
-| [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) | Entity/Aggregate 핵심 패턴 |
-| [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) | 유스케이스 구현 (CQRS Command/Query) |
-| [08a-error-system.md](../domain/08a-error-system) | 에러 시스템: 기초와 네이밍 |
-| [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) | 에러 시스템: Domain/Application 에러 |
-| [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) | 에러 시스템: Adapter 에러와 테스트 |
-| [12-ports.md](./12-ports) | Port 정의 가이드 |
-| [13-adapters.md](./13-adapters) | Adapter 구현 가이드 |
-| [14b-adapter-testing.md](./14b-adapter-testing) | Adapter 단위 테스트 가이드 |
-| [15a-unit-testing.md](../testing/15a-unit-testing) | 단위 테스트 작성 가이드 |
-| [08-observability.md](../../spec/08-observability) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
-| [01-project-structure.md](../architecture/01-project-structure) | 서비스 프로젝트 구조 가이드 |
+| [04-ddd-tactical-overview.md](../domain/04-ddd-tactical-overview) | Domain modeling overview |
+| [05a-value-objects.md](../domain/05a-value-objects) | Value Object implementation guide |
+| [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) | Entity/Aggregate core patterns |
+| [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) | Use case implementation (CQRS Command/Query) |
+| [08a-error-system.md](../domain/08a-error-system) | Error system: Basics and naming |
+| [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) | Error system: Domain/Application errors |
+| [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) | Error system: Adapter errors and testing |
+| [12-ports.md](./12-ports) | Port definition guide |
+| [13-adapters.md](./13-adapters) | Adapter implementation guide |
+| [14b-adapter-testing.md](./14b-adapter-testing) | Adapter unit testing guide |
+| [15a-unit-testing.md](../testing/15a-unit-testing) | Unit testing guide |
+| [08-observability.md](../../spec/08-observability) | Observability specification (tracing, logging, metrics details) |
+| [01-project-structure.md](../architecture/01-project-structure) | Service project structure guide |
 
-**외부 참고:**
+**External References:**
 
-- [OpenTelemetry .NET](https://opentelemetry.io/docs/languages/net/) - 분산 트레이싱
-- [LanguageExt](https://github.com/louthy/language-ext) - 함수형 프로그래밍 라이브러리
+- [OpenTelemetry .NET](https://opentelemetry.io/docs/languages/net/) - Distributed tracing
+- [LanguageExt](https://github.com/louthy/language-ext) - Functional programming library

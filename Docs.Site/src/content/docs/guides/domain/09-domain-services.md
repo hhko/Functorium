@@ -488,7 +488,7 @@ public sealed class Usecase(
         var shippingAddress = (ShippingAddress)shippingAddressResult;
         var quantity = (Quantity)quantityResult;
 
-        // 2. 조회 → 신용 검증(Domain Service) → 주문 생성 → 이벤트 발행
+        // 2. 조회 → 신용 검증(Domain Service) → 주문 생성 → event publishing
         FinT<IO, Response> usecase =
             from customer in _customerRepository.GetById(customerId)           // 1. 고객 조회
             from exists in _productCatalog.ExistsById(productId)               // 2. 상품 존재 확인
@@ -499,7 +499,7 @@ public sealed class Usecase(
             from order in _orderRepository.Create(                             // 6. 주문 생성
                 Order.Create(productId, quantity, unitPrice, shippingAddress))
             select new Response(...);
-            // SaveChanges + 이벤트 발행은 UsecaseTransactionPipeline이 자동 처리
+            // SaveChanges + event publishing은 UsecaseTransactionPipeline이 자동 처리
 
         Fin<Response> response = await usecase.Run().RunAsync();
         return response.ToFinResponse();
@@ -543,7 +543,7 @@ Usecase (Application Layer, I/O 조율)
 ├── ProductCatalog.GetPrice()   ← I/O (Adapter)
 ├── CreditCheckService.Validate()  ← 순수 로직 (Domain Service)
 └── Repository.Create()         ← I/O (Adapter)
-    // SaveChanges + 이벤트 발행은 UsecaseTransactionPipeline이 자동 처리
+    // SaveChanges + event publishing은 UsecaseTransactionPipeline이 자동 처리
 ```
 
 **Repository 패턴:**
@@ -553,7 +553,7 @@ Usecase (Application Layer, I/O 조율)
 │
 ├── EmailCheckService.ValidateEmailUnique()  ← Domain Service (내부에서 Repository 사용)
 └── Repository.Create()                      ← I/O (Adapter)
-    // SaveChanges + 이벤트 발행은 UsecaseTransactionPipeline이 자동 처리
+    // SaveChanges + event publishing은 UsecaseTransactionPipeline이 자동 처리
 ```
 
 ---

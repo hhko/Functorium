@@ -863,7 +863,7 @@ This separation enables:
 - Repositories remain as pure data access layers
 - Repositories call `IDomainEventCollector.Track(aggregate)` to register domain event collection targets
 
-> **Reference**: For the pipeline pattern, see [11-usecases-and-cqrs.md §Transaction and Event Publishing](../application/11-usecases-and-cqrs#트랜잭션과-이벤트-발행-usecasetransactionpipeline).
+> **Reference**: For the pipeline pattern, see [11-usecases-and-cqrs.md -- Transaction and Event Publishing](../application/11-usecases-and-cqrs#transactions-and-event-publishing-usecasetransactionpipeline).
 
 While Repository Adapters handle data persistence, External API Adapters handle HTTP communication with external systems.
 

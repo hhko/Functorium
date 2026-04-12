@@ -56,19 +56,19 @@ error.ShouldBeErrorCodeExceptional<InvalidOperationException>("AdapterErrors.Dat
 using Functorium.Adapters.Errors;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
-// 기본 사용법 - 암시적 변환으로 직접 반환
+// Basic usage - direct return via implicit conversion
 return AdapterError.For<ProductRepository>(
     new NotFound(),
     id.ToString(),
     "상품을 찾을 수 없습니다");
 
-// 제네릭 값 타입
+// Generic value type
 return AdapterError.For<HttpClientAdapter, string>(
     new Timeout(Duration: TimeSpan.FromSeconds(30)),
     url,
     "요청 타임아웃");
 
-// 예외 래핑
+// Exception wrapping
 return AdapterError.FromException<ExternalApiService>(
     new ConnectionFailed("ExternalApi"),
     exception);
@@ -346,7 +346,7 @@ public void ShouldBeAdapterError_WithValue_WhenTimeout()
         expectedCurrentValue: url);
 }
 
-// 예외 래핑 에러 검증
+// Exception wrapping 에러 검증
 [Fact]
 public void ShouldBeAdapterExceptionalError_WhenExceptionOccurs()
 {
@@ -715,7 +715,7 @@ public void Validate_ShouldContain_MultipleErrorCodes()
 | `validation.ShouldContainException<T, TException>("code")` | `Validation` 실패 + 특정 예외 타입 포함 검증 |
 
 ```csharp
-// 예외 래핑 에러 검증 예시
+// Exception wrapping 에러 검증 예시
 [Fact]
 public void ShouldWrapException_WhenDatabaseFails()
 {

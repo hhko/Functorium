@@ -16,8 +16,8 @@ title: "Aggregate Design (WHY + WHAT)"
 
 This document covers the following topics:
 
-1. **Aggregate가 일관성 경계인 이유** - 불변식 보호와 트랜잭션 원칙
-2. **Aggregate 설계 4가지 핵심 규칙** - 불변식 보호, 작은 Aggregate, ID 참조, 최종 일관성
+1. **Aggregate가 일관성 경계인 이유** - invariant protection와 트랜잭션 원칙
+2. **Aggregate 설계 4가지 핵심 규칙** - invariant protection, 작은 Aggregate, ID 참조, 최종 일관성
 3. **Value Object/Entity/Aggregate Root 구분 기준** - 의사결정 흐름도와 판단 기준
 4. **분할/병합 의사결정** - 운영 중 경계 재설정이 필요한 신호와 판단 기준
 5. **안티패턴 식별과 회피** - God Aggregate, 직접 참조, 외부 불변식 검증 등
@@ -41,10 +41,10 @@ A basic understanding of the following concepts is needed to understand this doc
 [GenerateEntityId]
 public class Order : AggregateRoot<OrderId> { }
 
-// 불변식 보호 (Aggregate 내부)
+// Invariant protection (Aggregate 내부)
 public Fin<Unit> DeductStock(Quantity quantity) { ... }
 
-// 도메인 이벤트 발행
+// Domain event 발행
 AddDomainEvent(new CreatedEvent(Id, productId, quantity, totalAmount));
 
 // Cross-Aggregate 참조 (ID만)
@@ -71,7 +71,7 @@ public ProductId ProductId { get; private set; }
 | 트랜잭션 원칙 | 하나의 트랜잭션 = 하나의 Aggregate 변경 |
 | ID 참조 | Aggregate 간 객체 직접 참조 금지, EntityId만 저장 |
 | 최종 일관성 | Cross-Aggregate 변경은 도메인 이벤트로 비동기 처리 |
-| 작은 Aggregate | 불변식 보호에 필요한 최소 데이터만 포함 |
+| 작은 Aggregate | invariant protection에 필요한 최소 데이터만 포함 |
 
 ---
 
@@ -98,7 +98,7 @@ Aggregate는 **하나의 단위로 일관성을 보장하는 객체 그룹입니
 │          Aggregate              │
 │                                 │
 │  ┌──────────────┐               │
-│  │ Aggregate    │  불변식 보호    │  ← 트랜잭션 경계
+│  │ Aggregate    │  invariant protection    │  ← transaction boundary
 │  │ Root         │───────────    │
 │  └──────┬───────┘               │
 │         │                       │
@@ -134,19 +134,19 @@ public Fin<Unit> DeductStock(Quantity quantity)
 }
 ```
 
-### 트랜잭션 경계로서의 Aggregate
+### transaction boundary로서의 Aggregate
 
 **하나의 트랜잭션 = 하나의 Aggregate 변경이** 원칙입니다.
 
 ```
-✅ 트랜잭션 1개에 Aggregate 1개 변경
+✅ Transaction 1개에 Aggregate 1개 변경
 ┌─────────────────────────┐
 │ Transaction             │
 │  Inventory.DeductStock  │
 │  Repository.Save        │
 └─────────────────────────┘
 
-❌ 트랜잭션 1개에 Aggregate 여러 개 변경
+❌ Transaction 1개에 Aggregate 여러 개 변경
 ┌──────────────────────────────────┐
 │ Transaction                      │
 │  Inventory.DeductStock           │
@@ -238,32 +238,32 @@ public class Order : AggregateRoot<OrderId>
     public Money Amount { get; private set; }
     public CustomerId CustomerId { get; private set; }
 
-    // ORM용 기본 생성자
+    // Default constructor for ORM
 #pragma warning disable CS8618
     private Order() { }
 #pragma warning restore CS8618
 
-    // 내부 생성자
+    // Internal constructor
     private Order(OrderId id, Money amount, CustomerId customerId) : base(id)
     {
         Amount = amount;
         CustomerId = customerId;
     }
 
-    // Create: 이미 검증된 Value Object를 직접 받음
+    // Create: Receives already validated Value Objects directly
     public static Order Create(Money amount, CustomerId customerId)
     {
         var id = OrderId.New();
         return new Order(id, amount, customerId);
     }
 
-    // CreateFromValidated: 이미 검증/정규화된 데이터를 직접 pass-through
+    // CreateFromValidated: Direct pass-through of already validated/normalized data
     // DB에서 읽어온 데이터로 Aggregate를 복원합니다.
     // 저장 시점에 이미 검증을 통과한 데이터이므로 검증/정규화를 생략합니다.
     public static Order CreateFromValidated(OrderId id, Money amount, CustomerId customerId)
         => new(id, amount, customerId);
 
-    // 도메인 연산
+    // Domain operation
     public Fin<Unit> UpdateAmount(Money newAmount)
     {
         Amount = newAmount;
@@ -279,7 +279,7 @@ We have examined the Aggregate concept and its components. In the next section, 
 
 ## Aggregate 설계 규칙
 
-### 규칙 1: Aggregate 경계 안에서 불변식 보호
+### 규칙 1: Aggregate 경계 안에서 invariant protection
 
 Aggregate 내부의 모든 불변식은 Aggregate Root를 통해 보호합니다. 외부에서 자식 Entity를 직접 수정할 수 없습니다.
 
@@ -292,7 +292,7 @@ public sealed class Product : AggregateRoot<ProductId>
 
     public Product AddTag(Tag tag)
     {
-        // 불변식: 중복 Tag 방지
+        // Invariant: 중복 Tag 방지
         if (_tags.Any(t => t.Id == tag.Id))
             return this;
 
@@ -321,7 +321,7 @@ product.Tags.Add(newTag);  // IReadOnlyList이므로 컴파일 오류
 
 ### 규칙 2: 작은 Aggregate를 설계하라
 
-Aggregate는 **불변식 보호에 필요한 최소한의 데이터만** 포함해야 합니다.
+Aggregate는 **invariant protection에 필요한 최소한의 데이터만** 포함해야 합니다.
 
 ```csharp
 // ✅ 작은 Aggregate: 필요한 것만 포함
@@ -362,7 +362,7 @@ Aggregate 간에는 **EntityId만 저장합니다.** 객체 참조를 직접 사
 // ✅ ID로만 참조 (Order → Product)
 public sealed class Order : AggregateRoot<OrderId>
 {
-    // 교차 Aggregate 참조 (Product의 ID를 값으로 참조)
+    // Cross-Aggregate reference (Product의 ID를 값으로 참조)
     public ProductId ProductId { get; private set; }
     public Quantity Quantity { get; private set; }
     public Money UnitPrice { get; private set; }
@@ -392,7 +392,7 @@ public class Order : AggregateRoot<OrderId>
 // Create order 시 재고 차감은 별도 Aggregate(Product) 변경
 // → 도메인 이벤트로 비동기 처리
 
-// Order Aggregate에서 이벤트 발행
+// Order Aggregate에서 event publishing
 public static Order Create(
     ProductId productId,
     Quantity quantity,
@@ -415,7 +415,7 @@ public static Order Create(
 // }
 ```
 
-> **Note**: 하나의 트랜잭션에서 여러 Aggregate를 동시에 변경할 수 없으므로, Cross-Aggregate 부수 효과는 이벤트 핸들러(최종 일관성)로 처리합니다. 같은 Bounded Context 내에서 관련 Aggregate를 동시에 **생성하는** 경우 등 실용적 예외는 [§4 트랜잭션 경계 실전 가이드라인](#트랜잭션-경계-실전-가이드라인)을 참조하세요.
+> **Note**: 하나의 트랜잭션에서 여러 Aggregate를 동시에 변경할 수 없으므로, Cross-Aggregate 부수 효과는 이벤트 핸들러(최종 일관성)로 처리합니다. 같은 Bounded Context 내에서 관련 Aggregate를 동시에 **생성하는** 경우 등 실용적 예외는 [§4 transaction boundary 실전 가이드라인](#트랜잭션-경계-실전-가이드라인)을 참조하세요.
 
 Now that we understand the design rules, let us learn the criteria for classifying domain concepts as Value Object, Entity, or Aggregate Root.
 
@@ -565,7 +565,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     private readonly List<Tag> _tags = [];
     public IReadOnlyList<Tag> Tags => _tags.AsReadOnly();
 
-    // 불변식 보호: Tag 중복 방지
+    // Invariant protection: Tag 중복 방지
     public Product AddTag(Tag tag)
     {
         if (_tags.Any(t => t.Id == tag.Id))
@@ -591,7 +591,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
     public Quantity StockQuantity { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
 
-    // 불변식 보호: 재고 ≥ 0
+    // Invariant protection: 재고 ≥ 0
     public Fin<Unit> DeductStock(Quantity quantity)
     {
         if (quantity > StockQuantity)
@@ -657,7 +657,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 - Application Layer에서 Product 생성 시 Inventory도 함께 생성 (같은 Usecase)
 - 재고 차감은 Inventory Aggregate에 직접 요청
 
-#### 트랜잭션 경계 실전 가이드라인
+#### transaction boundary 실전 가이드라인
 
 [§1의 원칙](#트랜잭션-경계로서의-aggregate)은 **하나의 트랜잭션 = 하나의 Aggregate 변경입니다.** 실전에서는 다음과 같이 패턴을 분류합니다.
 
@@ -822,7 +822,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditable
         Money unitPrice,
         ShippingAddress shippingAddress)
     {
-        // 불변식: TotalAmount = UnitPrice × Quantity
+        // Invariant: TotalAmount = UnitPrice × Quantity
         var totalAmount = unitPrice.Multiply(quantity);
         var order = new Order(OrderId.New(), productId, quantity, unitPrice, totalAmount, shippingAddress);
         order.AddDomainEvent(new CreatedEvent(order.Id, productId, quantity, totalAmount));
@@ -904,7 +904,7 @@ public class DeductStockUsecase
 ```
 
 ```csharp
-// ✅ Aggregate Root 내부에서 불변식 보호
+// ✅ Aggregate Root 내부에서 invariant protection
 public class DeductStockUsecase
 {
     public async Task Handle(DeductStockCommand cmd)

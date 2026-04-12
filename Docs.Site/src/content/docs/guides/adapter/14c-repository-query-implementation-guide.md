@@ -41,11 +41,11 @@ This document presents methods to reduce such repetition and errors through base
 
 ---
 
-## 1. 개요
+## 1. Overview
 
-이 문서는 새 Aggregate에 대한 **Repository** (Write Side)와 **Query Adapter** (Read Side)를 구현하는 절차를 설명합니다.
+This document describes the step-by-step procedures for implementing **Repository** (Write Side) and **Query Adapter** (Read Side) for new Aggregates.
 
-### CQRS 구조
+### CQRS Structure
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -67,14 +67,14 @@ This document presents methods to reduce such repetition and errors through base
 └─────────────────────────────────────────────────┘
 ```
 
-- **Repository** — Aggregate Root 단위 CRUD. 도메인 객체를 통한 읽기/쓰기
-- **Query Adapter** — DTO 직접 프로젝션. Aggregate 재구성 없이 DB → DTO
+- **Repository** — Aggregate Root-level CRUD. Read/write through domain objects
+- **Query Adapter** — Direct DTO projection. DB to DTO without Aggregate reconstruction
 
-### 베이스 클래스 계층
+### Base Class Hierarchy
 
-다음 표는 Write/Read 측 베이스 클래스와 구현 대상 인터페이스를 정리한 것입니다.
+The following table summarizes the base classes and target interfaces for the Write/Read sides.
 
-| 역할 | 베이스 클래스 | 구현 대상 |
+| Role | Base Class | Implementation Target |
 |------|-------------|----------|
 | Write (EF Core) | `EfCoreRepositoryBase<TAgg, TId, TModel>` | `IRepository<TAgg, TId>` |
 | Write (InMemory) | `InMemoryRepositoryBase<TAgg, TId>` | `IRepository<TAgg, TId>` |
@@ -83,31 +83,31 @@ This document presents methods to reduce such repetition and errors through base
 
 ---
 
-## 2. Repository 구현 가이드 (Write Side)
+## 2. Repository Implementation Guide (Write Side)
 
-### 2.1 구현 체크리스트
+### 2.1 Implementation Checklist
 
-새 Aggregate `Xxx`를 추가할 때의 단계별 체크리스트입니다. 각 단계의 상세 구현은 이어지는 섹션에서 설명합니다.
+This is a step-by-step checklist when adding a new Aggregate `Xxx`. Detailed implementation for each step is explained in the following sections.
 
-| # | 계층 | 작업 | 파일 |
+| # | Layer | Task | File |
 |---|------|------|------|
-| 1 | Domain | `IXxxRepository` 인터페이스 정의 | `Domain/AggregateRoots/Xxxs/IXxxRepository.cs` |
-| 2 | Adapter | `XxxModel` + `IHasStringId` 구현 | `Repositories/Xxxs/Xxx.Model.cs` |
+| 1 | Domain | Define `IXxxRepository` interface | `Domain/AggregateRoots/Xxxs/IXxxRepository.cs` |
+| 2 | Adapter | Implement `XxxModel` + `IHasStringId` | `Repositories/Xxxs/Xxx.Model.cs` |
 | 3 | Adapter | `IEntityTypeConfiguration<XxxModel>` | `Repositories/Xxxs/Xxx.Configuration.cs` |
 | 4 | Adapter | `XxxMapper` (ToModel/ToDomain) | `Repositories/Xxxs/Xxx.Mapper.cs` |
-| 5 | Adapter | `XxxRepositoryEfCore` 구현 | `Repositories/Xxxs/Repositories/XxxRepositoryEfCore.cs` |
-| 6 | Adapter | `XxxRepositoryInMemory` 구현 | `Repositories/Xxxs/Repositories/XxxRepositoryInMemory.cs` |
-| 7 | Adapter | DI Registration 등록 | `Abstractions/Registrations/AdapterPersistenceRegistration.cs` |
+| 5 | Adapter | Implement `XxxRepositoryEfCore` | `Repositories/Xxxs/Repositories/XxxRepositoryEfCore.cs` |
+| 6 | Adapter | Implement `XxxRepositoryInMemory` | `Repositories/Xxxs/Repositories/XxxRepositoryInMemory.cs` |
+| 7 | Adapter | DI Registration | `Abstractions/Registrations/AdapterPersistenceRegistration.cs` |
 
-### 2.2 Domain 인터페이스
+### 2.2 Domain Interface
 
-기본 CRUD만 필요하면 `IRepository<TAgg, TId>`를 그대로 상속합니다:
+If only basic CRUD is needed, simply inherit `IRepository<TAgg, TId>` as-is:
 
 ```csharp
-// 최소 구현 — 추가 메서드 없음
+// Minimal implementation — no additional methods
 public interface ITagRepository : IRepository<Tag, TagId>;
 
-// 추가 메서드가 필요한 경우
+// When additional methods are needed
 public interface IProductRepository : IRepository<Product, ProductId>
 {
     FinT<IO, bool> Exists(Specification<Product> spec);
@@ -115,30 +115,30 @@ public interface IProductRepository : IRepository<Product, ProductId>
 }
 ```
 
-`IRepository<TAgg, TId>`가 제공하는 기본 8개 메서드:
+The 8 default methods provided by `IRepository<TAgg, TId>`:
 - `Create`, `GetById`, `Update`, `Delete`
 - `CreateRange`, `GetByIds`, `UpdateRange`, `DeleteRange`
 
-### 2.3 EfCoreRepositoryBase 구현 패턴
+### 2.3 EfCoreRepositoryBase Implementation Pattern
 
-#### 생성자 3인자 패턴
+#### Constructor 3-Parameter Pattern
 
-`eventCollector`는 필수이고, `applyIncludes`와 `propertyMap`은 필요할 때만 전달한다는 점.
+Note that `eventCollector` is required, while `applyIncludes` and `propertyMap` are only passed when needed.
 
 ```csharp
 protected EfCoreRepositoryBase(
-    IDomainEventCollector eventCollector,                                 // 필수: 도메인 이벤트 수집
+    IDomainEventCollector eventCollector,                                 // Required: domain event collection
     Func<IQueryable<TModel>, IQueryable<TModel>>? applyIncludes = null,   // Navigation Property Include
-    PropertyMap<TAggregate, TModel>? propertyMap = null)                  // Specification → SQL 변환
+    PropertyMap<TAggregate, TModel>? propertyMap = null)                  // Specification → SQL translation
 ```
 
-- **eventCollector** — 항상 필수
-- **applyIncludes** — Navigation Property가 있으면 선언. `ReadQuery()`에 자동 적용되어 N+1 방지
-- **propertyMap** — `Exists(Specification)` 또는 `BuildQuery` 사용 시 필수
+- **eventCollector** — Always required
+- **applyIncludes** — Declare when Navigation Properties exist. Automatically applied to `ReadQuery()` to prevent N+1
+- **propertyMap** — Required when using `Exists(Specification)` or `BuildQuery`
 
-#### 최소 구현 (TagRepository)
+#### Minimal Implementation (TagRepository)
 
-Navigation Property도 없고, Specification 검색도 없는 가장 단순한 형태:
+The simplest form with no Navigation Properties and no Specification search:
 
 ```csharp
 [GenerateObservablePort]
@@ -148,7 +148,7 @@ public class TagRepositoryEfCore
     private readonly LayeredArchDbContext _dbContext;
 
     public TagRepositoryEfCore(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
-        : base(eventCollector)                          // applyIncludes, propertyMap 모두 생략
+        : base(eventCollector)                          // both applyIncludes and propertyMap omitted
         => _dbContext = dbContext;
 
     protected override DbContext DbContext => _dbContext;
@@ -158,13 +158,13 @@ public class TagRepositoryEfCore
 }
 ```
 
-서브클래스가 구현해야 하는 필수 멤버는 4개입니다:
-- `DbContext` — EF Core DbContext (TrackedMerge Update에 사용)
+There are 4 required members that subclasses must implement:
+- `DbContext` — EF Core DbContext (used for TrackedMerge Update)
 - `DbSet` — EF Core DbSet
-- `ToDomain()` — Model → Domain 매핑
-- `ToModel()` — Domain → Model 매핑
+- `ToDomain()` — Model → Domain mapping
+- `ToModel()` — Domain → Model mapping
 
-#### Navigation Property가 있는 구현 (OrderRepository)
+#### Implementation with Navigation Property (OrderRepository)
 
 ```csharp
 [GenerateObservablePort]
@@ -174,7 +174,7 @@ public class OrderRepositoryEfCore
     private readonly LayeredArchDbContext _dbContext;
 
     public OrderRepositoryEfCore(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
-        : base(eventCollector, q => q.Include(o => o.OrderLines))   // Include 선언
+        : base(eventCollector, q => q.Include(o => o.OrderLines))   // Include declaration
         => _dbContext = dbContext;
 
     protected override DbContext DbContext => _dbContext;
@@ -184,7 +184,7 @@ public class OrderRepositoryEfCore
 }
 ```
 
-#### 전체 구현 (ProductRepository) — Include + PropertyMap + 커스텀 메서드
+#### Full Implementation (ProductRepository) -- Include + PropertyMap + Custom Methods
 
 ```csharp
 [GenerateObservablePort]
@@ -196,7 +196,7 @@ public class ProductRepositoryEfCore
     public ProductRepositoryEfCore(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
         : base(eventCollector,
                q => q.Include(p => p.ProductTags),                // Navigation Include
-               new PropertyMap<Product, ProductModel>()           // Specification 매핑
+               new PropertyMap<Product, ProductModel>()           // Specification mapping
                    .Map(p => (decimal)p.Price, m => m.Price)
                    .Map(p => (string)p.Name, m => m.Name)
                    .Map(p => p.Id.ToString(), m => m.Id))
@@ -207,18 +207,18 @@ public class ProductRepositoryEfCore
     protected override Product ToDomain(ProductModel model) => model.ToDomain();
     protected override ProductModel ToModel(Product p) => p.ToModel();
 
-    // Specification 기반 존재 확인 — 베이스의 ExistsBySpec 활용
+    // Specification-based existence check — leveraging base class ExistsBySpec
     public virtual FinT<IO, bool> Exists(Specification<Product> spec)
         => ExistsBySpec(spec);
 
-    // Soft Delete 오버라이드 (섹션 5.1 참조)
+    // Soft Delete override (see section 5.1)
     // ...
 }
 ```
 
-#### PropertyMap 선언 규칙
+#### PropertyMap Declaration Rules
 
-Domain의 Value Object를 Model의 primitive 타입에 매핑합니다:
+Maps Domain Value Objects to Model primitive types:
 
 ```csharp
 new PropertyMap<Customer, CustomerModel>()
@@ -228,9 +228,9 @@ new PropertyMap<Customer, CustomerModel>()
     .Map(c => c.Id.ToString(), m => m.Id)                   // CustomerId → string
 ```
 
-### 2.4 InMemoryRepositoryBase 구현 패턴
+### 2.4 InMemoryRepositoryBase Implementation Pattern
 
-#### 기본 패턴 — `static ConcurrentDictionary` + `Store` 프로퍼티
+#### Basic Pattern -- `static ConcurrentDictionary` + `Store` Property
 
 ```csharp
 [GenerateObservablePort]
@@ -245,12 +245,12 @@ public class TagRepositoryInMemory
 }
 ```
 
-핵심 규칙:
-- `ConcurrentDictionary`는 반드시 **`static`으로** 선언합니다 (DI Scope 간 데이터 공유)
-- `internal static`으로 선언하여 같은 어셈블리의 Query Adapter에서 접근 가능하게 합니다
-- 베이스 클래스가 8개 CRUD를 모두 구현하므로, 추가 메서드만 오버라이드합니다
+Core rules:
+- `ConcurrentDictionary` must be declared as **`static`** (data sharing across DI Scopes)
+- Declared as `internal static` to allow access from Query Adapters in the same assembly
+- Since the base class implements all 8 CRUD operations, only override additional methods
 
-#### 추가 메서드가 있는 구현 (InventoryRepository)
+#### Implementation with Additional Methods (InventoryRepository)
 
 ```csharp
 [GenerateObservablePort]
@@ -275,7 +275,7 @@ public class InventoryRepositoryInMemory
 
             return AdapterError.For<InventoryRepositoryInMemory>(
                 new NotFound(), productId.ToString(),
-                $"상품 ID '{productId}'에 대한 재고를 찾을 수 없습니다");
+                $"Inventory not found for product ID '{productId}'");
         });
     }
 
@@ -290,13 +290,13 @@ public class InventoryRepositoryInMemory
 }
 ```
 
-### 2.5 Mapper 구현 패턴
+### 2.5 Mapper Implementation Pattern
 
-확장 메서드로 `ToModel()` / `ToDomain()`를 구현합니다.
+Implements `ToModel()` / `ToDomain()` as extension methods.
 
-#### 단순 매퍼 (TagMapper)
+#### Simple Mapper (TagMapper)
 
-`ToDomain()`에서 `CreateFromValidated`를 사용하여 DB 복원 시 재검증을 방지하는 패턴.
+A pattern that uses `CreateFromValidated` in `ToDomain()` to prevent re-validation when restoring from DB.
 
 ```csharp
 internal static class TagMapper
@@ -310,20 +310,20 @@ internal static class TagMapper
     };
 
     public static Tag ToDomain(this TagModel model) =>
-        Tag.CreateFromValidated(                        // 재검증 방지
+        Tag.CreateFromValidated(                        // Prevent re-validation
             TagId.Create(model.Id),
-            TagName.CreateFromValidated(model.Name),    // CreateFromValidated 사용
+            TagName.CreateFromValidated(model.Name),    // Using CreateFromValidated
             model.CreatedAt,
             Optional(model.UpdatedAt));
 }
 ```
 
-핵심 규칙:
-- `ToDomain`에서 **`CreateFromValidated()`** 를 사용합니다 — DB에서 읽은 데이터는 이미 검증됨
-- `Option<DateTime>` → `DateTime?` 변환: `.ToNullable()`
-- `DateTime?` → `Option<DateTime>` 변환: `Optional(model.UpdatedAt)`
+Core rules:
+- Use **`CreateFromValidated()`** in `ToDomain` -- data read from DB is already validated
+- `Option<DateTime>` to `DateTime?` conversion: `.ToNullable()`
+- `DateTime?` to `Option<DateTime>` conversion: `Optional(model.UpdatedAt)`
 
-#### Navigation Property 매핑 (ProductMapper)
+#### Navigation Property Mapping (ProductMapper)
 
 ```csharp
 internal static class ProductMapper
@@ -367,7 +367,7 @@ internal static class ProductMapper
 }
 ```
 
-#### 자식 엔티티를 포함하는 매핑 (OrderMapper)
+#### Mapping with Child Entities (OrderMapper)
 
 ```csharp
 internal static class OrderMapper
@@ -384,7 +384,7 @@ internal static class OrderMapper
             Status = order.Status,
             CreatedAt = order.CreatedAt,
             UpdatedAt = order.UpdatedAt.ToNullable(),
-            OrderLines = order.OrderLines.Select(l => l.ToModel(orderId)).ToList()  // 부모 Id 전달
+            OrderLines = order.OrderLines.Select(l => l.ToModel(orderId)).ToList()  // Pass parent Id
         };
     }
 
@@ -401,7 +401,7 @@ internal static class OrderMapper
 }
 ```
 
-### 2.6 EF Core Model & Configuration 패턴
+### 2.6 EF Core Model & Configuration Pattern
 
 #### Model
 
@@ -414,7 +414,7 @@ public class ProductModel : IHasStringId
     public decimal Price { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    // Soft Delete 전용
+    // Soft Delete only
     public DateTime? DeletedAt { get; set; }
     public string? DeletedBy { get; set; }
     // Navigation Property
@@ -422,9 +422,9 @@ public class ProductModel : IHasStringId
 }
 ```
 
-규칙:
-- 반드시 `IHasStringId`를 구현합니다 — 베이스 클래스의 `ByIdPredicate`가 이 인터페이스에 의존
-- `Id`는 `string` 타입, maxLength 26 (Ulid)
+Rules:
+- Must implement `IHasStringId` -- the base class's `ByIdPredicate` depends on this interface
+- `Id` is `string` type, maxLength 26 (Ulid)
 
 #### Configuration
 
@@ -452,161 +452,161 @@ public class ProductConfiguration : IEntityTypeConfiguration<ProductModel>
 }
 ```
 
-Configuration 규칙:
-- Id: `HasMaxLength(26)` (Ulid 길이)
+Configuration rules:
+- Id: `HasMaxLength(26)` (Ulid length)
 - decimal: `HasPrecision(18, 4)`
 - Soft Delete: `HasQueryFilter(p => p.DeletedAt == null)`
-- Navigation: Cascade Delete 설정
+- Navigation: Cascade Delete configuration
 
-### 2.7 CRUD 대칭성 분석
+### 2.7 CRUD Symmetry Analysis
 
-`EfCoreRepositoryBase`의 단건/벌크 CRUD 연산 간 아키텍처 경로를 비교합니다.
+Compares the architecture paths between single/bulk CRUD operations of `EfCoreRepositoryBase`.
 
-#### 전체 비교표
+#### Full Comparison Table
 
-| 연산 | Category | Change Tracker | 도메인 변환 | 이벤트 추적 | ReadQuery | 실행 방식 |
+| Operation | Category | Change Tracker | Domain Conversion | Event Tracking | ReadQuery | Execution Method |
 |------|------|:-:|:-:|:-:|:-:|------|
-| **Create** | 단건 | O | O (ToModel) | O (Track) | - | `DbSet.Add` |
-| **CreateRange** | 벌크 | O | O (ToModel) | O (TrackRange) | - | `DbSet.AddRange` |
-| **GetById** | 단건 | X | O (ToDomain) | - | O | `AsNoTracking` → `FirstOrDefault` |
-| **GetByIds** | 벌크 | X | O (ToDomain) | - | O | `AsNoTracking` → `Where` → `ToList` |
-| **Update** | 단건 | O | O (ToModel) | O (Track) | - | `FindAsync + SetValues (TrackedMerge)` |
-| **UpdateRange** | 벌크 | O | O (ToModel) | O (TrackRange) | - | `FindAsync + SetValues (TrackedMerge)` |
-| **Delete** | 단건 | **X** | **X** | **X** | - | `Where(pred).ExecuteDeleteAsync` |
-| **DeleteRange** | 벌크 | **X** | **X** | **X** | - | `Where(pred).ExecuteDeleteAsync` |
+| **Create** | Single | O | O (ToModel) | O (Track) | - | `DbSet.Add` |
+| **CreateRange** | Bulk | O | O (ToModel) | O (TrackRange) | - | `DbSet.AddRange` |
+| **GetById** | Single | X | O (ToDomain) | - | O | `AsNoTracking` → `FirstOrDefault` |
+| **GetByIds** | Bulk | X | O (ToDomain) | - | O | `AsNoTracking` → `Where` → `ToList` |
+| **Update** | Single | O | O (ToModel) | O (Track) | - | `FindAsync + SetValues (TrackedMerge)` |
+| **UpdateRange** | Bulk | O | O (ToModel) | O (TrackRange) | - | `FindAsync + SetValues (TrackedMerge)` |
+| **Delete** | Single | **X** | **X** | **X** | - | `Where(pred).ExecuteDeleteAsync` |
+| **DeleteRange** | Bulk | **X** | **X** | **X** | - | `Where(pred).ExecuteDeleteAsync` |
 
-> **Note**: ReadQuery 열의 O는 `ReadQuery()` (AsNoTracking + Include 자동 적용)를 사용한다는 의미입니다.
+> **Note**: O in the ReadQuery column means `ReadQuery()` (AsNoTracking + Include automatically applied) is used.
 >
-> **Note**: GetByIds는 요청 ID 수와 결과 수가 다르면 `PartialNotFoundError`를 반환합니다.
+> **Note**: GetByIds returns `PartialNotFoundError` when the number of requested IDs differs from the number of results.
 
-#### CRUD 4쌍 대칭 요약
+#### CRUD 4-Pair Symmetry Summary
 
-| 연산 | 단건 vs 벌크 | 이유 |
+| Operation | Single vs Bulk | Reason |
 |------|:---:|------|
-| Create | 대칭 | `DbSet.Add` vs `DbSet.AddRange` (API만 복수형) |
-| Read | 대칭 | `FirstOrDefault` vs `Where().ToList()` (조건만 단수/복수) |
-| Update | 대칭 | `FindAsync + SetValues` (TrackedMerge: 변경된 컬럼만 UPDATE) |
-| Delete | 대칭 | `Where(pred).ExecuteDeleteAsync` (동일 경로, 조건만 단수/복수) |
+| Create | Symmetric | `DbSet.Add` vs `DbSet.AddRange` (only API is plural) |
+| Read | Symmetric | `FirstOrDefault` vs `Where().ToList()` (only condition is singular/plural) |
+| Update | Symmetric | `FindAsync + SetValues` (TrackedMerge: UPDATE only changed columns) |
+| Delete | Symmetric | `Where(pred).ExecuteDeleteAsync` (same path, only condition is singular/plural) |
 
-**비대칭은 Soft Delete 오버라이드에서만 발생합니다.**
-벌크 SQL 연산(`ExecuteUpdateAsync`)과 도메인 이벤트 추적은 구조적으로 양립 불가능합니다:
+**Asymmetry occurs only in Soft Delete overrides.**
+Bulk SQL operations (`ExecuteUpdateAsync`) and domain event tracking are structurally incompatible:
 
-1. 도메인 이벤트는 도메인 객체의 상태 전이에서 발생
-2. 벌크 SQL은 도메인 객체를 생성하지 않음
-3. N건을 개별 로드하면 벌크 연산의 성능 이점이 소멸
+1. Domain events arise from state transitions of domain objects
+2. Bulk SQL does not create domain objects
+3. Loading N items individually eliminates the performance benefit of bulk operations
 
-이것은 의도된 성능 트레이드오프입니다. Soft Delete 코드는 섹션 5.1을 참조하세요.
+This is an intentional performance trade-off. See section 5.1 for Soft Delete code.
 
-#### 서브클래스 오버라이드 현황
+#### Subclass Override Status
 
-| 리포지토리 | CRUD 오버라이드 | 고유 메서드 |
+| Repository | CRUD Override | Custom Methods |
 |-----------|:-:|------|
 | `ProductRepositoryEfCore` | `Delete`, `DeleteRange` | `GetByIdIncludingDeleted`, `Exists` |
-| `OrderRepositoryEfCore` | 없음 | 없음 |
-| `CustomerRepositoryEfCore` | 없음 | `Exists` |
-| `InventoryRepositoryEfCore` | 없음 | `GetByProductId`, `Exists` |
-| `TagRepositoryEfCore` | 없음 | 없음 |
+| `OrderRepositoryEfCore` | None | None |
+| `CustomerRepositoryEfCore` | None | `Exists` |
+| `InventoryRepositoryEfCore` | None | `GetByProductId`, `Exists` |
+| `TagRepositoryEfCore` | None | None |
 
-Product만 유일하게 CRUD를 오버라이드합니다. 이유는 Soft Delete라는 도메인 요구사항 때문입니다.
+Only Product overrides CRUD. The reason is the domain requirement of Soft Delete.
 
-#### applyIncludes 선언 현황
+#### applyIncludes Declaration Status
 
-| 리포지토리 | applyIncludes | Navigation Property |
+| Repository | applyIncludes | Navigation Property |
 |-----------|--------------|---------------------|
 | `ProductRepositoryEfCore` | `q => q.Include(p => p.ProductTags)` | `ProductTags` |
 | `OrderRepositoryEfCore` | `q => q.Include(o => o.OrderLines)` | `OrderLines` |
-| `CustomerRepositoryEfCore` | `null` (기본값) | 없음 |
-| `InventoryRepositoryEfCore` | `null` (기본값) | 없음 |
-| `TagRepositoryEfCore` | `null` (기본값) | 없음 |
+| `CustomerRepositoryEfCore` | `null` (default) | None |
+| `InventoryRepositoryEfCore` | `null` (default) | None |
+| `TagRepositoryEfCore` | `null` (default) | None |
 
-Repository(Write Side) 구현을 완료했다면, 이제 읽기 전용 조회를 위한 Query Adapter(Read Side) 구현으로 넘어갑니다.
+If you have completed the Repository (Write Side) implementation, proceed to the Query Adapter (Read Side) implementation for read-only queries.
 
 ---
 
-## 3. Query Adapter 구현 가이드 (Read Side)
+## 3. Query Adapter Implementation Guide (Read Side)
 
-### 3.1 Query 분류
+### 3.1 Query Classification
 
-아래 표는 Query 유형별 베이스 클래스와 인터페이스를 정리한 것입니다.
+The following table summarizes the base classes and interfaces by Query type.
 
-| 유형 | 베이스 클래스 | 인터페이스 | Example |
+| Type | Base Class | Interface | Example |
 |------|-------------|-----------|------|
-| 검색 (페이징) | `DapperQueryBase` / `InMemoryQueryBase` | `IQueryPort<TEntity, TDto>` | `IProductQuery` |
-| 단건 조회 | 직접 구현 | `IQueryPort` (비제네릭) | `IProductDetailQuery` |
-| JOIN 검색 | `DapperQueryBase` / `InMemoryQueryBase` | `IQueryPort<TEntity, TDto>` | `IProductWithStockQuery` |
-| LEFT JOIN 검색 | `DapperQueryBase` / `InMemoryQueryBase` | `IQueryPort<TEntity, TDto>` | `IProductWithOptionalStockQuery` |
-| GROUP BY 집계 | `DapperQueryBase` / `InMemoryQueryBase` | `IQueryPort<TEntity, TDto>` | `ICustomerOrderSummaryQuery` |
-| 복합 JOIN | 직접 구현 | `IQueryPort` (비제네릭) | `ICustomerOrdersQuery` |
+| Search (paging) | `DapperQueryBase` / `InMemoryQueryBase` | `IQueryPort<TEntity, TDto>` | `IProductQuery` |
+| Single-item query | Direct implementation | `IQueryPort` (non-generic) | `IProductDetailQuery` |
+| JOIN search | `DapperQueryBase` / `InMemoryQueryBase` | `IQueryPort<TEntity, TDto>` | `IProductWithStockQuery` |
+| LEFT JOIN search | `DapperQueryBase` / `InMemoryQueryBase` | `IQueryPort<TEntity, TDto>` | `IProductWithOptionalStockQuery` |
+| GROUP BY aggregation | `DapperQueryBase` / `InMemoryQueryBase` | `IQueryPort<TEntity, TDto>` | `ICustomerOrderSummaryQuery` |
+| Complex JOIN | Direct implementation | `IQueryPort` (non-generic) | `ICustomerOrdersQuery` |
 
-**`IQueryPort<TEntity, TDto>`** — `Search` + `SearchByCursor` + `Stream` 제공
-**`IQueryPort`** (비제네릭 마커) — 단건 조회 등 커스텀 시그니처용
+**`IQueryPort<TEntity, TDto>`** -- Provides `Search` + `SearchByCursor` + `Stream`
+**`IQueryPort`** (non-generic marker) -- For custom signatures such as single-item queries
 
-### 3.2 DapperQueryBase 구현 패턴
+### 3.2 DapperQueryBase Implementation Pattern
 
-#### 필수 추상 멤버
+#### Required Abstract Members
 
-서브클래스에서 반드시 구현해야 하는 4개의 추상 멤버입니다. SQL 선언만 담당하고 실행은 베이스 클래스가 처리합니다.
+There are 4 abstract members that subclasses must implement. They handle only SQL declaration, while execution is handled by the base class.
 
 ```csharp
-protected abstract string SelectSql { get; }                              // SELECT 절
-protected abstract string CountSql { get; }                               // COUNT 절
-protected abstract string DefaultOrderBy { get; }                          // 기본 정렬 (예: "Name ASC")
-protected abstract Dictionary<string, string> AllowedSortColumns { get; }  // 허용 정렬 컬럼
+protected abstract string SelectSql { get; }                              // SELECT clause
+protected abstract string CountSql { get; }                               // COUNT clause
+protected abstract string DefaultOrderBy { get; }                          // Default sort (e.g., "Name ASC")
+protected abstract Dictionary<string, string> AllowedSortColumns { get; }  // Allowed sort columns
 ```
 
-#### virtual 멤버
+#### virtual Members
 
 ```csharp
 protected virtual (string Where, DynamicParameters Params)
-    BuildWhereClause(Specification<TEntity> spec);  // DapperSpecTranslator 제공 시 자동 위임
-protected virtual string PaginationClause => "LIMIT @PageSize OFFSET @Skip";     // DB 방언별 오버라이드
-protected virtual string CursorPaginationClause => "LIMIT @PageSize";            // Keyset 페이지네이션
+    BuildWhereClause(Specification<TEntity> spec);  // Auto-delegated when DapperSpecTranslator is provided
+protected virtual string PaginationClause => "LIMIT @PageSize OFFSET @Skip";     // Override per DB dialect
+protected virtual string CursorPaginationClause => "LIMIT @PageSize";            // Keyset pagination
 ```
 
-`BuildWhereClause`는 `DapperSpecTranslator`를 생성자로 제공하면 자동 위임됩니다. Translator가 없으면 서브클래스에서 반드시 오버라이드해야 합니다.
+`BuildWhereClause` is auto-delegated when `DapperSpecTranslator` is provided via the constructor. If no Translator is provided, subclasses must override it.
 
-#### 생성자
+#### Constructor
 
-두 가지 오버로드를 제공합니다:
+Two overloads are provided:
 
 ```csharp
-// 1. 기본 — BuildWhereClause를 직접 오버라이드하는 경우
+// 1. Basic -- When overriding BuildWhereClause directly
 protected DapperQueryBase(IDbConnection connection)
 
-// 2. DapperSpecTranslator 주입 — BuildWhereClause 자동 위임 (권장)
+// 2. DapperSpecTranslator injection -- Auto-delegates BuildWhereClause (recommended)
 protected DapperQueryBase(IDbConnection connection, DapperSpecTranslator<TEntity> translator, string tableAlias = "")
 ```
 
-#### SQL 조립
+#### SQL Assembly
 
-베이스 클래스가 `Search` 메서드에서 `QueryMultipleAsync`를 사용하여 단일 라운드트립으로 카운트와 데이터를 조회합니다:
+The base class uses `QueryMultipleAsync` in the `Search` method for single round-trip count and data retrieval:
 
 ```sql
--- QueryMultipleAsync 단일 라운드트립
+-- QueryMultipleAsync single round-trip
 {CountSql} {where};
 {SelectSql} {where} {orderBy} {PaginationClause}
 ```
 
-#### DapperSpecTranslator — Specification → SQL 변환 레지스트리
+#### DapperSpecTranslator -- Specification to SQL Translation Registry
 
-`DapperSpecTranslator<TEntity>`는 Specification 타입별 SQL WHERE 변환 핸들러를 등록하는 레지스트리 패턴입니다. 공유 Translator 인스턴스를 정의하면 여러 Query Adapter에서 재사용할 수 있습니다.
+`DapperSpecTranslator<TEntity>` is a registry pattern that registers SQL WHERE translation handlers per Specification type. Defining a shared Translator instance allows reuse across multiple Query Adapters.
 
 **Fluent API:**
 
 | Method | Description |
 |--------|------|
-| `WhenAll(handler)` | 모든 Specification에 적용되는 기본 핸들러 (예: Soft Delete 필터) |
-| `When<TSpec>(handler)` | 특정 Specification 타입에 대한 핸들러 |
-| `Translate(spec, tableAlias)` | 등록된 핸들러로 Specification을 SQL WHERE로 변환 |
+| `WhenAll(handler)` | Default handler applied to all Specifications (e.g., Soft Delete filter) |
+| `When<TSpec>(handler)` | Handler for a specific Specification type |
+| `Translate(spec, tableAlias)` | Translates a Specification to SQL WHERE using registered handlers |
 
-**Static 헬퍼:**
+**Static Helpers:**
 
 | Method | Description |
 |--------|------|
-| `Params(params (string, object)[])` | `DynamicParameters` 생성 헬퍼 |
-| `Prefix(string tableAlias)` | 테이블 별칭 접두사 (`"p"` → `"p."`, `""` → `""`) |
+| `Params(params (string, object)[])` | `DynamicParameters` creation helper |
+| `Prefix(string tableAlias)` | Table alias prefix (`"p"` → `"p."`, `""` → `""`) |
 
-**공유 Translator 예시 (ProductSpecTranslator):**
+**Shared Translator Example (ProductSpecTranslator):**
 
 ```csharp
 public static class ProductSpecTranslator
@@ -630,9 +630,9 @@ public static class ProductSpecTranslator
 }
 ```
 
-`WhenAll`은 `Specification.All`(IsAll == true)일 때 사용되고, `When<TSpec>`은 특정 Specification 타입에 매칭됩니다. 매칭되지 않는 타입은 `NotSupportedException`을 발생시킵니다.
+`WhenAll` is used when `Specification.All` (IsAll == true), and `When<TSpec>` matches specific Specification types. Unmatched types throw `NotSupportedException`.
 
-#### 단일 테이블 예시 (ProductQueryDapper)
+#### Single Table Example (ProductQueryDapper)
 
 ```csharp
 [GenerateObservablePort]
@@ -647,13 +647,13 @@ public class ProductQueryDapper
     protected override Dictionary<string, string> AllowedSortColumns { get; } =
         new(StringComparer.OrdinalIgnoreCase) { ["Name"] = "Name", ["Price"] = "Price" };
 
-    // DapperSpecTranslator를 주입하면 BuildWhereClause 오버라이드 불필요
+    // No need to override BuildWhereClause when injecting DapperSpecTranslator
     public ProductQueryDapper(IDbConnection connection)
         : base(connection, ProductSpecTranslator.Instance) { }
 }
 ```
 
-#### JOIN 테이블 예시 (ProductWithStockQueryDapper)
+#### JOIN Table Example (ProductWithStockQueryDapper)
 
 ```csharp
 [GenerateObservablePort]
@@ -662,15 +662,15 @@ public class ProductWithStockQueryDapper
 {
     public string RequestCategory => "QueryAdapter";
 
-    // JOIN 시 테이블 별칭 사용
+    // Use table aliases for JOINs
     protected override string SelectSql =>
         "SELECT p.Id AS ProductId, p.Name, p.Price, i.StockQuantity " +
         "FROM Products p INNER JOIN Inventories i ON i.ProductId = p.Id";
     protected override string CountSql =>
         "SELECT COUNT(*) FROM Products p INNER JOIN Inventories i ON i.ProductId = p.Id";
-    protected override string DefaultOrderBy => "p.Name ASC";  // 별칭 포함
+    protected override string DefaultOrderBy => "p.Name ASC";  // Includes alias
 
-    // AllowedSortColumns에도 테이블 별칭 포함
+    // AllowedSortColumns also includes table aliases
     protected override Dictionary<string, string> AllowedSortColumns { get; } =
         new(StringComparer.OrdinalIgnoreCase)
         {
@@ -679,15 +679,15 @@ public class ProductWithStockQueryDapper
             ["StockQuantity"] = "i.StockQuantity"
         };
 
-    // DapperSpecTranslator + 테이블 별칭 "p"를 생성자에서 전달
+    // Pass DapperSpecTranslator + table alias "p" in constructor
     public ProductWithStockQueryDapper(IDbConnection connection)
         : base(connection, ProductSpecTranslator.Instance, "p") { }
 }
 ```
 
-> **Key point:** JOIN 시 `DefaultOrderBy`, `AllowedSortColumns` 모두에서 테이블 별칭(`p.`, `i.`)을 사용해야 합니다. `DapperSpecTranslator`에 별칭을 전달하면 WHERE 절에도 자동으로 별칭이 적용됩니다.
+> **Key point:** When using JOINs, table aliases (`p.`, `i.`) must be used in both `DefaultOrderBy` and `AllowedSortColumns`. When passing an alias to `DapperSpecTranslator`, the alias is automatically applied to the WHERE clause as well.
 
-#### LEFT JOIN 예시 (ProductWithOptionalStockQueryDapper)
+#### LEFT JOIN Example (ProductWithOptionalStockQueryDapper)
 
 ```csharp
 protected override string SelectSql =>
@@ -695,14 +695,14 @@ protected override string SelectSql =>
     "FROM Products p LEFT JOIN Inventories i ON i.ProductId = p.Id";
 ```
 
-LEFT JOIN의 결과에서 `i.StockQuantity`는 `null`이 될 수 있으므로 DTO에서 `int?`로 선언합니다:
+In LEFT JOIN results, `i.StockQuantity` can be `null`, so declare it as `int?` in the DTO:
 
 ```csharp
 public sealed record ProductWithOptionalStockDto(
     string ProductId, string Name, decimal Price, int? StockQuantity);
 ```
 
-#### GROUP BY 예시 (CustomerOrderSummaryQueryDapper)
+#### GROUP BY Example (CustomerOrderSummaryQueryDapper)
 
 ```csharp
 protected override string SelectSql =>
@@ -713,31 +713,31 @@ protected override string SelectSql =>
     "FROM Customers c LEFT JOIN Orders o ON o.CustomerId = c.Id " +
     "GROUP BY c.Id, c.Name";
 protected override string CountSql =>
-    "SELECT COUNT(*) FROM Customers c";     // GROUP BY 전 원본 테이블 COUNT
+    "SELECT COUNT(*) FROM Customers c";     // COUNT from original table before GROUP BY
 ```
 
-GROUP BY의 `CountSql`은 GROUP BY 없이 원본 테이블 기준으로 작성합니다.
+The `CountSql` for GROUP BY is written based on the original table without GROUP BY.
 
-`AllowedSortColumns`에서 집계 컬럼은 별칭(AS 이름)을 직접 사용합니다:
+In `AllowedSortColumns`, aggregate columns use aliases (AS names) directly:
 
 ```csharp
 protected override Dictionary<string, string> AllowedSortColumns { get; } =
     new(StringComparer.OrdinalIgnoreCase)
     {
-        ["CustomerName"] = "CustomerName",   // 집계 결과의 별칭
+        ["CustomerName"] = "CustomerName",   // Alias from aggregate result
         ["OrderCount"] = "OrderCount",
         ["TotalSpent"] = "TotalSpent",
         ["LastOrderDate"] = "LastOrderDate"
     };
 ```
 
-#### 복합 JOIN 예시 (CustomerOrdersQueryDapper) — QueryBase 미사용
+#### Complex JOIN Example (CustomerOrdersQueryDapper) -- Without QueryBase
 
-4-table JOIN처럼 Row → DTO 그룹핑이 필요한 경우, `DapperQueryBase`를 사용하지 않고 직접 구현합니다:
+For cases requiring Row to DTO grouping like 4-table JOINs, implement directly without using `DapperQueryBase`:
 
 ```csharp
 [GenerateObservablePort]
-public class CustomerOrdersQueryDapper : ICustomerOrdersQuery  // IQueryPort 비제네릭 마커만
+public class CustomerOrdersQueryDapper : ICustomerOrdersQuery  // Only IQueryPort non-generic marker
 {
     private const string CustomerSql =
         "SELECT Id AS CustomerId, Name AS CustomerName FROM Customers WHERE Id = @CustomerId";
@@ -766,12 +766,12 @@ public class CustomerOrdersQueryDapper : ICustomerOrdersQuery  // IQueryPort 비
             if (customer is null)
                 return AdapterError.For<CustomerOrdersQueryDapper>(
                     new NotFound(), id.ToString(),
-                    $"고객 ID '{id}'을(를) 찾을 수 없습니다");
+                    $"Customer ID '{id}' not found");
 
             var rows = (await _connection.QueryAsync<OrderLineRow>(
                 OrderLinesSql, new { CustomerId = id.ToString() })).ToList();
 
-            // Row → DTO 그룹핑
+            // Row → DTO grouping
             var orders = toSeq(rows
                 .GroupBy(r => r.OrderId)
                 .Select(g =>
@@ -788,7 +788,7 @@ public class CustomerOrdersQueryDapper : ICustomerOrdersQuery  // IQueryPort 비
         });
     }
 
-    // Dapper 매핑용 private record
+    // Private record for Dapper mapping
     private sealed record CustomerRow(string CustomerId, string CustomerName);
     private sealed record OrderLineRow(
         string OrderId, decimal TotalAmount, string Status, DateTime CreatedAt,
@@ -796,17 +796,17 @@ public class CustomerOrdersQueryDapper : ICustomerOrdersQuery  // IQueryPort 비
 }
 ```
 
-### 3.3 InMemoryQueryBase 구현 패턴
+### 3.3 InMemoryQueryBase Implementation Pattern
 
-#### 필수 추상 멤버
+#### Required Abstract Members
 
 ```csharp
-protected abstract string DefaultSortField { get; }                          // 기본 정렬 필드명
-protected abstract IEnumerable<TDto> GetProjectedItems(Specification<TEntity> spec);  // 필터 + 프로젝션
-protected abstract Func<TDto, object> SortSelector(string fieldName);        // 정렬 키 셀렉터
+protected abstract string DefaultSortField { get; }                          // Default sort field name
+protected abstract IEnumerable<TDto> GetProjectedItems(Specification<TEntity> spec);  // Filter + projection
+protected abstract Func<TDto, object> SortSelector(string fieldName);        // Sort key selector
 ```
 
-#### 단일 테이블 예시 (ProductQueryInMemory)
+#### Single Table Example (ProductQueryInMemory)
 
 ```csharp
 [GenerateObservablePort]
@@ -820,7 +820,7 @@ public class ProductQueryInMemory
     protected override IEnumerable<ProductSummaryDto> GetProjectedItems(Specification<Product> spec)
     {
         return ProductRepositoryInMemory.Products.Values
-            .Where(p => p.DeletedAt.IsNone && spec.IsSatisfiedBy(p))  // Soft Delete + Spec 필터
+            .Where(p => p.DeletedAt.IsNone && spec.IsSatisfiedBy(p))  // Soft Delete + Spec filter
             .Select(p => new ProductSummaryDto(p.Id.ToString(), p.Name, p.Price));
     }
 
@@ -828,12 +828,12 @@ public class ProductQueryInMemory
     {
         "Name" => p => p.Name,
         "Price" => p => p.Price,
-        _ => p => p.Name                                // 미지원 필드는 기본값으로 fallback
+        _ => p => p.Name                                // Unsupported fields fallback to default
     };
 }
 ```
 
-#### JOIN 구현 — 다른 Repository의 static Store 접근
+#### JOIN Implementation -- Accessing Other Repository's static Store
 
 ```csharp
 [GenerateObservablePort]
@@ -850,7 +850,7 @@ public class ProductWithStockQueryInMemory
             .Where(p => p.DeletedAt.IsNone && spec.IsSatisfiedBy(p))
             .Select(p =>
             {
-                // 다른 Repository의 static Store에 직접 접근 (INNER JOIN)
+                // Direct access to another Repository's static Store (INNER JOIN)
                 var inventory = InventoryRepositoryInMemory.Inventories.Values
                     .FirstOrDefault(i => i.ProductId.Equals(p.Id));
                 var stockQuantity = inventory is not null ? (int)inventory.StockQuantity : 0;
@@ -868,9 +868,9 @@ public class ProductWithStockQueryInMemory
 }
 ```
 
-#### nullable 정렬 처리
+#### nullable Sort Handling
 
-LEFT JOIN 결과의 nullable 값을 정렬할 때 기본값을 제공합니다:
+Provide default values when sorting nullable values from LEFT JOIN results:
 
 ```csharp
 protected override Func<ProductWithOptionalStockDto, object> SortSelector(string fieldName) => fieldName switch
@@ -879,7 +879,7 @@ protected override Func<ProductWithOptionalStockDto, object> SortSelector(string
     _ => p => p.Name
 };
 
-// DateTime? 예시
+// DateTime? example
 protected override Func<CustomerOrderSummaryDto, object> SortSelector(string fieldName) => fieldName switch
 {
     "LastOrderDate" => c => c.LastOrderDate ?? DateTime.MinValue,  // DateTime? → MinValue
@@ -887,11 +887,11 @@ protected override Func<CustomerOrderSummaryDto, object> SortSelector(string fie
 };
 ```
 
-> `SortSelector`의 반환 타입이 `object`이므로, `null` 반환 시 NullReferenceException이 발생합니다. 항상 기본값을 제공하세요.
+> Since the return type of `SortSelector` is `object`, returning `null` causes a NullReferenceException. Always provide a default value.
 
-### 3.4 단건 조회 Query 패턴
+### 3.4 Single-Item Query Pattern
 
-`IQueryPort`(비제네릭 마커)만 상속하고, `GetById` 메서드를 직접 정의합니다:
+Only inherit `IQueryPort` (non-generic marker) and define the `GetById` method directly:
 
 ```csharp
 // Interface
@@ -900,11 +900,11 @@ public interface IProductDetailQuery : IQueryPort
     FinT<IO, ProductDetailDto> GetById(ProductId id);
 }
 
-// Dapper 구현은 직접 SQL
-// InMemory 구현은 static Store에서 TryGetValue
+// Dapper implementation uses direct SQL
+// InMemory implementation uses TryGetValue from static Store
 ```
 
-InMemory 단건 조회 예시:
+InMemory single-item query example:
 
 ```csharp
 [GenerateObservablePort]
@@ -926,15 +926,15 @@ public class ProductDetailQueryInMemory : IProductDetailQuery
 
             return AdapterError.For<ProductDetailQueryInMemory>(
                 new NotFound(), id.ToString(),
-                $"상품 ID '{id}'을(를) 찾을 수 없습니다");
+                $"Product ID '{id}' not found");
         });
     }
 }
 ```
 
-### 3.5 Cursor 페이지네이션
+### 3.5 Cursor Pagination
 
-Offset 페이지네이션(`Search`)의 대안으로, Keyset 기반 Cursor 페이지네이션(`SearchByCursor`)을 지원합니다.
+As an alternative to Offset pagination (`Search`), Keyset-based Cursor pagination (`SearchByCursor`) is supported.
 
 #### API
 
@@ -945,146 +945,146 @@ FinT<IO, CursorPagedResult<TDto>> SearchByCursor(
     SortExpression sort);
 ```
 
-#### 요청/응답 타입
+#### Request/Response Types
 
-| Type | 속성 | Description |
+| Type | Property | Description |
 |------|------|------|
-| `CursorPageRequest` | `After` | 이 커서 이후의 데이터 조회 (forward) |
-| | `Before` | 이 커서 이전의 데이터 조회 (backward) |
-| | `PageSize` | 페이지 크기 (기본 20, 최대 10,000) |
-| `CursorPagedResult<T>` | `Items` | 조회 결과 (`IReadOnlyList<T>`) |
-| | `NextCursor` | 다음 페이지 커서 |
-| | `PrevCursor` | 이전 페이지 커서 |
-| | `HasMore` | 다음 데이터 존재 여부 |
+| `CursorPageRequest` | `After` | Retrieve data after this cursor (forward) |
+| | `Before` | Retrieve data before this cursor (backward) |
+| | `PageSize` | Page size (default 20, max 10,000) |
+| `CursorPagedResult<T>` | `Items` | Query results (`IReadOnlyList<T>`) |
+| | `NextCursor` | Next page cursor |
+| | `PrevCursor` | Previous page cursor |
+| | `HasMore` | Whether more data exists |
 
-#### Dapper 구현 원리
+#### Dapper Implementation Principle
 
 ```sql
--- Cursor 페이지네이션 SQL
+-- Cursor pagination SQL
 {SelectSql} {where} AND {sortColumn} > @CursorValue ORDER BY {sortColumn} {CursorPaginationClause}
 ```
 
-`PageSize + 1`건을 fetch하여 `HasMore`를 판단합니다. 추가 COUNT 쿼리가 불필요하므로 대용량 데이터에서 Offset 방식보다 효율적입니다.
+Fetches `PageSize + 1` items to determine `HasMore`. Since no additional COUNT query is needed, this is more efficient than the Offset approach for large datasets.
 
-#### InMemory 구현 원리
+#### InMemory Implementation Principle
 
-`SortSelector`와 `FindLastIndex`/`FindIndex`를 사용하여 커서 위치를 찾고 슬라이싱합니다.
+Uses `SortSelector` and `FindLastIndex`/`FindIndex` to locate the cursor position and slice.
 
-#### Offset vs Cursor 비교
+#### Offset vs Cursor Comparison
 
 | Item | Offset (`Search`) | Cursor (`SearchByCursor`) |
 |------|-------------------|---------------------------|
-| 총 건수 | O (COUNT 쿼리) | X (불필요) |
-| 페이지 점프 | O (임의 페이지 이동) | X (순차 탐색만) |
-| 대용량 성능 | 뒤 페이지일수록 느림 | 일정한 성능 |
-| 실시간 데이터 | 삽입/삭제 시 중복/누락 | 커서 기반으로 안정적 |
-| UI 적합성 | 페이지 번호 UI | 무한 스크롤, "더 보기" UI |
+| Total count | O (COUNT query) | X (not needed) |
+| Page jump | O (arbitrary page navigation) | X (sequential traversal only) |
+| Large dataset performance | Slower for later pages | Consistent performance |
+| Real-time data | Duplicates/omissions on insert/delete | Stable with cursor-based approach |
+| UI suitability | Page number UI | Infinite scroll, "Load more" UI |
 
-### 3.6 Compiled Query 패턴 (EF Core)
+### 3.6 Compiled Query Pattern (EF Core)
 
-EF Core의 `EF.CompileAsyncQuery`를 사용하여 반복 호출 시 ~10-15% 성능 향상을 얻을 수 있습니다.
+Using EF Core's `EF.CompileAsyncQuery`, you can achieve ~10-15% performance improvement for repeated calls.
 
 ```csharp
-// ProductRepositoryEfCore에서 opt-in 선언
+// Opt-in declaration in ProductRepositoryEfCore
 private static readonly Func<LayeredArchDbContext, string, CancellationToken, Task<ProductModel?>>
     GetByIdIgnoringFiltersCompiled = EF.CompileAsyncQuery(
         (LayeredArchDbContext db, string id, CancellationToken _) =>
             db.Products.IgnoreQueryFilters().FirstOrDefault(p => p.Id == id));
 ```
 
-**적용 원칙:**
-- 베이스 클래스가 아닌 구체 서브클래스에서 opt-in으로 선언
-- 동일 쿼리를 반복 호출하는 경우에만 적용 (예: `GetByIdIncludingDeleted`)
-- Expression Tree 파싱 비용을 한 번만 지불하므로 반복 호출 시 유리
+**Application Principles:**
+- Declare as opt-in in concrete subclasses, not base classes
+- Apply only when the same query is called repeatedly (e.g., `GetByIdIncludingDeleted`)
+- Expression Tree parsing cost is paid only once, making it advantageous for repeated calls
 
 ---
 
-## 4. 잘못된 사례 (Anti-Patterns)
+## 4. Anti-Patterns
 
 ### 4.1 Repository Anti-Patterns
 
-#### 1. ByIdPredicate 중복 구현
+#### 1. Duplicate ByIdPredicate Implementation
 
 ```csharp
-// ❌ 잘못된 사례: 서브클래스마다 반복 구현
+// ❌ Bad: Repeated implementation in each subclass
 public class ProductRepositoryEfCore : EfCoreRepositoryBase<Product, ProductId, ProductModel>
 {
     protected override Expression<Func<ProductModel, bool>> ByIdPredicate(ProductId id)
     {
         var s = id.ToString();
-        return m => m.Id == s;  // 베이스에 이미 IHasStringId 기반 구현이 있음
+        return m => m.Id == s;  // Base already has IHasStringId-based implementation
     }
 }
 ```
 
-`EfCoreRepositoryBase`가 `IHasStringId` 기반 기본 구현을 제공합니다. 모든 Model이 `IHasStringId`를 구현하면 오버라이드가 불필요합니다.
+`EfCoreRepositoryBase` provides a default implementation based on `IHasStringId`. If all Models implement `IHasStringId`, overriding is unnecessary.
 
-#### 2. ReadQuery() 미사용
+#### 2. Not Using ReadQuery()
 
 ```csharp
-// ❌ 잘못된 사례: DbSet에 직접 쿼리 → Include 누락 → N+1
+// ❌ Bad: Querying DbSet directly → Missing Include → N+1
 var model = await DbSet.AsNoTracking()
     .FirstOrDefaultAsync(m => m.Id == id.ToString());
 
-// ✅ 올바른 사례: ReadQuery() 사용 → Include 자동 적용
+// ✅ Good: Using ReadQuery() → Include automatically applied
 var model = await ReadQuery()
     .FirstOrDefaultAsync(ByIdPredicate(id));
 ```
 
-#### 3. BuildQuery에서 예외 throw
+#### 3. Throwing Exceptions in BuildQuery
 
 ```csharp
-// ❌ 잘못된 사례: 예외 사용
+// ❌ Bad: Using exceptions
 protected Fin<IQueryable<TModel>> BuildQuery(Specification<TAggregate> spec)
 {
     if (PropertyMap is null)
-        throw new InvalidOperationException("PropertyMap is required");  // 예외!
+        throw new InvalidOperationException("PropertyMap is required");  // Exception!
 }
 
-// ✅ 올바른 사례: Fin<T>으로 에러 반환
+// ✅ Good: Return error as Fin<T>
 return NotConfiguredError("PropertyMap is required for BuildQuery/ExistsBySpec.");
 ```
 
-#### 4. 벌크 연산에서 도메인 이벤트 기대
+#### 4. Expecting Domain Events from Bulk Operations
 
-`ExecuteDeleteAsync` / `ExecuteUpdateAsync`는 Change Tracker를 우회하므로 도메인 이벤트가 발행되지 않습니다.
+`ExecuteDeleteAsync` / `ExecuteUpdateAsync` bypass the Change Tracker, so domain events are not published.
 
 ```csharp
-// ExecuteUpdateAsync — SQL 직접 실행, 도메인 이벤트 없음 (의도된 동작)
+// ExecuteUpdateAsync -- Direct SQL execution, no domain events (intended behavior)
 int affected = await DbSet.Where(ByIdsPredicate(ids))
     .ExecuteUpdateAsync(s => s
         .SetProperty(p => p.DeletedAt, DateTime.UtcNow)
         .SetProperty(p => p.DeletedBy, "system"));
 
-// 이벤트가 필요하면 단건 Delete()를 사용
+// Use single-item Delete() if events are needed
 ```
 
-#### 5. PropertyMap 없이 ExistsBySpec 호출
+#### 5. Calling ExistsBySpec Without PropertyMap
 
 ```csharp
-// ❌ PropertyMap을 생성자에 전달하지 않고 ExistsBySpec 호출 → 런타임 에러
+// ❌ Calling ExistsBySpec without passing PropertyMap to constructor → runtime error
 public class TagRepositoryEfCore : EfCoreRepositoryBase<Tag, TagId, TagModel>
 {
-    public TagRepositoryEfCore(...) : base(eventCollector) { }  // propertyMap 없음
+    public TagRepositoryEfCore(...) : base(eventCollector) { }  // no propertyMap
 
     public FinT<IO, bool> Exists(Specification<Tag> spec) => ExistsBySpec(spec);
-    // → NotConfiguredError 반환
+    // → Returns NotConfiguredError
 }
 ```
 
-#### 6. IN 절 파라미터 제한 무시
+#### 6. Ignoring IN Clause Parameter Limits
 
-베이스 클래스는 `IdBatchSize`(기본 500)로 자동 배치 처리합니다.
-직접 `ByIdsPredicate`를 사용할 때는 이 제한을 직접 처리해야 합니다.
+The base class automatically handles batch processing with `IdBatchSize` (default 500).
+When using `ByIdsPredicate` directly, you must handle this limit yourself.
 
-#### 7. Update에서 DbSet.Update 전체 Modified 설정
+#### 7. Using DbSet.Update Setting All Columns as Modified
 
 ```csharp
-// ❌ DbSet.Update — 모든 컬럼을 Modified로 설정하여 불필요한 UPDATE 발생
+// ❌ DbSet.Update -- Sets all columns as Modified, causing unnecessary UPDATEs
 DbSet.Update(ToModel(aggregate));
 EventCollector.Track(aggregate);
 
-// ✅ TrackedMerge — FindAsync + SetValues로 변경된 컬럼만 UPDATE
+// ✅ TrackedMerge -- FindAsync + SetValues to UPDATE only changed columns
 var model = ToModel(aggregate);
 var tracked = await DbSet.FindAsync(model.Id);
 if (tracked is null) return NotFoundError(aggregate.Id);
@@ -1092,63 +1092,63 @@ DbContext.Entry(tracked).CurrentValues.SetValues(model);
 EventCollector.Track(aggregate);
 ```
 
-TrackedMerge는 `FindAsync`로 기존 엔티티를 추적 상태로 로드한 후 `SetValues`로 변경된 값만 덮어씁니다. EF Core Change Tracker가 자동으로 실제 변경된 컬럼만 UPDATE SQL에 포함하여 불필요한 DB I/O를 줄입니다.
+TrackedMerge loads the existing entity in tracked state via `FindAsync`, then overwrites only changed values via `SetValues`. EF Core Change Tracker automatically includes only actually changed columns in the UPDATE SQL, reducing unnecessary DB I/O.
 
 ### 4.2 Query Adapter Anti-Patterns
 
-#### 1. AllowedSortColumns에 테이블 별칭 누락
+#### 1. Missing Table Alias in AllowedSortColumns
 
 ```csharp
-// ❌ JOIN 시 별칭 없이 컬럼명만 사용 → "ambiguous column name" 오류
+// ❌ Using column name without alias in JOINs → "ambiguous column name" error
 protected override Dictionary<string, string> AllowedSortColumns { get; } =
     new() { ["Name"] = "Name" };  // Products.Name? Customers.Name?
 
-// ✅ 테이블 별칭 포함
+// ✅ Include table alias
 protected override Dictionary<string, string> AllowedSortColumns { get; } =
     new() { ["Name"] = "p.Name" };
 ```
 
-#### 2. SortSelector에서 nullable 미처리
+#### 2. Not Handling nullable in SortSelector
 
 ```csharp
-// ❌ null 반환 → NullReferenceException (object boxing 시)
-"StockQuantity" => p => p.StockQuantity  // int? → object 변환 시 null!
+// ❌ null return → NullReferenceException (during object boxing)
+"StockQuantity" => p => p.StockQuantity  // int? → null during object boxing!
 
-// ✅ 기본값 제공
+// ✅ Provide default value
 "StockQuantity" => p => p.StockQuantity ?? -1
 ```
 
-#### 3. BuildWhereClause에서 parameterized query 미사용
+#### 3. Not Using Parameterized Query in BuildWhereClause
 
 ```csharp
-// ❌ SQL Injection 위험
+// ❌ SQL Injection risk
 ($"WHERE Name = '{spec.Name}'", new DynamicParameters())
 
-// ✅ DapperSpecTranslator의 Params() 헬퍼 사용
+// ✅ Use DapperSpecTranslator's Params() helper
 var @params = DapperSpecTranslator<Product>.Params(("Name", (string)spec.Name));
 return ("WHERE Name = @Name", @params);
 ```
 
-> **권장**: `DapperSpecTranslator`를 사용하면 `Params()` 헬퍼로 안전한 파라미터 바인딩이 보장됩니다.
+> **Recommended**: Using `DapperSpecTranslator` ensures safe parameter binding via the `Params()` helper.
 
-#### 4. InMemory GetProjectedItems에서 Specification 무시
+#### 4. Ignoring Specification in InMemory GetProjectedItems
 
 ```csharp
-// ❌ Specification을 무시하고 항상 전체 데이터 반환
+// ❌ Ignoring Specification and always returning all data
 protected override IEnumerable<ProductSummaryDto> GetProjectedItems(Specification<Product> spec)
 {
-    return ProductRepositoryInMemory.Products.Values   // spec 미적용!
+    return ProductRepositoryInMemory.Products.Values   // spec not applied!
         .Select(p => new ProductSummaryDto(...));
 }
 
-// ✅ spec.IsSatisfiedBy 적용
+// ✅ Apply spec.IsSatisfiedBy
     .Where(p => p.DeletedAt.IsNone && spec.IsSatisfiedBy(p))
 ```
 
-#### 5. InMemory JOIN에서 O(N*M) 선형 탐색
+#### 5. O(N*M) Linear Scan in InMemory JOIN
 
 ```csharp
-// ❌ 매 Product마다 Inventories 전체 순회 → O(N*M)
+// ❌ Full Inventories scan for each Product → O(N*M)
 .Select(p =>
 {
     var inventory = InventoryRepositoryInMemory.Inventories.Values
@@ -1156,7 +1156,7 @@ protected override IEnumerable<ProductSummaryDto> GetProjectedItems(Specificatio
     ...
 })
 
-// ✅ Dictionary 룩업으로 O(N) — 조회 전에 미리 빌드
+// ✅ O(N) with Dictionary lookup -- Build before querying
 var inventoryByProductId = InventoryRepositoryInMemory.Inventories.Values
     .ToDictionary(i => i.ProductId);
 
@@ -1167,37 +1167,37 @@ var inventoryByProductId = InventoryRepositoryInMemory.Inventories.Values
 })
 ```
 
-#### 6. Repository와 Query에서 Soft Delete 필터 불일치
+#### 6. Soft Delete Filter Mismatch Between Repository and Query
 
-Repository의 EF Core Global Query Filter와 Query Adapter의 WHERE 조건이 일치해야 합니다:
-- **EfCore Repository** — `HasQueryFilter(p => p.DeletedAt == null)` (자동)
-- **Dapper Query** — `WHERE p.DeletedAt IS NULL` (수동)
-- **InMemory Query** — `.Where(p => p.DeletedAt.IsNone)` (수동)
+The EF Core Global Query Filter in Repository and the WHERE condition in Query Adapter must match:
+- **EfCore Repository** -- `HasQueryFilter(p => p.DeletedAt == null)` (automatic)
+- **Dapper Query** -- `WHERE p.DeletedAt IS NULL` (manual)
+- **InMemory Query** -- `.Where(p => p.DeletedAt.IsNone)` (manual)
 
 ---
 
-## 5. 고급 패턴
+## 5. Advanced Patterns
 
-### 5.1 Soft Delete 오버라이드
+### 5.1 Soft Delete Override
 
-#### EfCore — ReadQueryIgnoringFilters + Attach + IsModified 패턴
+#### EfCore -- ReadQueryIgnoringFilters + Attach + IsModified Pattern
 
 ```csharp
 public override FinT<IO, int> Delete(ProductId id)
 {
     return IO.liftAsync(async () =>
     {
-        // 1. Global Filter 무시하여 이미 삭제된 것도 조회
+        // 1. Ignore Global Filter to also retrieve already deleted items
         var model = await ReadQueryIgnoringFilters()
             .FirstOrDefaultAsync(ByIdPredicate(id));
 
         if (model is null) return NotFoundError(id);
 
-        // 2. 도메인 상태 전이 (이벤트 발행)
+        // 2. Domain state transition (event publishing)
         var product = ToDomain(model);
         product.Delete("system");
 
-        // 3. Attach + IsModified로 변경된 컬럼만 UPDATE
+        // 3. Attach + IsModified to UPDATE only changed columns
         var updatedModel = ToModel(product);
         DbSet.Attach(updatedModel);
         _dbContext.Entry(updatedModel).Property(p => p.DeletedAt).IsModified = true;
@@ -1209,7 +1209,7 @@ public override FinT<IO, int> Delete(ProductId id)
 }
 ```
 
-벌크 Soft Delete는 성능을 위해 `ExecuteUpdateAsync` 사용 (이벤트 미발행):
+Bulk Soft Delete uses `ExecuteUpdateAsync` for performance (events not published):
 
 ```csharp
 public override FinT<IO, int> DeleteRange(IReadOnlyList<ProductId> ids)
@@ -1227,7 +1227,7 @@ public override FinT<IO, int> DeleteRange(IReadOnlyList<ProductId> ids)
 }
 ```
 
-#### InMemory — GetById/GetByIds에서 DeletedAt.IsNone 필터
+#### InMemory -- DeletedAt.IsNone Filter in GetById/GetByIds
 
 ```csharp
 public override FinT<IO, Product> GetById(ProductId id)
@@ -1245,16 +1245,16 @@ public override FinT<IO, int> Delete(ProductId id)
     return IO.lift(() =>
     {
         if (!Products.TryGetValue(id, out var product)) return Fin.Succ(0);
-        product.Delete("system");       // 도메인 상태 전이
-        EventCollector.Track(product);  // 이벤트 수집
+        product.Delete("system");       // Domain state transition
+        EventCollector.Track(product);  // Event collection
         return Fin.Succ(1);
     });
 }
 ```
 
-### 5.2 Specification → SQL 변환
+### 5.2 Specification to SQL Translation
 
-#### PropertyMap 선언
+#### PropertyMap Declaration
 
 ```csharp
 new PropertyMap<Product, ProductModel>()
@@ -1266,21 +1266,21 @@ new PropertyMap<Product, ProductModel>()
 #### BuildQuery + ExistsBySpec
 
 ```csharp
-// ExistsBySpec — 한 줄로 Specification 기반 존재 확인
+// ExistsBySpec -- Specification-based existence check in one line
 public virtual FinT<IO, bool> Exists(Specification<Product> spec)
     => ExistsBySpec(spec);
 
-// BuildQuery — Specification 기반 쿼리 빌드 (커스텀 사용)
+// BuildQuery -- Specification-based query build (custom usage)
 var query = BuildQuery(spec);
-// query는 Fin<IQueryable<TModel>>
+// query is Fin<IQueryable<TModel>>
 ```
 
-#### Dapper의 DapperSpecTranslator 기반 변환
+#### Dapper's DapperSpecTranslator-Based Translation
 
-`DapperSpecTranslator`를 사용하면 Specification → SQL 변환을 공유 가능한 레지스트리로 관리합니다. 여러 Query Adapter가 동일한 Translator를 재사용할 수 있습니다.
+Using `DapperSpecTranslator` manages Specification to SQL translation as a shareable registry. Multiple Query Adapters can reuse the same Translator.
 
 ```csharp
-// 공유 Translator 정의 (한 번만 선언)
+// Shared Translator definition (declared once)
 public static class ProductSpecTranslator
 {
     public static readonly DapperSpecTranslator<Product> Instance =
@@ -1301,20 +1301,20 @@ public static class ProductSpecTranslator
             });
 }
 
-// Query Adapter에서 Translator 주입 — BuildWhereClause 오버라이드 불필요
+// Inject Translator in Query Adapter -- No need to override BuildWhereClause
 public ProductQueryDapper(IDbConnection connection)
     : base(connection, ProductSpecTranslator.Instance) { }
 
-// JOIN Query에서 테이블 별칭과 함께 사용
+// Use with table alias in JOIN Query
 public ProductWithStockQueryDapper(IDbConnection connection)
     : base(connection, ProductSpecTranslator.Instance, "p") { }
 ```
 
-> **기존 Pattern Matching 방식도** `BuildWhereClause`를 직접 오버라이드하여 여전히 사용 가능합니다. Translator가 없는 생성자(`base(connection)`)를 사용하면 서브클래스에서 오버라이드가 필수입니다.
+> **The existing Pattern Matching approach** can still be used by directly overriding `BuildWhereClause`. When using the constructor without a Translator (`base(connection)`), overriding in the subclass is required.
 
-### 5.3 복합 JOIN Query (QueryBase 미사용)
+### 5.3 Complex JOIN Query (Without QueryBase)
 
-#### Dapper — Row → DTO 그룹핑 패턴
+#### Dapper -- Row to DTO Grouping Pattern
 
 ```csharp
 var rows = await _connection.QueryAsync<OrderLineRow>(sql, param);
@@ -1328,7 +1328,7 @@ var orders = rows.GroupBy(r => r.OrderId)
     });
 ```
 
-#### InMemory — 다중 Repository static Store 접근
+#### InMemory -- Accessing Multiple Repository static Stores
 
 ```csharp
 public virtual FinT<IO, CustomerOrdersDto> GetByCustomerId(CustomerId id)
@@ -1359,9 +1359,9 @@ public virtual FinT<IO, CustomerOrdersDto> GetByCustomerId(CustomerId id)
 
 ---
 
-## 6. DI Registration 패턴
+## 6. DI Registration Pattern
 
-### Provider 기반 분기
+### Provider-Based Branching
 
 ```csharp
 public static IServiceCollection RegisterAdapterPersistence(
@@ -1392,10 +1392,10 @@ public static IServiceCollection RegisterAdapterPersistence(
 }
 ```
 
-### Repository 등록 — RegisterScopedObservablePort
+### Repository Registration -- RegisterScopedObservablePort
 
-`[GenerateObservablePort]` Source Generator가 `XxxObservable` 래퍼를 생성합니다.
-등록 시 이 Observable 버전을 사용합니다:
+The `[GenerateObservablePort]` Source Generator creates `XxxObservable` wrappers.
+Use this Observable version when registering:
 
 ```csharp
 // InMemory
@@ -1408,7 +1408,7 @@ services.RegisterScopedObservablePort<IProductRepository, ProductRepositoryEfCor
 services.RegisterScopedObservablePort<IOrderRepository, OrderRepositoryEfCoreObservable>();
 ```
 
-### UnitOfWork 등록
+### UnitOfWork Registration
 
 ```csharp
 // InMemory
@@ -1418,15 +1418,15 @@ services.RegisterScopedObservablePort<IUnitOfWork, UnitOfWorkInMemoryObservable>
 services.RegisterScopedObservablePort<IUnitOfWork, UnitOfWorkEfCoreObservable>();
 ```
 
-### Query Adapter 등록
+### Query Adapter Registration
 
 ```csharp
-// InMemory — Query와 DetailQuery 모두 등록
+// InMemory -- Register both Query and DetailQuery
 services.RegisterScopedObservablePort<IProductQuery, ProductQueryInMemoryObservable>();
 services.RegisterScopedObservablePort<IProductDetailQuery, ProductDetailQueryInMemoryObservable>();
 services.RegisterScopedObservablePort<IProductWithStockQuery, ProductWithStockQueryInMemoryObservable>();
 
-// Dapper — IDbConnection도 등록 필요
+// Dapper -- IDbConnection registration also required
 services.AddScoped<IDbConnection>(_ =>
 {
     var conn = new SqliteConnection(connectionString);
@@ -1437,33 +1437,33 @@ services.RegisterScopedObservablePort<IProductQuery, ProductQueryDapperObservabl
 services.RegisterScopedObservablePort<IProductWithStockQuery, ProductWithStockQueryDapperObservable>();
 ```
 
-### InMemory Repository의 추가 등록
+### Additional Registration for InMemory Repository
 
-InMemory Query가 다른 Repository의 static Store에 접근할 때, 해당 Repository의 concrete 타입도 등록이 필요합니다:
+When InMemory Query accesses another Repository's static Store, the concrete type of that Repository also needs to be registered:
 
 ```csharp
-// ProductWithStockQueryInMemory가 InventoryRepositoryInMemory.Inventories에 접근
+// ProductWithStockQueryInMemory accesses InventoryRepositoryInMemory.Inventories
 services.AddScoped<InventoryRepositoryInMemory>();
 
-// ProductCatalogInMemory가 ProductRepositoryInMemory에 의존
+// ProductCatalogInMemory depends on ProductRepositoryInMemory
 services.AddScoped<ProductRepositoryInMemory>();
 ```
 
 ---
 
-## 7. 트러블슈팅
+## 7. Troubleshooting
 
-### 벌크 DeleteRange 후 Change Tracker 상태가 불일치할 때
+### Change Tracker State Mismatch After Bulk DeleteRange
 
-**Cause:** `ExecuteDeleteAsync`/`ExecuteUpdateAsync`는 Change Tracker를 우회하므로, 이미 추적 중인 엔티티의 상태가 DB와 달라질 수 있습니다.
+**Cause:** `ExecuteDeleteAsync`/`ExecuteUpdateAsync` bypass the Change Tracker, so the state of already-tracked entities may differ from the DB.
 
-**Resolution:** `ReadQuery()`는 `AsNoTracking()`을 사용하므로 읽기 시에는 문제가 없습니다. 동일 트랜잭션 내에서 벌크 삭제 후 해당 엔티티를 Change Tracker로 조작해야 한다면, `DbContext.ChangeTracker.Clear()`를 호출하세요.
+**Resolution:** `ReadQuery()` uses `AsNoTracking()`, so there is no issue during reads. If you need to manipulate the entity via Change Tracker after a bulk delete within the same transaction, call `DbContext.ChangeTracker.Clear()`.
 
-### Product 벌크 DeleteRange에서 도메인 이벤트가 발행되지 않을 때
+### Domain Events Not Published During Product Bulk DeleteRange
 
-**Cause:** 의도된 동작입니다. `ExecuteUpdateAsync`는 도메인 객체를 생성하지 않으므로 이벤트가 발행되지 않습니다.
+**Cause:** This is intended behavior. `ExecuteUpdateAsync` does not create domain objects, so events are not published.
 
-**Resolution:** 이벤트가 반드시 필요하다면 단건 `Delete()`를 개별 호출하세요. 성능이 중요하다면 벌크 `DeleteRange()`를 사용하고, 필요한 후처리를 별도로 수행하세요.
+**Resolution:** If events are absolutely required, call single-item `Delete()` individually. If performance is critical, use bulk `DeleteRange()` and perform necessary post-processing separately.
 
 ---
 
@@ -1471,48 +1471,48 @@ services.AddScoped<ProductRepositoryInMemory>();
 
 ### Repository
 
-**Q: ByIdPredicate를 오버라이드해야 하나요?**
-A: 아니요. 모든 Model이 `IHasStringId`를 구현하면 베이스의 기본 구현이 적용됩니다. 오버라이드가 필요한 경우는 복합 키나 Id 외 다른 컬럼으로 조회할 때입니다.
+**Q: Do I need to override ByIdPredicate?**
+A: No. If all Models implement `IHasStringId`, the base class's default implementation is applied. Override is only needed when querying by composite keys or columns other than Id.
 
-**Q: applyIncludes는 언제 설정하나요?**
-A: Navigation Property가 있는 Aggregate만 설정합니다. `ReadQuery()`에 자동 적용되어 모든 읽기 메서드에서 N+1을 방지합니다. Navigation Property가 없으면 생략합니다.
+**Q: When should applyIncludes be configured?**
+A: Only configure it for Aggregates with Navigation Properties. It is automatically applied to `ReadQuery()` to prevent N+1 in all read methods. Omit it if there are no Navigation Properties.
 
-**Q: PropertyMap은 언제 필요한가요?**
-A: `Exists(Specification)` 또는 `BuildQuery`를 사용하는 Repository에서만 필요합니다. Tag처럼 단순 CRUD만 하는 Repository는 불필요합니다.
+**Q: When is PropertyMap needed?**
+A: Only for Repositories that use `Exists(Specification)` or `BuildQuery`. Repositories that only do simple CRUD like Tag do not need it.
 
-**Q: InMemoryRepository의 ConcurrentDictionary는 왜 static이어야 하나요?**
-A: DI가 Scoped로 등록되어 요청마다 새 인스턴스가 생성됩니다. 데이터가 요청 간에 공유되려면 static이어야 합니다. 또한 InMemory Query Adapter가 static Store에 직접 접근합니다.
+**Q: Why must InMemoryRepository's ConcurrentDictionary be static?**
+A: DI registers as Scoped, so a new instance is created per request. The data must be static to be shared across requests. Additionally, InMemory Query Adapters directly access the static Store.
 
-**Q: 왜 CRUD 8개 연산이 모두 대칭인가요?**
-A: Create/Update는 호출자가 이미 도메인 객체를 가지고 있으므로, 단건이든 벌크든 `ToModel` → `DbSet.Add/Update`로 동일한 경로를 탑니다. Delete는 둘 다 ID를 받아 `ExecuteDeleteAsync`로 SQL DELETE를 직접 실행합니다. Read는 둘 다 `ReadQuery()`를 사용하고 조건만 단수/복수로 다릅니다. 자세한 비교표는 섹션 2.7을 참조하세요.
+**Q: Why are all 8 CRUD operations symmetric?**
+A: For Create/Update, the caller already has domain objects, so whether single or bulk, the same path of `ToModel` -> `DbSet.Add/Update` is taken. Delete receives IDs and directly executes SQL DELETE via `ExecuteDeleteAsync` for both. Read uses `ReadQuery()` for both, differing only in singular/plural conditions. See section 2.7 for the detailed comparison table.
 
-**Q: 벌크 DeleteRange에 단일 ID를 넘기면 어떻게 되나요?**
-A: 정상 동작합니다. `DeleteRange(new[] { id })`는 단건 `Delete(id)`와 동일하게 1회 DB 왕복으로 삭제를 수행합니다. 둘 다 `ExecuteDeleteAsync`를 사용하므로 성능 차이가 없습니다.
+**Q: What happens if a single ID is passed to bulk DeleteRange?**
+A: It works normally. `DeleteRange(new[] { id })` performs the deletion with a single DB round-trip, identical to single-item `Delete(id)`. Both use `ExecuteDeleteAsync`, so there is no performance difference.
 
-**Q: Product 외에 Soft Delete가 필요한 엔티티가 추가되면 어떻게 하나요?**
-A: `ProductRepositoryEfCore`의 패턴을 따르세요: (1) `Delete()`를 오버라이드하여 `ReadQueryIgnoringFilters` → `ToDomain` → 상태 전이 → `Attach + IsModified` 경로를 구현, (2) `DeleteRange()`를 오버라이드하여 `ExecuteUpdateAsync`로 `DeletedAt`/`DeletedBy`를 직접 갱신, (3) 글로벌 쿼리 필터를 `DbContext.OnModelCreating`에서 설정. 코드 예시는 섹션 5.1을 참조하세요.
+**Q: What if a new entity requiring Soft Delete is added besides Product?**
+A: Follow the `ProductRepositoryEfCore` pattern: (1) Override `Delete()` to implement the `ReadQueryIgnoringFilters` -> `ToDomain` -> state transition -> `Attach + IsModified` path, (2) Override `DeleteRange()` to directly update `DeletedAt`/`DeletedBy` via `ExecuteUpdateAsync`, (3) Configure global query filter in `DbContext.OnModelCreating`. See section 5.1 for code examples.
 
 ### Query Adapter
 
-**Q: 검색 Query와 단건 조회 Query의 차이는?**
-A: 검색 Query는 `IQueryPort<TEntity, TDto>`를 구현하고 `DapperQueryBase`/`InMemoryQueryBase`를 상속합니다. 단건 조회는 `IQueryPort`(비제네릭)만 구현하고 `GetById` 메서드를 직접 정의합니다.
+**Q: What is the difference between search Query and single-item Query?**
+A: Search Query implements `IQueryPort<TEntity, TDto>` and inherits from `DapperQueryBase`/`InMemoryQueryBase`. Single-item query only implements `IQueryPort` (non-generic) and defines the `GetById` method directly.
 
-**Q: Dapper Query에서 새 Specification을 지원하려면?**
-A: 공유 `DapperSpecTranslator`에 `When<TSpec>()` 핸들러를 추가합니다. `Params()` 헬퍼로 파라미터 바인딩을 생성하세요. Translator를 사용하지 않는 경우 `BuildWhereClause`를 직접 오버라이드하여 새 case를 추가합니다.
+**Q: How do I support a new Specification in Dapper Query?**
+A: Add a `When<TSpec>()` handler to the shared `DapperSpecTranslator`. Create parameter bindings with the `Params()` helper. If not using a Translator, directly override `BuildWhereClause` to add the new case.
 
-**Q: InMemory Query에서 JOIN은 어떻게 하나요?**
-A: 다른 Repository의 `internal static` ConcurrentDictionary에 직접 접근합니다. LINQ의 `FirstOrDefault`, `Where` 등으로 JOIN을 모방합니다.
+**Q: How do you do JOINs in InMemory Query?**
+A: Directly access other Repositories' `internal static` ConcurrentDictionary. Use LINQ's `FirstOrDefault`, `Where`, etc. to simulate JOINs.
 
-**Q: GROUP BY 집계를 InMemory로 구현하려면?**
-A: `GetProjectedItems`에서 LINQ의 `GroupBy`, `Count()`, `Sum()`, `Max()` 등을 사용합니다. `CustomerOrderSummaryQueryInMemory`를 참고하세요.
+**Q: How do you implement GROUP BY aggregation in InMemory?**
+A: Use LINQ's `GroupBy`, `Count()`, `Sum()`, `Max()`, etc. in `GetProjectedItems`. Refer to `CustomerOrderSummaryQueryInMemory`.
 
-**Q: `[GenerateObservablePort]`는 무엇인가요?**
-A: Source Generator가 관찰 가능한 래퍼 클래스(`XxxObservable`)를 자동 생성합니다. 이 래퍼는 메서드 호출을 로깅/트레이싱하는 파이프라인을 포함합니다. DI 등록 시 이 Observable 버전을 사용합니다.
+**Q: What is `[GenerateObservablePort]`?**
+A: The Source Generator automatically creates an observable wrapper class (`XxxObservable`). This wrapper includes a pipeline that logs/traces method calls. Use this Observable version when registering in DI.
 
 ---
 
-## 9. 참고 문서
+## 9. References
 
-- [13-adapters.md](./13-adapters) — Adapter 구현 가이드
-- [15a-unit-testing.md](../testing/15a-unit-testing) — 단위 테스트 규칙
-- [OPTIMIZATION-TECHNIQUES.md](../../Src.Benchmarks/BulkCrud.Benchmarks/OPTIMIZATION-TECHNIQUES.md) — 대량 CRUD 성능 최적화 기법
+- [13-adapters.md](./13-adapters) -- Adapter implementation guide
+- [15a-unit-testing.md](../testing/15a-unit-testing) -- Unit testing rules
+- [OPTIMIZATION-TECHNIQUES.md](../../Src.Benchmarks/BulkCrud.Benchmarks/OPTIMIZATION-TECHNIQUES.md) -- Bulk CRUD performance optimization techniques
