@@ -1,60 +1,60 @@
 ---
-title: "컨텍스트 기반 검증 (ContextualValidation)"
+title: "Contextual Validation"
 ---
 
 ## Overview
 
-Part 2의 1~5장에서는 `ValidationRules<Price>.NotEmpty(value)` 처럼 **타입 기반** 검증을 배웠습니다. 이 패턴은 도메인 레이어에서 Value Object를 검증할 때 이상적입니다 — error message에 `Price`라는 타입 정보가 자동으로 포함되기 때문입니다.
+In Part 2, chapters 1-5, we learned **type-based** validation like `ValidationRules<Price>.NotEmpty(value)`. This pattern is ideal for validating Value Objects in the domain layer -- the error message automatically includes the type information `Price`.
 
-하지만 Application 레이어에서 DTO를 검증할 때는 상황이 다릅니다. `CreateOrderCommand`의 `Price` 필드와 `ShippingCost` 필드가 둘 다 `decimal`이라면? 타입 정보만으로는 어떤 필드에서 오류가 발생했는지 구분할 수 없습니다.
+But the situation is different when validating DTOs in the Application layer. If the `Price` field and `ShippingCost` field of `CreateOrderCommand` are both `decimal`, type information alone cannot distinguish which field produced the error.
 
-`ContextualValidation`은 **필드 이름(컨텍스트)을** 에러에 포함시켜 이 문제를 resolves.
+`ContextualValidation` resolves this problem by **including the field name (context)** in the error.
 
-> **"Domain Layer는 타입이 컨텍스트, Application Layer는 필드 이름이 컨텍스트."**
+> **"In the Domain Layer, the type is the context; in the Application Layer, the field name is the context."**
 
 ## Learning Objectives
 
-1. **`ValidationRules.For("fieldName")`** — Named Context 검증 진입점
-2. **`ContextualValidation<T>`** — 컨텍스트를 체이닝 중 전파하는 wrapper
-3. **TypedValidation vs ContextualValidation** 비교
-4. **Apply 조합**으로 다중 필드 병렬 검증
+1. **`ValidationRules.For("fieldName")`** -- Named Context validation entry point
+2. **`ContextualValidation<T>`** -- wrapper that propagates context during chaining
+3. **TypedValidation vs ContextualValidation** comparison
+4. **Apply composition** for multi-field parallel validation
 
-### 실습을 통해 확인할 내용
-- **PhoneNumber**: 단일 필드 검증 — NotNull → NotEmpty → MinLength → MaxLength
-- **Address**: 다중 필드 병렬 검증 — City + Street + PostalCode를 Apply로 조합
+### What you will verify through practice
+- **PhoneNumber**: Single field validation -- NotNull -> NotEmpty -> MinLength -> MaxLength
+- **Address**: Multi-field parallel validation -- City + Street + PostalCode combined with Apply
 
 ## TypedValidation vs ContextualValidation
 
 | Feature | TypedValidation | ContextualValidation |
 |------|-----------------|---------------------|
-| **진입점** | `ValidationRules<Price>.NotEmpty(value)` | `ValidationRules.For("price").NotEmpty(value)` |
-| **컨텍스트** | 타입 이름 (`Price`) | 필드 이름 (`"price"`) |
-| **에러 식별** | `DomainError.For<Price>(...)` | `DomainError.ForContext("price", ...)` |
-| **주 사용처** | Domain Layer — Value Object 검증 | Application Layer — DTO/Command 검증 |
-| **장점** | compile time 타입 안전성 | 동적 필드 이름 지정 |
+| **Entry point** | `ValidationRules<Price>.NotEmpty(value)` | `ValidationRules.For("price").NotEmpty(value)` |
+| **Context** | Type name (`Price`) | Field name (`"price"`) |
+| **Error identification** | `DomainError.For<Price>(...)` | `DomainError.ForContext("price", ...)` |
+| **Primary usage** | Domain Layer -- Value Object validation | Application Layer -- DTO/Command validation |
+| **Advantage** | Compile time type safety | Dynamic field name specification |
 
-동일한 검증 규칙 카테고리(Presence, Length, Numeric, Format, DateTime)를 공유합니다.
+They share the same validation rule categories (Presence, Length, Numeric, Format, DateTime).
 
-## 코드 구조
+## Code Structure
 
-### ValidationRules.For — 진입점
+### ValidationRules.For -- Entry Point
 
 ```csharp
-// Named Context 검증 시작
+// Start named context validation
 ValidationContext context = ValidationRules.For("PhoneNumber");
 
-// 체이닝 — 컨텍스트가 자동 전파
+// Chaining -- context is automatically propagated
 ContextualValidation<string> result = context
-    .NotNull(phoneNumber)   // ContextualValidation<string> 반환
-    .ThenNotEmpty()         // Then* 메서드로 체이닝
+    .NotNull(phoneNumber)   // Returns ContextualValidation<string>
+    .ThenNotEmpty()         // Chain with Then* methods
     .ThenMinLength(10)
     .ThenMaxLength(15);
 
-// Validation<Error, string>으로 암시적 변환
+// Implicit conversion to Validation<Error, string>
 Validation<Error, string> validation = result;
 ```
 
-### ContextualValidation<T> — 컨텍스트 전파 wrapper
+### ContextualValidation<T> -- Context Propagation Wrapper
 
 ```csharp
 public readonly struct ContextualValidation<T>
@@ -62,15 +62,15 @@ public readonly struct ContextualValidation<T>
     public Validation<Error, T> Value { get; }
     public string ContextName { get; }
 
-    // Validation<Error, T>로 암시적 변환
+    // Implicit conversion to Validation<Error, T>
     public static implicit operator Validation<Error, T>(
         ContextualValidation<T> contextual) => contextual.Value;
 }
 ```
 
-`ContextualValidation<T>`는 `Validation<Error, T>`를 감싸면서 `ContextName`을 체이닝 메서드에 전달합니다. `ThenNotEmpty()`, `ThenMinLength()` 등의 체이닝 메서드는 이 컨텍스트를 사용하여 error message를 생성합니다.
+`ContextualValidation<T>` wraps `Validation<Error, T>` while passing `ContextName` to chaining methods. The chaining methods like `ThenNotEmpty()`, `ThenMinLength()`, etc. use this context to generate error messages.
 
-### 단일 필드 검증
+### Single Field Validation
 
 ```csharp
 public static Validation<Error, string> Validate(string? phoneNumber)
@@ -79,10 +79,10 @@ public static Validation<Error, string> Validate(string? phoneNumber)
         .ThenNotEmpty()
         .ThenMinLength(10)
         .ThenMaxLength(15);
-// 실패 시 에러: "PhoneNumber cannot be null."
+// On failure, error: "PhoneNumber cannot be null."
 ```
 
-### 다중 필드 Apply 조합
+### Multi-Field Apply Composition
 
 ```csharp
 public static Validation<Error, AddressDto> Validate(
@@ -97,46 +97,46 @@ private static Validation<Error, string> ValidateCity(string? value)
         .ThenMaxLength(100);
 ```
 
-각 필드가 독립적으로 검증되고, **모든 오류가 한 번에 수집**됩니다. City가 null이고 PostalCode가 너무 짧으면 두 오류가 모두 반환됩니다.
+Each field is validated independently, and **all errors are collected at once**. If City is null and PostalCode is too short, both errors are returned.
 
-## 검증 규칙 카테고리
+## Validation Rule Categories
 
-`ValidationContext`는 TypedValidation과 동일한 규칙 카테고리를 provides:
+`ValidationContext` provides the same rule categories as TypedValidation:
 
-| 카테고리 | 메서드 예시 | 대상 |
+| Category | Method examples | Target |
 |---------|-----------|------|
-| **Presence** | `NotNull()` | 모든 타입 |
+| **Presence** | `NotNull()` | All types |
 | **Length** | `NotEmpty()`, `MinLength()`, `MaxLength()`, `ExactLength()` | string |
 | **Numeric** | `NotZero()`, `Positive()`, `NonNegative()`, `Between()` | INumber\<T\> |
 | **Format** | `Matches(Regex)`, `IsUpperCase()`, `IsLowerCase()` | string |
 | **DateTime** | `NotDefault()`, `InPast()`, `InFuture()`, `Before()` | DateTime |
-| **Custom** | `Must(predicate, errorType, message)` | 모든 타입 |
+| **Custom** | `Must(predicate, errorType, message)` | All types |
 
 ## Summary at a Glance
 
-| 구성 요소 | 역할 |
+| Component | Role |
 |-----------|------|
-| `ValidationRules.For(name)` | Named Context 검증 시작, `ValidationContext` 반환 |
-| `ValidationContext` | 컨텍스트 이름을 보유, 검증 메서드 제공 |
-| `ContextualValidation<T>` | 검증 결과 + 컨텍스트 이름을 체이닝 중 전파 |
-| `Then*` 체이닝 | `ThenNotEmpty()`, `ThenMinLength()` 등 — Bind 기반 순차 검증 |
-| `Apply` 조합 | 2~4개 필드의 병렬 검증 결과 조합 |
+| `ValidationRules.For(name)` | Starts named context validation, returns `ValidationContext` |
+| `ValidationContext` | Holds context name, provides validation methods |
+| `ContextualValidation<T>` | Propagates validation result + context name during chaining |
+| `Then*` chaining | `ThenNotEmpty()`, `ThenMinLength()` etc. -- Bind-based sequential validation |
+| `Apply` composition | Combines parallel validation results of 2-4 fields |
 
 ## FAQ
 
-### Q1: FluentValidation과 어떻게 다른가요?
-**A**: FluentValidation은 클래스 단위로 Validator를 정의하고 DI로 주입합니다. ContextualValidation은 함수형 — `Validation<Error, T>` 모나드 기반으로, 다른 검증 결과와 Apply/Bind로 합성할 수 있습니다. 두 접근법은 공존 가능합니다.
+### Q1: How does this differ from FluentValidation?
+**A**: FluentValidation defines Validators at the class level and injects via DI. ContextualValidation is functional -- based on the `Validation<Error, T>` monad, it can be composed with other validation results using Apply/Bind. The two approaches can coexist.
 
-### Q2: Domain Layer에서도 ContextualValidation을 쓸 수 있나요?
-**A**: 가능하지만 권장하지 않습니다. Domain Layer에서는 `ValidationRules<Price>.NotEmpty(value)`로 타입 기반 검증을 사용하는 것이 DDD 원칙에 부합합니다. ContextualValidation은 Value Object가 없는 Application/Presentation Layer에 적합합니다.
+### Q2: Can ContextualValidation be used in the Domain Layer?
+**A**: It is possible but not recommended. In the Domain Layer, using type-based validation with `ValidationRules<Price>.NotEmpty(value)` aligns with DDD principles. ContextualValidation is suitable for Application/Presentation Layers where Value Objects are not present.
 
-### Q3: error message를 커스텀할 수 있나요?
-**A**: `Must(predicate, errorType, message)` 커스텀 검증으로 자유로운 메시지를 지정할 수 있습니다. 내장 규칙(NotNull, NotEmpty 등)은 컨텍스트 이름을 자동으로 포함하는 표준화된 메시지를 생성합니다.
+### Q3: Can error messages be customized?
+**A**: You can specify custom messages with `Must(predicate, errorType, message)` custom validation. Built-in rules (NotNull, NotEmpty, etc.) generate standardized messages that automatically include the context name.
 
 ---
 
-ContextualValidation은 Application Layer에서 DTO 필드를 검증할 때, **TypedValidation과 동일한 함수형 합성**을 필드 이름 기반으로 provides.
+ContextualValidation provides **the same functional composition as TypedValidation** on a field-name basis when validating DTO fields in the Application Layer.
 
-Part 2에서 검증 패턴을 모두 학습했습니다. Part 3에서는 이 개념들을 Functorium 프레임워크의 기본 클래스로 조립하여, 실전에서 바로 사용할 수 있는 value object 패턴을 완성합니다.
+In Part 2, we have learned all the validation patterns. In Part 3, we assemble these concepts into framework base classes from the Functorium framework to complete value object patterns ready for practical use.
 
-→ [Part 3의 1장: SimpleValueObject](../../Part3-ValueObject-Patterns/01-SimpleValueObject/)
+-> [Part 3, Chapter 1: SimpleValueObject](../../Part3-ValueObject-Patterns/01-SimpleValueObject/)

@@ -1,48 +1,48 @@
 ---
-title: "비교 가능한 value object"
+title: "Comparable Value Object"
 ---
 
 > `ComparableValueObject`
 
 ## Overview
 
-`ValueObject`로 날짜 범위를 표현했는데, 여러 범위를 시간순으로 정렬해야 한다면 어떻게 할까요? `ComparableValueObject`는 여러 primitive 타입을 조합하면서도 `GetComparableEqualityComponents()`를 통해 비교 순서를 정의하여, 정렬과 비교 연산을 자연스럽게 지원합니다.
+What if you represented a date range with `ValueObject` but need to sort multiple ranges chronologically? `ComparableValueObject` supports sorting and comparison operations naturally by defining the comparison order through `GetComparableEqualityComponents()`, while still combining multiple primitive types.
 
 ## Learning Objectives
 
-- `ComparableValueObject`가 `ValueObject`와 어떻게 다른지 설명할 수 있습니다
-- `GetComparableEqualityComponents()`로 비교 순서를 정의할 수 있습니다
-- 여러 값으로 구성된 객체를 컬렉션에서 정렬할 수 있습니다
-- LINQ의 `OrderBy()`에서 복합 value object를 직접 사용할 수 있습니다
+- Explain how `ComparableValueObject` differs from `ValueObject`
+- Define comparison order with `GetComparableEqualityComponents()`
+- Sort objects composed of multiple values in collections
+- Use composite value objects directly in LINQ's `OrderBy()`
 
 ## Why Is This Needed?
 
-`ValueObject`는 동등성 비교만 지원합니다. 날짜 범위나 좌표 같은 복합 데이터를 정렬하려면 기준이 되는 값이 무엇인지 직접 지정해야 하고, `OrderBy()`나 `Min()` 같은 LINQ 메서드에서도 별도의 비교 함수를 매번 제공해야 합니다. `<`, `>` 같은 비교 연산자도 사용할 수 없어, 조건문이 직관적이지 않습니다.
+`ValueObject` only supports equality comparison. When sorting composite data like date ranges or coordinates, you must specify what value serves as the basis, and must provide a separate comparison function each time for LINQ methods like `OrderBy()` or `Min()`. `<`, `>` comparison operators are also unavailable, making it unintuitive to compare the order of two items.
 
-`ComparableValueObject`는 `GetComparableEqualityComponents()`에서 구성 요소의 반환 순서를 정의하는 것만으로 자연스러운 정렬과 비교를 지원합니다.
+`ComparableValueObject` supports natural sorting and comparison simply by defining the return order of components in `GetComparableEqualityComponents()`.
 
 ## Core Concepts
 
-### GetComparableEqualityComponents() 구현
+### GetComparableEqualityComponents() Implementation
 
-`ComparableValueObject`는 `GetComparableEqualityComponents()` 메서드를 구현하여 비교에 사용될 구성 요소들을 순서대로 returns. 첫 번째 요소부터 비교하고, 값이 같으면 다음 요소로 진행하는 사전식 순서를 따릅니다.
+`ComparableValueObject` returns the components used for comparison in order via the `GetComparableEqualityComponents()` method. It follows lexicographic order, comparing from the first element and proceeding to the next when values are equal.
 
-날짜 범위의 경우, 시작 날짜부터 비교하고 시작 날짜가 같으면 종료 날짜로 compares.
+For date ranges, it compares start dates first, and if start dates are equal, compares end dates.
 
 ```csharp
 protected override IEnumerable<IComparable> GetComparableEqualityComponents()
 {
-    yield return StartDate;  // 먼저 시작 날짜로 비교
-    yield return EndDate;    // 시작 날짜가 같으면 종료 날짜로 비교
+    yield return StartDate;  // Compare by start date first
+    yield return EndDate;    // Compare by end date if start dates are equal
 }
 ```
 
-### 자동 비교 기능 상속
+### Automatic Comparison Functionality Inheritance
 
-부모 클래스가 `IComparable<T>` 인터페이스를 자동으로 구현하므로, `List<T>.Sort()`나 LINQ의 `OrderBy()`에서 별도의 비교 함수 없이 바로 사용할 수 있습니다.
+The parent class automatically implements the `IComparable<T>` interface, so it can be used directly in `List<T>.Sort()` or LINQ's `OrderBy()` without a separate comparison function.
 
 ```csharp
-// 자동 정렬 가능
+// Automatic sorting possible
 List<DateRange> ranges = new List<DateRange>
 {
     new DateRange(start1, end1),
@@ -50,115 +50,115 @@ List<DateRange> ranges = new List<DateRange>
     new DateRange(start3, end3)
 };
 
-ranges.Sort(); // 별도의 비교 함수 불필요
+ranges.Sort(); // No separate comparison function needed
 
-// LINQ에서도 자연스럽게 사용
-var sorted = ranges.OrderBy(r => r); // IComparable<T> 덕분에 가능
+// Also naturally usable in LINQ
+var sorted = ranges.OrderBy(r => r); // Possible thanks to IComparable<T>
 ```
 
-### 모든 비교 연산자 지원
+### All Comparison Operators Supported
 
-`<`, `<=`, `>`, `>=` 연산자가 모두 자동으로 오버로딩됩니다. 복합 데이터에 대해서도 직관적인 비교 표현이 가능합니다.
+`<`, `<=`, `>`, `>=` operators are all automatically overloaded. Intuitive comparison expressions are possible even for composite data.
 
 ```csharp
-// 자연스러운 비교 표현
+// Natural comparison expressions
 DateRange range1 = DateRange.Create(start1, end1);
 DateRange range2 = DateRange.Create(start2, end2);
 
-// 직관적인 비교
-bool isEarlier = range1 < range2;    // range1이 range2보다 이전인가?
-bool isLater = range1 > range2;      // range1이 range2보다 이후인가?
-bool overlaps = range1 <= range2;    // range1이 range2와 겹치는가?
+// Intuitive comparison
+bool isEarlier = range1 < range2;    // Is range1 earlier than range2?
+bool isLater = range1 > range2;      // Is range1 later than range2?
+bool overlaps = range1 <= range2;    // Does range1 overlap with range2?
 ```
 
 ## Practical Guidelines
 
 ### Expected Output
 ```
-=== 4. 비교 가능한 복합 primitive 값 객체 - ComparableValueObject ===
-부모 클래스: ComparableValueObject
-예시: DateRange (날짜 범위)
+=== 4. Comparable Composite Primitive Value Object - ComparableValueObject ===
+Parent class: ComparableValueObject
+Example: DateRange (date range)
 
-📋 특징:
-   ✅ 여러 primitive 값을 조합
-   ✅ 비교 기능 자동 제공
-   ✅ 날짜 범위의 유효성 검증
+Features:
+   Combines multiple primitive values
+   Comparison functionality automatically provided
+   Date range validity validation
 
-🔍 성공 케이스:
-   ✅ DateRange: 2024-01-01 ~ 2024-06-30
+Success Cases:
+   DateRange: 2024-01-01 ~ 2024-06-30
      - StartDate: 2024-01-01
      - EndDate: 2024-06-30
 
-   ✅ DateRange: 2024-07-01 ~ 2024-12-31
+   DateRange: 2024-07-01 ~ 2024-12-31
      - StartDate: 2024-07-01
      - EndDate: 2024-12-31
 
-   ✅ DateRange: 2024-01-01 ~ 2024-06-30
+   DateRange: 2024-01-01 ~ 2024-06-30
      - StartDate: 2024-01-01
      - EndDate: 2024-06-30
 
-📊 동등성 비교:
+Equality Comparison:
    2024-01-01 ~ 2024-06-30 == 2024-07-01 ~ 2024-12-31 = False
    2024-01-01 ~ 2024-06-30 == 2024-01-01 ~ 2024-06-30 = True
 
-📊 비교 기능 (IComparable<T>):
+Comparison Functionality (IComparable<T>):
    2024-01-01 ~ 2024-06-30 < 2024-07-01 ~ 2024-12-31 = True
    2024-01-01 ~ 2024-06-30 <= 2024-07-01 ~ 2024-12-31 = True
    2024-01-01 ~ 2024-06-30 > 2024-07-01 ~ 2024-12-31 = False
    2024-01-01 ~ 2024-06-30 >= 2024-07-01 ~ 2024-12-31 = False
 
-🔢 해시코드:
+Hash Code:
    2024-01-01 ~ 2024-06-30.GetHashCode() = -1711187277
    2024-01-01 ~ 2024-06-30.GetHashCode() = -1711187277
-   동일한 값의 해시코드가 같은가? True
+   Same value hash codes equal? True
 
-❌ 실패 케이스:
+Failure Cases:
    DateRange(2024-12-31, 2024-01-01): StartAfterEnd
 
-📈 정렬 데모:
-   정렬된 DateRange 목록:
+Sorting Demo:
+   Sorted DateRange list:
      2024-01-01 ~ 2024-03-31
      2024-04-01 ~ 2024-05-31
      2024-06-01 ~ 2024-06-30
      2024-09-01 ~ 2024-12-31
 
-💡 비교 가능한 primitive 조합 값 객체의 특징:
-   - 여러 primitive 타입(DateTime 등)을 조합
-   - 각 primitive 값에 대한 개별 검증 로직
-   - 동등성 비교와 비교 기능 모두 제공
-   - 정렬과 크기 비교가 가능한 복잡한 도메인 개념 표현
+Comparable primitive composition value object characteristics:
+   - Combines multiple primitive types (DateTime, etc.)
+   - Individual validation logic for each primitive value
+   - Provides both equality comparison and comparison functionality
+   - Expresses complex domain concepts with sorting and size comparison
 
-✅ 데모가 성공적으로 완료되었습니다!
+Demo completed successfully!
 ```
 
 ### Key Implementation Points
 
-`ValueObject`와 비교했을 때 추가되는 핵심 요소를 정리합니다.
+Summarizes the key elements added compared to `ValueObject`.
 
-| 포인트 | Description |
+| Point | Description |
 |--------|------|
-| **ComparableValueObject 상속** | 자동 비교 기능 상속 |
-| **GetComparableEqualityComponents() 구현** | 비교 순서 정의 |
-| **`IComparable<T>` 자동 구현** | 부모 클래스에서 제공 |
-| **비교 연산자 자동 지원** | `<`, `<=`, `>`, `>=` 사용 가능 |
+| **Inherit ComparableValueObject** | Inherits automatic comparison functionality |
+| **Implement GetComparableEqualityComponents()** | Defines comparison order |
+| **Automatic `IComparable<T>` implementation** | Provided by parent class |
+| **Automatic comparison operator support** | `<`, `<=`, `>`, `>=` available |
 
 ## Project Description
 
 ### Project Structure
 ```
 04-ComparableValueObject-Primitive/
-├── Program.cs                              # 메인 실행 파일
-├── ComparableValueObjectPrimitive.csproj  # 프로젝트 파일
+├── Program.cs                              # Main entry point
+├── ComparableValueObjectPrimitive.csproj  # Project file
 ├── ValueObjects/
-│   └── DateRange.cs                       # 날짜 범위 값 객체
-└── README.md                              # 프로젝트 문서
+│   └── DateRange.cs                       # Date range value object
+└── README.md                              # Project document
 ```
 
 ### Core Code
 
-`DateRange`는 `ComparableValueObject`를 상속하여 시작일과 종료일을 하나의 비교 가능한 날짜 범위로 표현합니다.
+`DateRange` inherits from `ComparableValueObject` to represent start and end dates as a single comparable date range.
 
-**DateRange.cs - 비교 가능한 복합 primitive value object 구현**
+**DateRange.cs - comparable composite primitive value object implementation**
 ```csharp
 public sealed class DateRange : ComparableValueObject
 {
@@ -178,7 +178,7 @@ public sealed class DateRange : ComparableValueObject
     public static DateRange CreateFromValidated((DateTime startDate, DateTime endDate) validatedValues) =>
         new(validatedValues.startDate, validatedValues.endDate);
 
-    // 날짜 범위 검증
+    // Date range validation
     public static Validation<Error, (DateTime startDate, DateTime endDate)> Validate(
         DateTime startDate, DateTime endDate) =>
         startDate <= endDate
@@ -186,62 +186,62 @@ public sealed class DateRange : ComparableValueObject
             : DomainError.For<DateRange, DateTime, DateTime>(new StartAfterEnd(), startDate, endDate,
                 $"Start date cannot be after end date. Start: '{startDate:yyyy-MM-dd}', End: '{endDate:yyyy-MM-dd}'");
 
-    // 비교 순서 정의
+    // Comparison order definition
     protected override IEnumerable<IComparable> GetComparableEqualityComponents()
     {
-        yield return StartDate;  // 시작 날짜 우선 비교
-        yield return EndDate;    // 시작 날짜 같으면 종료 날짜 비교
+        yield return StartDate;  // Compare start date first
+        yield return EndDate;    // Compare end date if start dates are equal
     }
 
     public override string ToString() => $"{StartDate:yyyy-MM-dd} ~ {EndDate:yyyy-MM-dd}";
 }
 ```
 
-비교 연산자와 자동 정렬을 확인하는 데모 코드입니다.
+Demo code that verifies comparison operators and automatic sorting.
 
-**Program.cs - 비교 가능한 복합 value object 데모**
+**Program.cs - comparable composite value object demo**
 ```csharp
-// 비교 연산자 사용
+// Using comparison operators
 var r1 = range1.Match(Succ: x => x, Fail: _ => default!);
 var r2 = range2.Match(Succ: x => x, Fail: _ => default!);
 Console.WriteLine($"   {r1} < {r2} = {r1 < r2}");
 Console.WriteLine($"   {r1} <= {r2} = {r1 <= r2}");
 
-// 자동 정렬
+// Automatic sorting
 var ranges = new[] { ... }
     .Select(r => DateRange.Create(r.Item1, r.Item2))
     .Where(result => result.IsSucc)
     .Select(result => result.Match(Succ: x => x, Fail: _ => default!))
-    .OrderBy(r => r)  // 자연스러운 정렬
+    .OrderBy(r => r)  // Natural sorting
     .ToArray();
 ```
 
 ## Summary at a Glance
 
-`ValueObject`와 `ComparableValueObject`의 차이를 compares.
+Compares the difference between `ValueObject` and `ComparableValueObject`.
 
 ### Comparison Table
 | Aspect | ValueObject | ComparableValueObject |
 |------|-------------|----------------------|
-| **비교 기능** | 미지원 | 자동 지원 |
-| **GetComparableEqualityComponents()** | 해당 없음 | 필수 구현 |
-| **`IComparable<T>`** | 미구현 | 자동 구현 |
-| **LINQ 정렬** | 수동 구현 | 자동 지원 |
-| **operator overloading** | 미지원 | 자동 지원 |
+| **Comparison functionality** | Not supported | Automatically supported |
+| **GetComparableEqualityComponents()** | N/A | Required implementation |
+| **`IComparable<T>`** | Not implemented | Automatically implemented |
+| **LINQ sorting** | Manual implementation | Automatically supported |
+| **operator overloading** | Not supported | Automatically supported |
 
 ## FAQ
 
-### Q1: GetComparableEqualityComponents()와 GetEqualityComponents()의 차이점은 무엇인가요?
-**A**: `GetEqualityComponents()`는 동등성 비교에만 사용되고, `GetComparableEqualityComponents()`는 동등성과 정렬 비교 모두에 사용됩니다. 후자는 `IComparable` 타입의 요소를 반환해야 합니다.
+### Q1: What is the difference between GetComparableEqualityComponents() and GetEqualityComponents()?
+**A**: `GetEqualityComponents()` is used only for equality comparison, while `GetComparableEqualityComponents()` is used for both equality and sort comparison. The latter must return elements of `IComparable` type, and the order of elements determines the sorting priority.
 
-### Q2: 비교 순서는 어떻게 결정되나요?
-**A**: `GetComparableEqualityComponents()`에서 요소를 반환하는 순서에 따라 결정됩니다. 첫 번째 요소가 다르면 그것으로 결과가 확정되고, 같으면 다음 요소로 진행합니다. 날짜 범위에서는 시작일 우선, 좌표에서는 X축 우선 등 도메인에 맞게 순서를 지정합니다.
+### Q2: How is the comparison order determined?
+**A**: It is determined by the order in which elements are returned from `GetComparableEqualityComponents()`. If the first element is different, that determines the result; if equal, it proceeds to the next element. Specify the order to match the domain -- start date first for date ranges, X-axis first for coordinates, etc.
 
-### Q3: 모든 경우에 ComparableValueObject를 사용해야 하나요?
-**A**: 아닙니다. 정렬이나 크기 비교가 필요 없는 복합 데이터에는 `ValueObject`가 적합합니다. 불필요한 비교 기능은 `GetComparableEqualityComponents()` 구현 부담만 추가하므로, 정렬이 필요한 경우에만 `ComparableValueObject`를 선택합니다.
+### Q3: Should ComparableValueObject always be used?
+**A**: No. For composite data that does not need sorting or size comparison, `ValueObject` is sufficient. Unnecessary comparison functionality only adds the burden of implementing `GetComparableEqualityComponents()`, so choose `ComparableValueObject` only when sorting is actually needed.
 
-Next chapter에서는 primitive 타입이 아닌 다른 value object를 조합하는 복합 value object 패턴을 학습합니다. value object 안에 value object를 포함하여 더 풍부한 도메인 모델을 구성하는 방법을 examines.
+The next chapter covers the composite value object pattern that combines other value objects rather than primitive types. It examines how to build richer domain models by including value objects within value objects.
 
 ---
 
-→ [5장: ValueObject (Composite)](../05-ValueObject-Composite/)
+-> [Chapter 5: ValueObject (Composite)](../05-ValueObject-Composite/)

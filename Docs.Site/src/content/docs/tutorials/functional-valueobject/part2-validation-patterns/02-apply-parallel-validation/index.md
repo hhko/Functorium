@@ -4,50 +4,50 @@ title: "Apply Parallel Validation"
 
 ## Overview
 
-사용자가 회원가입 폼에서 이메일, 비밀번호, 이름, 나이를 모두 잘못 입력했다고 가정합니다. Bind 패턴을 사용하면 이메일 오류만 보고하고 중단됩니다. 사용자는 이메일을 고치고, 다시 제출하고, 이번에는 비밀번호 오류를 받고... 이 과정을 네 번 반복해야 합니다. Apply 패턴은 모든 검증을 동시에 실행하여 모든 에러를 한 번에 수집합니다.
+Suppose a user enters email, password, name, and age all incorrectly on a registration form. Using the Bind pattern, only the email error is reported and execution stops. The user fixes the email, submits again, and this time receives the password error... this process must be repeated four times. The Apply pattern runs all validations simultaneously and collects all errors at once.
 
 ## Learning Objectives
 
-- 서로 독립적인 검증 규칙들을 동시에 실행하는 **Apply 연산자의 병렬 실행 메커니즘을** 이해할 수 있습니다.
-- 모든 검증 실패를 한 번에 수집하여 사용자에게 완전한 피드백을 제공하는 **에러 수집 패턴을** 구현할 수 있습니다.
-- 복수개의 에러를 구조화된 방식으로 처리하는 **ManyErrors 타입을** 활용할 수 있습니다.
+- Understand the **Apply operator's parallel execution mechanism** that runs mutually independent validation rules simultaneously.
+- Implement the **error collection pattern** that collects all validation failures at once and provides complete feedback to the user.
+- Leverage the **ManyErrors type** to handle multiple errors in a structured manner.
 
 ## Why Is This Needed?
 
-Previous step인 Bind 순차 검증에서는 의존적인 검증 규칙들을 순차적으로 실행하는 방법을 학습했습니다. 하지만 서로 독립적인 정보들을 검증해야 하는 상황에서는 다른 접근이 필요합니다.
+In the previous step, Bind sequential validation, we learned how to run dependent validation rules sequentially. However, when validating mutually independent information, a different approach is needed.
 
-사용자 경험 측면에서, 여러 필드에 잘못된 값을 입력했을 때 모든 문제점을 한 번에 보여주는 것이 훨씬 효율적입니다. 이메일 형식이 틀렸다고 해서 비밀번호나 이름 검증을 중단할 이유가 없습니다. 서로 독립적인 검증들을 동시에 실행하면 전체 검증 시간도 단축할 수 있고, 모든 검증 실패를 한꺼번에 수집하여 구조화된 error information를 제공할 수도 있습니다.
+From a user experience perspective, showing all problems at once when multiple fields have invalid values is much more efficient. There is no reason to stop password or name validation just because the email format is wrong. Running independent validations simultaneously can reduce total validation time, and collecting all validation failures at once allows providing structured error information.
 
-**Apply 병렬 검증 패턴은** 독립적인 검증 규칙들을 병렬로 실행하여 이 모든 요구를 충족합니다.
+**The Apply parallel validation pattern** satisfies all these requirements by running independent validation rules in parallel.
 
 ## Core Concepts
 
-### Apply 병렬 실행 메커니즘
+### Apply Parallel Execution Mechanism
 
-Apply는 서로 의존성이 없는 검증 규칙들을 동시에 실행합니다. 어느 하나가 실패해도 나머지 검증은 계속 진행되며, 실패한 결과들은 모두 수집됩니다.
+Apply runs validation rules that have no dependencies on each other simultaneously. Even if one fails, the remaining validations continue, and all failed results are collected.
 
-The following code 순차 실행 방식의 한계를 보여줍니다.
+The following code shows the limitations of the sequential execution approach.
 
 ```csharp
-// 이전 방식 (문제가 있는 방식) - 순차적으로 실행하여 비효율적
+// Previous approach (problematic) - sequential execution is inefficient
 public static Validation<Error, UserRegistration> ValidateOld(string email, string password, string name, string ageInput)
 {
     var emailResult = ValidateEmail(email);
-    if (emailResult.IsFail) return emailResult; // 조기 중단으로 다른 검증 생략
+    if (emailResult.IsFail) return emailResult; // Short-circuit skips other validations
 
     var passwordResult = ValidatePassword(password);
-    if (passwordResult.IsFail) return passwordResult; // 조기 중단으로 다른 검증 생략
-    // 사용자가 모든 문제를 한 번에 파악할 수 없음
+    if (passwordResult.IsFail) return passwordResult; // Short-circuit skips other validations
+    // User cannot identify all problems at once
 }
 ```
 
-### Apply 구현 방법 비교
+### Apply Implementation Methods Comparison
 
-LanguageExt에서 Apply 병렬 검증을 구현하는 두 가지 방법이 있습니다.
+There are two ways to implement Apply parallel validation in LanguageExt.
 
-#### 방법 1: 튜플 기반 Apply (권장)
+#### Method 1: Tuple-based Apply (Recommended)
 
-여러 Validation을 튜플로 묶어서 한 번에 Apply를 호출하는 방식입니다.
+This approach groups multiple Validations into a tuple and calls Apply at once.
 
 ```csharp
 public static Validation<Error, (string Email, string Password, string Name, int Age)> Validate(
@@ -58,11 +58,11 @@ public static Validation<Error, (string Email, string Password, string Name, int
         .As();
 ```
 
-간결하고 직관적이며, 검증 개수가 명확하게 드러나므로 대부분의 상황에서 권장됩니다.
+It is concise and intuitive, and since the number of validations is clearly visible, it is recommended for most situations.
 
-#### 방법 2: fun 기반 개별 Apply
+#### Method 2: fun-based Individual Apply
 
-`fun` 함수를 사용하여 Currying 방식으로 개별 Apply를 체이닝하는 방식입니다.
+This approach uses the `fun` function to chain individual Apply calls using Currying.
 
 ```csharp
 using static LanguageExt.Prelude;
@@ -77,7 +77,7 @@ public static Validation<Error, (string Email, string Password, string Name, int
         .Apply(ValidateAgeFormat(ageInput));
 ```
 
-또는 `Pure`를 사용하여 더 간결하게 작성할 수 있습니다.
+Or it can be written more concisely using `Pure`.
 
 ```csharp
 public static Validation<Error, (string Email, string Password, string Name, int Age)> Validate(
@@ -90,38 +90,38 @@ public static Validation<Error, (string Email, string Password, string Name, int
         .Apply(ValidateAgeFormat(ageInput));
 ```
 
-이 방식은 Currying을 통한 단계적 적용으로 유연성을 확보하며, 동적으로 검증 개수를 조절할 때 유용합니다.
+This approach provides flexibility through step-by-step application via Currying and is useful when dynamically adjusting the number of validations.
 
-#### 두 방법 비교
+#### Comparison of the Two Methods
 
-The following table 두 가지 Apply 구현 방법의 특성을 compares.
+The following table compares the characteristics of the two Apply implementation methods.
 
-| Aspect | 튜플 기반 Apply | fun 기반 개별 Apply |
+| Aspect | Tuple-based Apply | fun-based Individual Apply |
 |------|----------------|---------------------|
-| **코드 간결성** | 간결하고 직관적 | 상대적으로 장황함 |
-| **타입 추론** | 자동 추론 | `fun`이 타입 추론 지원 |
-| **유연성** | 고정된 검증 개수 | 동적 검증 개수 가능 |
-| **사용 시기** | 대부분의 경우 | 고급 합성, 동적 파라미터 |
-| **학습 곡선** | 낮음 | Currying 이해 필요 |
+| **Code conciseness** | Concise and intuitive | Relatively verbose |
+| **Type inference** | Automatic inference | `fun` supports type inference |
+| **Flexibility** | Fixed number of validations | Dynamic number possible |
+| **When to use** | Most cases | Advanced composition, dynamic parameters |
+| **Learning curve** | Low | Requires understanding of Currying |
 
-> **권장사항**: 일반적인 경우 **튜플 기반 Apply를** 사용하세요. fun 기반 개별 Apply는 동적으로 검증을 조합해야 하거나 함수형 프로그래밍 패턴을 깊이 활용할 때 고려하세요.
+> **Recommendation**: Use **tuple-based Apply** for general cases. Consider fun-based individual Apply when you need to dynamically combine validations or deeply leverage functional programming patterns.
 
-### 에러 수집 및 ManyErrors 처리
+### Error Collection and ManyErrors Handling
 
-Apply는 모든 검증 실패를 `ManyErrors` 타입으로 수집합니다. The following code 수집된 에러를 순회하며 사용자에게 표시하는 방법을 보여줍니다.
+Apply collects all validation failures into a `ManyErrors` type. The following code shows how to iterate through collected errors and display them to the user.
 
 ```csharp
-// ManyErrors를 통한 복수개 에러 처리
+// Handling multiple errors via ManyErrors
 if (error is ManyErrors manyErrors)
 {
-    Console.WriteLine($"   → 총 {manyErrors.Errors.Count}개의 검증 실패:");
+    Console.WriteLine($"   -> Total {manyErrors.Errors.Count} validation failures:");
     for (int i = 0; i < manyErrors.Errors.Count; i++)
     {
         var individualError = manyErrors.Errors[i];
         if (individualError is ErrorCodeExpected errorCodeExpected)
         {
-            Console.WriteLine($"     {i + 1}. 에러 코드: {errorCodeExpected.ErrorCode}");
-            Console.WriteLine($"        현재 값: '{errorCodeExpected.ErrorCurrentValue}'");
+            Console.WriteLine($"     {i + 1}. Error code: {errorCodeExpected.ErrorCode}");
+            Console.WriteLine($"        Current value: '{errorCodeExpected.ErrorCurrentValue}'");
         }
     }
 }
@@ -131,54 +131,54 @@ if (error is ManyErrors manyErrors)
 
 ### Expected Output
 ```
-=== 독립 검증 (Independent Validation) 예제 ===
-사용자 등록 값 객체의 모든 검증 규칙을 병렬로 실행합니다.
+=== Independent Validation Example ===
+Runs all validation rules for the user registration value object in parallel.
 
---- 유효한 사용자 등록 ---
-이메일: 'newuser@example.com'
-비밀번호: 'newpass123'
-이름: '홍길동'
-나이: '25'
-성공: 사용자 등록이 유효합니다.
-   → 등록된 사용자: 홍길동 (newuser@example.com)
-   → 모든 독립 검증 규칙을 통과했습니다.
+--- Valid User Registration ---
+Email: 'newuser@example.com'
+Password: 'newpass123'
+Name: 'John Doe'
+Age: '25'
+Success: User registration is valid.
+   -> Registered user: John Doe (newuser@example.com)
+   -> All independent validation rules passed.
 
---- 모든 검증 동시 실패 (Apply의 핵심) ---
-이메일: ''
-비밀번호: 'short'
-이름: 'A'
-나이: 'abc'
-실패:
-   → 총 4개의 검증 실패:
-     1. 에러 코드: DomainErrors.UserRegistration.EmailMissingAt
-        현재 값: ''
-     2. 에러 코드: DomainErrors.UserRegistration.PasswordTooShort
-        현재 값: 'short'
-     3. 에러 코드: DomainErrors.UserRegistration.NameTooShort
-        현재 값: 'A'
-     4. 에러 코드: DomainErrors.UserRegistration.AgeNotNumeric
-        현재 값: 'abc'
+--- All Validations Fail Simultaneously (Core of Apply) ---
+Email: ''
+Password: 'short'
+Name: 'A'
+Age: 'abc'
+Failure:
+   -> Total 4 validation failures:
+     1. Error code: DomainErrors.UserRegistration.EmailMissingAt
+        Current value: ''
+     2. Error code: DomainErrors.UserRegistration.PasswordTooShort
+        Current value: 'short'
+     3. Error code: DomainErrors.UserRegistration.NameTooShort
+        Current value: 'A'
+     4. Error code: DomainErrors.UserRegistration.AgeNotNumeric
+        Current value: 'abc'
 ```
 
 ### Key Implementation Points
 
-구현 시 세 가지 포인트에 주목합니다. 여러 검증을 튜플로 묶어서 Apply로 병렬 실행하고, 모든 검증 실패를 ManyErrors로 수집하며, 사용자에게 모든 문제점을 한 번에 표시합니다.
+Three points to note during implementation. Group multiple validations into a tuple and run them in parallel with Apply, collect all validation failures using ManyErrors, and display all problems to the user at once.
 
 ## Project Description
 
 ### Project Structure
 ```
 02-Apply-Parallel-Validation/
-├── Program.cs              # 메인 실행 파일
+├── Program.cs              # Main entry point
 ├── ValueObjects/
-│   └── UserRegistration.cs # 사용자 등록 값 객체 (Apply 패턴 구현)
+│   └── UserRegistration.cs # User registration value object (Apply pattern implementation)
 ├── ApplyParallelValidation.csproj
-└── README.md               # 메인 문서
+└── README.md               # Main document
 ```
 
 ### Core Code
 
-UserRegistration value object는 Apply를 사용하여 이메일, 비밀번호, 이름, 나이를 동시에 검증합니다.
+The UserRegistration value object uses Apply to validate email, password, name, and age simultaneously.
 
 ```csharp
 public sealed class UserRegistration : ValueObject
@@ -188,16 +188,16 @@ public sealed class UserRegistration : ValueObject
     public string Name { get; }
     public int Age { get; }
 
-    // Apply를 통한 병렬 검증 구현
+    // Parallel validation implementation via Apply
     public static Validation<Error, (string Email, string Password, string Name, int Age)> Validate(
         string email, string password, string name, string ageInput) =>
-        // 핵심 검증 규칙들을 병렬로 실행 (독립적 유효성 검사)
+        // Run core validation rules in parallel (independent validations)
         (ValidateEmailFormat(email), ValidatePasswordStrength(password), ValidateNameFormat(name), ValidateAgeFormat(ageInput))
             .Apply((validEmail, validPassword, validName, validAge) =>
                 (Email: validEmail, Password: validPassword, Name: validName, Age: validAge))
             .As();
 
-    // 독립적인 검증 메서드들
+    // Independent validation methods
     private static Validation<Error, string> ValidateEmailFormat(string email) =>
         !string.IsNullOrWhiteSpace(email) && email.Contains("@") && email.Contains(".")
             ? email
@@ -212,36 +212,36 @@ public sealed class UserRegistration : ValueObject
 
 ## Summary at a Glance
 
-The following table Bind 순차 검증과 Apply 병렬 검증의 차이를 compares.
+The following table compares the difference between Bind sequential validation and Apply parallel validation.
 
-| Aspect | Bind 순차 검증 | Apply 병렬 검증 |
+| Aspect | Bind Sequential Validation | Apply Parallel Validation |
 |------|----------------|----------------|
-| **실행 방식** | 순차적으로 체이닝하여 실행 | 모든 검증을 동시에 실행 |
-| **error handling** | 첫 번째 실패에서 조기 중단 | 모든 실패를 수집하여 반환 |
-| **성능** | 조기 중단으로 효율적 | 병렬 실행으로 빠름 |
-| **사용자 경험** | 한 번에 하나의 문제만 확인 | 모든 문제를 한 번에 확인 |
+| **Execution method** | Chains and executes sequentially | Runs all validations simultaneously |
+| **error handling** | Short-circuits at the first failure | Collects all failures and returns them |
+| **Performance** | Efficient via short-circuiting | Fast via parallel execution |
+| **User experience** | Only one problem identified at a time | All problems identified at once |
 
-The following table Apply 병렬 검증의 장단점을 정리합니다.
+The following table summarizes the pros and cons of Apply parallel validation.
 
 | Pros | Cons |
 |------|------|
-| 모든 문제점을 한 번에 확인 가능 | error handling가 복잡함 |
-| 병렬 실행으로 빠른 검증 | 모든 에러를 메모리에 보관 |
-| 모든 검증 실패를 수집 | 검증 규칙이 독립적이어야 함 |
+| All problems identified at once | Error handling is complex |
+| Fast validation via parallel execution | All errors must be kept in memory |
+| Collects all validation failures | Validation rules must be independent |
 
 ## FAQ
 
-### Q1: Apply와 Bind를 언제 선택해야 하나요?
-**A:** 검증 규칙들 간의 의존성을 확인하세요. 서로 독립적이라면 Apply를, 이전 결과가 다음 검증에 영향을 미친다면 Bind를 uses.
+### Q1: When should I choose Apply vs Bind?
+**A:** Check the dependencies between validation rules. If they are mutually independent, use Apply. If previous results affect the next validation, use Bind.
 
-### Q2: ManyErrors는 어떻게 처리하나요?
-**A:** ManyErrors 타입을 확인한 뒤 복수개의 에러를 순회하면서 각각을 처리합니다. ErrorCodeExpected 타입인지 확인하여 error code와 현재 값을 표시하는 것이 좋습니다.
+### Q2: How is ManyErrors handled?
+**A:** Check the ManyErrors type, then iterate through the multiple errors and handle each one. It is good practice to check whether each is an ErrorCodeExpected type and display the error code and current value.
 
-### Q3: 모든 검증이 실패하는 경우는 어떻게 처리하나요?
-**A:** ManyErrors를 통해 모든 실패를 수집하여 사용자에게 완전한 피드백을 provides. 각 에러를 명확하게 구분하여 표시하면 사용자가 모든 문제점을 한 번에 파악하고 수정할 수 있습니다.
+### Q3: How do you handle the case where all validations fail?
+**A:** ManyErrors collects all failures and provides complete feedback to the user. By clearly distinguishing and displaying each error, the user can identify and fix all problems at once.
 
-지금까지 Bind(순차)와 Apply(병렬)를 각각 독립적으로 살펴보았습니다. 하지만 실제 도메인에서는 독립적인 필드와 의존적인 필드가 하나의 객체에 공존합니다. Next chapter에서는 Apply와 Bind를 조합하여 이런 복합적인 검증 요구사항을 resolves.
+So far we have examined Bind (sequential) and Apply (parallel) independently. However, in real domains, independent fields and dependent fields coexist in a single object. The next chapter resolves these complex validation requirements by combining Apply and Bind.
 
 ---
 
-→ [3장: Apply와 Bind 조합](../03-Apply-Bind-Combined-Validation/)
+-> [Chapter 3: Apply and Bind Combined](../03-Apply-Bind-Combined-Validation/)

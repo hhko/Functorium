@@ -3,20 +3,20 @@ title: "Testing Strategies"
 ---
 ## Overview
 
-value object의 테스트 전략을 학습합니다. 단위 테스트 패턴, 테스트 헬퍼, 아키텍처 테스트를 다룹니다.
+Learn testing strategies for value objects. Covers unit test patterns, test helpers, and architecture tests.
 
 ---
 
 ## Learning Objectives
 
-- value object 생성 테스트 패턴
-- 동등성 테스트 패턴
-- comparability 테스트 패턴
-- `Fin<T>` 테스트 헬퍼 활용
+- Value object creation test patterns
+- Equality test patterns
+- Comparability test patterns
+- Using `Fin<T>` test helpers
 
 ---
 
-## 실행 방법
+## How to Run
 
 ```bash
 cd Docs/tutorials/Functional-ValueObject/04-practical-guide/04-Testing-Strategies/TestingStrategies
@@ -25,44 +25,44 @@ dotnet run
 
 ---
 
-## 예상 출력
+## Expected Output
 
 ```
-=== 값 객체 테스트 전략 ===
+=== Value Object Testing Strategies ===
 
-1. 생성 테스트 패턴
+1. Creation Test Patterns
 ────────────────────────────────────────
-   [유효한 입력 테스트] user@example.com → PASS
-   [유효하지 않은 입력 테스트] invalid-email → PASS
-   [에러 메시지 검증] '@' 포함 → PASS
-   [경계값 테스트] 빈 문자열/null → PASS
+   [Valid input test] user@example.com -> PASS
+   [Invalid input test] invalid-email -> PASS
+   [Error message verification] Contains '@' -> PASS
+   [Boundary value test] Empty string/null -> PASS
 
-2. 동등성 테스트 패턴
+2. Equality Test Patterns
 ────────────────────────────────────────
-   [같은 값 동등성] email1 == email2 → PASS
-   [다른 값 비동등성] email1 != email3 → PASS
-   [해시코드 일관성] hash(email1) == hash(email2) → PASS
-   [연산자 테스트] == 및 != → PASS
+   [Same value equality] email1 == email2 -> PASS
+   [Different value inequality] email1 != email3 -> PASS
+   [Hash code consistency] hash(email1) == hash(email2) -> PASS
+   [Operator test] == and != -> PASS
 
-3. 비교 가능성 테스트 패턴
+3. Comparability Test Patterns
 ────────────────────────────────────────
-   [CompareTo 테스트] 20 < 25 < 30 → PASS
-   [비교 연산자 테스트] < 연산자 → PASS
-   [정렬 테스트] 정렬 후 순서 → PASS
+   [CompareTo test] 20 < 25 < 30 -> PASS
+   [Comparison operator test] < operator -> PASS
+   [Sorting test] Order after sorting -> PASS
 
-4. 테스트 헬퍼 사용
+4. Test Helper Usage
 ────────────────────────────────────────
-   [ShouldBeSuccess 헬퍼] → PASS
-   [ShouldBeFail 헬퍼] → PASS
-   [GetSuccessValue 헬퍼] → PASS
-   [GetFailError 헬퍼] → PASS
+   [ShouldBeSuccess helper] -> PASS
+   [ShouldBeFail helper] -> PASS
+   [GetSuccessValue helper] -> PASS
+   [GetFailError helper] -> PASS
 ```
 
 ---
 
-## 핵심 코드 설명
+## Core Code Explanation
 
-### 1. Fin<T> 테스트 헬퍼
+### 1. Fin<T> Test Helpers
 
 ```csharp
 public static class FinTestExtensions
@@ -87,10 +87,10 @@ public static class FinTestExtensions
 }
 ```
 
-### 2. 테스트 패턴 예시
+### 2. Test Pattern Examples
 
 ```csharp
-// 생성 테스트
+// Creation test
 [Fact]
 public void Create_WithValidEmail_ShouldSucceed()
 {
@@ -101,7 +101,7 @@ public void Create_WithValidEmail_ShouldSucceed()
     ((string)email).ShouldBe("user@example.com");
 }
 
-// 동등성 테스트
+// Equality test
 [Fact]
 public void Equals_WithSameValue_ShouldBeTrue()
 {
@@ -112,7 +112,7 @@ public void Equals_WithSameValue_ShouldBeTrue()
     email1.GetHashCode().ShouldBe(email2.GetHashCode());
 }
 
-// 비교 테스트
+// Comparison test
 [Fact]
 public void Sort_ShouldOrderByValue()
 {
@@ -127,43 +127,43 @@ public void Sort_ShouldOrderByValue()
 
 ---
 
-## 테스트 체크리스트
+## Test Checklist
 
-### 생성 테스트
-- [ ] 유효한 입력 → 성공
-- [ ] 유효하지 않은 입력 → 실패
-- [ ] 경계값 테스트 (빈 문자열, null, 최소/최대값)
-- [ ] error message 검증
+### Creation Tests
+- [ ] Valid input -> success
+- [ ] Invalid input -> failure
+- [ ] Boundary value tests (empty string, null, min/max values)
+- [ ] Error message verification
 
-### 동등성 테스트
-- [ ] 같은 값 → 동등
-- [ ] 다른 값 → 비동등
-- [ ] 해시코드 일관성
-- [ ] == / != 연산자
+### Equality Tests
+- [ ] Same values -> equal
+- [ ] Different values -> not equal
+- [ ] Hash code consistency
+- [ ] == / != operators
 
-### 비교 테스트 (해당 시)
-- [ ] CompareTo 정확성
-- [ ] <, >, <=, >= 연산자
-- [ ] 정렬 동작
+### Comparison Tests (when applicable)
+- [ ] CompareTo accuracy
+- [ ] <, >, <=, >= operators
+- [ ] Sorting behavior
 
-### immutability 테스트
-- [ ] 연산 후 원본 변경 없음
+### Immutability Tests
+- [ ] Original unchanged after operations
 
 ## FAQ
 
-### Q1: `Fin<T>` 테스트 헬퍼는 왜 필요한가요?
-**A**: `Fin<T>`의 성공/실패를 직접 검증하려면 `Match`를 호출하고 조건을 확인하는 반복 코드가 필요합니다. `ShouldBeSuccess()`, `ShouldBeFail()` 같은 헬퍼를 사용하면 테스트 코드가 간결해지고, 실패 시 error message도 명확하게 출력됩니다.
+### Q1: Why are `Fin<T>` test helpers needed?
+**A**: Directly verifying the success/failure of `Fin<T>` requires calling `Match` and checking conditions repeatedly. Using helpers like `ShouldBeSuccess()` and `ShouldBeFail()` makes test code concise, and error messages are clearly output on failure.
 
-### Q2: value object 테스트에서 경계값 테스트가 중요한 이유는 무엇인가요?
-**A**: value object의 `Create` 메서드는 유효성 검증의 마지막 방어선입니다. 빈 문자열, `null`, 최소/최대값 같은 경계 조건에서 검증이 정확히 동작하는지 확인하지 않으면, 유효하지 않은 값이 시스템에 들어올 수 있습니다.
+### Q2: Why are boundary value tests important for value objects?
+**A**: The `Create` method of a value object is the last line of defense for validation. If validation is not confirmed to work correctly for boundary conditions like empty strings, `null`, min/max values, invalid values may enter the system.
 
-### Q3: 동등성 테스트에서 해시코드 일관성까지 검증해야 하나요?
-**A**: 네. C#의 `Dictionary`와 `HashSet`은 `GetHashCode()`를 사용하여 키를 관리합니다. 동등한 두 객체의 해시코드가 다르면 컬렉션에서 올바르게 동작하지 않으므로, `Equals`가 `true`인 경우 해시코드도 반드시 같아야 합니다.
+### Q3: Must hash code consistency also be verified in equality tests?
+**A**: Yes. C#'s `Dictionary` and `HashSet` use `GetHashCode()` to manage keys. If two equal objects have different hash codes, the collection will not work correctly, so when `Equals` is `true`, hash codes must also be equal.
 
 ---
 
 ## Next Steps
 
-Part 5에서 도메인별 실전 예제를 학습합니다.
+Learn practical domain examples in Part 5.
 
-→ [5.1 이커머스 도메인](../../../05-domain-examples/01-Ecommerce-Domain/EcommerceDomain/)
+-> [5.1 E-commerce Domain](../../../05-domain-examples/01-Ecommerce-Domain/EcommerceDomain/)

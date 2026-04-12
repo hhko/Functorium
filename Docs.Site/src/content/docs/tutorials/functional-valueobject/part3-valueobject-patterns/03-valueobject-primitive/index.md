@@ -1,138 +1,138 @@
 ---
-title: "value object"
+title: "Value Object"
 ---
 
 > `ValueObject`
 
 ## Overview
 
-2D 좌표는 X와 Y 두 값이 항상 함께 다녀야 의미가 있습니다. 지금까지 배운 `SimpleValueObject<T>`는 단일 값만 래핑할 수 있었는데, 이처럼 여러 primitive 타입을 조합한 도메인 개념은 어떻게 표현할까요? `ValueObject`는 여러 값을 하나의 불변 단위로 묶고, `GetEqualityComponents()`를 통해 구성 요소 기반의 동등성 비교를 provides.
+A 2D coordinate is meaningful only when X and Y values always travel together. The `SimpleValueObject<T>` we have learned so far can only wrap a single value, so how do we represent domain concepts that combine multiple primitive types? `ValueObject` bundles multiple values into a single immutable unit and provides component-based equality comparison through `GetEqualityComponents()`.
 
 ## Learning Objectives
 
-- 여러 primitive 타입을 조합하여 복합 value object를 구현할 수 있습니다
-- `GetEqualityComponents()` 메서드로 동등성 비교 기준을 정의할 수 있습니다
-- LINQ Expression을 활용하여 복합 validation logic을 구현할 수 있습니다
-- 각 구성 요소에 대한 개별 검증과 통합 검증을 구분하여 적용할 수 있습니다
+- Implement a composite value object by combining multiple primitive types
+- Define equality comparison criteria with the `GetEqualityComponents()` method
+- Implement composite validation logic using LINQ Expressions
+- Distinguish and apply individual validation and integrated validation for each component
 
 ## Why Is This Needed?
 
-실제 도메인에서는 단일 값으로 표현되지 않는 개념이 많습니다. 2D 좌표의 X와 Y를 별도 변수로 관리하면 한쪽만 업데이트되어 데이터 일관성이 깨지기 쉽습니다. 여러 값이 서로 관련되어 함께 검증해야 하는 경우, 개별 변수로는 유효성 보장이 복잡해집니다. 또한 복합 데이터의 동등성 비교를 수동으로 구현하면 구성 요소 누락 등의 오류가 발생하기 쉽습니다.
+In real domains, many concepts cannot be represented by a single value. If the X and Y of a 2D coordinate are managed as separate variables, one side can be updated alone, easily breaking data consistency. When multiple values are related and must be validated together, guaranteeing validity with individual variables becomes complex. Also, manually implementing equality comparison for composite data is prone to errors like missing components.
 
-`ValueObject`는 관련 값들을 하나의 불변 객체로 캡슐화하고, 동등성 비교와 validation logic을 한 곳에서 관리할 수 있게 합니다.
+`ValueObject` encapsulates related values into a single immutable object and allows managing equality comparison and validation logic in one place.
 
 ## Core Concepts
 
-### Primitive 타입 조합
+### Primitive Type Composition
 
-`ValueObject`는 여러 기본 타입을 하나의 의미 있는 단위로 조합합니다. 분산된 관련 데이터를 하나의 객체로 묶어 응집성을 높이고 관련 로직을 집중시킵니다.
+`ValueObject` combines multiple base types into a single meaningful unit. It groups related dispersed data into a single object, increasing cohesion and concentrating related logic.
 
 ```csharp
-// 분산된 데이터 (문제가 있음)
+// Dispersed data (problematic)
 int x = 100;
 int y = 200;
 
-// 조합된 데이터 (해결됨)
+// Composed data (resolved)
 Coordinate coord = Coordinate.Create(100, 200);
 ```
 
-### GetEqualityComponents() 구현
+### GetEqualityComponents() Implementation
 
-`ValueObject`는 동등성 비교를 위해 `GetEqualityComponents()` 메서드를 구현해야 합니다. 이 메서드가 반환하는 모든 구성 요소가 같아야 두 인스턴스가 동일한 것으로 판단됩니다.
+`ValueObject` must implement the `GetEqualityComponents()` method for equality comparison. All components returned by this method must be equal for two instances to be considered identical.
 
-`Coordinate`의 경우 X와 Y 값이 모두 같아야 동일한 좌표로 취급됩니다. 특정 필드를 동등성 비교에서 제외하고 싶다면 해당 필드를 반환하지 않으면 됩니다.
+For `Coordinate`, both X and Y values must be the same to be treated as the same coordinate. If you want to exclude a specific field from equality comparison, simply do not return that field.
 
 ```csharp
 protected override IEnumerable<object> GetEqualityComponents()
 {
-    yield return X;  // X 좌표를 비교 요소로
-    yield return Y;  // Y 좌표를 비교 요소로
+    yield return X;  // X coordinate as comparison element
+    yield return Y;  // Y coordinate as comparison element
 }
 ```
 
-### 복합 validation logic
+### Composite Validation Logic
 
-`ValueObject`는 각 구성 요소에 대한 개별 검증과 전체적인 유효성 검증을 모두 수행할 수 있습니다. LINQ Expression의 `from-in-select` 패턴을 사용하면 순차적 검증을 선언적으로 표현할 수 있습니다.
+`ValueObject` can perform both individual validation for each component and overall validity validation. Using the `from-in-select` pattern of LINQ Expressions, sequential validation can be expressed declaratively.
 
 ```csharp
 public static Validation<Error, (int x, int y)> Validate(int x, int y) =>
-    from validX in ValidateX(x)      // X 좌표 개별 검증
-    from validY in ValidateY(y)      // Y 좌표 개별 검증
-    select (x: validX, y: validY);   // 검증된 값들 조합
+    from validX in ValidateX(x)      // Individual X coordinate validation
+    from validY in ValidateY(y)      // Individual Y coordinate validation
+    select (x: validX, y: validY);   // Combine validated values
 ```
 
 ## Practical Guidelines
 
 ### Expected Output
 ```
-=== 3. 비교 불가능한 복합 primitive 값 객체 - ValueObject ===
-부모 클래스: ValueObject
-예시: Coordinate (2D 좌표)
+=== 3. Non-Comparable Composite Primitive Value Object - ValueObject ===
+Parent class: ValueObject
+Example: Coordinate (2D coordinate)
 
-📋 특징:
-   ✅ 여러 primitive 값을 조합
-   ✅ 동등성 비교만 제공
-   ✅ 비교 기능은 제공되지 않음 (의도적으로)
+Features:
+   Combines multiple primitive values
+   Provides equality comparison only
+   Comparison functionality intentionally not provided
 
-🔍 성공 케이스:
-   ✅ Coordinate: (100, 200) (X: 100, Y: 200)
-   ✅ Coordinate: (100, 200) (X: 100, Y: 200)
-   ✅ Coordinate: (300, 400) (X: 300, Y: 400)
+Success Cases:
+   Coordinate: (100, 200) (X: 100, Y: 200)
+   Coordinate: (100, 200) (X: 100, Y: 200)
+   Coordinate: (300, 400) (X: 300, Y: 400)
 
-📊 동등성 비교:
+Equality Comparison:
    (100, 200) == (100, 200) = True
    (100, 200) == (300, 400) = False
 
-🔢 해시코드:
+Hash Code:
    (100, 200).GetHashCode() = -1711187277
    (100, 200).GetHashCode() = -1711187277
-   동일한 값의 해시코드가 같은가? True
+   Same value hash codes equal? True
 
-📊 비교 기능:
-   비교 기능은 제공되지 않음 (의도적으로)
-   정렬이나 크기 비교가 필요한 경우 ComparableValueObject 사용
+Comparison Functionality:
+   Comparison functionality intentionally not provided
+   Use ComparableValueObject when sorting or size comparison is needed
 
-❌ 실패 케이스:
+Failure Cases:
    Coordinate(-1, 200): XOutOfRange
    Coordinate(100, 2000): YOutOfRange
 
-💡 primitive 조합 값 객체의 특징:
-   - 여러 primitive 타입(int, string, decimal 등)을 조합
-   - 각 primitive 값에 대한 개별 검증 로직
-   - 동등성 비교만 제공 (비교 기능 없음)
-   - 복잡한 도메인 개념을 단순한 primitive 조합으로 표현
+Primitive composition value object characteristics:
+   - Combines multiple primitive types (int, string, decimal, etc.)
+   - Individual validation logic for each primitive value
+   - Provides equality comparison only (no comparison functionality)
+   - Expresses complex domain concepts as simple primitive compositions
 
-✅ 데모가 성공적으로 완료되었습니다!
+Demo completed successfully!
 ```
 
 ### Key Implementation Points
 
-`ValueObject` 기반 복합 value object 구현의 필수 요소를 정리합니다.
+Summarizes the essential elements of composite `ValueObject`-based value object implementation.
 
-| 포인트 | Description |
+| Point | Description |
 |--------|------|
-| **ValueObject 상속** | 복합 value object의 기본 기능 상속 |
-| **GetEqualityComponents() 구현** | 동등성 비교를 위한 구성 요소 정의 |
-| **LINQ Expression 검증** | from-in-select 패턴을 활용한 복합 검증 |
-| **개별 검증 메서드** | 각 primitive 값에 대한 독립적 검증 |
+| **Inherit ValueObject** | Inherits basic composite value object functionality |
+| **Implement GetEqualityComponents()** | Defines components for equality comparison |
+| **LINQ Expression validation** | Composite validation using from-in-select pattern |
+| **Individual validation methods** | Independent validation for each primitive value |
 
 ## Project Description
 
 ### Project Structure
 ```
 03-ValueObject-Primitive/
-├── Program.cs                    # 메인 실행 파일
-├── ValueObjectPrimitive.csproj  # 프로젝트 파일
+├── Program.cs                    # Main entry point
+├── ValueObjectPrimitive.csproj  # Project file
 ├── ValueObjects/
-│   └── Coordinate.cs            # 2D 좌표 값 객체
-└── README.md                    # 프로젝트 문서
+│   └── Coordinate.cs            # 2D coordinate value object
+└── README.md                    # Project document
 ```
 
 ### Core Code
 
-`Coordinate`는 `ValueObject`를 상속하여 X, Y 두 정수를 하나의 2D 좌표로 표현합니다.
+`Coordinate` inherits from `ValueObject` to represent two integers X and Y as a single 2D coordinate.
 
-**Coordinate.cs - 복합 primitive value object 구현**
+**Coordinate.cs - composite primitive value object implementation**
 ```csharp
 public sealed class Coordinate : ValueObject
 {
@@ -151,20 +151,20 @@ public sealed class Coordinate : ValueObject
     public static Coordinate CreateFromValidated((int x, int y) validatedValues) =>
         new(validatedValues.x, validatedValues.y);
 
-    // LINQ Expression을 활용한 복합 검증
+    // Composite validation using LINQ Expression
     public static Validation<Error, (int x, int y)> Validate(int x, int y) =>
         from validX in ValidateX(x)
         from validY in ValidateY(y)
         select (x: validX, y: validY);
 
-    // ValidationRules<T>를 활용한 개별 검증
+    // Individual validation using ValidationRules<T>
     private static Validation<Error, int> ValidateX(int x) =>
         ValidationRules<Coordinate>.NonNegative(x);
 
     private static Validation<Error, int> ValidateY(int y) =>
         ValidationRules<Coordinate>.Between(y, 0, 1000);
 
-    // 동등성 비교를 위한 구성 요소
+    // Components for equality comparison
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return X;
@@ -175,51 +175,51 @@ public sealed class Coordinate : ValueObject
 }
 ```
 
-동등성 비교와 해시코드를 확인하는 데모 코드입니다.
+Demo code that verifies equality comparison and hash code.
 
-**Program.cs - 복합 value object 데모**
+**Program.cs - composite value object demo**
 ```csharp
-// 복합 값 객체 생성
+// Create composite value objects
 var coord1 = Coordinate.Create(100, 200);
 var coord2 = Coordinate.Create(100, 200);
 var coord3 = Coordinate.Create(300, 400);
 
-// 동등성 비교
+// Equality comparison
 var c1 = coord1.Match(Succ: x => x, Fail: _ => default!);
 var c2 = coord2.Match(Succ: x => x, Fail: _ => default!);
 Console.WriteLine($"   {c1} == {c2} = {c1 == c2}");
 
-// 해시코드 확인
+// Hash code verification
 Console.WriteLine($"   {c1}.GetHashCode() = {c1.GetHashCode()}");
 Console.WriteLine($"   {c2}.GetHashCode() = {c2.GetHashCode()}");
 ```
 
 ## Summary at a Glance
 
-단일 값 래핑과 복합 값 조합의 차이를 compares.
+Compares the difference between single value wrapping and composite value composition.
 
 ### Comparison Table
 | Aspect | `SimpleValueObject<T>` | ValueObject |
 |------|---------------------|-------------|
-| **값 개수** | 단일 primitive | 복합 primitive |
-| **GetEqualityComponents()** | 자동 구현 | 수동 구현 필요 |
-| **validation logic** | 단순 검증 | 복합 검증 가능 |
-| **LINQ 활용** | 불필요 | 복합 검증에 유용 |
-| **용도** | 단순 값 래핑 | 복합 도메인 개념 |
+| **Number of values** | Single primitive | Composite primitive |
+| **GetEqualityComponents()** | Automatically implemented | Manual implementation required |
+| **Validation logic** | Simple validation | Composite validation possible |
+| **LINQ usage** | Not needed | Useful for composite validation |
+| **Usage** | Simple value wrapping | Composite domain concepts |
 
 ## FAQ
 
-### Q1: GetEqualityComponents()는 왜 필요한가요?
-**A**: 복합 value object의 동등성을 정의하기 위해 필요합니다. 좌표의 경우 X와 Y가 모두 같아야 동일한 좌표이므로, 두 값 모두를 returns. 특정 필드를 비교에서 제외하려면 해당 필드를 반환하지 않으면 됩니다.
+### Q1: Why is GetEqualityComponents() necessary?
+**A**: It is needed to define equality for composite value objects. For coordinates, both X and Y must be equal for the same coordinate, so both values are returned. To exclude a specific field from comparison, simply do not return that field.
 
-### Q2: LINQ Expression을 왜 사용하나요?
-**A**: `from-in-select` 패턴으로 복합 검증을 선언적으로 표현할 수 있습니다. X 검증이 실패하면 Y 검증을 건너뛰는 단락 평가가 자연스럽게 구현되며, if-else 체인보다 읽기 쉽습니다.
+### Q2: Why is LINQ Expression used?
+**A**: The `from-in-select` pattern allows expressing composite validation declaratively. Short-circuit evaluation where Y validation is skipped if X validation fails is naturally implemented, and it is more readable than if-else chains.
 
-### Q3: 언제 ValueObject 대신 일반 클래스를 사용해야 하나요?
-**A**: 값이 변경되어야 하거나 reference equality이 필요한 경우입니다. 은행 계좌 잔고처럼 자주 변경되는 데이터는 일반 클래스가 적합합니다. 이벤트, 설정값처럼 생성 후 변경되지 않는 값에 `ValueObject`를 uses.
+### Q3: When should a regular class be used instead of ValueObject?
+**A**: When the value needs to change or reference equality is required. Data that changes frequently, like a bank account balance, is suitable for regular classes. Use `ValueObject` for values that do not change after creation, such as events and configuration values.
 
-Next chapter에서는 `ValueObject`에 비교 기능을 추가한 `ComparableValueObject`를 학습합니다. 날짜 범위처럼 복합 데이터에도 자연스러운 순서가 필요한 경우를 다룹니다.
+The next chapter covers `ComparableValueObject`, which adds comparison functionality to `ValueObject`. It covers cases where composite data like date ranges also needs natural ordering.
 
 ---
 
-→ [4장: ComparableValueObject (Primitive)](../04-ComparableValueObject-Primitive/)
+-> [Chapter 4: ComparableValueObject (Primitive)](../04-ComparableValueObject-Primitive/)

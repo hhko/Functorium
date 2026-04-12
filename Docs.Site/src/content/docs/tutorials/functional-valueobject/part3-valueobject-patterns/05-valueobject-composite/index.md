@@ -1,72 +1,72 @@
 ---
-title: "복합 value object"
+title: "Composite Value Object"
 ---
 
 > `ValueObject`
 
 ## Overview
 
-이메일 주소를 문자열 하나로 다루다 보면 로컬 부분(`user`)과 도메인 부분(`example.com`)의 validation logic이 뒤섞이고, 각 부분을 독립적으로 재사용하기 어려워집니다. 복합 value object(Composite Value Object)는 작은 value object들을 조합하여 이런 복잡한 도메인 개념을 구조적으로 표현합니다.
+When handling an email address as a single string, the validation logic for the local part (`user`) and domain part (`example.com`) gets mixed up, making it difficult to reuse each part independently. A Composite Value Object combines smaller value objects to structurally represent such complex domain concepts.
 
 ## Learning Objectives
 
-1. 여러 value object를 조합하여 복잡한 도메인 개념을 표현할 수 있습니다.
-2. LINQ Expression으로 계층적 validation logic을 구현할 수 있습니다.
-3. `GetEqualityComponents()`를 오버라이드하여 복합 동등성을 정의할 수 있습니다.
-4. 작은 value object들을 모듈화하여 다른 맥락에서 재사용할 수 있습니다.
+1. Express complex domain concepts by combining multiple value objects.
+2. Implement hierarchical validation logic using LINQ Expressions.
+3. Override `GetEqualityComponents()` to define composite equality.
+4. Modularize smaller value objects for reuse in other contexts.
 
 ## Why Is This Needed?
 
-Previous step인 `04-ComparableValueObject-Primitive`에서는 여러 primitive 타입을 직접 조합하여 복합 데이터를 표현했습니다. 하지만 실제 애플리케이션에서는 더 복잡한 도메인 개념들이 등장합니다.
+In the previous step, `04-ComparableValueObject-Primitive`, we combined multiple primitive types directly to represent composite data. However, more complex domain concepts arise in real applications.
 
-이메일 주소처럼 로컬 부분과 도메인 부분이 각각 다른 규칙을 가지는 경우, 이를 하나의 단위로 다루어야 합니다. 형식 검증, 로컬 부분 검증, 도메인 검증이 순차적으로 이루어져야 하고, 이메일 로컬 부분이나 도메인은 다른 곳에서도 독립적으로 재사용될 수 있어야 합니다.
+For cases like email addresses where the local part and domain part each have different rules, they must be handled as a single unit. Format validation, split validation, local part validation, and domain validation must proceed hierarchically, and the email local part or domain should be independently reusable elsewhere.
 
-복합 value object(Composite Value Object)는 이런 요구를 충족합니다. `EmailLocalPart`와 `EmailDomain`이라는 독립적인 value object를 정의하고, 이를 조합하여 `Email`이라는 상위 개념을 만듭니다. 각 구성 요소는 자체 validation logic을 가지며, 전체 `Email`은 구성 요소들의 조합으로 동등성을 판단합니다.
+A Composite Value Object meets these requirements. It defines `EmailLocalPart` and `EmailDomain` as independent value objects and combines them to create a higher-level concept called `Email`. Each component has its own validation logic, and the overall `Email` determines equality based on the combination of its components.
 
 ## Core Concepts
 
-### value object 컴포지션
+### Value Object Composition
 
-`EmailLocalPart`와 `EmailDomain`이라는 두 개의 작은 value object를 조합하여 `Email`이라는 더 큰 개념을 만듭니다. 각 부분은 독립적인 value object로 존재하지만, 함께 조합되어 이메일이라는 더 큰 개념을 형성합니다.
+Two smaller value objects, `EmailLocalPart` and `EmailDomain`, are combined to create a larger concept called `Email`. Each part exists as an independent value object, but together they form the larger concept of email.
 
 ```csharp
-// 개별 값 객체들
+// Individual value objects
 EmailLocalPart localPart = EmailLocalPart.Create("user");
 EmailDomain domain = EmailDomain.Create("example.com");
 
-// 복합 값 객체
+// Composite value object
 Email email = Email.Create("user@example.com");
 ```
 
-이러한 컴포지션은 코드의 모듈성과 재사용성을 크게 향상시킵니다. 작은 value object들은 다른 맥락에서도 재사용될 수 있습니다.
+This composition greatly enhances code modularity and reusability. The smaller value objects can be reused in other contexts.
 
-### 계층적 validation logic
+### Hierarchical Validation Logic
 
-복합 value object는 여러 단계의 validation logic을 가지고 있습니다. 이메일 검증은 형식 검증, 분할 검증, 로컬 부분 검증, 도메인 검증이 계층적으로 진행됩니다.
+Composite value objects have multi-level validation logic. Email validation proceeds hierarchically through format validation, split validation, local part validation, and domain validation.
 
-LINQ Expression의 `from-in` 체인을 사용하면 이 검증 단계들을 선언적으로 표현할 수 있습니다.
+Using the `from-in` chain of LINQ Expressions, these validation stages can be expressed declaratively.
 
 ```csharp
-// 계층적 검증
+// Hierarchical validation
 public static Validation<Error, (EmailLocalPart, EmailDomain)> Validate(string email) =>
-    from validEmail in ValidateEmailFormat(email)        // 1. 형식 검증
-    from validParts in ValidateEmailParts(validEmail)     // 2. 분할 검증
-    select validParts;                                     // 결과 조합
+    from validEmail in ValidateEmailFormat(email)        // 1. Format validation
+    from validParts in ValidateEmailParts(validEmail)     // 2. Split validation
+    select validParts;                                     // Combine results
 ```
 
-각 단계에서 실패하면 이후 단계는 실행되지 않으므로, 복잡한 business rule을 체계적으로 구현할 수 있습니다.
+If any stage fails, subsequent stages are not executed, allowing systematic implementation of complex business rules.
 
-### 복합 동등성
+### Composite Equality
 
-복합 value object의 동등성은 모든 구성 요소들의 동등성을 종합적으로 판단합니다. 이메일 주소의 동등성은 로컬 부분과 도메인 부분이 모두 같을 때 성립합니다.
+The equality of a composite value object is determined by comprehensively evaluating the equality of all components. Email address equality holds when both local part and domain part are equal.
 
-`GetEqualityComponents()`에서 반환하는 모든 요소가 pairwise로 같아야 두 객체가 동일합니다.
+All elements returned from `GetEqualityComponents()` must be pairwise equal for two objects to be identical.
 
 ```csharp
 protected override IEnumerable<object> GetEqualityComponents()
 {
-    yield return LocalPart;  // 로컬 부분 비교
-    yield return Domain;     // 도메인 부분 비교
+    yield return LocalPart;  // Compare local part
+    yield return Domain;     // Compare domain part
 }
 ```
 
@@ -74,82 +74,82 @@ protected override IEnumerable<object> GetEqualityComponents()
 
 ### Expected Output
 ```
-=== 5. 비교 불가능한 복합 값 객체 - ValueObject ===
-부모 클래스: ValueObject
-예시: Email (이메일 주소) - EmailLocalPart + EmailDomain 조합
+=== 5. Non-Comparable Composite Value Object - ValueObject ===
+Parent class: ValueObject
+Example: Email (email address) - EmailLocalPart + EmailDomain composition
 
-📋 특징:
-   ✅ 복잡한 검증 로직을 가진 값 객체
-   ✅ 동등성 비교만 제공
-   ✅ 여러 값 객체를 조합하여 더 복잡한 도메인 개념 표현
-   ✅ EmailLocalPart + EmailDomain = Email
+Features:
+   Value object with complex validation logic
+   Provides equality comparison only
+   Expresses more complex domain concepts by combining multiple value objects
+   EmailLocalPart + EmailDomain = Email
 
-🔍 성공 케이스:
-   ✅ Email: user@example.com
+Success Cases:
+   Email: user@example.com
      - LocalPart: user
      - Domain: example.com
 
-   ✅ Email: user@example.com
+   Email: user@example.com
      - LocalPart: user
      - Domain: example.com
 
-   ✅ Email: admin@test.org
+   Email: admin@test.org
      - LocalPart: admin
      - Domain: test.org
 
-📊 동등성 비교:
+Equality Comparison:
    user@example.com == user@example.com = True
    user@example.com == admin@test.org = False
 
-🔢 해시코드:
+Hash Code:
    user@example.com.GetHashCode() = -1711187277
    user@example.com.GetHashCode() = -1711187277
-   동일한 값의 해시코드가 같은가? True
+   Same value hash codes equal? True
 
-❌ 실패 케이스:
+Failure Cases:
    Email("invalid-email"): InvalidEmailFormat
    Email("@example.com"): EmptyOrOutOfRange
    Email("user@"): EmptyOrInvalidFormat
 
-💡 복합 값 객체의 특징:
-   - EmailLocalPart와 EmailDomain은 각각 독립적인 값 객체
-   - Email은 이 두 값 객체를 조합하여 더 복잡한 도메인 개념 표현
-   - 각 구성 요소는 자체적인 검증 로직을 가짐
-   - 전체 Email은 구성 요소들의 조합으로 동등성 비교
+Composite value object characteristics:
+   - EmailLocalPart and EmailDomain are each independent value objects
+   - Email expresses a more complex domain concept by combining these two value objects
+   - Each component has its own validation logic
+   - The overall Email determines equality through the combination of components
 
-✅ 데모가 성공적으로 완료되었습니다!
+Demo completed successfully!
 ```
 
 ### Key Implementation Points
 
-다음 네 가지가 복합 value object 구현의 핵심입니다.
+The following four are the core of composite value object implementation.
 
-| 포인트 | Description |
+| Point | Description |
 |--------|------|
-| **계층적 value object 구조** | EmailLocalPart + EmailDomain -> Email |
-| **LINQ Expression 계층적 검증** | from-in 체인으로 복합 검증 구현 |
-| **GetEqualityComponents() 복합 구현** | 여러 구성 요소의 동등성 정의 |
-| **모듈성** | 작은 value object들의 재사용성 보장 |
+| **Hierarchical value object structure** | EmailLocalPart + EmailDomain -> Email |
+| **LINQ Expression hierarchical validation** | Composite validation via from-in chaining |
+| **Composite GetEqualityComponents() implementation** | Defines equality across multiple components |
+| **Modularity** | Ensures reusability of smaller value objects |
 
 ## Project Description
 
 ### Project Structure
 ```
 05-ValueObject-Composite/
-├── Program.cs                    # 메인 실행 파일
-├── ValueObjectComposite.csproj  # 프로젝트 파일
+├── Program.cs                    # Main entry point
+├── ValueObjectComposite.csproj  # Project file
 ├── ValueObjects/
-│   ├── Email.cs                 # 복합 이메일 값 객체
-│   ├── EmailLocalPart.cs        # 이메일 로컬 부분 값 객체
-│   └── EmailDomain.cs           # 이메일 도메인 값 객체
-└── README.md                    # 프로젝트 문서
+│   ├── Email.cs                 # Composite email value object
+│   ├── EmailLocalPart.cs        # Email local part value object
+│   └── EmailDomain.cs           # Email domain value object
+└── README.md                    # Project document
 ```
 
 ### Core Code
 
-`EmailLocalPart`는 이메일 로컬 부분을 독립된 value object로 표현합니다.
+`EmailLocalPart` represents the email local part as an independent value object.
 
-**EmailLocalPart.cs - 기본 value object**
+**EmailLocalPart.cs - basic value object**
 ```csharp
 public sealed class EmailLocalPart : SimpleValueObject<string>
 {
@@ -171,9 +171,9 @@ public sealed class EmailLocalPart : SimpleValueObject<string>
 }
 ```
 
-`Email`은 `EmailLocalPart`와 `EmailDomain`을 조합하여 복합 동등성과 계층적 검증을 provides.
+`Email` combines `EmailLocalPart` and `EmailDomain` to provide composite equality and hierarchical validation.
 
-**Email.cs - 복합 value object**
+**Email.cs - composite value object**
 ```csharp
 public sealed class Email : ValueObject
 {
@@ -186,13 +186,13 @@ public sealed class Email : ValueObject
         Domain = domain;
     }
 
-    // 계층적 검증
+    // Hierarchical validation
     public static Validation<Error, (EmailLocalPart, EmailDomain)> Validate(string email) =>
-        from validEmail in ValidateEmailFormat(email)      // 1. 형식 검증
-        from validParts in ValidateEmailParts(validEmail)   // 2. 분할 검증
-        select validParts;                                   // 결과 조합
+        from validEmail in ValidateEmailFormat(email)      // 1. Format validation
+        from validParts in ValidateEmailParts(validEmail)   // 2. Split validation
+        select validParts;                                   // Combine results
 
-    // 복합 동등성
+    // Composite equality
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return LocalPart;
@@ -201,13 +201,13 @@ public sealed class Email : ValueObject
 }
 ```
 
-**Program.cs - 복합 value object 데모**
+**Program.cs - composite value object demo**
 ```csharp
-// 복합 값 객체 생성
+// Create composite value objects
 var email1 = Email.Create("user@example.com");
 var email2 = Email.Create("user@example.com");
 
-// 동등성 비교
+// Equality comparison
 var e1 = email1.Match(Succ: x => x, Fail: _ => default!);
 var e2 = email2.Match(Succ: x => x, Fail: _ => default!);
 Console.WriteLine($"   {e1} == {e2} = {e1 == e2}");
@@ -215,38 +215,38 @@ Console.WriteLine($"   {e1} == {e2} = {e1 == e2}");
 
 ## Summary at a Glance
 
-Primitive 직접 조합 방식과 value object 컴포지션 방식의 차이를 compares.
+Compares the difference between direct primitive composition and value object composition approaches.
 
 ### Comparison Table
 | Aspect | ValueObject-Primitive | ValueObject-Composite |
 |------|----------------------|---------------------|
-| **구성 요소** | Primitive 타입 직접 사용 | value object 컴포지션 |
-| **검증 복잡성** | 단일 단계 검증 | 계층적 검증 |
-| **재사용성** | 제한적 | 높음 (컴포넌트 재사용) |
-| **모듈성** | 낮음 | 높음 |
-| **유지보수성** | 보통 | 높음 |
+| **Components** | Primitive types used directly | Value object composition |
+| **Validation complexity** | Single-stage validation | Hierarchical validation |
+| **Reusability** | Limited | High (component reuse) |
+| **Modularity** | Low | High |
+| **Maintainability** | Average | High |
 
 ### Pros and Cons
 | Pros | Cons |
 |------|------|
-| **높은 모듈성** | 구현 복잡도 증가 |
-| **컴포넌트 재사용** | 계층 구조 복잡 |
-| **유지보수성 향상** | 학습 곡선 존재 |
-| **도메인 표현력** | 성능 오버헤드 |
+| **High modularity** | Implementation complexity increases |
+| **Component reuse** | Complex hierarchy structure |
+| **Improved maintainability** | Learning curve exists |
+| **Domain expressiveness** | Performance overhead |
 
 ## FAQ
 
-### Q1: 복합 value object와 일반 클래스의 차이점은 무엇인가요?
-**A**: 복합 value object는 구성 요소들의 immutability과 값 기반 동등성을 강제합니다. 생성 후 변경할 수 없으며, `GetEqualityComponents()`를 통해 동등성 비교 방식을 명시적으로 defines. 일반 클래스는 이러한 제약이 없어 구성 요소를 자유롭게 변경할 수 있지만, 동등성과 immutability을 보장하지 않습니다.
+### Q1: What is the difference between a composite value object and a regular class?
+**A**: A composite value object enforces immutability and value-based equality of its components. It cannot be changed after creation, and explicitly defines how equality comparison works through `GetEqualityComponents()`. Regular classes have no such constraints and can freely change components, but do not guarantee equality and immutability.
 
-### Q2: 왜 계층적 검증을 사용하나요?
-**A**: 복잡한 business rule을 단계별로 명확하게 구현할 수 있기 때문입니다. 이메일 검증에서 먼저 기본 형식을 확인하고, 그 다음에 각 부분의 유효성을 검증하면 디버깅과 유지보수가 용이합니다. 각 검증 단계는 독립적으로 테스트하고 재사용할 수 있습니다.
+### Q2: Why is hierarchical validation used?
+**A**: Because complex business rules can be implemented clearly step by step. In email validation, first checking the basic format and then validating the validity of each part makes debugging and maintenance easier. Each validation stage can be independently tested and reused.
 
-### Q3: GetEqualityComponents()는 어떻게 복합 동등성을 구현하나요?
-**A**: `GetEqualityComponents()`는 복합 value object의 모든 구성 요소를 순차적으로 returns. 두 복합 value object가 동일하려면 반환된 모든 요소가 pairwise로 같아야 합니다. 이메일의 경우 로컬 부분과 도메인 부분이 모두 같아야 동일한 이메일로 취급됩니다.
+### Q3: How does GetEqualityComponents() implement composite equality?
+**A**: `GetEqualityComponents()` sequentially returns all components of the composite value object. For two composite value objects to be identical, all returned elements must be pairwise equal. In the case of email, both the local part and domain part must be equal to be treated as the same email.
 
-지금까지 동등성만 지원하는 복합 value object를 살펴보았습니다. Next chapter에서는 `ComparableValueObject`를 상속하여 복합 value object에 정렬과 비교 기능을 추가하는 방법을 다룹니다.
+So far we have examined composite value objects that only support equality. The next chapter covers how to add sorting and comparison functionality to composite value objects by inheriting from `ComparableValueObject`.
 
 ---
 
-→ [6장: ComparableValueObject (Composite)](../06-ComparableValueObject-Composite/)
+-> [Chapter 6: ComparableValueObject (Composite)](../06-ComparableValueObject-Composite/)
