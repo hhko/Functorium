@@ -2,7 +2,7 @@
 title: "Commit Analysis and Feature Extraction"
 ---
 
-Raw data alone is not enough to write release notes. Dozens of commits and API change lists tell you "what changed" but not "what it means to users." In Phase 3, the collected data is analyzed to extract features for the release notes and identify Breaking Changes.
+Raw data alone cannot produce release notes. Dozens of commits and API change listings tell us "what changed" but not "what it means to the user." Phase 3 analyzes the collected data to extract features for the release notes and identify Breaking Changes.
 
 ## Input Files
 
@@ -18,9 +18,9 @@ The following files generated in Phase 2 are analyzed.
 
 ## Commit Analysis Method
 
-The analysis proceeds in four steps.
+Analysis proceeds in four steps.
 
-### Step 1: Reading Commit Messages
+### Step 1: Read Commit Messages
 
 Check the commit list from the component analysis files.
 
@@ -32,27 +32,27 @@ c5e604f Add OpenTelemetry integration support (#125)
 4ee28c2 Improve Serilog destructuring for LanguageExt errors (#126)
 ```
 
-### Step 2: Looking Up GitHub Issues/PRs
+### Step 2: Look Up GitHub Issues/PRs
 
-If GitHub references (`#123`, `(#124)`) are in commit messages, they **must be looked up.** PRs and issues contain context that cannot be known from commit messages alone. You can identify the specific problem users experienced, the motivation for the change, and related issues, making them key material when writing the "Why this matters" section of the release notes.
+If commit messages contain GitHub references (`#123`, `(#124)`), they **must be looked up.** PRs and issues contain context that cannot be known from commit messages alone. You can identify the specific problems users faced, the motivation for the change, and related issues, making this a key resource when writing the "Why this matters" section of the release notes.
 
 ```txt
 PR #106 description:
 - Title: "Error handling improvements"
-- Fixes issues: #101 and #102
+- Fixed issues: #101 and #102
 - Implementation: Better error handling and validation
 
 Issue #101: "ErrorCodeFactory doesn't support nested errors"
 - User problem: Information loss when creating nested errors
-- Pain point: "Inner error information not showing in logs"
+- Pain point: "Internal error information is not displayed in logs"
 
 Issue #102: "Serilog destructuring loses error context"
 - User problem: LanguageExt error context lost during Serilog logging
 ```
 
-### Step 3: Identifying Feature Types
+### Step 3: Identify Feature Types
 
-Feature types are identified by patterns in commit messages.
+Identify feature types from commit message patterns.
 
 | Pattern | Meaning | Priority |
 |---------|---------|:--------:|
@@ -62,17 +62,17 @@ Feature types are identified by patterns in commit messages.
 | `Fix` | Bug fix | Low |
 | `Support for` | New platform/technology integration | High |
 
-### Step 4: Extracting User Impact
+### Step 4: Extract User Impact
 
-For each significant commit, four questions are answered. What capability does this enable (new feature), what changes for developers (API impact), what problem does it solve (use case), and is it a Breaking Change (migration required). The answers to these questions become the material for composing each section of the release notes.
+For each important commit, answer four questions. What does this enable (new capability), what changes for the developer (API impact), what problem does it solve (use case), and is it a Breaking Change (migration needed). The answers to these questions become the material composing each section of the release notes.
 
 ## Breaking Changes Detection
 
-Breaking Changes are identified using **two methods**, and both methods are used together to minimize omissions.
+Breaking Changes are identified using **two methods**, and both are used together to minimize omissions.
 
 ### Method 1: Commit Message Patterns (Developer Intent)
 
-This finds Breaking Changes explicitly marked by developers in commit messages. It searches for patterns containing `breaking` or `BREAKING` strings, or `!` after the type (e.g., `feat!:`, `fix!:`).
+Find Breaking Changes explicitly marked by developers in commit messages. Search for patterns containing `breaking`, `BREAKING` strings, or `!` after the type (e.g., `feat!:`, `fix!:`).
 
 ```txt
 feat!: Change IErrorHandler to IErrorDestructurer
@@ -80,13 +80,13 @@ fix!: Remove deprecated Create method
 BREAKING: Update authentication flow
 ```
 
-This method directly reflects developer intent but has the limitation that it cannot detect changes when the notation is omitted.
+This method directly reflects the developer's intent but has the limitation that it cannot detect changes if the marking is omitted.
 
-### Method 2: Git Diff Analysis (Auto-detection, Recommended)
+### Method 2: Git Diff Analysis (Automatic Detection, Recommended)
 
-This analyzes the Git diff of the `.api` folder to **objectively** detect actual API changes. Even if not marked in the commit message, it does not miss APIs that were actually deleted or changed.
+Analyze the Git diff of the `.api` folder to **objectively** detect actual API changes. Even if not marked in the commit message, deleted or changed APIs are not missed.
 
-**Git Diff File Location:**
+**Git Diff file location:**
 ```txt
 .analysis-output/api-changes-build-current/api-changes-diff.txt
 ```
@@ -98,7 +98,7 @@ Breaking Change status is determined by the following patterns.
 | `- public class Foo` | Class deleted | Yes |
 | `- public interface IFoo` | Interface deleted | Yes |
 | `- public void Method()` | Method deleted | Yes |
-| `- Method(int x)` to `+ Method(string x)` | Type change | Yes |
+| `- Method(int x)` to `+ Method(string x)` | Type changed | Yes |
 | `+ public class Bar` | New class added | No |
 | `+ public void NewMethod()` | New method added | No |
 
@@ -118,25 +118,25 @@ diff --git a/Src/Functorium/.api/Functorium.cs b/Src/Functorium/.api/Functorium.
  }
 ```
 
-In the above example, two Breaking Changes are detected. The interface name was changed from `IErrorDestructurer` to `IErrorProcessor`, and the method name was changed from `CanHandle` to `CanProcess`.
+In the example above, two Breaking Changes are detected. The interface name changed from `IErrorDestructurer` to `IErrorProcessor`, and the method name changed from `CanHandle` to `CanProcess`.
 
-Comparing the two methods, Git Diff analysis is more accurate and reliable. Commit message patterns depend on developer intent and may miss notations, while Git Diff analysis detects actual code changes, provides objective evidence, and covers all changes.
+Comparing the two methods, Git Diff analysis is more accurate and reliable. Commit message patterns depend on developer intent and markings can be missed, while Git Diff analysis detects actual code changes, providing objective evidence and covering all changes.
 
 ## Commit Priority
 
 Not all commits need to be included in the release notes. Priority is assigned based on the impact on users.
 
-**High priority** commits that must be included are new types (Add Type, Add Factory), new integration support (Add support, Support for), Breaking API changes (Rename, Remove, Change), major features (Add method, Implement), and security improvements (security, validation). These directly impact developers' code or workflows.
+**High priority** commits that must be included are new types (Add Type, Add Factory), new integration support (Add support, Support for), Breaking API changes (Rename, Remove, Change), major features (Add method, Implement), and security improvements (security, validation). These directly affect developer code or workflows.
 
-**Medium priority** commits to consider including are performance improvements (Improve performance, Optimize), enhanced configuration (Add configuration, Support options), better error handling (Improve error, Add validation), and developer experience improvements (Enhance, Better). These are changes that improve existing features and are worth informing users about, but not essential.
+**Medium priority** commits to consider include performance improvements (Improve performance, Optimize), enhanced configuration (Add configuration, Support options), better error handling (Improve error, Add validation), and developer experience improvements (Enhance, Better). These are changes that improve existing features and have value in communicating to users, but are not essential.
 
-**Low priority** commits that are usually skipped are minor bug fixes, internal refactoring with no user impact, documentation updates, test improvements, and code cleanup. Including them in the release notes can actually bury important changes.
+**Low priority** commits usually skipped are minor bug fixes, internal refactoring with no user impact, documentation updates, test improvements, and code cleanup. Including them in the release notes would bury the important changes.
 
 ## Feature Grouping
 
 ### Consolidating Related Commits
 
-Multiple commits often comprise a single feature. For example, the following three commits are each different tasks, but together they form a single feature called "Enhanced Error Logging System."
+Multiple commits often compose a single feature. For example, the following three commits are different tasks but together form a single feature called "Enhanced Error Logging System."
 
 ```txt
 853c918 Rename IErrorHandler to IErrorDestructurer
@@ -144,31 +144,31 @@ d4eacc6 Improve error destructuring output formatting
 a1b2c3d Add structured logging for all error types
 ```
 
-This consolidation allows the release notes to describe features in user-understandable units rather than listing individual commits. Describing a single feature from three aspects -- structured destructuring, better error messages, and enhanced tracing -- is much more effective.
+By consolidating this way, the release notes can describe in feature units that users can understand, rather than listing individual commits. Describing a single feature from three perspectives -- structured destructuring, better error messages, and enhanced tracing -- is much more effective.
 
 ### Multi-Component Features
 
-A single feature may also be implemented across multiple components. If the core error factory was changed in Functorium and test utilities were updated in Functorium.Testing, these are consolidated into a single feature called "Error Handling System Improvement."
+A single feature may be implemented across multiple components. If the core error factory was changed in Functorium and test utilities were updated in Functorium.Testing, these are consolidated into a single feature called "Error Handling System Improvement."
 
 ```txt
 Functorium.md:
-  - Core error factory change
+  - Core error factory changes
 
 Functorium.Testing.md:
-  - Test utility update
+  - Test utility updates
 
 → Consolidated: "Error Handling System Improvement"
 ```
 
-## Intermediate Results Storage
+## Saving Intermediate Results
 
-Phase 3 analysis results are stored in the following files.
+Phase 3's analysis results are saved in the following files.
 
 ```txt
 .release-notes/scripts/.analysis-output/work/
 ├── phase3-commit-analysis.md     # Commit classification and priority
 ├── phase3-feature-groups.md      # Feature grouping results
-└── phase3-api-mapping.md         # API and commit mapping
+└── phase3-api-mapping.md         # API to commit mapping
 ```
 
 ### phase3-commit-analysis.md Format
@@ -228,7 +228,7 @@ Analysis Results:
   Bug Fixes: 1
   Feature Groups: 8
 
-Identified Major Features:
+Identified Key Features:
   1. Functional Error Handling (ErrorCodeFactory)
   2. OpenTelemetry Integration (Observability)
   3. Architecture Validation (ArchUnitNET)
@@ -238,7 +238,7 @@ Identified Major Features:
   7. Options Pattern (FluentValidation)
   8. Utility Extension Methods
 
-Intermediate results saved:
+Intermediate Results Saved:
   .analysis-output/work/phase3-commit-analysis.md
   .analysis-output/work/phase3-feature-groups.md
   .analysis-output/work/phase3-api-mapping.md
@@ -246,9 +246,9 @@ Intermediate results saved:
 
 ## Verification Step
 
-After analysis is complete, the quality of the results is checked.
+After analysis is complete, check the quality of the results.
 
-First, review whether commit priorities are appropriate. New types, integration support, Breaking Changes, and major features should be at high priority, performance and configuration-related changes at medium priority, and documentation or refactoring at low priority.
+First, review whether commit priorities are appropriate. New types, integration support, Breaking Changes, and major features should be at high priority; performance and configuration changes at medium priority; and documentation and refactoring at low priority.
 
 Next, verify all API references against the Uber file.
 
@@ -256,17 +256,17 @@ Next, verify all API references against the Uber file.
 grep "ErrorCodeFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
 ```
 
-Finally, ensure Breaking Changes are comprehensively included. All deleted/changed APIs from `api-changes-diff.txt` must be documented, and commits marked with commit message patterns (`!:`, `breaking`) must also be included.
+Finally, confirm that Breaking Changes are comprehensively included. All deleted/changed APIs in `api-changes-diff.txt` must be documented, and commits marked with commit message patterns (`!:`, `breaking`) must also be included.
 
 ## FAQ
 
-### Q1: What is the criteria for grouping multiple commits into a single feature?
-**A**: Commits that deal with related APIs or modules, commits linked to the same GitHub issue/PR, and commits that address similar topics (e.g., error handling, logging) are consolidated into a single feature group. Multi-component features (e.g., core change in Functorium, test addition in Functorium.Testing) are also grouped together.
+### Q1: What criteria are used to group multiple commits into a single feature?
+**A**: Commits that deal with related APIs or modules, commits connected to the same GitHub issue/PR, and commits addressing similar topics (e.g., error handling, logging) are consolidated into a single feature group. Multi-component features (e.g., core changes in Functorium and test additions in Functorium.Testing) are also grouped together.
 
-### Q2: Why is looking up GitHub issues/PRs "mandatory"?
-**A**: Commit messages alone make it difficult to **understand the motivation and context of the change.** PRs and issues contain the specific problems users experienced, alternative considerations, and related issues, making them key material for writing the "Why this matters" section. Without this information, the result is just a simple feature listing.
+### Q2: Why is GitHub issue/PR lookup "mandatory"?
+**A**: Commit messages alone make it difficult to understand **the motivation and context of the change.** PRs and issues contain the specific problems users faced, alternative considerations, and related issues, making them key material for writing the "Why this matters" section. Without this information, the result is merely a list of features.
 
 ### Q3: Why are intermediate results saved to files?
-**A**: This is a design for **traceability and debugging.** Saving `phase3-commit-analysis.md` and `phase3-feature-groups.md` as files allows Phase 4 to use them as input, and when problems occur, the Phase 3 analysis results can be directly checked to identify the cause.
+**A**: This is a design for **traceability and debugging.** Saving `phase3-commit-analysis.md` and `phase3-feature-groups.md` to files allows Phase 4 to use them as input, and when problems occur, Phase 3's analysis results can be directly examined to identify the cause.
 
 Once analysis is complete, proceed to [Phase 4: Release Note Writing](04-phase4-writing.md) to write the actual document based on the extracted feature groups.

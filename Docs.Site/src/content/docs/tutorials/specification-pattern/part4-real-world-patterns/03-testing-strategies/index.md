@@ -2,38 +2,38 @@
 title: "Testing Strategies"
 ---
 
-## 개요
+## Overview
 
-Specification이 정확한 비즈니스 규칙을 표현하는지 어떻게 보장할 수 있을까요? 단위 테스트 하나로 충분할까요, 아니면 조합과 Repository 통합까지 검증해야 할까요? 이 장에서는 Specification의 세 가지 테스트 수준 — 개별 Spec, 조합, Usecase 통합 — 을 체계적으로 다룹니다.
+How can we ensure that Specifications express the correct business rules? Is a single unit test enough, or do we need to verify compositions and Repository integration as well? This chapter systematically covers three testing levels for Specifications -- individual Spec, composition, and Usecase integration.
 
-## 학습 목표
+## Learning Objectives
 
-1. **Level 1: Spec 자체 테스트** - 개별 Specification의 `IsSatisfiedBy()` 경계값 테스트
-2. **Level 2: 조합 테스트** - `And`, `Or`, `Not` 조합의 정확한 동작 검증
-3. **Level 3: Usecase 테스트** - Mock Repository를 통한 Specification 통합 검증
+1. **Level 1: Spec self-testing** - Boundary value testing of individual Specification's `IsSatisfiedBy()`
+2. **Level 2: Composition testing** - Verifying correct behavior of `And`, `Or`, `Not` compositions
+3. **Level 3: Usecase testing** - Verifying Specification integration through Mock Repository
 
-## 핵심 개념
+## Core Concepts
 
-### 3-Level 테스트 피라미드
+### 3-Level Test Pyramid
 
 ```
-         /  Level 3  \       Usecase 테스트 (통합)
-        / ----------- \      Mock Repository로 Spec이 올바르게 사용되는지 검증
-       /   Level 2     \     조합 테스트 (And/Or/Not)
-      / --------------- \    복합 조건의 정확한 동작 검증
-     /     Level 1       \   Spec 자체 테스트 (경계값)
-    / ------------------- \  IsSatisfiedBy()의 만족/불만족 경계 검증
+         /  Level 3  \       Usecase tests (integration)
+        / ----------- \      Verify Specs are correctly used via Mock Repository
+       /   Level 2     \     Composition tests (And/Or/Not)
+      / --------------- \    Verify correct behavior of composite conditions
+     /     Level 1       \   Spec self-tests (boundary values)
+    / ------------------- \  Verify satisfaction/non-satisfaction boundaries of IsSatisfiedBy()
 ```
 
-### Level 1: Spec 자체 테스트
+### Level 1: Spec Self-Testing
 
-`Theory` + `InlineData`로 경계값을 검증합니다.
+Verify boundary values using `Theory` + `InlineData`.
 
 ```csharp
 [Theory]
-[InlineData(0, false)]     // 경계: 재고 0
-[InlineData(1, true)]      // 경계: 재고 1
-[InlineData(100, true)]    // 일반 케이스
+[InlineData(0, false)]     // Boundary: stock 0
+[InlineData(1, true)]      // Boundary: stock 1
+[InlineData(100, true)]    // Normal case
 public void ProductInStockSpec_ShouldReturnExpected_WhenStockIs(int stock, bool expected)
 {
     var product = new Product("Test", 1000, stock, "Test");
@@ -42,9 +42,9 @@ public void ProductInStockSpec_ShouldReturnExpected_WhenStockIs(int stock, bool 
 }
 ```
 
-### Level 2: 조합 테스트
+### Level 2: Composition Testing
 
-실제 데이터로 `And`, `Or`, `Not` 조합을 검증합니다.
+Verify `And`, `Or`, `Not` compositions with real data.
 
 ```csharp
 var spec = new ProductCategorySpec("Electronics") & new ProductInStockSpec();
@@ -52,9 +52,9 @@ spec.IsSatisfiedBy(inStockElectronics).ShouldBeTrue();
 spec.IsSatisfiedBy(outOfStockElectronics).ShouldBeFalse();
 ```
 
-### Level 3: Usecase 테스트
+### Level 3: Usecase Testing
 
-Mock Repository를 사용하여 Specification이 Usecase에서 올바르게 전달되는지 검증합니다.
+Use a Mock Repository to verify that Specifications are correctly passed within Usecases.
 
 ```csharp
 public class MockProductRepository : IProductRepository
@@ -65,9 +65,9 @@ public class MockProductRepository : IProductRepository
 }
 ```
 
-## 프로젝트 설명
+## Project Description
 
-### 프로젝트 구조
+### Project Structure
 
 ```
 TestingStrategies/
@@ -81,34 +81,34 @@ TestingStrategies/
 └── Program.cs
 
 TestingStrategies.Tests.Unit/
-├── Level1_SpecSelfTests.cs         # Spec 경계값 테스트
-├── Level2_CompositionTests.cs      # And/Or/Not 조합 테스트
-└── Level3_UsecaseTests.cs          # Mock Repository 통합 테스트
+├── Level1_SpecSelfTests.cs         # Spec boundary value tests
+├── Level2_CompositionTests.cs      # And/Or/Not composition tests
+└── Level3_UsecaseTests.cs          # Mock Repository integration tests
 ```
 
-## 한눈에 보는 정리
+## At a Glance
 
-각 테스트 레벨이 무엇을 검증하고 어떤 기법을 사용하는지 정리합니다.
+A summary of what each test level verifies and the techniques used.
 
-| 레벨 | 대상 | 검증 내용 | 기법 |
-|------|------|----------|------|
-| **Level 1** | 개별 Spec | `IsSatisfiedBy()` 경계값 | `Theory` + `InlineData` |
-| **Level 2** | Spec 조합 | `And`, `Or`, `Not` 동작 | 실제 데이터 + 연산자 |
-| **Level 3** | Usecase | Spec이 Repository에 올바르게 전달 | Mock Repository |
+| Level | Target | What it verifies | Technique |
+|-------|--------|-----------------|-----------|
+| **Level 1** | Individual Spec | `IsSatisfiedBy()` boundary values | `Theory` + `InlineData` |
+| **Level 2** | Spec composition | `And`, `Or`, `Not` behavior | Real data + operators |
+| **Level 3** | Usecase | Spec correctly passed to Repository | Mock Repository |
 
 ## FAQ
 
-### Q1: 3가지 레벨을 모두 작성해야 하나요?
-**A**: Level 1은 필수입니다. 모든 Specification에 대해 경계값 테스트를 작성해야 합니다. Level 2는 복잡한 조합이 있을 때, Level 3는 Usecase가 Specification을 사용할 때 작성합니다.
+### Q1: Do I need to write all 3 levels?
+**A**: Level 1 is mandatory. Boundary value tests should be written for all Specifications. Level 2 is needed when there are complex compositions, and Level 3 when Usecases use Specifications.
 
-### Q2: Level 3에서 NSubstitute 같은 Mocking 프레임워크를 사용해도 되나요?
-**A**: 네, 프로젝트에서 이미 사용 중이라면 Mocking 프레임워크를 사용해도 됩니다. 이 예제에서는 외부 의존성 없이 Mock 클래스를 직접 구현하여 패턴을 명확히 보여줍니다.
+### Q2: Can I use a mocking framework like NSubstitute for Level 3?
+**A**: Yes, if you're already using a mocking framework in your project. In this example, we implement Mock classes directly without external dependencies to clearly demonstrate the pattern.
 
-### Q3: Specification 테스트에서 가장 흔한 실수는 무엇인가요?
-**A**: 경계값 누락입니다. 예를 들어 `ProductPriceRangeSpec(1000, 10000)`에서 정확히 1000과 10000인 경우를 테스트하지 않으면, `>=`와 `>`의 차이로 인한 버그를 놓칠 수 있습니다.
+### Q3: What is the most common mistake in Specification testing?
+**A**: Missing boundary values. For example, if you don't test the exact values 1000 and 10000 for `ProductPriceRangeSpec(1000, 10000)`, you may miss bugs caused by the difference between `>=` and `>`.
 
 ---
 
-테스트로 Specification의 정확성을 보장했습니다. 다음 장에서는 ArchUnitNET을 활용하여 Specification 클래스의 네이밍, 폴더 배치, 상속 규칙을 자동으로 검증하는 아키텍처 규칙을 다룹니다.
+We've ensured Specification correctness through testing. The next chapter covers architecture rules that use ArchUnitNET to automatically verify Specification class naming, folder placement, and inheritance rules.
 
-→ [4장: 아키텍처 규칙](../04-Architecture-Rules/)
+→ [Chapter 4: Architecture Rules](../04-Architecture-Rules/)

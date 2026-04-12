@@ -5,120 +5,120 @@ description: "Rationale for selecting LanguageExt IO advanced features (Retry, T
 
 ## Overview
 
-[기술 요구사항](../00-business-requirements/)에서 정의한 4가지 외부 서비스 시나리오에 대해, 어떤 LanguageExt IO 고급 기능을 적용할지와 그 근거를 정리합니다.
+This document organizes the rationale for which LanguageExt IO advanced features to apply for the 4 external service scenarios defined in the [technical requirements](../00-business-requirements/).
 
-## 외부 서비스 요구사항 -> IO 패턴 매핑
+## External Service Requirements -> IO Pattern Mapping
 
-| 외부 서비스 | 문제 상황 | 필요한 보장 | 선택된 IO 패턴 |
+| External Service | Problem Scenario | Required Guarantee | Selected IO Pattern |
 |-----------|----------|-----------|--------------|
-| 모델 헬스 체크 | 간헐적 느린 응답(>10s) | 최대 대기 시간 제한, 타임아웃 시 폴백 | **Timeout + Catch** |
-| 모델 모니터링 | 간헐적 503 오류 | 일시적 실패에서 자동 복구, 재시도 간격 조절 | **Retry + Schedule** |
-| 병렬 컴플라이언스 | 5개 독립 체크, 순차 실행 시 느림 | 병렬 실행, 모든 결과 수집 | **Fork + awaitAll** |
-| 모델 레지스트리 | 세션 기반 리소스 관리 | 예외 발생해도 세션 해제 보장 | **Bracket** |
+| Model health check | Intermittent slow responses (>10s) | Limit maximum wait time, fallback on timeout | **Timeout + Catch** |
+| Model monitoring | Intermittent 503 errors | Automatic recovery from transient failures, retry interval control | **Retry + Schedule** |
+| Parallel compliance | 5 independent checks, slow when sequential | Parallel execution, collect all results | **Fork + awaitAll** |
+| Model registry | Session-based resource management | Guarantee session release even on exceptions | **Bracket** |
 
-## 패턴별 설계 의사결정
+## Per-Pattern Design Decisions
 
-### 1. Timeout + Catch -- 모델 헬스 체크
+### 1. Timeout + Catch -- Model Health Check
 
-**문제:** 헬스 체크 서비스가 간헐적으로 12초 이상 응답 지연. 무한 대기하면 시스템 전체가 느려짐.
+**Problem:** The health check service intermittently delays responses by 12 seconds or more. Waiting indefinitely slows down the entire system.
 
-**왜 Timeout인가?** 외부 서비스의 응답 시간을 통제할 수 없을 때, 시스템이 허용하는 최대 대기 시간을 선언적으로 설정합니다. LanguageExt의 `Timeout`은 IO 연산에 시간 제한을 걸어 `Errors.TimedOut`을 발생시킵니다.
+**Why Timeout?** When you cannot control the response time of an external service, you declaratively set the maximum wait time the system allows. LanguageExt's `Timeout` imposes a time limit on IO operations, raising `Errors.TimedOut`.
 
-**왜 Catch 체이닝인가?** 타임아웃을 "오류"가 아닌 "폴백 결과"로 변환해야 합니다. 헬스 체크 타임아웃은 모델이 "건강하지 않음"을 의미하지, 시스템 오류를 의미하지 않습니다.
+**Why Catch chaining?** The timeout must be converted from an "error" to a "fallback result." A health check timeout means the model is "not healthy," not that there is a system error.
 
-| Catch 순서 | 조건 | 결과 |
+| Catch Order | Condition | Result |
 |-----------|------|------|
-| 1번째 | `e.Is(Errors.TimedOut)` | TimedOut 폴백 결과 (오류 아님) |
-| 2번째 | `e.IsExceptional` | AdapterError로 변환 |
+| 1st | `e.Is(Errors.TimedOut)` | TimedOut fallback result (not an error) |
+| 2nd | `e.IsExceptional` | Convert to AdapterError |
 
-### 2. Retry + Schedule -- 모델 모니터링
+### 2. Retry + Schedule -- Model Monitoring
 
-**문제:** 모니터링 서비스가 일시적으로 503을 반환. 첫 시도는 60% 확률로 실패하지만 재시도하면 대부분 성공.
+**Problem:** The monitoring service temporarily returns 503. The first attempt fails with 60% probability, but retrying usually succeeds.
 
-**왜 Retry인가?** 일시적 네트워크 오류(503, timeout)는 재시도로 해결되는 경우가 많습니다. LanguageExt의 `Retry`는 IO 연산을 Schedule에 따라 자동으로 재시도합니다.
+**Why Retry?** Transient network errors (503, timeout) are often resolved by retrying. LanguageExt's `Retry` automatically retries IO operations according to a Schedule.
 
-**Schedule 설계:**
+**Schedule design:**
 
 ```
 exponential(100ms) | jitter(0.3) | recurs(3) | maxDelay(5s)
 ```
 
-| 구성 요소 | 역할 | 값 |
+| Component | Role | Value |
 |----------|------|-----|
-| `exponential` | 기본 지연: 100ms -> 200ms -> 400ms | 100ms 기반 |
-| `jitter` | 동시 재시도 분산 (thundering herd 방지) | 30% 변동 |
-| `recurs` | 최대 재시도 횟수 | 3회 |
-| `maxDelay` | 지연 상한 | 5초 |
+| `exponential` | Base delay: 100ms -> 200ms -> 400ms | Based on 100ms |
+| `jitter` | Distribute concurrent retries (prevent thundering herd) | 30% variation |
+| `recurs` | Maximum retry count | 3 times |
+| `maxDelay` | Delay upper bound | 5 seconds |
 
-**왜 이 Schedule인가?**
-- `exponential`: 서버 부하를 점진적으로 줄임
-- `jitter`: 여러 클라이언트가 동시에 재시도하는 thundering herd 문제 방지
-- `recurs(3)`: 3회면 일시적 오류 대부분 복구, 그 이상은 영구 오류
-- `maxDelay(5s)`: 사용자 대기 시간 상한 제한
+**Why this Schedule?**
+- `exponential`: Gradually reduces server load
+- `jitter`: Prevents the thundering herd problem where multiple clients retry simultaneously
+- `recurs(3)`: 3 retries recover most transient errors; beyond that, it is a permanent error
+- `maxDelay(5s)`: Limits user wait time upper bound
 
-### 3. Fork + awaitAll -- 병렬 컴플라이언스 체크
+### 3. Fork + awaitAll -- Parallel Compliance Check
 
-**문제:** 5개 컴플라이언스 기준을 순차 실행하면 100~500ms x 5 = 최대 2.5초. 각 체크는 독립적이므로 병렬 실행 가능.
+**Problem:** Running 5 compliance criteria sequentially takes 100~500ms x 5 = up to 2.5 seconds. Each check is independent, so parallel execution is possible.
 
-**왜 Fork인가?** LanguageExt의 `Fork`는 IO 연산을 별도 파이버(경량 스레드)에서 실행하여 병렬성을 달성합니다. 각 체크가 독립적이므로 결과 간 의존성이 없어 안전하게 Fork할 수 있습니다.
+**Why Fork?** LanguageExt's `Fork` runs IO operations in separate fibers (lightweight threads) to achieve parallelism. Since each check is independent, there are no result dependencies, making it safe to Fork.
 
-**왜 awaitAll인가?** `awaitAll`은 모든 Fork의 결과를 수집합니다. 하나의 체크가 느려도 나머지는 이미 완료되어 있으므로, 전체 소요 시간은 가장 느린 체크의 시간에 수렴합니다.
+**Why awaitAll?** `awaitAll` collects results from all Forks. Even if one check is slow, the rest are already completed, so the total elapsed time converges to the slowest check's time.
 
-**성능 비교:**
+**Performance comparison:**
 
-| 실행 방식 | 최악 소요 시간 | 기대 소요 시간 |
+| Execution Mode | Worst-case Time | Expected Time |
 |----------|-------------|-------------|
-| 순차 | 500ms x 5 = 2,500ms | ~1,500ms |
-| 병렬 (Fork) | max(500ms) = 500ms | ~350ms |
+| Sequential | 500ms x 5 = 2,500ms | ~1,500ms |
+| Parallel (Fork) | max(500ms) = 500ms | ~350ms |
 
-### 4. Bracket -- 모델 레지스트리
+### 4. Bracket -- Model Registry
 
-**문제:** 레지스트리 조회는 세션을 획득하고 사용한 뒤 반드시 해제해야 합니다. 조회 중 예외가 발생해도 세션이 누수되면 안 됩니다.
+**Problem:** Registry lookup must acquire a session, use it, and then release it. Even if an exception occurs during lookup, the session must not leak.
 
-**왜 Bracket인가?** Bracket 패턴은 리소스의 수명 주기를 Acquire -> Use -> Release 세 단계로 보장합니다. Release(Fin 매개변수)는 Use 단계의 성공/실패 무관하게 항상 실행됩니다. C#의 `try-finally`와 유사하지만, IO 컨텍스트 안에서 합성 가능합니다.
+**Why Bracket?** The Bracket pattern guarantees the resource lifecycle in three stages: Acquire -> Use -> Release. Release (the Fin parameter) always executes regardless of whether the Use stage succeeds or fails. It is similar to C#'s `try-finally`, but can be composed within an IO context.
 
 ```
-Acquire: 세션 획득 (50~150ms 지연, 5% 실패)
+Acquire: Session acquisition (50~150ms delay, 5% failure)
     |
     v
-Use: 레지스트리 조회 (100~400ms 지연, 5% 실패)
+Use: Registry lookup (100~400ms delay, 5% failure)
     |
     v
-Fin(Release): 세션 해제 (성공/실패 무관 보장)
+Fin(Release): Session release (guaranteed regardless of success/failure)
 ```
 
-**왜 try-finally가 아닌 Bracket인가?**
-- IO 합성 체인 안에서 자연스럽게 사용 가능
-- Release가 IO 효과를 가질 수 있음 (비동기 해제)
-- FinT LINQ 체인에 투명하게 합성 가능
+**Why Bracket instead of try-finally?**
+- Can be used naturally within IO composition chains
+- Release can have IO effects (async release)
+- Transparently composable in FinT LINQ chains
 
 ## Naming Conventions: `{Subject}{Role}{Variant}`
 
-Adapter 레이어의 파일명은 3차원 네이밍 규칙을 따릅니다:
+Adapter layer filenames follow a 3-dimensional naming convention:
 
-| 차원 | 표현 수단 | 예시 |
+| Dimension | Expressed By | Example |
 |------|-----------|------|
-| Subject (무엇) | Aggregate 이름 | `AIModel`, `Deployment`, `Assessment`, `Incident` |
-| Role (역할) | CQRS 역할 | `Repository`, `Query`, `DetailQuery` |
-| Variant (어떻게) | 기술 접미사 | `InMemory`, `EfCore`, `Dapper` |
+| Subject (what) | Aggregate name | `AIModel`, `Deployment`, `Assessment`, `Incident` |
+| Role (role) | CQRS role | `Repository`, `Query`, `DetailQuery` |
+| Variant (how) | Technology suffix | `InMemory`, `EfCore`, `Dapper` |
 
-적용 예:
+Applied examples:
 
-| 파일명 | Subject | Role | Variant |
+| Filename | Subject | Role | Variant |
 |--------|---------|------|---------|
 | `AIModelRepositoryInMemory.cs` | AIModel | Repository | InMemory |
 | `AIModelRepositoryEfCore.cs` | AIModel | Repository | EfCore |
 | `AIModelQueryInMemory.cs` | AIModel | Query | InMemory |
 | `DeploymentDetailQueryInMemory.cs` | Deployment | DetailQuery | InMemory |
-| `UnitOfWorkInMemory.cs` | (공통) | UnitOfWork | InMemory |
+| `UnitOfWorkInMemory.cs` | (common) | UnitOfWork | InMemory |
 
-이 규칙은 Observable 래퍼에도 동일하게 적용됩니다: `{Subject}{Role}{Variant}Observable` (예: `AIModelRepositoryInMemoryObservable`).
+This convention also applies to Observable wrappers: `{Subject}{Role}{Variant}Observable` (e.g., `AIModelRepositoryInMemoryObservable`).
 
-## 관측성 설계
+## Observability Design
 
 ### GenerateObservablePort
 
-모든 외부 서비스와 Repository는 `[GenerateObservablePort]` Source Generator를 적용합니다. 이 속성은 원본 클래스를 래핑하는 Observable 클래스를 자동 생성하여, 각 메서드 호출에 대해 로깅, 메트릭, 트레이싱을 추가합니다.
+All external services and Repositories apply the `[GenerateObservablePort]` Source Generator. This attribute auto-generates an Observable class that wraps the original class, adding logging, metrics, and tracing to each method call.
 
 ```
 IModelHealthCheckService
@@ -126,23 +126,23 @@ IModelHealthCheckService
     [GenerateObservablePort]
     |
     v
-ModelHealthCheckServiceObservable  (Source Generator 자동 생성)
-    |-- 메서드 진입/종료 로깅
-    |-- 실행 시간 메트릭
-    |-- 분산 트레이싱 스팬
+ModelHealthCheckServiceObservable  (auto-generated by Source Generator)
+    |-- Method entry/exit logging
+    |-- Execution time metrics
+    |-- Distributed tracing spans
     |
     v
-ModelHealthCheckService  (실제 구현)
+ModelHealthCheckService  (actual implementation)
 ```
 
-### DI 등록 패턴
+### DI Registration Pattern
 
 ```csharp
-// Observable 래퍼를 인터페이스에 등록
+// Register Observable wrapper to interface
 services.AddScoped<IModelHealthCheckService, ModelHealthCheckService>();
 services.RegisterScopedObservablePort<IAIModelRepository, InMemoryAIModelRepositoryObservable>();
 ```
 
-외부 서비스는 직접 등록, Repository는 Observable 래퍼를 통해 등록합니다.
+External services are registered directly; Repositories are registered through Observable wrappers.
 
-다음 단계에서는 이 설계를 C# 코드로 구현하여 [코드 설계](./02-code-design/)를 진행합니다.
+In the next step, we implement this design in C# code in [Code Design](./02-code-design/).

@@ -4,10 +4,10 @@ title: "Create-Only Constraint"
 
 ## Overview
 
-Now we apply the IFinResponse hierarchy designed in Part 3 to real Pipelines. The Validation Pipeline and Exception Pipeline only need to **create failure responses** when failures occur during request processing. They don't need to read or inspect existing responses. This section covers the pattern of applying only the minimal constraint `IFinResponseFactory<TResponse>` to these "create-only" Pipelines.
+Now we apply the IFinResponse hierarchy designed in Part 3 to real Pipelines. The Validation Pipeline and Exception Pipeline only need to **create failure responses** when a failure occurs during request processing. They do not need to read or inspect existing responses. This section covers the pattern of applying only the minimum constraint `IFinResponseFactory<TResponse>` to these "create-only" Pipelines.
 
 ```
-Pipeline operation flow:
+Pipeline behavior flow:
 
 Validation Pipeline:
   isValid? ──No──→ TResponse.CreateFail(error)  ← Only creation needed
@@ -22,15 +22,15 @@ Exception Pipeline:
 
 After completing this section, you will be able to:
 
-1. Identify Pipelines that use the Create-Only constraint (`IFinResponseFactory<TResponse>`)
+1. Identify Pipelines where the Create-Only constraint (`IFinResponseFactory<TResponse>`) applies
 2. Understand that `TResponse.CreateFail(error)` is a static abstract call and explain why reflection is unnecessary
-3. Explain why the Validation Pipeline and Exception Pipeline don't need response reading (IFinResponse)
+3. Explain why the Validation Pipeline and Exception Pipeline do not need response reading (IFinResponse)
 
 ## Key Concepts
 
-### 1. What Is the Create-Only Constraint?
+### 1. What Is a Create-Only Constraint?
 
-This applies when a Pipeline does not read `IsSucc`/`IsFail` on the response object, but **only creates new responses on failure**.
+This applies when a Pipeline does not read `IsSucc`/`IsFail` of the response object and **only creates a new response on failure**.
 
 ```csharp
 // Required capability: CreateFail only
@@ -89,26 +89,26 @@ public sealed class SimpleExceptionPipeline<TResponse>
 
 ### 4. Why Is IFinResponse (Read) Not Needed?
 
-The following summarizes which capabilities each Pipeline actually uses.
+The following summarizes what capabilities the two Pipelines actually use.
 
-| Operation | Required Interface | Validation | Exception |
+| Action | Required Interface | Validation | Exception |
 |------|-------------------|:----------:|:---------:|
-| IsSucc/IsFail reading | IFinResponse | - | - |
-| CreateFail creation | IFinResponseFactory | O | O |
+| Read IsSucc/IsFail | IFinResponse | - | - |
+| Create with CreateFail | IFinResponseFactory | O | O |
 | Error access | IFinResponseWithError | - | - |
 
-The Validation/Exception Pipelines do **not inspect** existing responses. They determine failure conditions directly (validation failure, exception occurrence) and **only create** new responses on failure.
+Validation/Exception Pipelines **do not inspect** existing responses. They directly determine the failure condition (validation failure, exception) and **only create** a new response on failure.
 
 ## FAQ
 
-### Q1: Why doesn't the Validation Pipeline need to read responses?
-**A**: The Validation Pipeline checks request validity **before the Handler executes**. Since no response has been created yet, there is nothing to read. If invalid, it directly creates a failure response with `TResponse.CreateFail(error)` and returns; if valid, it delegates to the next step via `next()`.
+### Q1: Why doesn't the Validation Pipeline need to read the response?
+**A**: The Validation Pipeline checks request validity **before the Handler executes**. Since no response has been created yet, there is no response to read. If invalid, it creates a failure response directly with `TResponse.CreateFail(error)` and returns; if valid, it delegates to the next step with `next()`.
 
 ### Q2: How does `TResponse.CreateFail(error)` differ from a `new TResponse(error)` constructor call?
-**A**: Constructor calls (`new TResponse()`) only support the `new()` constraint in generics, which cannot call constructors with parameters. The `static abstract` method `CreateFail` can accept an `Error` parameter and create a failure instance of the exact type.
+**A**: Constructor calls (`new TResponse()`) only support the `new()` constraint in generics and cannot call constructors with parameters. The `static abstract` method `CreateFail` can accept an `Error` parameter and create a failure instance of the exact type.
 
 ### Q3: Why does the Exception Pipeline convert exceptions to `Error`?
-**A**: By converting exceptions to `Error.New(ex)`, everything outside the Pipeline is handled consistently as `FinResponse.Fail` rather than exceptions. This allows the upper layers to handle all failures **in a uniform manner** using `IsSucc`/`IsFail` without try-catch.
+**A**: Converting an exception to `Error.New(ex)` means that outside the Pipeline, all failures are consistently handled as `FinResponse.Fail` rather than exceptions. This allows upper layers to handle all failures **uniformly** via `IsSucc`/`IsFail` without try-catch.
 
 ## Project Structure
 
@@ -137,6 +137,6 @@ dotnet test --project CreateOnlyConstraint.Tests.Unit
 
 ---
 
-The next section applies the Read+Create dual constraint to Logging, Tracing, and Metrics Pipelines, which need to read the response's success/failure status while also creating failure responses.
+The next section applies Read+Create dual constraints to the Logging, Tracing, and Metrics Pipelines, which need to both read the response's success/failure status and create failure responses.
 
 → [Section 4.2: Read+Create Constraint](../02-Read-Create-Constraint/)

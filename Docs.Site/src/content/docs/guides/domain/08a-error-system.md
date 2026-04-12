@@ -68,65 +68,65 @@ return Fin.Succ(product);
 
 ## Why Explicit Error Handling
 
-### 예외(Exception) vs 결과 타입(Result Type)
+### Exception vs Result Type
 
-전통적인 예외 기반 에러 처리는 제어 흐름이 암시적이고, 어떤 메서드가 어떤 에러를 반환하는지 시그니처에 드러나지 않습니다. 결과 타입(`Fin<T>`, `Validation<Error, T>`)은 성공과 실패를 타입 시스템으로 명시하여, 호출자가 반드시 두 경우를 모두 처리하도록 강제합니다.
+Traditional exception-based error handling has implicit control flow, and method signatures do not reveal which errors a method may return. Result types (`Fin<T>`, `Validation<Error, T>`) make success and failure explicit in the type system, forcing callers to handle both cases.
 
 ### Railway Oriented Programming
 
-Railway Oriented Programming(ROP)은 성공 트랙과 실패 트랙을 두 개의 레일로 비유합니다. 각 단계는 성공 시 다음 단계로, 실패 시 에러 트랙으로 자동 전환됩니다. `Fin<T>`의 `Bind`/`Map`과 LINQ 쿼리 문법이 이 패턴을 자연스럽게 지원합니다.
+Railway Oriented Programming (ROP) uses two rails as a metaphor for success and failure tracks. Each step automatically transitions to the next step on success, or to the error track on failure. `Fin<T>`'s `Bind`/`Map` and LINQ query syntax naturally support this pattern.
 
-### DDD에서 에러의 역할
+### Role of Errors in DDD
 
-도메인 주도 설계에서 에러는 단순한 예외가 아니라 **도메인 규칙 위반의 명시적 표현입니다.** Value Object의 Immutable식 위반, Entity의 상태 전이 제약, Aggregate의 비즈니스 규칙 등이 모두 타입화된 에러로 표현됩니다.
+In Domain-Driven Design, errors are not mere exceptions but **explicit representations of domain rule violations.** Value Object invariant violations, Entity state transition constraints, and Aggregate business rules are all expressed as typed errors.
 
-### Functorium의 접근
+### Functorium's Approach
 
-Functorium은 LanguageExt의 `Fin<T>`와 `Validation<Error, T>`를 활용합니다:
+Functorium leverages LanguageExt's `Fin<T>` and `Validation<Error, T>`:
 
-- **`Fin<T>`**: 단일 에러를 반환하는 연산 (Entity 메서드, Usecase 등)
-- **`Validation<Error, T>`**: 여러 에러를 누적하는 검증 (Value Object 생성 등)
-- **레이어별 에러 팩토리**: `DomainError`, `ApplicationError`, `AdapterError`로 에러 출처를 명확히 구분
-- **타입 안전 에러 코드**: 문자열 대신 `DomainErrorType`, `ApplicationErrorType`, `AdapterErrorType` 사용
+- **`Fin<T>`**: Operations that return a single error (Entity methods, Usecases, etc.)
+- **`Validation<Error, T>`**: Validation that accumulates multiple errors (Value Object creation, etc.)
+- **Per-layer error factories**: Clearly distinguish error origins with `DomainError`, `ApplicationError`, `AdapterError`
+- **Type-safe error codes**: Use `DomainErrorType`, `ApplicationErrorType`, `AdapterErrorType` instead of strings
 
-명시적 에러 처리의 필요성을 이해했으니, 이제 Functorium에서 에러를 반환하는 구체적인 패턴을 살펴보겠습니다.
+Now that we understand the need for explicit error handling, let us examine the specific patterns for returning errors in Functorium.
 
 ---
 
 ## Fin and Error Return Patterns
 
-### Fin<T> 개요
+### Fin<T> Overview
 
-`Fin<T>`는 LanguageExt에서 제공하는 성공/실패를 표현하는 타입입니다:
+`Fin<T>` is a type provided by LanguageExt that represents success/failure:
 
 ```csharp
-// 성공
-Fin<Product> success = product;           // 암시적 변환
-Fin<Product> success = Fin.Succ(product); // 명시적
+// Success
+Fin<Product> success = product;           // Implicit conversion
+Fin<Product> success = Fin.Succ(product); // Explicit
 
-// 실패
-Fin<Product> failure = error;             // 암시적 변환 (권장)
-Fin<Product> failure = Fin.Fail<Product>(error); // 명시적 (불필요)
+// Failure
+Fin<Product> failure = error;             // Implicit conversion (recommended)
+Fin<Product> failure = Fin.Fail<Product>(error); // Explicit (unnecessary)
 ```
 
-### 암시적 변환 활용 (권장)
+### Leveraging Implicit Conversion (Recommended)
 
-LanguageExt는 `Error → Fin<T>` 암시적 변환을 제공합니다. **`Fin.Fail<T>(error)` 래핑은 불필요합니다.**
+LanguageExt provides `Error -> Fin<T>` implicit conversion. **`Fin.Fail<T>(error)` wrapping is unnecessary.**
 
 ```csharp
-// ❌ 기존 방식 (verbose)
+// ❌ Previous approach (verbose)
 return Fin.Fail<Money>(AdapterError.For<MyAdapter>(
-    new NotFound(), context, "리소스를 찾을 수 없습니다"));
+    new NotFound(), context, "Resource not found"));
 
-// ✅ 권장 방식 (implicit conversion)
+// ✅ Recommended approach (implicit conversion)
 return AdapterError.For<MyAdapter>(
-    new NotFound(), context, "리소스를 찾을 수 없습니다");
+    new NotFound(), context, "Resource not found");
 ```
 
-### 레이어별 에러 반환 패턴
+### Per-Layer Error Return Patterns
 
 ```csharp
-// Domain Layer - Entity 메서드
+// Domain Layer - Entity method
 // Error type definition: public sealed record InsufficientStock : DomainErrorType.Custom;
 public Fin<Unit> DeductStock(Quantity quantity)
 {
@@ -134,7 +134,7 @@ public Fin<Unit> DeductStock(Quantity quantity)
         return DomainError.For<Product, int>(
             new InsufficientStock(),
             currentValue: (int)StockQuantity,
-            message: $"재고 부족. 현재: {(int)StockQuantity}, 요청: {(int)quantity}");
+            message: $"Insufficient stock. Current: {(int)StockQuantity}, Requested: {(int)quantity}");
 
     StockQuantity = Quantity.Create((int)StockQuantity - (int)quantity).ThrowIfFail();
     return unit;
@@ -147,9 +147,9 @@ public async ValueTask<FinResponse<Response>> Handle(Request request, ...)
         return ApplicationError.For<CreateProductCommand>(
             new AlreadyExists(),
             request.ProductCode,
-            "이미 존재하는 상품 코드입니다");
+            "Product code already exists");
 
-    // 성공 처리...
+    // Success processing...
 }
 
 // Adapter Layer - Repository
@@ -163,25 +163,25 @@ public virtual FinT<IO, Product> GetById(ProductId id)
         return AdapterError.For<InMemoryProductRepository>(
             new NotFound(),
             id.ToString(),
-            $"상품 ID '{id}'을(를) 찾을 수 없습니다");
+            $"Product ID '{id}' not found");
     });
 }
 ```
 
-### FinT<IO, T> 패턴
+### FinT<IO, T> Pattern
 
-비동기 IO 작업과 함께 사용하는 `FinT<IO, T>` 패턴입니다:
+The `FinT<IO, T>` pattern used with asynchronous IO operations:
 
 ```csharp
-// 동기 작업
+// Synchronous operation
 return IO.lift(() =>
 {
     if (condition)
         return Fin.Succ(result);
-    return AdapterError.For<MyAdapter>(new NotFound(), context, "메시지");
+    return AdapterError.For<MyAdapter>(new NotFound(), context, "message");
 });
 
-// 비동기 작업
+// Asynchronous operation
 // Error type definition: public sealed record HttpError : AdapterErrorType.Custom;
 return IO.liftAsync(async () =>
 {
@@ -192,7 +192,7 @@ return IO.liftAsync(async () =>
             return AdapterError.For<MyAdapter>(
                 new HttpError(),
                 response.StatusCode.ToString(),
-                "API 호출 실패");
+                "API call failed");
 
         var result = await response.Content.ReadFromJsonAsync<T>();
         return Fin.Succ(result!);
@@ -208,20 +208,20 @@ return IO.liftAsync(async () =>
 
 ### Notes on Returning Success
 
-성공 값을 반환할 때는 여전히 `Fin.Succ(value)`를 사용합니다:
+When returning success values, `Fin.Succ(value)` is still used:
 
 ```csharp
-// ✅ 성공 반환
+// ✅ Success return
 return Fin.Succ(product);
-return Fin.Succ(unit);  // Unit 타입
+return Fin.Succ(unit);  // Unit type
 
-// ❌ Unit은 암시적 변환 안됨 (Unit은 Error가 아님)
-return unit;  // 컴파일 에러 또는 타입 추론 실패
+// ❌ Unit does not have implicit conversion (Unit is not an Error)
+return unit;  // Compile error or type inference failure
 ```
 
 ### Exception Handling Pattern
 
-예외를 `Error`로 변환할 때는 `FromException` 메서드를 사용합니다:
+Use the `FromException` method when converting exceptions to `Error`:
 
 ```csharp
 catch (HttpRequestException ex)
@@ -238,7 +238,7 @@ catch (TaskCanceledException ex) when (ex.CancellationToken == cancellationToken
     return AdapterError.For<ExternalPricingApiService>(
         new OperationCancelled(),
         productCode,
-        "요청이 취소되었습니다");
+        "Request was cancelled");
 }
 catch (TaskCanceledException ex)
 {
@@ -262,101 +262,101 @@ Now that we have learned error return patterns, the next important thing is nami
 
 ### Quick Reference: Naming Rules Summary
 
-When defining a new error type, first find the appropriate rule in this table. R1부터 순서대로 적용합니다.
+When defining a new error type, first find the appropriate rule in this table. Apply rules in order starting from R1.
 
 | Rule | Condition | Pattern | Example |
 |------|----------|------|------|
-| **R1** | 상태가 자명한 문제 | 상태 그대로 | `Empty`, `Null`, `Negative`, `Duplicate` |
-| **R2** | 기준 대비 비교 | `Too-` / `Below-` / `Above-` / `OutOf-` | `TooShort`, `BelowMinimum`, `OutOfRange` |
-| **R3** | 기대 조건 불충족 | `Not-` + 기대 | `NotPositive`, `NotUpperCase`, `NotFound` |
-| **R4** | 이미 발생한 상태 | `Already-` + 상태 | `AlreadyExists` |
-| **R5** | 형식/구조 문제 | `Invalid-` + 대상 | `InvalidFormat`, `InvalidState` |
-| **R6** | 두 값 불일치 | `Mismatch` / `Wrong-` | `Mismatch`, `WrongLength` |
-| **R7** | 권한/인증 문제 | 상태 그대로 | `Unauthorized`, `Forbidden` |
-| **R8** | 작업/프로세스 문제 | 동사 과거분사 + 명사 | `ValidationFailed`, `OperationCancelled` |
+| **R1** | Self-evident problematic state | State as-is | `Empty`, `Null`, `Negative`, `Duplicate` |
+| **R2** | Comparison against criteria | `Too-` / `Below-` / `Above-` / `OutOf-` | `TooShort`, `BelowMinimum`, `OutOfRange` |
+| **R3** | Unmet expected condition | `Not-` + expectation | `NotPositive`, `NotUpperCase`, `NotFound` |
+| **R4** | Already occurred state | `Already-` + state | `AlreadyExists` |
+| **R5** | Format/structure issue | `Invalid-` + target | `InvalidFormat`, `InvalidState` |
+| **R6** | Two values mismatch | `Mismatch` / `Wrong-` | `Mismatch`, `WrongLength` |
+| **R7** | Authorization/authentication issue | State as-is | `Unauthorized`, `Forbidden` |
+| **R8** | Operation/process issue | Past participle + noun | `ValidationFailed`, `OperationCancelled` |
 
 ### Detailed Rule Description
 
-#### R1: Self-Evident State → 상태 그대로
+#### R1: Self-Evident State -> State As-Is
 
-**Applicable Condition**: 그 자체로 "문제"임이 명백한 경우
+**Applicable Condition**: Cases where it is clearly a "problem" by itself
 
 ```csharp
 // ✅ Correct
-new Empty()      // 비어있음 → 문제
-new Null()       // null임 → 문제
-new Negative()   // 음수임 → 문제
-new Duplicate()  // 중복됨 → 문제
+new Empty()      // Being empty → problem
+new Null()       // Being null → problem
+new Negative()   // Being negative → problem
+new Duplicate()  // Being duplicate → problem
 
 // ❌ Incorrect
-new NotFilled()  // Empty로 충분
-new IsNull()     // Null로 충분
+new NotFilled()  // Empty is sufficient
+new IsNull()     // Null is sufficient
 ```
 
-#### R2: Comparison Against Criteria → 비교 표현
+#### R2: Comparison Against Criteria -> Comparison Expression
 
-**Applicable Condition**: 최소/최대/범위 등 기준값과 비교가 필요한 경우
+**Applicable Condition**: Cases where comparison against criteria such as min/max/range is needed
 
 ```csharp
 // ✅ Correct
-new TooShort(MinLength: 8)        // 최소 길이 미만
-new TooLong(MaxLength: 100)       // 최대 길이 초과
-new BelowMinimum(Minimum: "0")    // 최소값 미만
-new AboveMaximum(Maximum: "100")  // 최대값 초과
-new OutOfRange(Min: "1", Max: "10") // 범위 밖
+new TooShort(MinLength: 8)        // Below minimum length
+new TooLong(MaxLength: 100)       // Exceeds maximum length
+new BelowMinimum(Minimum: "0")    // Below minimum value
+new AboveMaximum(Maximum: "100")  // Above maximum value
+new OutOfRange(Min: "1", Max: "10") // Outside range
 
 // ❌ Incorrect
-new Short()      // 기준 불명확
-new Long()       // 기준 불명확
+new Short()      // Criteria unclear
+new Long()       // Criteria unclear
 ```
 
 | Prefix | Meaning | Use Case |
 |--------|------|----------|
-| `Too-` | 과도함/부족함 | 길이, 크기 등 상대적 비교 |
-| `Below-` | 미만 | 최소 기준 미충족 |
-| `Above-` | 초과 | 최대 기준 초과 |
-| `OutOf-` | 범위 벗어남 | 허용 범위 외 |
+| `Too-` | Excessive/insufficient | Relative comparison of length, size, etc. |
+| `Below-` | Less than | Minimum criteria not met |
+| `Above-` | Greater than | Maximum criteria exceeded |
+| `OutOf-` | Out of range | Outside allowed range |
 
-#### R3: Unmet Expected Condition → Not + 기대
+#### R3: Unmet Expected Condition -> Not + Expectation
 
-**Applicable Condition**: "~여야 하는데 아님"을 표현해야 하는 경우
+**Applicable Condition**: Cases where "should be X but is not" needs to be expressed
 
 ```csharp
 // ✅ Correct
-new NotPositive()   // 양수여야 함 (0도 에러)
-new NotUpperCase()  // 대문자여야 함
-new NotLowerCase()  // 소문자여야 함
-new NotFound()      // 존재해야 함
+new NotPositive()   // Should be positive (0 is also an error)
+new NotUpperCase()  // Should be uppercase
+new NotLowerCase()  // Should be lowercase
+new NotFound()      // Should exist
 
 // ❌ Incorrect
-new Lowercase()     // 의미 모호
-new Missing()       // NotFound가 더 명확
+new Lowercase()     // Ambiguous meaning
+new Missing()       // NotFound is more clear
 ```
 
-**R1 vs R3 구분:**
+**R1 vs R3 distinction:**
 
-| 상황 | Applied Rule | Reason |
+| Situation | Applied Rule | Reason |
 |------|----------|------|
-| `Negative` | R1 | "음수임"이 명백한 문제 |
-| `NotPositive` | R3 | "양수여야 함"인데 0도 포함해야 함 |
-| `Empty` | R1 | "비어있음"이 명백한 문제 |
-| `NotUpperCase` | R3 | "대문자여야 함"을 명시해야 명확 |
+| `Negative` | R1 | "Being negative" is clearly a problem |
+| `NotPositive` | R3 | "Should be positive" but also needs to include 0 |
+| `Empty` | R1 | "Being empty" is clearly a problem |
+| `NotUpperCase` | R3 | Needs to explicitly state "should be uppercase" for clarity |
 
-#### R4: Already Occurred State → Already + 상태
+#### R4: Already Occurred State -> Already + State
 
-**Applicable Condition**: 이미 발생하여 되돌릴 수 없는 상태
+**Applicable Condition**: A state that has already occurred and cannot be undone
 
 ```csharp
 // ✅ Correct
-new AlreadyExists()  // 이미 존재함
+new AlreadyExists()  // Already exists
 
 // ❌ Incorrect
-new Exists()         // "이미"가 빠지면 의미 약함
+new Exists()         // Weak meaning without "already"
 ```
 
-#### R5: Format/Structure/State Issue → Invalid + 대상
+#### R5: Format/Structure/State Issue -> Invalid + Target
 
-**Applicable Condition**: 값의 형식, 구조, 또는 상태가 유효하지 않은 경우
+**Applicable Condition**: Cases where the format, structure, or state of a value is invalid
 
 ```csharp
 // ✅ Correct
@@ -364,48 +364,48 @@ new InvalidFormat(Pattern: @"^\d{3}-\d{4}$")
 new InvalidState()
 
 // ❌ Incorrect
-new InvalidLength()  // WrongLength 사용 (R6)
-new InvalidValue()   // 너무 추상적
+new InvalidLength()  // Use WrongLength (R6)
+new InvalidValue()   // Too abstract
 ```
 
-**주의**: `Invalid-` 접두사는 형식/구조/상태 문제에만 사용합니다.
+**Caution**: The `Invalid-` prefix is only used for format/structure/state issues.
 
-#### R6: Two Values Mismatch → Mismatch 또는 Wrong
+#### R6: Two Values Mismatch -> Mismatch or Wrong
 
-**Applicable Condition**: 두 값이 일치해야 하는데 불일치하는 경우
+**Applicable Condition**: Cases where two values should match but do not
 
 ```csharp
 // ✅ Correct
-new Mismatch()                    // 일반적인 불일치
-new WrongLength(Expected: 10)     // 정확한 길이 불일치
+new Mismatch()                    // General mismatch
+new WrongLength(Expected: 10)     // Exact length mismatch
 
 // ❌ Incorrect
-new NotMatching()    // Mismatch가 더 간결
-new LengthMismatch() // WrongLength가 더 명확
+new NotMatching()    // Mismatch is more concise
+new LengthMismatch() // WrongLength is more clear
 ```
 
 | Pattern | Use Case |
 |------|----------|
-| `Mismatch` | 두 값 비교 (비밀번호 확인 등) |
-| `Wrong-` | 기대한 정확한 값과 불일치 |
+| `Mismatch` | Two value comparison (password confirmation, etc.) |
+| `Wrong-` | Mismatch with expected exact value |
 
-#### R7: Authorization/Authentication Issue → 상태 그대로
+#### R7: Authorization/Authentication Issue -> State As-Is
 
-**Applicable Condition**: 인증/권한 관련 문제
+**Applicable Condition**: Authentication/authorization related issues
 
 ```csharp
-// ✅ Correct (HTTP 상태 코드와 일치)
-new Unauthorized()   // 401: 인증 필요
-new Forbidden()      // 403: 접근 금지
+// ✅ Correct (matches HTTP status codes)
+new Unauthorized()   // 401: Authentication required
+new Forbidden()      // 403: Access denied
 
 // ❌ Incorrect
-new NotAuthenticated()  // Unauthorized가 표준
-new AccessDenied()      // Forbidden이 표준
+new NotAuthenticated()  // Unauthorized is standard
+new AccessDenied()      // Forbidden is standard
 ```
 
-#### R8: Operation/Process Issue → 동사 과거분사 + 명사
+#### R8: Operation/Process Issue -> Past Participle + Noun
 
-**Applicable Condition**: 작업이나 프로세스 실행 중 발생한 문제
+**Applicable Condition**: Issues that occur during operation or process execution
 
 ```csharp
 // ✅ Correct
@@ -415,8 +415,8 @@ new BusinessRuleViolated(RuleName: "MaxOrderLimit")
 new ConcurrencyConflict()
 
 // ❌ Incorrect
-new FailedValidation()  // 어순 불일치
-new CancelledOperation() // OperationCancelled가 표준
+new FailedValidation()  // Word order mismatch
+new CancelledOperation() // OperationCancelled is standard
 ```
 
 ### Rule Application Flowchart
@@ -424,81 +424,81 @@ new CancelledOperation() // OperationCancelled가 표준
 When defining a new error type, apply rules in the following order:
 
 ```
-1. 상태 자체가 문제인가?
+1. Is the state itself a problem?
    ├─ Yes → R1 (Empty, Null, Negative, Duplicate)
    └─ No ↓
 
-2. 기준값과 비교가 필요한가?
+2. Does it need comparison against criteria?
    ├─ Yes → R2 (TooShort, BelowMinimum, OutOfRange)
    └─ No ↓
 
-3. "~여야 하는데 아님"인가?
+3. Is it "should be X but is not"?
    ├─ Yes → R3 (NotPositive, NotUpperCase, NotFound)
    └─ No ↓
 
-4. 이미 발생한 상태인가?
+4. Is it an already occurred state?
    ├─ Yes → R4 (AlreadyExists)
    └─ No ↓
 
-5. 형식/구조/상태 문제인가?
+5. Is it a format/structure/state issue?
    ├─ Yes → R5 (InvalidFormat, InvalidState)
    └─ No ↓
 
-6. 두 값 불일치인가?
+6. Is it a two values mismatch?
    ├─ Yes → R6 (Mismatch, WrongLength)
    └─ No ↓
 
-7. 권한/인증 문제인가?
+7. Is it an authorization/authentication issue?
    ├─ Yes → R7 (Unauthorized, Forbidden)
    └─ No ↓
 
-8. 작업/프로세스 실패인가?
+8. Is it an operation/process failure?
    ├─ Yes → R8 (ValidationFailed, OperationCancelled)
-   └─ No → Custom 사용
+   └─ No → Use Custom
 ```
 
-### Custom → 표준 에러 승격 기준
+### Custom -> Standard Error Promotion Criteria
 
-플로우차트 끝의 `Custom` 에러가 프로젝트 전반에서 반복 사용되면, 표준 에러 타입(R1-R8)으로 승격을 검토합니다:
+When a `Custom` error at the end of the flowchart is used repeatedly throughout the project, consider promoting it to a standard error type (R1-R8):
 
-> 1. **3개 이상의 서로 다른 위치에서** 동일 Custom 에러 사용
-> 2. **재사용 의미가 명확** (도메인 개념으로 자리잡음)
-> 3. 기존 네이밍 규칙(R1-R8)에 **자연스럽게 매핑** 가능
-> 4. **안정성 확인** (더 이상 의미가 변하지 않음)
+> 1. **Used in 3 or more different locations** with the same Custom error
+> 2. **Reuse meaning is clear** (established as a domain concept)
+> 3. Can be **naturally mapped** to existing naming rules (R1-R8)
+> 4. **Stability confirmed** (meaning is no longer changing)
 
-4가지 조건을 모두 충족하면 표준 `DomainErrorType` / `ApplicationErrorType` / `AdapterErrorType`에 추가합니다.
+When all 4 conditions are met, add it to the standard `DomainErrorType` / `ApplicationErrorType` / `AdapterErrorType`.
 
 ---
 
 ## Troubleshooting
 
-### `unit` 반환 시 `Fin<Unit>` 타입 추론 실패
-**Cause:** `return unit;`은 `Unit` 타입이지 `Error`가 아니므로 `Fin<T>`로의 암시적 변환이 되지 않습니다. 암시적 변환은 `Error → Fin<T>` 방향만 지원합니다.
-**Solution:** 성공 반환 시 항상 `return Fin.Succ(unit);`을 명시적으로 사용하세요. 값 타입(`Product` 등)은 암시적 변환이 가능하지만, `Unit`은 예외입니다.
+### `Fin<Unit>` type inference failure when returning `unit`
+**Cause:** `return unit;` is of type `Unit`, not `Error`, so implicit conversion to `Fin<T>` does not work. Implicit conversion only supports the `Error -> Fin<T>` direction.
+**Solution:** Always explicitly use `return Fin.Succ(unit);` for success returns. Value types (like `Product`) support implicit conversion, but `Unit` is an exception.
 
-### 에러 네이밍에서 R1과 R3 구분이 모호함
-**Cause:** `Negative`(R1)와 `NotPositive`(R3)처럼 비슷해 보이는 경우가 있습니다.
-**Solution:** R1은 "그 자체로 문제가 명백한 상태"(예: `Empty`, `Null`, `Negative`), R3은 "기대 조건이 있어야 의미가 통하는 부정"(예: `NotPositive`는 0도 포함, `NotUpperCase`). 플로우차트를 위에서 아래로 순서대로 따르면 가장 먼저 일치하는 규칙이 정답입니다.
+### Ambiguous distinction between R1 and R3 in error naming
+**Cause:** There are cases that look similar, like `Negative` (R1) and `NotPositive` (R3).
+**Solution:** R1 is for "states that are clearly problematic by themselves" (e.g., `Empty`, `Null`, `Negative`), while R3 is for "negations that only make sense with an expected condition" (e.g., `NotPositive` includes 0, `NotUpperCase`). Follow the flowchart from top to bottom in order, and the first matching rule is the correct answer.
 
-### `FinT<IO, T>` 내부에서 에러 반환 시 `Fin.Fail` 필요
-**Cause:** `IO.lift(() => { ... })` 블록 내부에서는 반환 타입이 `Fin<T>`이므로 에러 반환 시 암시적 변환이 정상 동작합니다. 다만 성공 반환 시에는 `Fin.Succ(value)`가 필요합니다.
-**Solution:** `IO.lift` 블록 내부에서는 에러는 암시적 변환, 성공은 `Fin.Succ(value)`를 사용하세요.
+### `Fin.Fail` needed for error return inside `FinT<IO, T>`
+**Cause:** Inside `IO.lift(() => { ... })` blocks, the return type is `Fin<T>`, so implicit conversion works normally for error returns. However, `Fin.Succ(value)` is needed for success returns.
+**Solution:** Inside `IO.lift` blocks, use implicit conversion for errors and `Fin.Succ(value)` for success.
 
 ---
 
 ## FAQ
 
-**Q: `Fin<T>`과 Exception의 차이점은?**
+**Q: What is the difference between `Fin<T>` and Exception?**
 
-`Fin<T>`은 예상 가능한 실패(비즈니스 규칙 위반, 검증 실패 등)를 타입으로 표현하여 호출자가 반드시 처리하도록 강제합니다. Exception은 네트워크 장애, 메모리 부족 등 예외적이고 복구 불가능한 상황에만 사용합니다.
+`Fin<T>` represents predictable failures (business rule violations, validation failures, etc.) as types, forcing callers to handle them. Exceptions are used only for exceptional, unrecoverable situations such as network failures or out-of-memory conditions.
 
-**Q: 에러 코드 네이밍에서 R1-R8 중 어떤 규칙을 적용할지 모르겠을 때는?**
+**Q: When I am unsure which rule among R1-R8 to apply for error code naming?**
 
-[규칙 적용 플로우차트](#규칙-적용-플로우차트)를 위에서 아래로 순서대로 따르세요. 가장 먼저 일치하는 규칙이 가장 구체적인 규칙이므로 그것을 적용합니다.
+Follow the [Rule Application Flowchart](#rule-application-flowchart) from top to bottom in order. The first matching rule is the most specific, so apply that one.
 
-**Q: Custom 에러는 언제 만드는가?**
+**Q: When should Custom errors be created?**
 
-R1-R8의 표준 에러 타입으로 표현할 수 없는 도메인 특화 에러일 때 Custom을 사용합니다. 예: `InsufficientStock`, `HttpError` 등. 이후 3개 이상 위치에서 반복 사용되면 [표준 에러 승격 기준](#custom--표준-에러-승격-기준)에 따라 승격을 검토합니다.
+Use Custom when the error is domain-specific and cannot be expressed with standard error types from R1-R8. Examples: `InsufficientStock`, `HttpError`, etc. If later used repeatedly in 3 or more locations, consider promotion per the [Custom -> Standard Error Promotion Criteria](#custom---standard-error-promotion-criteria).
 
 ---
 
@@ -508,55 +508,55 @@ R1-R8의 표준 에러 타입으로 표현할 수 없는 도메인 특화 에러
 
 ```
 Src/Functorium/Abstractions/Errors/
-├── ErrorCodeExpected.cs              # Expected 에러 타입 (4가지 변형)
-├── ErrorCodeExpectedBase.cs          # Expected 에러 공통 기반 클래스 (13개 override 통합)
-├── ErrorCodeExceptional.cs           # Exceptional 에러 타입
-├── ErrorCodeFactory.cs               # ErrorCodeExpected/Exceptional 인스턴스 생성
-├── ErrorCodeFieldNames.cs            # Serilog 구조화 필드명 상수
-├── ErrorType.cs                      # 에러 접두사 상수 (DomainErrorsPrefix 등)
-├── IHasErrorCode.cs                  # 에러 코드 접근 인터페이스
-└── LayerErrorCore.cs                 # 레이어별 팩토리 공통 에러 코드 생성 로직
+├── ErrorCodeExpected.cs              # Expected error type (4 variants)
+├── ErrorCodeExpectedBase.cs          # Expected error common base class (13 overrides unified)
+├── ErrorCodeExceptional.cs           # Exceptional error type
+├── ErrorCodeFactory.cs               # ErrorCodeExpected/Exceptional instance creation
+├── ErrorCodeFieldNames.cs            # Serilog structured field name constants
+├── ErrorType.cs                      # Error prefix constants (DomainErrorsPrefix, etc.)
+├── IHasErrorCode.cs                  # Error code access interface
+└── LayerErrorCore.cs                 # Per-layer factory common error code generation logic
 
 Src/Functorium.Testing/Assertions/Errors/
-├── DomainErrorAssertions.cs          # 도메인 에러 검증 (thin wrapper)
-├── ApplicationErrorAssertions.cs     # 애플리케이션 에러 검증 (thin wrapper)
-├── AdapterErrorAssertions.cs         # 어댑터 에러 검증 (thin wrapper)
-├── ErrorAssertionCore.cs             # 레이어별 Assertion 공통 검증 로직
-├── ErrorAssertionHelpers.cs          # 공유 유틸리티
-├── ErrorCodeAssertions.cs            # 범용 에러 코드 검증
-└── ErrorCodeExceptionalAssertions.cs # Exceptional 에러 검증
+├── DomainErrorAssertions.cs          # Domain error validation (thin wrapper)
+├── ApplicationErrorAssertions.cs     # Application error validation (thin wrapper)
+├── AdapterErrorAssertions.cs         # Adapter error validation (thin wrapper)
+├── ErrorAssertionCore.cs             # Per-layer Assertion common validation logic
+├── ErrorAssertionHelpers.cs          # Shared utilities
+├── ErrorCodeAssertions.cs            # General-purpose error code validation
+└── ErrorCodeExceptionalAssertions.cs # Exceptional error validation
 
 Src/Functorium.Adapters/Abstractions/Errors/
-└── DestructuringPolicies/            # Serilog 구조화 정책
+└── DestructuringPolicies/            # Serilog destructuring policies
     ├── IErrorDestructurer.cs
     ├── ErrorsDestructuringPolicy.cs
     └── ErrorTypes/
         ├── ErrorCodeExpectedDestructurer.cs
         ├── ErrorCodeExpectedTDestructurer.cs
         ├── ErrorCodeExceptionalDestructurer.cs
-        ├── ExceptionalDestructurer.cs    # LanguageExt Exceptional 구조화
-        ├── ExpectedDestructurer.cs       # LanguageExt Expected 구조화
+        ├── ExceptionalDestructurer.cs    # LanguageExt Exceptional destructuring
+        ├── ExpectedDestructurer.cs       # LanguageExt Expected destructuring
         └── ManyErrorsDestructurer.cs
 ```
 
 ### Error Type Hierarchy
 
-Functorium의 에러 타입은 LanguageExt의 `Error`를 확장하여 다음과 같은 계층을 형성합니다.
+Functorium's error types extend LanguageExt's `Error` to form the following hierarchy.
 
 ```
 Error (LanguageExt.Common)
-├── ErrorCodeExpectedBase             - Expected 에러 공통 기반 (13개 override 통합)
-│   ├── ErrorCodeExpected             - 도메인/비즈니스 에러 (문자열 값)
-│   ├── ErrorCodeExpected<T>          - 도메인/비즈니스 에러 (타입 값 1개)
-│   ├── ErrorCodeExpected<T1, T2>     - 도메인/비즈니스 에러 (타입 값 2개)
-│   └── ErrorCodeExpected<T1, T2, T3> - 도메인/비즈니스 에러 (타입 값 3개)
-├── ErrorCodeExceptional              - 예외 래퍼
-└── ManyErrors                        - 복수 에러 컬렉션
+├── ErrorCodeExpectedBase             - Expected error common base (13 overrides unified)
+│   ├── ErrorCodeExpected             - Domain/business error (string value)
+│   ├── ErrorCodeExpected<T>          - Domain/business error (1 typed value)
+│   ├── ErrorCodeExpected<T1, T2>     - Domain/business error (2 typed values)
+│   └── ErrorCodeExpected<T1, T2, T3> - Domain/business error (3 typed values)
+├── ErrorCodeExceptional              - Exception wrapper
+└── ManyErrors                        - Multiple error collection
 ```
 
-`ErrorCodeExpectedBase`는 `ErrorCode`, `Message`, `Code`, `Inner` 속성과 `sealed override ToString() => Message`, `IsExpected = true`, `IsExceptional = false` 등 공통 멤버를 정의합니다. 파생 4종은 `ErrorCurrentValue` 관련 속성만 추가합니다. `sealed override ToString()`은 C# record가 파생 클래스에서 `ToString()`을 자동 재생성하는 것을 차단하여, 모든 Expected 에러가 일관되게 `Message`를 반환하도록 보장합니다.
+`ErrorCodeExpectedBase` defines common members including `ErrorCode`, `Message`, `Code`, `Inner` properties and `sealed override ToString() => Message`, `IsExpected = true`, `IsExceptional = false`. The 4 derived types only add `ErrorCurrentValue`-related properties. `sealed override ToString()` prevents C# records from auto-regenerating `ToString()` in derived classes, ensuring all Expected errors consistently return `Message`.
 
-모든 `ErrorCodeExpected` 변형과 `ErrorCodeExceptional`은 **internal record이며** `IHasErrorCode` 인터페이스를 구현합니다.
+All `ErrorCodeExpected` variants and `ErrorCodeExceptional` are **internal records** implementing the `IHasErrorCode` interface.
 
 | Type | `IsExpected` | `IsExceptional` | Access Modifier |
 |------|:---:|:---:|:---:|
@@ -567,79 +567,79 @@ Error (LanguageExt.Common)
 | `ErrorCodeExpected<T1, T2, T3>` | `true` | `false` | internal |
 | `ErrorCodeExceptional` | `false` | `true` | internal |
 
-> **Note**: `DomainError.For<TDomain, T1, T2, T3>()` 3-값 오버로드도 지원됩니다. 상세 시그니처와 사용 예제는 [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app)를 참조하세요.
+> **Note**: The 3-value overload `DomainError.For<TDomain, T1, T2, T3>()` is also supported. For detailed signatures and usage examples, see [Error System: Domain/Application Errors](./08b-error-system-domain-app).
 
 ### Error Creation Flow
 
-레이어별 팩토리(`DomainError`, `ApplicationError`, `EventError`, `AdapterError`)는 2단계 내부 위임으로 에러를 생성합니다.
+Per-layer factories (`DomainError`, `ApplicationError`, `EventError`, `AdapterError`) create errors through a 2-stage internal delegation.
 
 ```
-DomainError.For<Email>(new Empty(), value, msg)     ← 공개 API (DomainErrorType 강제)
+DomainError.For<Email>(new Empty(), value, msg)     ← Public API (DomainErrorType enforced)
   → LayerErrorCore.Create<Email>(prefix, errorType, value, msg)
-      ← ErrorType(base)로 수신 → 에러 코드 조립: "DomainErrors.Email.Empty"
+      ← Received as ErrorType(base) → Assemble error code: "DomainErrors.Email.Empty"
     → ErrorCodeFactory.Create(errorCode, value, msg)
-        ← ErrorCodeExpected 인스턴스 생성
+        ← Create ErrorCodeExpected instance
 ```
 
-`LayerErrorCore`는 4개 팩토리의 공통 구현으로, 에러 코드 문자열 `{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}`을 조립합니다. 공개 팩토리는 레이어별 타입 파라미터(`DomainErrorType`, `ApplicationErrorType` 등)를 유지하여 **컴파일 타임에 잘못된 레이어 에러 사용을 차단합니다.** 모든 메서드에 `[AggressiveInlining]`이 적용되어 JIT이 위임 호출을 인라인 처리하므로, 직접 호출과 성능이 동일합니다.
+`LayerErrorCore` is the shared implementation for the 4 factories, assembling the error code string `{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}`. The public factories maintain per-layer type parameters (`DomainErrorType`, `ApplicationErrorType`, etc.) to **prevent incorrect layer error usage at compile time.** All methods have `[AggressiveInlining]` applied so the JIT inlines the delegation calls, achieving the same performance as direct calls.
 
 ### ErrorCodeFactory API
 
-`ErrorCodeFactory`는 `Abstractions/Errors/ErrorCodeFactory.cs`에 위치한 **정적 클래스로,** `ErrorCodeExpected`와 `ErrorCodeExceptional` 인스턴스를 직접 생성합니다.
+`ErrorCodeFactory` is a **static class** located in `Abstractions/Errors/ErrorCodeFactory.cs` that directly creates `ErrorCodeExpected` and `ErrorCodeExceptional` instances.
 
 ```csharp
 public static class ErrorCodeFactory
 {
-    // Expected 에러 (문자열 값) → ErrorCodeExpected
+    // Expected error (string value) → ErrorCodeExpected
     public static Error Create(string errorCode, string errorCurrentValue, string errorMessage);
 
-    // Expected 에러 (타입 값) → ErrorCodeExpected<T>
+    // Expected error (typed value) → ErrorCodeExpected<T>
     public static Error Create<T>(string errorCode, T errorCurrentValue, string errorMessage)
         where T : notnull;
 
-    // Expected 에러 (2개 타입 값) → ErrorCodeExpected<T1, T2>
+    // Expected error (2 typed values) → ErrorCodeExpected<T1, T2>
     public static Error Create<T1, T2>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, string errorMessage)
         where T1 : notnull where T2 : notnull;
 
-    // Expected 에러 (3개 타입 값) → ErrorCodeExpected<T1, T2, T3>
+    // Expected error (3 typed values) → ErrorCodeExpected<T1, T2, T3>
     public static Error Create<T1, T2, T3>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, T3 errorCurrentValue3, string errorMessage)
         where T1 : notnull where T2 : notnull where T3 : notnull;
 
-    // Exceptional 에러 → ErrorCodeExceptional
+    // Exceptional error → ErrorCodeExceptional
     public static Error CreateFromException(string errorCode, Exception exception);
 
-    // 에러 코드 포맷 → string.Join('.', parts)
+    // Error code format → string.Join('.', parts)
     public static string Format(params string[] parts);
 }
 ```
 
-### 사용 예시
+### Usage Examples
 
 ```csharp
-// Expected 에러 (문자열 값)
+// Expected error (string value)
 Error error = ErrorCodeFactory.Create(
-    "DomainErrors.User.NotFound", "user123", "사용자를 찾을 수 없습니다");
+    "DomainErrors.User.NotFound", "user123", "User not found");
 
-// Expected 에러 (타입 값)
+// Expected error (typed value)
 Error error = ErrorCodeFactory.Create(
-    "DomainErrors.Sensor.TemperatureOutOfRange", 150, "온도 범위 초과");
+    "DomainErrors.Sensor.TemperatureOutOfRange", 150, "Temperature out of range");
 
-// Expected 에러 (2개 타입 값)
+// Expected error (2 typed values)
 Error error = ErrorCodeFactory.Create(
-    "DomainErrors.Range.InvalidBounds", 100, 50, "최소값이 최대값보다 큽니다");
+    "DomainErrors.Range.InvalidBounds", 100, 50, "Minimum is greater than maximum");
 
-// Exceptional 에러
+// Exceptional error
 Error error = ErrorCodeFactory.CreateFromException(
     "ApplicationErrors.Database.ConnectionFailed", exception);
 
-// 에러 코드 포맷
+// Error code format
 string code = ErrorCodeFactory.Format("DomainErrors", "User", "NotFound");
-// 결과: "DomainErrors.User.NotFound"
+// Result: "DomainErrors.User.NotFound"
 ```
 
-### Serilog 구조화
+### Serilog Destructuring
 
-`ErrorsDestructuringPolicy`를 등록하면 에러 객체가 구조화된 JSON으로 로깅됩니다.
+Registering `ErrorsDestructuringPolicy` enables error objects to be logged as structured JSON.
 
 ```csharp
 Log.Logger = new LoggerConfiguration()
@@ -647,7 +647,7 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 ```
 
-**필드 매핑:**
+**Field mapping:**
 
 | Field | Expected | Expected&lt;T&gt; | Exceptional | ManyErrors |
 |-------|:---:|:---:|:---:|:---:|
@@ -664,5 +664,5 @@ Log.Logger = new LoggerConfiguration()
 
 ## Reference Documents
 
-- [08b-error-system-domain-app.md](./08b-error-system-domain-app) - Domain/Application 에러 정의와 테스트
-- [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing) - Adapter 에러, Custom 에러, 테스트 모범 사례
+- [08b-error-system-domain-app.md](./08b-error-system-domain-app) - Domain/Application error definitions and testing
+- [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing) - Adapter errors, Custom errors, testing best practices

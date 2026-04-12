@@ -33,7 +33,7 @@ Input → [Function] → Success output (to next step)
 
 ---
 
-## FinResponse\<A\>와 ROP
+## FinResponse\<A\> and ROP
 
 ### 1. FinResponse Is a Two-Track Type
 

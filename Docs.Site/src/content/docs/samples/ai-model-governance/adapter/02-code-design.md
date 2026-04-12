@@ -3,11 +3,11 @@ title: "Adapter Code Design"
 description: "Code snippets for 4 advanced IO patterns and DI registration patterns"
 ---
 
-[타입 설계 의사결정](../01-type-design-decisions/)에서 선택한 4가지 IO 패턴을 C# 코드로 구현합니다.
+Implements the 4 IO patterns selected in [Type Design Decisions](../01-type-design-decisions/) in C# code.
 
 ## 1. Timeout + Catch -- ModelHealthCheckService
 
-10초 타임아웃 + 타임아웃 폴백 + 예외 변환 패턴입니다.
+10-second timeout + timeout fallback + exception conversion pattern.
 
 ```csharp
 [GenerateObservablePort]
@@ -21,7 +21,7 @@ public class ModelHealthCheckService : IModelHealthCheckService
     {
         var io = IO.liftAsync<HealthCheckResult>(async env =>
             {
-                // 네트워크 지연 시뮬레이션 (50~300ms, 10%에서 12초)
+                // Network latency simulation (50~300ms, 12s in 10% of cases)
                 var delay = _random.Next(100) < 10
                     ? TimeSpan.FromSeconds(12)
                     : TimeSpan.FromMilliseconds(_random.Next(50, 300));
@@ -56,16 +56,16 @@ public class ModelHealthCheckService : IModelHealthCheckService
 }
 ```
 
-**핵심 포인트:**
-- `IO.liftAsync`: 비동기 작업을 IO 모나드로 리프팅
-- `.Timeout(10s)`: IO 연산에 시간 제한 부여, 초과 시 `Errors.TimedOut` 발생
-- `.Catch(e => e.Is(Errors.TimedOut), ...)`: 타임아웃을 오류가 아닌 폴백 결과로 변환
-- `.Catch(e => e.IsExceptional, ...)`: 그 외 예외를 `AdapterError`로 변환
-- Catch 순서가 중요: 구체적인 조건(TimedOut)을 먼저, 일반적인 조건(IsExceptional)을 나중에
+**Key points:**
+- `IO.liftAsync`: Lifts an async operation into the IO monad
+- `.Timeout(10s)`: Imposes a time limit on the IO operation, raises `Errors.TimedOut` on exceeding
+- `.Catch(e => e.Is(Errors.TimedOut), ...)`: Converts timeout to a fallback result instead of an error
+- `.Catch(e => e.IsExceptional, ...)`: Converts other exceptions to `AdapterError`
+- Catch order matters: specific conditions (TimedOut) first, general conditions (IsExceptional) last
 
 ## 2. Retry + Schedule -- ModelMonitoringService
 
-지수 백오프 + 지터 + 최대 3회 재시도 패턴입니다.
+Exponential backoff + jitter + max 3 retries pattern.
 
 ```csharp
 [GenerateObservablePort]
@@ -92,7 +92,7 @@ public class ModelMonitoringService : IModelMonitoringService
                     TimeSpan.FromMilliseconds(_random.Next(50, 200)),
                     env.Token);
 
-                // 처음 두 번은 60% 실패, 이후 10% 실패
+                // First two attempts fail 60%, subsequent 10%
                 var failRate = attemptCount <= 2 ? 60 : 10;
                 if (_random.Next(100) < failRate)
                     throw new InvalidOperationException(
@@ -119,24 +119,24 @@ public class ModelMonitoringService : IModelMonitoringService
 }
 ```
 
-**핵심 포인트:**
-- `Schedule` 합성: `|` 연산자로 여러 Schedule 정책을 합성
-- `.Retry(RetrySchedule)`: Schedule에 따라 IO 연산을 자동 재시도
-- `attemptCount`를 클로저로 캡처하여 시도 횟수를 추적
-- 3회 재시도 후에도 실패하면 `.Catch`가 최종 오류를 변환
+**Key points:**
+- `Schedule` composition: Composes multiple Schedule policies with the `|` operator
+- `.Retry(RetrySchedule)`: Automatically retries the IO operation according to the Schedule
+- Captures `attemptCount` via closure to track attempt count
+- After 3 retries, `.Catch` converts the final error if still failing
 
-**Schedule 타임라인:**
+**Schedule timeline:**
 
 ```
-시도 1 (실패, 60%) → 대기 ~100ms
-시도 2 (실패, 60%) → 대기 ~200ms
-시도 3 (실패, 60%) → 대기 ~400ms
-시도 4 (성공, 90%) → 결과 반환
+Attempt 1 (fail, 60%) -> wait ~100ms
+Attempt 2 (fail, 60%) -> wait ~200ms
+Attempt 3 (fail, 60%) -> wait ~400ms
+Attempt 4 (success, 90%) -> return result
 ```
 
 ## 3. Fork + awaitAll -- ParallelComplianceCheckService
 
-5개 독립 체크를 병렬로 Fork하고 awaitAll로 수집하는 패턴입니다.
+Pattern that Forks 5 independent checks in parallel and collects them with awaitAll.
 
 ```csharp
 [GenerateObservablePort]
@@ -151,11 +151,11 @@ public class ParallelComplianceCheckService : IParallelComplianceCheckService
     public virtual FinT<IO, ComplianceCheckReport> RunComplianceChecks(
         ModelDeploymentId deploymentId)
     {
-        // 각 기준별 IO 체크를 Fork로 병렬 실행
+        // Fork each criterion IO check for parallel execution
         var forks = CriterionNames.Map(name =>
             CheckSingleCriterion(name).Fork());
 
-        // awaitAll로 모든 Fork 결과를 수집
+        // Collect all Fork results with awaitAll
         var io = awaitAll(forks)
             .Map(results =>
             {
@@ -181,7 +181,7 @@ public class ParallelComplianceCheckService : IParallelComplianceCheckService
     {
         return IO.liftAsync<ComplianceCriterionCheckResult>(async env =>
         {
-            // 각 기준별 독립적인 네트워크 지연 (100~500ms)
+            // Independent network latency per criterion (100~500ms)
             await Task.Delay(
                 TimeSpan.FromMilliseconds(_random.Next(100, 500)),
                 env.Token);
@@ -199,15 +199,15 @@ public class ParallelComplianceCheckService : IParallelComplianceCheckService
 }
 ```
 
-**핵심 포인트:**
-- `.Fork()`: IO 연산을 별도 파이버에서 비동기 실행
-- `awaitAll(forks)`: `Seq<IO<ForkIO<A>>>` 오버로드로 모든 Fork 결과를 `Seq<A>`로 수집
-- `.Map(results => ...)`: 수집된 결과를 집계하여 보고서 생성
-- 각 `CheckSingleCriterion`은 독립적이므로 안전하게 병렬화 가능
+**Key points:**
+- `.Fork()`: Executes the IO operation asynchronously in a separate fiber
+- `awaitAll(forks)`: `Seq<IO<ForkIO<A>>>` overload that collects all Fork results into `Seq<A>`
+- `.Map(results => ...)`: Aggregates collected results to generate a report
+- Each `CheckSingleCriterion` is independent, so safe to parallelize
 
 ## 4. Bracket -- ModelRegistryService
 
-세션 Acquire -> Use -> Release 리소스 수명 관리 패턴입니다.
+Session Acquire -> Use -> Release resource lifecycle management pattern.
 
 ```csharp
 [GenerateObservablePort]
@@ -218,7 +218,7 @@ public class ModelRegistryService : IModelRegistryService
     public virtual FinT<IO, ModelRegistryEntry> LookupModel(
         AIModelId modelId)
     {
-        // Acquire: 레지스트리 세션 획득
+        // Acquire: Acquire registry session
         var acquireSession = IO.liftAsync<RegistrySession>(async env =>
         {
             await Task.Delay(
@@ -249,7 +249,7 @@ public class ModelRegistryService : IModelRegistryService
             }),
             Fin: session => IO.lift(() =>
             {
-                // Release: 세션 해제 (성공/실패 무관)
+                // Release: Release session (regardless of success/failure)
                 session.Dispose();
                 return unit;
             }));
@@ -266,21 +266,21 @@ public class ModelRegistryService : IModelRegistryService
 }
 ```
 
-**핵심 포인트:**
-- `acquireSession.Bracket(Use: ..., Fin: ...)`: Acquire-Use-Release 패턴
-- `Fin` 매개변수: `Use`가 성공하든 실패하든 항상 실행됨 (finally 역할)
-- `session.Dispose()`: IDisposable 리소스 해제
-- Bracket 외부의 `.Catch`: 전체 Bracket 실패 시 오류 변환
+**Key points:**
+- `acquireSession.Bracket(Use: ..., Fin: ...)`: Acquire-Use-Release pattern
+- `Fin` parameter: Always executes whether `Use` succeeds or fails (acts as finally)
+- `session.Dispose()`: IDisposable resource release
+- `.Catch` outside Bracket: Error conversion on overall Bracket failure
 
-## Persistence 폴더 구조: Aggregate 중심 + CQRS Role
+## Persistence Folder Structure: Aggregate-centric + CQRS Role
 
-Persistence 프로젝트는 Aggregate를 1차 폴더로, CQRS Role(Repository/Query)을 2차 폴더로 구성합니다.
+The Persistence project uses Aggregate as the primary folder and CQRS Role (Repository/Query) as the secondary folder.
 
 ```
 AiGovernance.Adapters.Persistence/
 ├── Models/
-│   ├── AIModel.Model.cs                    # DB 모델
-│   ├── AIModel.Configuration.cs            # EF 설정
+│   ├── AIModel.Model.cs                    # DB model
+│   ├── AIModel.Configuration.cs            # EF configuration
 │   ├── Repositories/
 │   │   ├── AIModelRepositoryInMemory.cs
 │   │   └── AIModelRepositoryEfCore.cs
@@ -317,12 +317,12 @@ AiGovernance.Adapters.Persistence/
     └── PersistenceOptions.cs
 ```
 
-이 구조의 장점:
-- Aggregate별로 관련 파일이 응집되어 탐색이 용이하다
-- InMemory/EfCore 변형이 같은 폴더에 있어 비교가 쉽다
-- 새 Aggregate 추가 시 폴더 하나만 추가하면 된다
+Advantages of this structure:
+- Related files are cohesive per Aggregate, making navigation easy
+- InMemory/EfCore variants are in the same folder, making comparison easy
+- Adding a new Aggregate only requires adding one folder
 
-## DI 등록 패턴
+## DI Registration Patterns
 
 ### AdapterInfrastructureRegistration
 
@@ -330,7 +330,7 @@ AiGovernance.Adapters.Persistence/
 public static IServiceCollection RegisterAdapterInfrastructure(
     this IServiceCollection services, IConfiguration configuration)
 {
-    // Mediator + 도메인 이벤트 발행자
+    // Mediator + domain event publisher
     services.AddMediator(options =>
     {
         options.ServiceLifetime = ServiceLifetime.Scoped;
@@ -359,7 +359,7 @@ public static IServiceCollection RegisterAdapterInfrastructure(
     services.AddScoped<RiskClassificationService>();
     services.AddScoped<DeploymentEligibilityService>();
 
-    // 외부 서비스 (IO 고급 기능 데모)
+    // External services (IO advanced features demo)
     services.AddScoped<IModelHealthCheckService, ModelHealthCheckService>();
     services.AddScoped<IModelMonitoringService, ModelMonitoringService>();
     services.AddScoped<IParallelComplianceCheckService,
@@ -375,7 +375,7 @@ public static IServiceCollection RegisterAdapterInfrastructure(
 ```csharp
 private static void RegisterInMemoryRepositories(IServiceCollection services)
 {
-    // Repository (Observable 래퍼)
+    // Repository (Observable wrappers)
     services.RegisterScopedObservablePort<IAIModelRepository,
         AIModelRepositoryInMemoryObservable>();
     services.RegisterScopedObservablePort<IDeploymentRepository,
@@ -403,17 +403,17 @@ private static void RegisterInMemoryRepositories(IServiceCollection services)
 }
 ```
 
-`RegisterScopedObservablePort`는 Source Generator가 생성한 Observable 래퍼를 인터페이스에 등록합니다. 이 래퍼는 각 메서드 호출에 자동으로 로깅, 메트릭, 트레이싱을 추가합니다.
+`RegisterScopedObservablePort` registers the Source Generator-generated Observable wrapper to the interface. This wrapper automatically adds logging, metrics, and tracing to each method call.
 
-## IO 패턴 -> FinT 변환 공통 패턴
+## IO Pattern -> FinT Conversion Common Pattern
 
-모든 외부 서비스가 동일한 패턴으로 IO를 FinT로 변환합니다:
+All external services convert IO to FinT using the same pattern:
 
 ```csharp
-// IO<A> → FinT<IO, A>
+// IO<A> -> FinT<IO, A>
 return new FinT<IO, A>(io.Map(Fin.Succ));
 ```
 
-이 변환은 `IO<A>`를 `IO<Fin<A>>`로 매핑한 뒤, `FinT<IO, A>`로 래핑합니다. 이로써 Application Layer의 `FinT<IO, T>` LINQ 체인에 자연스럽게 합성됩니다.
+This conversion maps `IO<A>` to `IO<Fin<A>>`, then wraps it as `FinT<IO, A>`. This enables natural composition into the Application Layer's `FinT<IO, T>` LINQ chain.
 
-[구현 결과](./03-implementation-results/)에서 전체 Adapter 프로젝트 구조와 엔드포인트 목록을 확인합니다.
+See the complete Adapter project structure and endpoint list in [Implementation Results](./03-implementation-results/).

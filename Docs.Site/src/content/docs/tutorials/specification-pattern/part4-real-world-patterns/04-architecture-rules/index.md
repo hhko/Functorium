@@ -2,29 +2,29 @@
 title: "Architecture Rules"
 ---
 
-## 개요
+## Overview
 
-팀이 커지면 Specification의 네이밍이 제각각이 됩니다. 누군가는 `ActiveProductSpec`으로, 다른 사람은 `IsActiveSpecification`으로 만듭니다. 폴더 위치도 제멋대로입니다. 이 장에서는 네이밍 규칙, 폴더 배치, 그리고 ArchUnitNET을 활용한 자동 검증으로 팀 전체의 일관성을 유지하는 방법을 다룹니다.
+As a team grows, Specification naming becomes inconsistent. Someone names it `ActiveProductSpec`, while another creates `IsActiveSpecification`. Folder locations are all over the place. This chapter covers naming conventions, folder placement, and automated verification with ArchUnitNET to maintain consistency across the entire team.
 
-## 학습 목표
+## Learning Objectives
 
-1. **네이밍 규칙** - `{Aggregate}{Condition}Spec` 형식의 일관된 네이밍
-2. **폴더 배치 규칙** - Aggregate 하위 `Specifications/` 폴더에 배치
-3. **ArchUnitNET 검증** - 아키텍처 테스트로 규칙 자동 검증
+1. **Naming conventions** - Consistent naming in the `{Aggregate}{Condition}Spec` format
+2. **Folder placement rules** - Placing Specifications in a `Specifications/` folder under the Aggregate
+3. **ArchUnitNET verification** - Automated rule verification through architecture tests
 
-## 핵심 개념
+## Core Concepts
 
-### 네이밍 규칙: `{Aggregate}{Condition}Spec`
+### Naming Convention: `{Aggregate}{Condition}Spec`
 
-Specification 이름은 대상 Aggregate와 조건을 조합하여 명명합니다.
+Specification names are composed by combining the target Aggregate and the condition.
 
-| Specification | Aggregate | Condition | 설명 |
-|--------------|-----------|-----------|------|
-| `ProductInStockSpec` | Product | InStock | 재고 있는 상품 |
-| `ProductPriceRangeSpec` | Product | PriceRange | 가격 범위 내 상품 |
-| `ProductLowStockSpec` | Product | LowStock | 재고 부족 상품 |
+| Specification | Aggregate | Condition | Description |
+|--------------|-----------|-----------|-------------|
+| `ProductInStockSpec` | Product | InStock | Products in stock |
+| `ProductPriceRangeSpec` | Product | PriceRange | Products within a price range |
+| `ProductLowStockSpec` | Product | LowStock | Products with low stock |
 
-### 폴더 배치
+### Folder Placement
 
 ```
 Domain/AggregateRoots/Products/
@@ -35,12 +35,12 @@ Domain/AggregateRoots/Products/
     └── ProductLowStockSpec.cs
 ```
 
-### ArchUnitNET 자동 검증
+### ArchUnitNET Automated Verification
 
-ArchUnitNET은 코드의 아키텍처 규칙을 테스트로 검증하는 라이브러리입니다.
+ArchUnitNET is a library that verifies code architecture rules as tests.
 
 ```csharp
-// Specifications 네임스페이스의 클래스는 Spec으로 끝나야 함
+// Classes in the Specifications namespace must end with Spec
 var rule = Classes()
     .That()
     .ResideInNamespace("Specifications", useRegularExpressions: false)
@@ -50,9 +50,9 @@ var rule = Classes()
 rule.Check(Architecture);
 ```
 
-## 프로젝트 설명
+## Project Description
 
-### 프로젝트 구조
+### Project Structure
 
 ```
 ArchitectureRules/
@@ -67,50 +67,50 @@ ArchitectureRules/
 └── Program.cs
 
 ArchitectureRules.Tests.Unit/
-├── SpecificationNamingTests.cs     # ArchUnitNET 아키텍처 테스트
-└── ProductSpecTests.cs             # Spec 자체 테스트
+├── SpecificationNamingTests.cs     # ArchUnitNET architecture tests
+└── ProductSpecTests.cs             # Spec self-tests
 ```
 
-## 한눈에 보는 정리
+## At a Glance
 
-| 규칙 | 설명 | 검증 방법 |
-|------|------|----------|
-| **네이밍** | `{Aggregate}{Condition}Spec` | ArchUnitNET: `HaveNameEndingWith("Spec")` |
-| **배치** | `Specifications/` 네임스페이스 | ArchUnitNET: `ResideInNamespace("Specifications")` |
-| **접근 제한** | `sealed class` | 코드 리뷰 |
-| **단일 책임** | 하나의 Spec = 하나의 조건 | 코드 리뷰 |
+| Rule | Description | Verification Method |
+|------|-------------|---------------------|
+| **Naming** | `{Aggregate}{Condition}Spec` | ArchUnitNET: `HaveNameEndingWith("Spec")` |
+| **Placement** | `Specifications/` namespace | ArchUnitNET: `ResideInNamespace("Specifications")` |
+| **Access restriction** | `sealed class` | Code review |
+| **Single responsibility** | One Spec = one condition | Code review |
 
-### 양방향 규칙의 중요성
+### Importance of Bidirectional Rules
 
-| 규칙 방향 | 의미 | 방지하는 문제 |
-|-----------|------|-------------|
-| Specifications -> Spec | 네임스페이스 내 클래스는 Spec으로 끝남 | 네임스페이스에 관련 없는 클래스 배치 |
-| Spec -> Specifications | Spec으로 끝나는 클래스는 네임스페이스 안에 있음 | Spec이 잘못된 위치에 배치 |
+| Rule Direction | Meaning | Problem it prevents |
+|----------------|---------|---------------------|
+| Specifications -> Spec | Classes in the namespace end with Spec | Unrelated classes placed in the namespace |
+| Spec -> Specifications | Classes ending with Spec are in the namespace | Specs placed in wrong locations |
 
 ## FAQ
 
-### Q1: ArchUnitNET은 무엇인가요?
-**A**: ArchUnitNET은 .NET 프로젝트의 아키텍처 규칙을 단위 테스트로 검증하는 라이브러리입니다. Java의 ArchUnit에서 영감을 받았으며, Fluent API로 규칙을 정의하고 `Check()`로 검증합니다.
+### Q1: What is ArchUnitNET?
+**A**: ArchUnitNET is a library that verifies architecture rules of .NET projects as unit tests. Inspired by Java's ArchUnit, it defines rules with a Fluent API and verifies them with `Check()`.
 
-### Q2: 아키텍처 테스트가 필요한 이유는 무엇인가요?
-**A**: 코드 리뷰만으로는 네이밍 규칙이나 폴더 배치 규칙을 100% 보장하기 어렵습니다. 아키텍처 테스트를 CI/CD 파이프라인에 포함하면, 규칙 위반이 자동으로 감지되어 일관성을 유지할 수 있습니다.
+### Q2: Why are architecture tests needed?
+**A**: Code review alone cannot guarantee 100% compliance with naming conventions or folder placement rules. Including architecture tests in the CI/CD pipeline automatically detects rule violations, maintaining consistency.
 
-### Q3: 다른 Aggregate의 Specification도 같은 규칙을 적용할 수 있나요?
-**A**: 네, ArchUnitNET 규칙은 어셈블리 전체에 적용됩니다. `Customer` Aggregate에 `CustomerEmailUniqueSpec`을 추가해도 동일한 규칙이 자동으로 검증됩니다.
+### Q3: Can the same rules be applied to Specifications of other Aggregates?
+**A**: Yes, ArchUnitNET rules are applied to the entire assembly. Even if you add `CustomerEmailUniqueSpec` to the `Customer` Aggregate, the same rules are automatically verified.
 
-### Q4: Functorium에 기본 제공되는 아키텍처 규칙이 있나요?
-**A**: 네. `Functorium.Testing`의 `DomainArchitectureTestSuite`를 상속하면 Specification 전용 규칙 3개가 기본 제공됩니다:
+### Q4: Does Functorium provide built-in architecture rules?
+**A**: Yes. By inheriting `DomainArchitectureTestSuite` from `Functorium.Testing`, you get 3 Specification-specific rules out of the box:
 
-| 규칙 | 검증 내용 |
-|------|----------|
-| `Specification_ShouldBe_PublicSealed()` | public sealed class 강제 |
-| `Specification_ShouldInherit_SpecificationBase()` | `Specification<T>` 상속 강제 |
-| `Specification_ShouldResideIn_DomainLayer()` | 도메인 네임스페이스 배치 강제 |
+| Rule | What it verifies |
+|------|-----------------|
+| `Specification_ShouldBe_PublicSealed()` | Enforces public sealed class |
+| `Specification_ShouldInherit_SpecificationBase()` | Enforces `Specification<T>` inheritance |
+| `Specification_ShouldResideIn_DomainLayer()` | Enforces placement in domain namespace |
 
-실제 프로젝트에서는 이 suite를 상속하여 추가 규칙만 정의하면 됩니다. 이 장에서 직접 작성한 규칙은 ArchUnitNET의 원리를 이해하기 위한 것입니다.
+In real projects, you simply inherit this suite and define only additional rules. The rules written by hand in this chapter are for understanding the principles of ArchUnitNET.
 
 ---
 
-Part 4에서는 Specification 패턴의 실전 활용법을 살펴보았습니다 — CQRS 통합, 동적 필터 빌더, 테스트 전략, 아키텍처 규칙까지. Part 5에서는 이 모든 것을 종합하여 실제 도메인 시나리오에 적용합니다.
+In Part 4, we explored real-world usage of the Specification pattern -- CQRS integration, dynamic filter builders, testing strategies, and architecture rules. In Part 5, we'll synthesize everything and apply it to actual domain scenarios.
 
-→ [Part 5의 1장: 이커머스 상품 필터링](../../Part5-Domain-Examples/01-Ecommerce-Product-Filtering/)
+→ [Part 5, Chapter 1: E-Commerce Product Filtering](../../Part5-Domain-Examples/01-Ecommerce-Product-Filtering/)

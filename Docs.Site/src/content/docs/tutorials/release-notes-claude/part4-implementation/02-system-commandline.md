@@ -2,28 +2,28 @@
 title: "System.CommandLine Package"
 ---
 
-자동화 스크립트가 `args[0]`, `args[1]`을 직접 파싱하면 금방 한계에 부딪힙니다. 인자 순서가 바뀌거나, 기본값이 필요하거나, `--help`를 보여줘야 할 때마다 코드가 복잡해집니다. System.CommandLine은 이런 문제를 해결하는 Microsoft의 **명령줄 인자 파싱 라이브러리로**, 선언적으로 CLI를 정의하면 파싱, 검증, 도움말 생성까지 자동으로 처리해줍니다.
+When an automation script directly parses `args[0]`, `args[1]`, it quickly hits limitations. Every time the argument order changes, defaults are needed, or `--help` must be shown, the code becomes more complex. System.CommandLine is Microsoft's **command-line argument parsing library** that solves these problems. Define the CLI declaratively, and parsing, validation, and help generation are handled automatically.
 
-## 패키지 설치
+## Package Installation
 
-File-based App에서는 `#:package` 지시자로 설치합니다.
+In File-based Apps, install with the `#:package` directive.
 
 ```csharp
 #:package System.CommandLine@2.0.1
 ```
 
-## CLI를 구성하는 핵심 요소
+## Core Elements of a CLI
 
-System.CommandLine의 CLI는 네 가지 구성 요소로 이루어집니다.
+A System.CommandLine CLI consists of four building blocks.
 
-| 구성 요소 | 설명 | 예시 |
-|----------|------|------|
-| RootCommand | 최상위 명령어 | `dotnet MyApp.cs` |
-| Option | 이름 붙은 인자 | `--base`, `-b` |
-| Argument | 위치 기반 인자 | `<file>` |
-| Command | 하위 명령어 | `add`, `remove` |
+| Element | Description | Example |
+|---------|-------------|---------|
+| RootCommand | Top-level command | `dotnet MyApp.cs` |
+| Option | Named argument | `--base`, `-b` |
+| Argument | Positional argument | `<file>` |
+| Command | Subcommand | `add`, `remove` |
 
-실제 명령어에서 이 요소들이 어떻게 대응되는지 보겠습니다.
+Let's see how these elements correspond in an actual command.
 
 ```bash
 dotnet MyApp.cs add --name "Item" --priority 1 file.txt
@@ -32,20 +32,20 @@ dotnet MyApp.cs add --name "Item" --priority 1 file.txt
 #               Command
 ```
 
-## Option 정의하기
+## Defining Options
 
-Option은 이름 붙은 인자입니다. 가장 기본적인 형태부터 살펴보겠습니다.
+Options are named arguments. Let's start from the most basic form.
 
 ```csharp
 using System.CommandLine;
 
-// string 타입 Option
+// string type Option
 var nameOption = new Option<string>("--name")
 {
     Description = "The name to use"
 };
 
-// int 타입 Option (기본값 포함)
+// int type Option (with default value)
 var countOption = new Option<int>("--count")
 {
     Description = "Number of items"
@@ -53,7 +53,7 @@ var countOption = new Option<int>("--count")
 countOption.DefaultValueFactory = (_) => 10;
 ```
 
-축약형 별칭을 추가하면 긴 이름과 짧은 이름 모두 사용할 수 있습니다.
+Adding short aliases allows both long and short names.
 
 ```csharp
 var verboseOption = new Option<bool>(new[] { "--verbose", "-v" })
@@ -62,7 +62,7 @@ var verboseOption = new Option<bool>(new[] { "--verbose", "-v" })
 };
 ```
 
-필수 Option으로 만들려면 `IsRequired`를 설정합니다.
+To make an Option required, set `IsRequired`.
 
 ```csharp
 var requiredOption = new Option<string>("--required")
@@ -72,18 +72,18 @@ var requiredOption = new Option<string>("--required")
 };
 ```
 
-## Argument 정의하기
+## Defining Arguments
 
-Argument는 이름 없이 위치로 구분되는 인자입니다.
+Arguments are positional, identified by position rather than name.
 
 ```csharp
-// 단일 Argument
+// Single Argument
 var fileArgument = new Argument<string>("file")
 {
     Description = "The file to process"
 };
 
-// 여러 Argument
+// Multiple Arguments
 var filesArgument = new Argument<string[]>("files")
 {
     Description = "Files to process",
@@ -91,9 +91,9 @@ var filesArgument = new Argument<string[]>("files")
 };
 ```
 
-## RootCommand로 CLI 조립하기
+## Assembling a CLI with RootCommand
 
-Option과 Argument를 정의했다면, RootCommand에 등록하고 핸들러를 설정합니다. 릴리스 노트 스크립트의 전형적인 패턴을 따라 하나씩 만들어보겠습니다.
+Once Options and Arguments are defined, register them with a RootCommand and set up a handler. Let's build one step by step following the typical pattern of release note scripts.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -102,7 +102,7 @@ Option과 Argument를 정의했다면, RootCommand에 등록하고 핸들러를 
 
 using System.CommandLine;
 
-// Option 정의
+// Define Options
 var baseOption = new Option<string>("--base")
 {
     Description = "Base branch for comparison"
@@ -115,14 +115,14 @@ var targetOption = new Option<string>("--target")
 };
 targetOption.DefaultValueFactory = (_) => "HEAD";
 
-// RootCommand 생성
+// Create RootCommand
 var rootCommand = new RootCommand("My CLI application")
 {
     baseOption,
     targetOption
 };
 
-// 핸들러 설정
+// Set up handler
 rootCommand.SetAction((parseResult, cancellationToken) =>
 {
     var baseBranch = parseResult.GetValue(baseOption)!;
@@ -134,19 +134,19 @@ rootCommand.SetAction((parseResult, cancellationToken) =>
     return 0;
 });
 
-// 실행
+// Execute
 return await rootCommand.Parse(args).InvokeAsync();
 ```
 
-실행:
+Run:
 ```bash
 dotnet MyApp.cs --base origin/main --target HEAD
-# 출력:
+# Output:
 # Base: origin/main
 # Target: HEAD
 ```
 
-핸들러에서 비동기 작업이 필요하다면 `async` 키워드를 추가하면 됩니다.
+If async operations are needed in the handler, add the `async` keyword.
 
 ```csharp
 rootCommand.SetAction(async (parseResult, cancellationToken) =>
@@ -159,12 +159,12 @@ rootCommand.SetAction(async (parseResult, cancellationToken) =>
 });
 ```
 
-## 하위 Command 추가하기
+## Adding Subcommands
 
-여러 동작을 하나의 CLI에서 제공하려면 하위 Command를 사용합니다.
+To provide multiple actions in a single CLI, use subcommands.
 
 ```csharp
-// add 하위 명령어
+// add subcommand
 var addCommand = new Command("add", "Add a new item")
 {
     nameOption
@@ -177,7 +177,7 @@ addCommand.SetAction((parseResult, cancellationToken) =>
     return 0;
 });
 
-// remove 하위 명령어
+// remove subcommand
 var removeCommand = new Command("remove", "Remove an item")
 {
     nameOption
@@ -190,7 +190,7 @@ removeCommand.SetAction((parseResult, cancellationToken) =>
     return 0;
 });
 
-// RootCommand에 추가
+// Add to RootCommand
 var rootCommand = new RootCommand("Item manager")
 {
     addCommand,
@@ -198,15 +198,15 @@ var rootCommand = new RootCommand("Item manager")
 };
 ```
 
-실행:
+Run:
 ```bash
 dotnet MyApp.cs add --name "Item1"
 dotnet MyApp.cs remove --name "Item1"
 ```
 
-## 실제 예시: AnalyzeAllComponents.cs의 CLI 구성
+## Practical Example: CLI Configuration of AnalyzeAllComponents.cs
 
-릴리스 노트 자동화의 실제 코드에서 System.CommandLine이 어떻게 사용되는지 살펴보겠습니다. `--base`와 `--target` 두 Option으로 비교 대상 브랜치를 받고, 비동기 핸들러에서 분석을 수행합니다.
+Let's see how System.CommandLine is used in the actual release note automation code. Two Options, `--base` and `--target`, receive the comparison target branches, and an async handler performs the analysis.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -218,7 +218,7 @@ using System;
 using System.CommandLine;
 using System.Threading.Tasks;
 
-// Option 정의
+// Define Options
 var baseOption = new Option<string>("--base")
 {
     Description = "Base branch for comparison"
@@ -231,14 +231,14 @@ var targetOption = new Option<string>("--target")
 };
 targetOption.DefaultValueFactory = (_) => "origin/main";
 
-// RootCommand 구성
+// Configure RootCommand
 var rootCommand = new RootCommand("Automated analysis of all components")
 {
     baseOption,
     targetOption
 };
 
-// 비동기 핸들러
+// Async handler
 rootCommand.SetAction(async (parseResult, cancellationToken) =>
 {
     var baseBranch = parseResult.GetValue(baseOption)!;
@@ -248,22 +248,22 @@ rootCommand.SetAction(async (parseResult, cancellationToken) =>
     return 0;
 });
 
-// 실행
+// Execute
 return await rootCommand.Parse(args).InvokeAsync();
 
-// 메인 로직
+// Main logic
 static async Task AnalyzeAllComponentsAsync(string baseBranch, string targetBranch)
 {
     Console.WriteLine($"Analyzing from {baseBranch} to {targetBranch}...");
-    // 실제 분석 로직
+    // Actual analysis logic
 }
 ```
 
-## 자동으로 제공되는 기능
+## Automatically Provided Features
 
-System.CommandLine을 사용하면 별도 코드 없이 세 가지 기능이 자동으로 제공됩니다.
+Using System.CommandLine automatically provides three features without additional code.
 
-`--help`를 전달하면 Option 목록과 기본값이 포함된 도움말이 출력됩니다.
+Passing `--help` outputs help with Option lists and default values.
 
 ```bash
 $ dotnet MyApp.cs --help
@@ -281,59 +281,59 @@ Options:
   --version          Show version information
 ```
 
-`--version`으로 버전 정보를 확인할 수 있고, 알 수 없는 인자를 전달하면 오류 메시지와 함께 올바른 사용법을 안내합니다.
+Version information can be checked with `--version`, and passing unknown arguments produces an error message with correct usage guidance.
 
 ```bash
 $ dotnet MyApp.cs --unknown
 Unrecognized command or argument '--unknown'.
 ```
 
-## 패턴 정리
+## Pattern Summary
 
-릴리스 노트 스크립트에서 반복적으로 사용하는 패턴을 정리하면 다음과 같습니다.
+Here is a summary of patterns used repeatedly across release note scripts.
 
 ```csharp
-// 1. 기본 Option
+// 1. Basic Option
 var option = new Option<string>("--name");
 
-// 2. 기본값 설정
+// 2. Default value
 option.DefaultValueFactory = (_) => "default";
 
-// 3. 필수 Option
+// 3. Required Option
 option.IsRequired = true;
 
-// 4. 축약형 별칭
+// 4. Short alias
 var option = new Option<string>(new[] { "--name", "-n" });
 ```
 
 ```csharp
-// 1. 생성 및 Option 추가
+// 1. Create and add Options
 var rootCommand = new RootCommand("Description")
 {
     option1,
     option2
 };
 
-// 2. 핸들러 설정
+// 2. Set up handler
 rootCommand.SetAction((parseResult, cancellationToken) =>
 {
     var value = parseResult.GetValue(option1);
     return 0;
 });
 
-// 3. 실행
+// 3. Execute
 return await rootCommand.Parse(args).InvokeAsync();
 ```
 
 ## FAQ
 
-### Q1: `args[0]` 직접 파싱 대신 System.CommandLine을 사용하는 이유는 무엇인가요?
-**A**: `args[]` 직접 파싱은 인자가 2~3개만 되어도 순서 관리, 기본값 처리, 오류 메시지 생성 코드가 급격히 복잡해집니다. System.CommandLine은 선언적으로 Option과 Argument를 정의하면 **파싱, 검증, `--help` 생성까지 자동으로** 처리해주므로, 스크립트 코드가 실제 비즈니스 로직에만 집중할 수 있습니다.
+### Q1: Why use System.CommandLine instead of directly parsing `args[0]`?
+**A**: Directly parsing `args[]` makes code dramatically more complex even with just 2-3 arguments for order management, default value handling, and error message generation. System.CommandLine declaratively defines Options and Arguments and **automatically handles parsing, validation, and `--help` generation**, allowing script code to focus solely on actual business logic.
 
-### Q2: `SetAction` 핸들러에서 반환하는 `0`은 무엇을 의미하나요?
-**A**: 프로세스 종료 코드(exit code)입니다. `0`은 정상 종료를, `0`이 아닌 값은 오류를 의미합니다. 이 종료 코드는 CI/CD 파이프라인이나 셸 스크립트에서 명령 성공 여부를 판단하는 데 사용되므로, 오류 상황에서는 `1` 등 다른 값을 반환해야 합니다.
+### Q2: What does the `0` returned from the `SetAction` handler mean?
+**A**: It is the process exit code. `0` means normal termination, and non-zero values indicate errors. This exit code is used by CI/CD pipelines or shell scripts to determine command success, so error situations should return `1` or other values.
 
-### Q3: `DefaultValueFactory`와 생성자에서 기본값을 직접 설정하는 것의 차이는 무엇인가요?
-**A**: `DefaultValueFactory`는 **람다를 통해 기본값을 지연 생성합니다.** 즉, 사용자가 해당 Option을 지정하지 않았을 때만 팩토리가 호출됩니다. 기본값이 단순 상수가 아니라 환경 변수나 설정 파일에서 읽어야 하는 경우 특히 유용합니다.
+### Q3: What is the difference between `DefaultValueFactory` and setting a default value directly in the constructor?
+**A**: `DefaultValueFactory` **lazily generates the default value via a lambda.** That is, the factory is called only when the user does not specify that Option. This is especially useful when the default value must be read from an environment variable or configuration file rather than being a simple constant.
 
-System.CommandLine이 인자 파싱과 검증을 맡아주면, 스크립트 코드는 **실제 로직에만 집중**할 수 있습니다. 다음 절에서는 이 스크립트들의 콘솔 출력을 풍부하게 만들어주는 Spectre.Console을 살펴보겠습니다.
+With System.CommandLine handling argument parsing and validation, script code can **focus solely on actual logic**. The next section examines Spectre.Console, which enriches the console output of these scripts.

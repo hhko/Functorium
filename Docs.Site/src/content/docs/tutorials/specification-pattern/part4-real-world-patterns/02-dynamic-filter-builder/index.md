@@ -1,37 +1,37 @@
 ---
-title: "동적 필터 빌더"
+title: "Dynamic Filter Builder"
 ---
 
-## 개요
+## Overview
 
-Part 1의 4장에서 `Specification<T>.All` 항등원과 동적 필터 패턴을 소개했습니다. 이 장에서는 그 패턴을 독립적인 빌더 클래스로 발전시킵니다. 빌더는 선택적 필터 조건을 유창한(fluent) API로 조합하여, 복잡한 검색 화면의 필터 로직을 깔끔하게 캡슐화합니다.
+In Part 1, Chapter 4, we introduced the `Specification<T>.All` identity element and the dynamic filter pattern. In this chapter, we evolve that pattern into an independent builder class. The builder composes optional filter conditions through a fluent API, cleanly encapsulating the filter logic for complex search screens.
 
-## 학습 목표
+## Learning Objectives
 
-1. **All을 초기값으로 사용하는 패턴** - `Specification<T>.All`의 항등원 성질 이해
-2. **조건부 `&=` 체이닝** - null/empty 체크 후 점진적 조합
-3. **Filter Builder 분리** - 필터 구성 로직을 독립 클래스로 추출
+1. **Pattern using All as the initial value** - Understanding the identity property of `Specification<T>.All`
+2. **Conditional `&=` chaining** - Progressive composition after null/empty checks
+3. **Filter Builder separation** - Extracting filter composition logic into an independent class
 
-## 핵심 개념
+## Core Concepts
 
-### All을 초기값(Seed)으로 사용
+### Using All as the Seed Value
 
-`Specification<T>.All`은 `&` 연산의 항등원입니다. `All & X = X`이므로, 필터가 하나도 없으면 `All`이 그대로 반환되어 전체 조회로 동작합니다.
+`Specification<T>.All` is the identity element of the `&` operation. Since `All & X = X`, if no filters are applied, `All` is returned as-is, functioning as a full query.
 
 ```csharp
-var spec = Specification<Product>.All;  // 초기값
+var spec = Specification<Product>.All;  // Initial value
 
 if (!string.IsNullOrWhiteSpace(request.Name))
     spec &= new ProductNameContainsSpec(request.Name);
 if (!string.IsNullOrWhiteSpace(request.Category))
     spec &= new ProductCategorySpec(request.Category);
 
-return spec;  // 필터 없으면 All 반환
+return spec;  // Returns All if no filters
 ```
 
-### Filter Builder 패턴
+### Filter Builder Pattern
 
-필터 구성 로직을 `static` 메서드로 분리하면 Usecase 코드가 깔끔해지고, 필터 로직을 독립적으로 테스트할 수 있습니다.
+Separating filter composition logic into a `static` method keeps Usecase code clean and allows filter logic to be tested independently.
 
 ```csharp
 public static class ProductFilterBuilder
@@ -39,59 +39,59 @@ public static class ProductFilterBuilder
     public static Specification<Product> Build(SearchProductsRequest request)
     {
         var spec = Specification<Product>.All;
-        // 조건부 &= 체이닝
+        // Conditional &= chaining
         return spec;
     }
 }
 ```
 
-## 프로젝트 설명
+## Project Description
 
-### 프로젝트 구조
+### Project Structure
 
 ```
 DynamicFilter/
-├── Product.cs                          # 상품 레코드
-├── SampleProducts.cs                   # 예제 데이터
-├── SearchProductsRequest.cs            # 검색 요청 DTO
-├── ProductFilterBuilder.cs             # 동적 필터 빌더
+├── Product.cs                          # Product record
+├── SampleProducts.cs                   # Sample data
+├── SearchProductsRequest.cs            # Search request DTO
+├── ProductFilterBuilder.cs             # Dynamic filter builder
 ├── Specifications/
-│   ├── ProductNameContainsSpec.cs             # 이름 포함 검색
-│   ├── ProductCategorySpec.cs                 # 카테고리 필터
-│   ├── ProductPriceRangeSpec.cs               # 가격 범위
-│   └── ProductInStockSpec.cs                  # 재고 있음
-└── Program.cs                          # 데모 실행
+│   ├── ProductNameContainsSpec.cs             # Name contains search
+│   ├── ProductCategorySpec.cs                 # Category filter
+│   ├── ProductPriceRangeSpec.cs               # Price range
+│   └── ProductInStockSpec.cs                  # In stock
+└── Program.cs                          # Demo execution
 ```
 
-## 한눈에 보는 정리
+## At a Glance
 
-| 요청 상태 | `Build()` 반환값 | `IsAll` | 동작 |
-|-----------|-----------------|---------|------|
-| 필터 없음 | `All` | `true` | 전체 조회 |
-| 필터 1개 | 해당 Spec | `false` | 단일 필터 |
-| 필터 N개 | `And` 조합 | `false` | 복합 필터 |
+| Request State | `Build()` Return Value | `IsAll` | Behavior |
+|---------------|------------------------|---------|----------|
+| No filters | `All` | `true` | Full query |
+| 1 filter | That Spec | `false` | Single filter |
+| N filters | `And` composition | `false` | Composite filter |
 
-### null 폴백 vs All 초기값 비교
+### null Fallback vs All Initial Value Comparison
 
-| 항목 | `null` 폴백 | `All` 초기값 |
-|------|------------|-------------|
-| **null 체크** | 매번 필요 | 불필요 |
-| **조합 문법** | `spec = spec is not null ? spec & x : x` | `spec &= x` |
-| **빈 필터 처리** | 별도 분기 필요 | 자동 (All 반환) |
+| Item | `null` Fallback | `All` Initial Value |
+|------|----------------|---------------------|
+| **null check** | Required every time | Not needed |
+| **Composition syntax** | `spec = spec is not null ? spec & x : x` | `spec &= x` |
+| **Empty filter handling** | Separate branch needed | Automatic (returns All) |
 
 ## FAQ
 
-### Q1: All은 성능에 영향을 주나요?
-**A**: `All`의 `IsSatisfiedBy()`는 항상 `true`를 반환하므로 오버헤드가 거의 없습니다. 또한 `&` 연산자가 항등원 최적화를 수행하므로 (`All & X = X`), 불필요한 `And` 래핑이 발생하지 않습니다.
+### Q1: Does All affect performance?
+**A**: `All`'s `IsSatisfiedBy()` always returns `true`, so the overhead is negligible. Additionally, the `&` operator performs identity optimization (`All & X = X`), preventing unnecessary `And` wrapping.
 
-### Q2: Filter Builder를 static 메서드 대신 인스턴스 클래스로 만들어야 하나요?
-**A**: 외부 의존성(예: 현재 사용자 정보, 설정값)이 필요한 경우 인스턴스 클래스로 만들 수 있습니다. 그러나 순수한 필터 조합이라면 static 메서드로 충분합니다.
+### Q2: Should the Filter Builder be an instance class instead of a static method?
+**A**: If external dependencies (e.g., current user info, configuration values) are needed, it can be an instance class. However, for pure filter composition, a static method is sufficient.
 
-### Q3: `|=` (OR 체이닝)도 같은 패턴으로 사용할 수 있나요?
-**A**: `All`은 `&` 연산의 항등원이지만, `|` 연산의 항등원은 아닙니다 (`All | X = All`, 모든 것을 만족하는 조건과 OR하면 항상 전체가 됩니다). OR 조합이 필요하면 별도의 초기값 전략이 필요합니다.
+### Q3: Can `|=` (OR chaining) be used with the same pattern?
+**A**: `All` is the identity element for the `&` operation, but not for the `|` operation (`All | X = All` -- OR-ing with a condition that satisfies everything always results in everything). A separate initial value strategy is needed for OR composition.
 
 ---
 
-빌더로 필터 조합 로직을 깔끔하게 분리했습니다. 하지만 이 Specification들이 정확한 비즈니스 규칙을 표현하는지 어떻게 보장할 수 있을까요? 다음 장에서는 Specification의 체계적인 테스트 전략을 다룹니다.
+We've cleanly separated filter composition logic with a builder. But how can we ensure these Specifications express the correct business rules? The next chapter covers systematic testing strategies for Specifications.
 
-→ [3장: 테스트 전략](../03-Testing-Strategies/)
+→ [Chapter 3: Testing Strategies](../03-Testing-Strategies/)

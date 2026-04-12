@@ -1,40 +1,40 @@
 ---
 title: "PropertyMap"
 ---
-## 개요
+## Overview
 
-도메인 모델의 `Price` 속성이 데이터베이스 테이블에서는 `UnitPrice`라는 이름으로 저장된다면? 또는 도메인에서 `Money` Value Object로 표현한 가격이 DB에서는 단순한 `decimal`이라면? Specification의 Expression Tree를 그대로 EF Core에 전달하면 매핑 오류가 발생합니다. `PropertyMap`은 이 간극을 메우는 변환 계층입니다.
+What if the `Price` property in your domain model is stored as `UnitPrice` in the database table? Or what if a price represented as a `Money` Value Object in the domain is simply a `decimal` in the DB? If you pass a Specification's Expression Tree directly to EF Core, you'll get mapping errors. `PropertyMap` is the translation layer that bridges this gap.
 
-`PropertyMap`은 이런 이름 불일치를 해결하여, **도메인 기준으로 작성된 Expression을 DB 모델 기준 Expression으로 자동 변환합니다.**
+`PropertyMap` resolves these name mismatches by **automatically converting Expressions written in domain terms into Expressions based on the DB model.**
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **엔티티-모델 불일치 문제 이해** - 도메인 모델과 퍼시스턴스 모델의 프로퍼티 이름이 다를 때 발생하는 문제
-2. **PropertyMap 매핑 등록** - `Map(p => p.Name, m => m.ProductName)` 패턴
-3. **Expression 자동 변환** - `Translate` 메서드로 도메인 Expression을 모델 Expression으로 변환
+### Core Learning Objectives
+1. **Understanding entity-model mismatch problems** - Issues that arise when property names differ between domain models and persistence models
+2. **PropertyMap mapping registration** - The `Map(p => p.Name, m => m.ProductName)` pattern
+3. **Automatic Expression conversion** - Using the `Translate` method to convert domain Expressions to model Expressions
 
-### 실습을 통해 확인할 내용
-- 필드명 변환 (`TranslateFieldName`)
-- 단일 Expression 변환
-- 복합 Expression 변환 (And/Or 조합)
-- 변환된 Expression으로 DbModel 컬렉션 필터링
+### What you will verify through exercises
+- Field name conversion (`TranslateFieldName`)
+- Single Expression conversion
+- Composite Expression conversion (And/Or combinations)
+- Filtering a DbModel collection with converted Expressions
 
-## 핵심 개념
+## Core Concepts
 
-### 엔티티 vs 퍼시스턴스 모델
+### Entity vs Persistence Model
 
 ```csharp
-// 도메인 엔티티: 비즈니스 언어
+// Domain entity: business language
 public record Product(string Name, decimal Price, int Stock, string Category);
 
-// 퍼시스턴스 모델: DB 테이블 구조
+// Persistence model: DB table structure
 public record ProductDbModel(string ProductName, decimal UnitPrice, int StockQuantity, string CategoryCode);
 ```
 
-도메인 Specification은 `p => p.Stock > 0`으로 작성되지만, DB에는 `StockQuantity` 컬럼이 있습니다. PropertyMap이 이 간극을 자동으로 메워줍니다.
+Domain Specifications are written as `p => p.Stock > 0`, but the DB has a `StockQuantity` column. PropertyMap automatically bridges this gap.
 
-### PropertyMap 등록
+### PropertyMap Registration
 
 ```csharp
 var map = new PropertyMap<Product, ProductDbModel>();
@@ -44,84 +44,84 @@ map.Map(p => p.Stock, m => m.StockQuantity);
 map.Map(p => p.Category, m => m.CategoryCode);
 ```
 
-### TranslatingVisitor 내부 동작
+### TranslatingVisitor Internal Behavior
 
-`PropertyMap.Translate`는 내부적으로 `ExpressionVisitor`를 활용합니다.
+`PropertyMap.Translate` internally uses an `ExpressionVisitor`.
 
-1. Expression Tree를 순회하며 `ParameterExpression`과 `MemberExpression`을 찾음
-2. 엔티티 파라미터를 모델 파라미터로 교체
-3. 프로퍼티 접근(`p.Stock`)을 매핑된 모델 프로퍼티(`m.StockQuantity`)로 교체
-4. 결과: `p => p.Stock > 0` 이 `m => m.StockQuantity > 0`으로 변환
+1. Traverses the Expression Tree to find `ParameterExpression` and `MemberExpression` nodes
+2. Replaces entity parameters with model parameters
+3. Replaces property accesses (`p.Stock`) with the mapped model properties (`m.StockQuantity`)
+4. Result: `p => p.Stock > 0` is transformed into `m => m.StockQuantity > 0`
 
-### Value Object 캐스트 패턴 지원
+### Value Object Cast Pattern Support
 
-Part 2의 3장에서 `(decimal)product.Price` 캐스트 패턴을 배웠습니다. PropertyMap의 `Map` 메서드는 이 패턴을 직접 지원합니다:
+In Part 2, Chapter 3, we learned the `(decimal)product.Price` cast pattern. PropertyMap's `Map` method directly supports this pattern:
 
 ```csharp
-// 직접 접근: p => p.Name
+// Direct access: p => p.Name
 map.Map(p => p.Name, m => m.ProductName);
 
-// VO 캐스트: p => (decimal)p.Price
+// VO cast: p => (decimal)p.Price
 map.Map(p => (decimal)p.Price, m => m.UnitPrice);
 
-// ToString 변환: p => p.Id.ToString()
+// ToString conversion: p => p.Id.ToString()
 map.Map(p => p.Id.ToString(), m => m.ProductId);
 ```
 
-`TranslatingVisitor`는 Expression Tree를 순회하며 `Convert` 노드(캐스트)와 `ToString()` 호출을 인식하여 매핑된 모델 프로퍼티로 자동 교체합니다. 이것이 Part 2.3의 VO 변환 패턴과 PropertyMap이 연결되는 지점입니다.
+The `TranslatingVisitor` traverses the Expression Tree and recognizes `Convert` nodes (casts) and `ToString()` calls, automatically replacing them with the mapped model properties. This is the point where Part 2.3's VO conversion pattern connects with PropertyMap.
 
-> TranslatingVisitor의 전체 구현(VisitMember, VisitUnary, VisitMethodCall)은 `Src/Functorium/Domains/Specifications/Expressions/PropertyMap.cs`에서 확인할 수 있습니다.
+> The full implementation of TranslatingVisitor (VisitMember, VisitUnary, VisitMethodCall) can be found in `Src/Functorium/Domains/Specifications/Expressions/PropertyMap.cs`.
 
-핵심 개념을 이해했으니, 이제 실제 프로젝트에서 PropertyMap이 어떻게 구성되는지 살펴보겠습니다.
+Now that we understand the core concepts, let's look at how PropertyMap is structured in an actual project.
 
-## 프로젝트 설명
+## Project Description
 
-### 프로젝트 구조
+### Project Structure
 ```
-PropertyMapDemo/                         # 메인 프로젝트
-├── Product.cs                           # 도메인 모델
-├── ProductDbModel.cs                    # 퍼시스턴스 모델
-├── ProductPropertyMap.cs                # PropertyMap 정의
+PropertyMapDemo/                         # Main project
+├── Product.cs                           # Domain model
+├── ProductDbModel.cs                    # Persistence model
+├── ProductPropertyMap.cs                # PropertyMap definition
 ├── Specifications/
-│   ├── ProductInStockSpec.cs               # 재고 (Expression 기반)
-│   └── ProductPriceRangeSpec.cs            # 가격 범위 (Expression 기반)
-├── Program.cs                           # 변환 데모
+│   ├── ProductInStockSpec.cs               # In stock (Expression-based)
+│   └── ProductPriceRangeSpec.cs            # Price range (Expression-based)
+├── Program.cs                           # Conversion demo
 └── PropertyMapDemo.csproj
-PropertyMapDemo.Tests.Unit/              # 테스트 프로젝트
-├── PropertyMapTests.cs                  # 필드명/Expression 변환 테스트
+PropertyMapDemo.Tests.Unit/              # Test project
+├── PropertyMapTests.cs                  # Field name/Expression conversion tests
 └── ...
 ```
 
-## 한눈에 보는 정리
+## At a Glance
 
-### 매핑 테이블
-| 도메인 (Product) | DB 모델 (ProductDbModel) |
+### Mapping Table
+| Domain (Product) | DB Model (ProductDbModel) |
 |------------------|-------------------------|
 | `Name` | `ProductName` |
 | `Price` | `UnitPrice` |
 | `Stock` | `StockQuantity` |
 | `Category` | `CategoryCode` |
 
-### PropertyMap 핵심 메서드
-| 메서드 | 설명 |
-|--------|------|
-| `Map(entity, model)` | 프로퍼티 매핑 등록 |
-| `TranslateFieldName(name)` | 필드명 변환 |
-| `Translate(expression)` | Expression Tree 전체 변환 |
+### PropertyMap Core Methods
+| Method | Description |
+|--------|-------------|
+| `Map(entity, model)` | Register property mapping |
+| `TranslateFieldName(name)` | Convert field name |
+| `Translate(expression)` | Convert entire Expression Tree |
 
 ## FAQ
 
-### Q1: EF Core에는 이미 매핑 기능이 있는데 왜 PropertyMap이 필요한가요?
-**A**: EF Core의 `HasColumnName`은 EF Core 내부에서만 작동합니다. Specification은 도메인 계층에 있고, EF Core는 인프라 계층에 있으므로 **도메인 계층이 EF Core에 의존하지 않으면서** Expression을 변환해야 합니다. PropertyMap은 이 변환을 인프라 계층에서 수행합니다.
+### Q1: EF Core already has mapping features, so why is PropertyMap needed?
+**A**: EF Core's `HasColumnName` only works internally within EF Core. Since Specifications belong to the domain layer and EF Core belongs to the infrastructure layer, Expressions need to be converted **without the domain layer depending on EF Core**. PropertyMap performs this conversion in the infrastructure layer.
 
-### Q2: PropertyMap은 반드시 필요한가요?
-**A**: 도메인 모델과 DB 모델의 프로퍼티 이름이 동일하다면 필요 없습니다. 하지만 실무에서는 DB 컬럼 네이밍 규칙, 레거시 테이블 구조 등의 이유로 이름이 다른 경우가 많습니다.
+### Q2: Is PropertyMap always required?
+**A**: If the property names of your domain model and DB model are identical, it's not needed. However, in practice, names often differ due to DB column naming conventions, legacy table structures, and other reasons.
 
-### Q3: 복합 Expression (And/Or/Not)도 변환되나요?
-**A**: 네. `SpecificationExpressionResolver.TryResolve`가 복합 Specification을 단일 Expression으로 합성한 후, `PropertyMap.Translate`가 해당 Expression 전체를 변환합니다. TranslatingVisitor가 Expression Tree의 모든 노드를 재귀적으로 방문하므로 복합 Expression도 올바르게 변환됩니다.
+### Q3: Are composite Expressions (And/Or/Not) also converted?
+**A**: Yes. `SpecificationExpressionResolver.TryResolve` composes composite Specifications into a single Expression, and then `PropertyMap.Translate` converts that entire Expression. Since TranslatingVisitor recursively visits all nodes of the Expression Tree, composite Expressions are correctly converted.
 
 ---
 
-PropertyMap으로 도메인과 DB 모델 간의 프로퍼티 매핑을 해결했습니다. 다음 장에서는 지금까지 배운 모든 것 — Expression 추출, PropertyMap 변환, Queryable 적용 — 을 조합하여 EF Core 어댑터를 구현합니다.
+We've resolved property mapping between domain and DB models using PropertyMap. In the next chapter, we'll combine everything we've learned so far -- Expression extraction, PropertyMap conversion, and Queryable application -- to implement an EF Core adapter.
 
-→ [4장: EF Core 구현](../04-EfCore-Implementation/)
+→ [Chapter 4: EF Core Implementation](../04-EfCore-Implementation/)

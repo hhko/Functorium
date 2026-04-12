@@ -79,9 +79,9 @@ Adapter unit tests **directly test the original class** (not the Pipeline).
 
 ```csharp
 // Act
-var ioFin = adapter.MethodUnderTest(args);   // FinT<IO, T> 반환
-var ioResult = ioFin.Run();                  // IO<Fin<T>> 변환
-var result = await Task.Run(() => ioResult.Run());  // Fin<T> 실행
+var ioFin = adapter.MethodUnderTest(args);   // Returns FinT<IO, T>
+var ioResult = ioFin.Run();                  // Converts to IO<Fin<T>>
+var result = await Task.Run(() => ioResult.Run());  // Executes Fin<T>
 
 // Assert
 result.IsSucc.ShouldBeTrue();
@@ -492,9 +492,9 @@ public sealed class GetProductByIdQuery
 
 This is a summary of the Observability features automatically provided by the Pipeline. For detailed specifications, see [08-observability.md](../../spec/08-observability).
 
-**Span 이름 패턴**: `{layer} {category} {handler}.{method}`
+**Span name pattern**: `{layer} {category} {handler}.{method}`
 
-**Tracing Tag 구조:**
+**Tracing Tag structure:**
 
 | Tag Key | Success | Failure |
 |---------|---------|---------|
@@ -539,9 +539,9 @@ This is a summary of the Observability features automatically provided by the Pi
 **Resolution:** Use the `.Run().RunAsync()` pattern.
 
 ```csharp
-var ioFin = adapter.MethodUnderTest(args);   // FinT<IO, T> 반환
-var ioResult = ioFin.Run();                  // IO<Fin<T>> 변환
-var result = await Task.Run(() => ioResult.Run());  // Fin<T> 실행
+var ioFin = adapter.MethodUnderTest(args);   // Returns FinT<IO, T>
+var ioResult = ioFin.Run();                  // Converts to IO<Fin<T>>
+var result = await Task.Run(() => ioResult.Run());  // Executes Fin<T>
 ```
 
 ---

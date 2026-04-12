@@ -2,69 +2,69 @@
 title: "Fin to FinResponse Bridge"
 ---
 
-## 개요
+## Overview
 
-기존 `Fin<T>` 기반 코드와 새로운 `FinResponse<T>`를 어떻게 연결할까요? Repository 계층은 `Fin<T>`를 반환하고, Usecase 계층은 `FinResponse<T>`를 반환합니다. 이 두 계층을 연결하는 **브릿지**가 `ToFinResponse()` 확장 메서드입니다. 이 장에서는 다양한 변환 오버로드와 사용 시나리오를 학습합니다.
+How do you connect existing `Fin<T>`-based code with the new `FinResponse<T>`? The Repository layer returns `Fin<T>`, while the Usecase layer returns `FinResponse<T>`. The **bridge** connecting these two layers is the `ToFinResponse()` extension method. This section covers various conversion overloads and usage scenarios.
 
 ```
-계층 간 타입 흐름:
+Type flow between layers:
 
 Repository Layer          Usecase Layer
 ─────────────────        ─────────────────
-Fin<Product>       ──→   FinResponse<Product>        직접 변환
-Fin<Product>       ──→   FinResponse<ProductDto>     매퍼 변환
-Fin<Unit>          ──→   FinResponse<string>         팩토리 변환
-Fin<T> (Fail)      ──→   FinResponse<T> (Fail)       실패 전파
-Fin<int>           ──→   FinResponse<string>         커스텀 변환
+Fin<Product>       ──→   FinResponse<Product>        Direct conversion
+Fin<Product>       ──→   FinResponse<ProductDto>     Mapper conversion
+Fin<Unit>          ──→   FinResponse<string>         Factory conversion
+Fin<T> (Fail)      ──→   FinResponse<T> (Fail)       Failure propagation
+Fin<int>           ──→   FinResponse<string>         Custom conversion
 ```
 
-## 학습 목표
+## Learning Objectives
 
-이 장을 완료하면 다음을 할 수 있습니다:
+After completing this section, you will be able to:
 
-1. Repository(`Fin<T>`)와 Usecase(`FinResponse<T>`) 계층 간 변환이 필요한 이유를 설명할 수 있습니다
-2. 상황에 맞는 `ToFinResponse()` 오버로드를 선택할 수 있습니다
-3. 실패 상태가 변환 시 자동으로 전파되는 메커니즘을 이해할 수 있습니다
+1. Explain why conversion between the Repository (`Fin<T>`) and Usecase (`FinResponse<T>`) layers is needed
+2. Select the appropriate `ToFinResponse()` overload for the situation
+3. Understand the mechanism by which failure state is automatically propagated during conversion
 
-## 핵심 개념
+## Key Concepts
 
-### 1. 왜 브릿지가 필요한가?
+### 1. Why Is a Bridge Needed?
 
-- **`Fin<T>`**: LanguageExt의 Result 타입. sealed struct이므로 제약 조건으로 사용 불가.
-- **`FinResponse<T>`**: IFinResponse 인터페이스 계층을 구현한 Discriminated Union. Pipeline 제약에 사용 가능.
+- **`Fin<T>`**: LanguageExt's Result type. Cannot be used as a constraint because it is a sealed struct.
+- **`FinResponse<T>`**: A Discriminated Union implementing the IFinResponse interface hierarchy. Can be used in Pipeline constraints.
 
-Repository가 반환하는 `Fin<T>`를 Usecase의 `FinResponse<T>`로 변환해야 Pipeline 체인에서 타입 안전하게 처리할 수 있습니다.
+The `Fin<T>` returned by Repositories must be converted to the Usecase's `FinResponse<T>` to be handled in a type-safe manner within the Pipeline chain.
 
-### 2. 직접 변환: Fin\<A\> -> FinResponse\<A\>
+### 2. Direct Conversion: Fin\<A\> -> FinResponse\<A\>
 
-가장 단순한 변환입니다. 성공 값의 타입이 동일할 때 사용합니다.
+The simplest conversion. Used when the success value type is identical.
 
 ```csharp
 Fin<string> fin = Fin<string>.Succ("Hello");
 FinResponse<string> response = fin.ToFinResponse();
 ```
 
-### 3. 매퍼 변환: Fin\<A\> -> FinResponse\<B\>
+### 3. Mapper Conversion: Fin\<A\> -> FinResponse\<B\>
 
-성공 값의 타입을 변환할 때 사용합니다. 예: Entity -> DTO
+Used when the success value type needs to be converted. Example: Entity -> DTO
 
 ```csharp
 Fin<string> fin = Fin<string>.Succ("Hello");
 FinResponse<int> response = fin.ToFinResponse(s => s.Length);
 ```
 
-### 4. 팩토리 변환: Fin\<A\> -> FinResponse\<B\>
+### 4. Factory Conversion: Fin\<A\> -> FinResponse\<B\>
 
-원본 성공 값을 무시하고 새로운 값을 생성할 때 사용합니다. 예: `Fin<Unit>` -> `FinResponse<string>`
+Used when ignoring the original success value and generating a new one. Example: `Fin<Unit>` -> `FinResponse<string>`
 
 ```csharp
 Fin<Unit> fin = Fin<Unit>.Succ(Unit.Default);
 FinResponse<string> response = fin.ToFinResponse(() => "Deleted successfully");
 ```
 
-### 5. 실패 전파
+### 5. Failure Propagation
 
-`Fin`이 실패 상태이면, 변환 방식에 관계없이 Error가 그대로 `FinResponse`의 Fail로 전파됩니다.
+When `Fin` is in a failure state, the Error is propagated directly to `FinResponse`'s Fail regardless of the conversion method.
 
 ```csharp
 Fin<string> fin = Fin<string>.Fail(Error.New("not found"));
@@ -72,9 +72,9 @@ FinResponse<string> response = fin.ToFinResponse();
 // response.IsFail == true
 ```
 
-### 6. 커스텀 변환: Fin\<A\> -> FinResponse\<B\> (onSucc/onFail)
+### 6. Custom Conversion: Fin\<A\> -> FinResponse\<B\> (onSucc/onFail)
 
-성공과 실패 모두에 대해 커스텀 처리가 필요한 경우 사용합니다. 예: 성공 값을 다른 타입으로 변환하면서, 실패 시에도 별도 에러 처리를 적용하는 경우.
+Used when custom handling is needed for both success and failure. Example: converting the success value to a different type while also applying separate error handling on failure.
 
 ```csharp
 Fin<int> fin = Fin.Succ(42);
@@ -83,31 +83,31 @@ FinResponse<string> response = fin.ToFinResponse(
     onFail: error => FinResponse.Fail<string>(error));
 ```
 
-이 오버로드는 `Fin`의 `Match`와 동일한 구조이므로 가장 유연하지만, 대부분의 경우 직접/매퍼/팩토리 변환으로 충분합니다.
+This overload has the same structure as `Fin`'s `Match` and is the most flexible, but in most cases the direct/mapper/factory conversions are sufficient.
 
-### 7. 변환 오버로드 정리
+### 7. Conversion Overload Summary
 
-`ToFinResponse()`가 제공하는 변환 오버로드를 정리하면 다음과 같습니다.
+The following summarizes the conversion overloads provided by `ToFinResponse()`.
 
-| 오버로드 | 시그니처 | 용도 |
+| Overload | Signature | Use Case |
 |----------|---------|------|
-| 직접 변환 | `Fin<A>.ToFinResponse()` | 동일 타입 변환 |
-| 매퍼 변환 | `Fin<A>.ToFinResponse(Func<A, B>)` | Entity -> DTO |
-| 팩토리 변환 | `Fin<A>.ToFinResponse(Func<B>)` | Unit -> Response |
-| 커스텀 변환 | `Fin<A>.ToFinResponse(Func<A, FinResponse<B>>, Func<Error, FinResponse<B>>)` | 완전 제어 |
+| Direct conversion | `Fin<A>.ToFinResponse()` | Same type conversion |
+| Mapper conversion | `Fin<A>.ToFinResponse(Func<A, B>)` | Entity -> DTO |
+| Factory conversion | `Fin<A>.ToFinResponse(Func<B>)` | Unit -> Response |
+| Custom conversion | `Fin<A>.ToFinResponse(Func<A, FinResponse<B>>, Func<Error, FinResponse<B>>)` | Full control |
 
 ## FAQ
 
-### Q1: Repository가 `Fin<T>`를 반환하고 Usecase가 `FinResponse<T>`를 반환하는 이유는 무엇인가요?
-**A**: Repository는 LanguageExt의 순수 함수형 타입인 `Fin<T>`를 사용하여 **외부 라이브러리 의존 없이** 성공/실패를 표현합니다. Usecase는 Pipeline 제약에 사용 가능한 `FinResponse<T>`를 반환해야 합니다. `ToFinResponse()`가 이 두 계층을 연결합니다.
+### Q1: Why does the Repository return `Fin<T>` while the Usecase returns `FinResponse<T>`?
+**A**: The Repository uses LanguageExt's pure functional type `Fin<T>` to express success/failure **without external library dependencies**. The Usecase must return `FinResponse<T>` that can be used in Pipeline constraints. `ToFinResponse()` connects these two layers.
 
-### Q2: 매퍼 변환과 팩토리 변환은 각각 어떤 상황에서 사용하나요?
-**A**: **매퍼 변환**(`Func<A, B>`)은 Entity를 DTO로 변환할 때 사용합니다. 예: `fin.ToFinResponse(product => new ProductDto(product))`. **팩토리 변환**(`Func<B>`)은 원본 값을 무시하고 새로운 값을 생성할 때 사용합니다. 예: `Fin<Unit>` 반환을 `FinResponse<string>`의 "삭제 성공" 메시지로 변환.
+### Q2: When should mapper conversion vs factory conversion be used?
+**A**: **Mapper conversion** (`Func<A, B>`) is used when converting an Entity to a DTO. Example: `fin.ToFinResponse(product => new ProductDto(product))`. **Factory conversion** (`Func<B>`) is used when ignoring the original value and generating a new one. Example: converting a `Fin<Unit>` return to a "deletion successful" message in `FinResponse<string>`.
 
-### Q3: `ToFinResponse()`에서 실패가 자동 전파되는 원리는 무엇인가요?
-**A**: `ToFinResponse()`는 내부적으로 `Fin<T>`의 `Match`를 호출합니다. Succ이면 변환 함수를 적용하고, **Fail이면 변환 함수를 호출하지 않고** `Error`를 그대로 `FinResponse.Fail`로 전달합니다. 어떤 오버로드를 사용하든 실패 시 동일하게 동작합니다.
+### Q3: How does failure auto-propagation work in `ToFinResponse()`?
+**A**: `ToFinResponse()` internally calls `Fin<T>`'s `Match`. On Succ, the conversion function is applied; **on Fail, the conversion function is not called** and the `Error` is passed directly to `FinResponse.Fail`. This works identically regardless of which overload is used.
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 04-Fin-To-FinResponse-Bridge/
@@ -122,19 +122,18 @@ FinResponse<string> response = fin.ToFinResponse(
 └── README.md
 ```
 
-## 실행 방법
+## How to Run
 
 ```bash
-# 프로그램 실행
+# Run the program
 dotnet run --project FinToFinResponseBridge
 
-# 테스트 실행
+# Run tests
 dotnet test --project FinToFinResponseBridge.Tests.Unit
 ```
 
 ---
 
-Pipeline 제약 패턴이 완성되었습니다. Nested class 패턴으로 Request/Response/Validator/Handler를 구성하는 Command Usecase의 완전한 구현 예제를 작성합니다.
+Pipeline constraint patterns are complete. The next section builds a complete Command Usecase implementation example, composing Request/Response/Validator/Handler using the Nested class pattern.
 
-→ [5.1장: Command Usecase 완전 예제](../../Part5-Practical-Usecase-Examples/01-Command-Usecase-Example/)
-
+→ [Section 5.1: Command Usecase Complete Example](../../Part5-Practical-Usecase-Examples/01-Command-Usecase-Example/)

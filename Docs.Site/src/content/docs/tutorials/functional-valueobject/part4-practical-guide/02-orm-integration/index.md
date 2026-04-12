@@ -1,146 +1,146 @@
 ---
-title: "ORM 통합 패턴"
+title: "ORM Integration Patterns"
 ---
 ## Overview
 
-도메인 모델에서 `Email`은 강타입 객체이지만, 데이터베이스에는 `VARCHAR` 컬럼으로 저장해야 합니다. `Address(City, Street, PostalCode)` 같은 복합 value object는 어떻게 매핑할까요? 주문에 포함된 `List<OrderLineItem>` 같은 컬렉션은요?
+In the domain model, `Email` is a strongly-typed object, but it must be stored as a `VARCHAR` column in the database. How do you map a composite value object like `Address(City, Street, PostalCode)`? What about collections like `List<OrderLineItem>` within an order?
 
-In this chapter, Entity Framework Core가 제공하는 `OwnsOne`, `OwnsMany`, `Value Converter` 세 가지 패턴을 사용하여, 도메인 모델의 순수성을 유지하면서 value object를 영속화하는 방법을 다룹니다.
+In this chapter, we cover how to persist value objects while maintaining domain model purity, using three patterns provided by Entity Framework Core: `OwnsOne`, `OwnsMany`, and `Value Converter`.
 
 ## Learning Objectives
 
-- `OwnsOne` 패턴으로 복합 value object(Address, Money 등)를 엔티티의 일부로 매핑할 수 있습니다.
-- `Value Converter` 패턴으로 단일 value object(Email, ProductCode 등)를 데이터베이스 컬럼으로 변환할 수 있습니다.
-- `OwnsMany` 패턴으로 value object 컬렉션(OrderLineItem 등)을 매핑할 수 있습니다.
-- 도메인 모델의 순수성을 유지하면서 EF Core와 통합하는 구조를 설계할 수 있습니다.
+- Map composite value objects (Address, Money, etc.) as part of an entity using the `OwnsOne` pattern.
+- Convert single value objects (Email, ProductCode, etc.) to database columns using the `Value Converter` pattern.
+- Map value object collections (OrderLineItem, etc.) using the `OwnsMany` pattern.
+- Design a structure that integrates with EF Core while maintaining domain model purity.
 
 ## Why Is This Needed?
 
-value object를 데이터베이스에 저장할 때 몇 가지 기술적 도전이 있습니다.
+There are several technical challenges when persisting value objects to a database.
 
-도메인에서 `Email`은 강타입 객체이지만 데이터베이스에는 `VARCHAR` 컬럼으로 저장됩니다. 이 타입 변환을 매번 수동으로 처리하면 코드 중복과 실수가 발생합니다. `Address(City, Street, PostalCode)` 같은 복합 value object는 별도 테이블로 분리하면 불필요한 조인이 발생하고, 같은 테이블에 저장하면 컬럼 매핑을 명시해야 합니다. 또한 `List<OrderLineItem>` 같은 value object 컬렉션은 별도 테이블이 필요하지만 엔티티가 아닌 소유된 타입으로 관리해야 합니다.
+In the domain, `Email` is a strongly-typed object, but it is stored as a `VARCHAR` column in the database. Manually handling this type conversion every time causes code duplication and mistakes. Separating composite value objects like `Address(City, Street, PostalCode)` into separate tables causes unnecessary joins, while storing them in the same table requires explicit column mapping. Additionally, value object collections like `List<OrderLineItem>` require a separate table but must be managed as owned types rather than entities.
 
-EF Core의 Owned Entity 기능과 Value Converter를 사용하면 이러한 도전들을 투명하게 해결할 수 있습니다.
+EF Core's Owned Entity feature and Value Converters can transparently solve these challenges.
 
 ## Core Concepts
 
-### OwnsOne 패턴
+### OwnsOne Pattern
 
-`OwnsOne`은 value object를 엔티티의 일부로 매핑합니다. value object의 각 속성이 부모 테이블의 컬럼으로 저장됩니다.
+`OwnsOne` maps a value object as part of an entity. Each property of the value object is stored as a column in the parent table.
 
 ```csharp
 protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
-    // Email 값 객체: User 테이블에 Email_Value 컬럼으로 저장
+    // Email value object: stored as Email_Value column in the User table
     modelBuilder.Entity<User>()
         .OwnsOne(u => u.Email);
 
-    // Address 복합 값 객체: User 테이블에 Address_City, Address_Street, Address_PostalCode 컬럼으로 저장
+    // Address composite value object: stored as Address_City, Address_Street, Address_PostalCode columns in the User table
     modelBuilder.Entity<User>()
         .OwnsOne(u => u.Address);
 }
 ```
 
-별도 테이블이 아닌 같은 테이블의 컬럼들로 저장되며, 부모 엔티티와 함께 로드됩니다. 생성되는 테이블 구조는 다음과 같습니다.
+The data is stored as columns in the same table rather than a separate table, and is loaded together with the parent entity. The resulting table structure is as follows.
 
 ```
-Users 테이블
+Users table
 ├── Id (PK)
 ├── Name
-├── Email_Value          # OwnsOne으로 매핑된 Email
-├── Address_City         # OwnsOne으로 매핑된 Address
+├── Email_Value          # Email mapped via OwnsOne
+├── Address_City         # Address mapped via OwnsOne
 ├── Address_Street
 └── Address_PostalCode
 ```
 
-### Value Converter 패턴
+### Value Converter Pattern
 
-`HasConversion`은 value object를 단일 컬럼으로 변환합니다. 객체에서 원시 값으로, 원시 값에서 객체로의 양방향 변환을 defines.
+`HasConversion` converts a value object into a single column. It defines bidirectional conversion from object to primitive value and from primitive value back to object.
 
 ```csharp
 modelBuilder.Entity<Product>()
     .Property(p => p.Code)
     .HasConversion(
-        code => code.Value,                           // 저장 시: ProductCode → string
-        value => ProductCode.CreateFromValidated(value) // 로드 시: string → ProductCode
+        code => code.Value,                           // On save: ProductCode -> string
+        value => ProductCode.CreateFromValidated(value) // On load: string -> ProductCode
     );
 ```
 
-도메인 코드는 `ProductCode` 타입으로 작업하고, 데이터베이스에는 문자열로 저장됩니다. 이 변환 과정이 ORM 수준에서 자동으로 처리됩니다. `OwnsOne`이 value object의 각 속성을 별도 컬럼으로 저장하는 반면, `HasConversion`은 value object 전체를 하나의 컬럼으로 저장합니다.
+Domain code works with the `ProductCode` type while the database stores it as a string. This conversion process is handled automatically at the ORM level. While `OwnsOne` stores each property of a value object as a separate column, `HasConversion` stores the entire value object as a single column.
 
-### OwnsMany 패턴
+### OwnsMany Pattern
 
-`OwnsMany`는 value object 컬렉션을 매핑합니다. 별도 테이블에 저장되지만 엔티티가 아닌 소유된 타입으로 관리됩니다.
+`OwnsMany` maps value object collections. They are stored in a separate table but managed as owned types rather than entities.
 
 ```csharp
 modelBuilder.Entity<Order>()
     .OwnsMany(o => o.LineItems);
 ```
 
-`OrderLineItem`은 별도 테이블에 저장되지만, `Order`가 삭제되면 함께 삭제됩니다. 독립적인 생명주기가 없습니다. 생성되는 테이블 구조는 다음과 같습니다.
+`OrderLineItem` is stored in a separate table, but is deleted together when the `Order` is deleted. It has no independent lifecycle. The resulting table structure is as follows.
 
 ```
-Orders 테이블
+Orders table
 ├── Id (PK)
 └── CustomerName
 
-OrderLineItem 테이블
-├── OrderId (FK, PK 일부)
-├── Id (PK 일부)
+OrderLineItem table
+├── OrderId (FK, part of PK)
+├── Id (part of PK)
 ├── ProductName
 ├── Quantity
 └── UnitPrice
 ```
 
-### private 생성자와 EF Core 호환성
+### Private Constructors and EF Core Compatibility
 
-value object는 immutability을 위해 private 생성자를 uses. EF Core와 호환성을 유지하려면 매개변수 없는 private 생성자가 필요합니다.
+Value objects use private constructors for immutability. A parameterless private constructor is needed to maintain compatibility with EF Core.
 
 ```csharp
 public sealed class Email
 {
     public string Value { get; private set; }
 
-    // EF Core 매핑용 private 생성자
+    // Private constructor for EF Core mapping
     private Email() => Value = string.Empty;
 
-    // 실제 생성용 private 생성자
+    // Private constructor for actual creation
     private Email(string value) => Value = value;
 
     public static Fin<Email> Create(string value) { ... }
 }
 ```
 
-EF Core는 매개변수 없는 생성자로 객체를 생성한 후 속성을 설정합니다. `private setter`와 함께 사용하면 외부에서의 변경은 막으면서 ORM 매핑은 가능합니다.
+EF Core creates objects using the parameterless constructor and then sets properties. Used with `private setter`, it blocks external modification while allowing ORM mapping.
 
 ## Practical Guidelines
 
 ### Expected Output
 ```
-=== ORM 통합 패턴 ===
+=== ORM Integration Patterns ===
 
-1. OwnsOne 패턴 - 복합 값 객체 매핑
+1. OwnsOne Pattern - Composite Value Object Mapping
 ────────────────────────────────────────
-   저장된 사용자: 홍길동
-   이메일: hong@example.com
-   주소: 서울 강남구 테헤란로 123 (06234)
+   Saved user: Hong Gildong
+   Email: hong@example.com
+   Address: Seoul Gangnam-gu Teheran-ro 123 (06234)
 
-2. Value Converter 패턴 - 단일 값 객체 변환
+2. Value Converter Pattern - Single Value Object Conversion
 ────────────────────────────────────────
-   상품 코드: EL-001234
-   가격: 50,000 KRW
+   Product code: EL-001234
+   Price: 50,000 KRW
 
-3. OwnsMany 패턴 - 컬렉션 값 객체 매핑
+3. OwnsMany Pattern - Collection Value Object Mapping
 ────────────────────────────────────────
-   주문자: 김철수
-   주문 항목:
-      - 상품 A: 2개 x 10,000원
-      - 상품 B: 1개 x 25,000원
+   Customer: Kim Cheolsu
+   Order items:
+      - Product A: 2 x 10,000 won
+      - Product B: 1 x 25,000 won
 ```
 
-### DbContext 설정 예시
+### DbContext Configuration Example
 
-세 가지 매핑 패턴을 모두 적용한 `DbContext` 설정입니다.
+A `DbContext` configuration with all three mapping patterns applied.
 
 ```csharp
 public class AppDbContext : DbContext
@@ -151,11 +151,11 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // 1. OwnsOne: Email 값 객체
+        // 1. OwnsOne: Email value object
         modelBuilder.Entity<User>()
             .OwnsOne(u => u.Email);
 
-        // 2. OwnsOne: Address 복합 값 객체
+        // 2. OwnsOne: Address composite value object
         modelBuilder.Entity<User>()
             .OwnsOne(u => u.Address);
 
@@ -170,7 +170,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Product>()
             .OwnsOne(p => p.Price);
 
-        // 5. OwnsMany: OrderLineItem 컬렉션
+        // 5. OwnsMany: OrderLineItem collection
         modelBuilder.Entity<Order>()
             .OwnsMany(o => o.LineItems);
     }
@@ -183,12 +183,12 @@ public class AppDbContext : DbContext
 ```
 02-ORM-Integration/
 ├── OrmIntegration/
-│   ├── Program.cs                # 메인 실행 파일 (값 객체, 엔티티, DbContext 포함)
-│   └── OrmIntegration.csproj     # 프로젝트 파일
-└── README.md                     # 프로젝트 문서
+│   ├── Program.cs                # Main executable (includes value objects, entities, DbContext)
+│   └── OrmIntegration.csproj     # Project file
+└── README.md                     # Project documentation
 ```
 
-### 의존성
+### Dependencies
 ```xml
 <ItemGroup>
   <ProjectReference Include="..\..\..\..\..\Src\Functorium\Functorium.csproj" />
@@ -202,53 +202,53 @@ public class AppDbContext : DbContext
 
 ### Core Code
 
-**엔티티 정의**
+**Entity Definitions**
 ```csharp
 public class User
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public Email Email { get; set; } = null!;       // 단일 값 객체
-    public Address Address { get; set; } = null!;   // 복합 값 객체
+    public Email Email { get; set; } = null!;       // Single value object
+    public Address Address { get; set; } = null!;   // Composite value object
 }
 
 public class Product
 {
     public Guid Id { get; set; }
-    public ProductCode Code { get; set; } = null!;  // Value Converter 사용
-    public Money Price { get; set; } = null!;       // OwnsOne 사용
+    public ProductCode Code { get; set; } = null!;  // Uses Value Converter
+    public Money Price { get; set; } = null!;       // Uses OwnsOne
 }
 
 public class Order
 {
     public Guid Id { get; set; }
     public string CustomerName { get; set; } = string.Empty;
-    public List<OrderLineItem> LineItems { get; set; } = new();  // OwnsMany 사용
+    public List<OrderLineItem> LineItems { get; set; } = new();  // Uses OwnsMany
 }
 ```
 
-**value object 정의**
+**value object Definitions**
 ```csharp
-// EF Core 호환 값 객체
+// EF Core compatible value object
 public sealed class Email
 {
     public string Value { get; private set; }
 
-    private Email() => Value = string.Empty;  // EF Core용
+    private Email() => Value = string.Empty;  // For EF Core
     private Email(string value) => Value = value;
 
     public static Fin<Email> Create(string value) { ... }
     public static Email CreateFromValidated(string value) => new(value.ToLowerInvariant());
 }
 
-// 복합 값 객체
+// Composite value object
 public sealed class Address
 {
     public string City { get; private set; }
     public string Street { get; private set; }
     public string PostalCode { get; private set; }
 
-    private Address()  // EF Core용
+    private Address()  // For EF Core
     {
         City = string.Empty;
         Street = string.Empty;

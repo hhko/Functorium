@@ -2,38 +2,38 @@
 title: "Transaction/Caching"
 ---
 
-## 개요
+## Overview
 
-앞 장에서 Read+Create 이중 제약을 적용했습니다. 이번에는 동일한 이중 제약을 사용하면서 `where` 제약 조건으로 **컴파일 타임에** 적용 대상을 필터링하는 Pipeline을 다룹니다. Transaction Pipeline은 `where TRequest : ICommand<TResponse>` 제약으로 **Command에만**, Caching Pipeline은 `where TRequest : IQuery<TResponse>` 제약으로 **Query에만** 적용됩니다. Mediator 소스 제너레이터가 `where` 제약을 확인하여 해당 요청 타입에만 Pipeline을 등록하므로, 런타임 타입 검사 없이 Command/Query가 분리됩니다.
+In the previous section, we applied the Read+Create dual constraint. This section covers Pipelines that use the same dual constraint while filtering their application targets **at compile time** via `where` constraints. The Transaction Pipeline uses the `where TRequest : ICommand<TResponse>` constraint to apply **only to Commands**, while the Caching Pipeline uses the `where TRequest : IQuery<TResponse>` constraint to apply **only to Queries**. The Mediator source generator checks the `where` constraints and registers Pipelines only for matching request types, so Command/Query separation happens without runtime type checks.
 
 ```
 Transaction Pipeline:
-  isCommand? ──No──→ Skip (Query는 트랜잭션 불필요)
+  isCommand? ──No──→ Skip (Query doesn't need transaction)
               │
               Yes──→ Begin → handler() → IsSucc? → Commit / Rollback
 
 Caching Pipeline:
-  isCacheable? ──No──→ handler() 직접 실행
+  isCacheable? ──No──→ handler() executed directly
                  │
-                 Yes──→ cache hit? → 캐시 반환
+                 Yes──→ cache hit? → return cached
                                  │
-                                 No → handler() → IsSucc? → 캐시 저장
+                                 No → handler() → IsSucc? → save to cache
 ```
 
-## 학습 목표
+## Learning Objectives
 
-이 장을 완료하면 다음을 할 수 있습니다:
+After completing this section, you will be able to:
 
-1. Transaction Pipeline이 Command에만 적용되는 이유를 설명할 수 있습니다
-2. Caching Pipeline이 성공 응답만 캐싱하는 이유를 설명할 수 있습니다
-3. 두 Pipeline 모두 Read+Create 제약이 필요한 이유를 이해할 수 있습니다
-4. Command/Query 분기가 `where` 제약 조건으로 이루어지는 방식을 이해할 수 있습니다
+1. Explain why the Transaction Pipeline applies only to Commands
+2. Explain why the Caching Pipeline caches only successful responses
+3. Understand why both Pipelines need the Read+Create constraint
+4. Understand how Command/Query branching works through `where` constraints
 
-## 핵심 개념
+## Key Concepts
 
 ### 1. Transaction Pipeline
 
-Transaction Pipeline은 Command 요청에만 트랜잭션을 적용합니다:
+The Transaction Pipeline applies transactions only to Command requests:
 
 ```csharp
 public sealed class SimpleTransactionPipeline<TResponse>
@@ -43,7 +43,7 @@ public sealed class SimpleTransactionPipeline<TResponse>
     {
         if (!isCommand)
         {
-            // Query는 트랜잭션 불필요
+            // Query doesn't need a transaction
             return handler();
         }
 
@@ -60,11 +60,11 @@ public sealed class SimpleTransactionPipeline<TResponse>
 }
 ```
 
-실제 Functorium의 `UsecaseTransactionPipeline`은 `where TRequest : ICommand<TResponse>` 제약 조건을 사용합니다. Mediator 소스 제너레이터가 이 제약을 확인하여 Command 요청에만 Pipeline을 적용하므로, 런타임 분기 없이 컴파일 타임에 필터링됩니다.
+In the actual Functorium `UsecaseTransactionPipeline`, the `where TRequest : ICommand<TResponse>` constraint is used. The Mediator source generator checks this constraint and applies the Pipeline only to Command requests, filtering at compile time without runtime branching.
 
 ### 2. Caching Pipeline
 
-Caching Pipeline은 Query 요청 중 `ICacheable`을 구현한 요청에만 캐싱을 적용합니다:
+The Caching Pipeline applies caching only to Query requests that implement `ICacheable`:
 
 ```csharp
 public sealed class SimpleCachingPipeline<TResponse>
@@ -80,7 +80,7 @@ public sealed class SimpleCachingPipeline<TResponse>
 
         var response = handler();
 
-        if (response.IsSucc)    // Read: 성공 응답만 캐싱
+        if (response.IsSucc)    // Read: cache only successful responses
             SetCache(cacheKey, response);
 
         return response;
@@ -88,54 +88,54 @@ public sealed class SimpleCachingPipeline<TResponse>
 }
 ```
 
-### 3. 왜 Read+Create 제약인가?
+### 3. Why Read+Create Constraint?
 
-두 Pipeline이 Read와 Create 능력을 각각 어떻게 사용하는지 정리하면 다음과 같습니다.
+The following summarizes how the two Pipelines use the Read and Create capabilities respectively.
 
 | Pipeline | Read (IsSucc/IsFail) | Create (CreateFail) |
 |----------|:--------------------:|:-------------------:|
-| Transaction | Commit/Rollback 결정 | 예외 시 실패 응답 생성 |
-| Caching | 성공 응답만 캐싱 | 예외 시 실패 응답 생성 |
+| Transaction | Determines Commit/Rollback | Creates failure response on exception |
+| Caching | Caches only successful responses | Creates failure response on exception |
 
-두 Pipeline 모두 응답 상태를 **읽어야** 하므로 `IFinResponse`가 필요하고, 예외 처리를 위해 `IFinResponseFactory<TResponse>`도 필요합니다.
+Both Pipelines need `IFinResponse` because they must **read** the response status, and `IFinResponseFactory<TResponse>` for exception handling.
 
-### 4. Command/Query 분기
+### 4. Command/Query Branching
 
-실제 Functorium Pipeline에서는 `where` 제약 조건으로 적용 대상을 컴파일 타임에 결정합니다:
+In actual Functorium Pipelines, `where` constraints determine the application target at compile time:
 
 ```csharp
-// Transaction Pipeline: where 제약으로 Command에만 적용
+// Transaction Pipeline: applies only to Commands via where constraint
 internal sealed class UsecaseTransactionPipeline<TRequest, TResponse>
     : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : ICommand<TResponse>          // ← Command만
+    where TRequest : ICommand<TResponse>          // ← Command only
     where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 { ... }
 
-// Caching Pipeline: where 제약으로 Query에만 적용
+// Caching Pipeline: applies only to Queries via where constraint
 internal sealed class UsecaseCachingPipeline<TRequest, TResponse>
     : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IQuery<TResponse>            // ← Query만
+    where TRequest : IQuery<TResponse>            // ← Query only
     where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 { ... }
 ```
 
-Mediator 소스 제너레이터가 `where` 제약을 확인하여, `ICommand<TResponse>`를 구현하지 않는 요청에는 `UsecaseTransactionPipeline`을 등록하지 않고, `IQuery<TResponse>`를 구현하지 않는 요청에는 `UsecaseCachingPipeline`을 등록하지 않습니다. 런타임 `request is ICommandRequest` 같은 타입 검사가 필요 없습니다.
+The Mediator source generator checks the `where` constraints and does not register `UsecaseTransactionPipeline` for requests that don't implement `ICommand<TResponse>`, and does not register `UsecaseCachingPipeline` for requests that don't implement `IQuery<TResponse>`. No runtime type checks like `request is ICommandRequest` are needed.
 
 ## FAQ
 
-### Q1: Transaction Pipeline이 Query를 건너뛰는 것은 어떻게 구현되나요?
-**A**: `UsecaseTransactionPipeline`은 `where TRequest : ICommand<TResponse>` 제약 조건을 사용합니다. Mediator 소스 제너레이터가 이 제약을 확인하여 **Command 요청에만** Pipeline을 등록하므로, Query 요청에는 Transaction Pipeline 자체가 실행되지 않습니다. 런타임 타입 검사 없이 **컴파일 타임에** 필터링됩니다.
+### Q1: How is the Transaction Pipeline's skipping of Queries implemented?
+**A**: `UsecaseTransactionPipeline` uses the `where TRequest : ICommand<TResponse>` constraint. The Mediator source generator checks this constraint and registers the Pipeline **only for Command requests**, so the Transaction Pipeline itself is never executed for Query requests. Filtering happens **at compile time** without runtime type checks.
 
-### Q2: Caching Pipeline이 실패 응답을 캐싱하지 않는 이유는 무엇인가요?
-**A**: 실패 응답은 일시적 오류(네트워크 타임아웃, 일시적 DB 장애 등)인 경우가 많습니다. 실패를 캐싱하면 재시도 시에도 캐시된 실패가 반환되어 **복구 불가능한 상태**가 됩니다. 따라서 `response.IsSucc`으로 성공 응답만 캐싱합니다.
+### Q2: Why doesn't the Caching Pipeline cache failure responses?
+**A**: Failure responses are often transient errors (network timeouts, temporary DB failures, etc.). Caching failures would return the cached failure on retry, creating an **unrecoverable state**. Therefore, only successful responses are cached using `response.IsSucc`.
 
-### Q3: Transaction과 Caching이 같은 이중 제약을 사용하지만 적용 대상이 다른 이유는 무엇인가요?
-**A**: 두 Pipeline 모두 응답의 성공/실패를 읽는 능력(Read)과 예외 시 실패 응답을 생성하는 능력(Create)이 필요하므로 **제약 조건은 동일**합니다. 하지만 Transaction은 데이터 변경이 있는 **Command에만**, Caching은 읽기 전용인 **Query에만** 적용되는 것이 비즈니스 요구사항입니다.
+### Q3: Why do Transaction and Caching use the same dual constraint but apply to different targets?
+**A**: Both Pipelines need the ability to read the response's success/failure (Read) and create failure responses on exception (Create), so **the constraints are identical**. However, Transaction applying only to data-changing **Commands** and Caching applying only to read-only **Queries** is a business requirement.
 
-### Q4: `ICacheable` 인터페이스를 구현하지 않은 Query는 어떻게 되나요?
-**A**: Caching Pipeline은 `request is ICacheable`로 캐싱 가능 여부를 확인합니다. `ICacheable`을 구현하지 않은 Query는 캐싱을 건너뛰고 매번 Handler를 실행합니다. 모든 Query에 캐싱을 강제하지 않아 **선택적 최적화**가 가능합니다.
+### Q4: What happens to a Query that doesn't implement `ICacheable`?
+**A**: The Caching Pipeline checks `request is ICacheable` for cacheability. Queries not implementing `ICacheable` skip caching and execute the Handler every time. This enables **selective optimization** without forcing caching on all Queries.
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 03-Transaction-Caching-Pipeline/
@@ -150,19 +150,18 @@ Mediator 소스 제너레이터가 `where` 제약을 확인하여, `ICommand<TRe
 └── README.md
 ```
 
-## 실행 방법
+## How to Run
 
 ```bash
-# 프로그램 실행
+# Run the program
 dotnet run --project TransactionCachingPipeline
 
-# 테스트 실행
+# Run tests
 dotnet test --project TransactionCachingPipeline.Tests.Unit
 ```
 
 ---
 
-Repository 계층의 `Fin<T>`와 Usecase 계층의 `FinResponse<T>`를 `ToFinResponse()` 확장 메서드로 연결하는 브릿지 패턴을 학습합니다.
+The next section covers the bridge pattern connecting the Repository layer's `Fin<T>` and the Usecase layer's `FinResponse<T>` via the `ToFinResponse()` extension method.
 
-→ [4.4장: Fin → FinResponse 브릿지](../04-Fin-To-FinResponse-Bridge/)
-
+→ [Section 4.4: Fin → FinResponse Bridge](../04-Fin-To-FinResponse-Bridge/)
