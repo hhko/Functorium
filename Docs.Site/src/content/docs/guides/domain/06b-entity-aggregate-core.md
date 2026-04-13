@@ -973,11 +973,11 @@ Aggregate Root:
 - Can publish domain events.
 
 ```csharp
-// Order는 AggregateRoot - 외부에서 직접 접근
+// Order is AggregateRoot - accessed directly from outside
 [GenerateEntityId]
 public class Order : AggregateRoot<OrderId> { }
 
-// OrderItem은 Entity - Order를 통해서만 접근
+// OrderItem is Entity - accessed only through Order
 [GenerateEntityId]
 public class OrderItem : Entity<OrderItemId> { }
 ```

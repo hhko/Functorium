@@ -555,7 +555,7 @@ public sealed class OrderPlacedEventHandler : IDomainEventHandler<OrderPlacedEve
 - `[CtxIgnore]`: Applied to event classes/properties -> Excluded from generation.
 - `partial void OnEnrichLog()`: Extension point for adding computed fields to auto-generated Enrichers.
 
-DI 등록:
+DI registration:
 ```csharp
 services.AddScoped<
     IDomainEventCtxEnricher<OrderPlacedEvent>,
@@ -797,17 +797,17 @@ It is possible, but directly modifying another Aggregate in an Event Handler mak
 
 No. `UsecaseTransactionPipeline` automatically handles SaveChanges and event publishing. Only the Repository needs to be injected in the Usecase.
 
-### Q5. 이벤트 핸들러의 실행 순서를 보장할 수 있나요?
+### Q5. Can the execution order of event handlers be guaranteed?
 
-Mediator의 기본 동작은 핸들러 실행 순서를 보장하지 않습니다. 순서가 중요한 경우 하나의 핸들러 내에서 순차적으로 처리하거나, Saga/Process Manager 패턴을 고려하세요.
+Mediator's default behavior does not guarantee handler execution order. If order is important, process sequentially within a single handler or consider the Saga/Process Manager pattern.
 
 ---
 
 ## References
 
-- [06a-aggregate-design.md](./06a-aggregate-design) - Aggregate 설계, [06b-entity-aggregate-core.md](./06b-entity-aggregate-core) - Entity/Aggregate 핵심 패턴, [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced) - 고급 패턴
-- [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) - Use Case 구현
-- [11-usecases-and-cqrs.md §트랜잭션과 event publishing](../application/11-usecases-and-cqrs#트랜잭션과-이벤트-발행-usecasetransactionpipeline) - 파이프라인 자동 처리 패턴
-- [13-adapters.md](../adapter/13-adapters) - UoW Adapter 구현
-- [19-observability-logging.md](../observability/19-observability-logging) - 로깅과 Ctx Enricher
-- [08-observability.md](../../spec/08-observability) - Observability 사양
+- [06a-aggregate-design.md](./06a-aggregate-design) - Aggregate design, [06b-entity-aggregate-core.md](./06b-entity-aggregate-core) - Entity/Aggregate core patterns, [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced) - Advanced patterns
+- [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) - Use Case implementation
+- [11-usecases-and-cqrs.md - Transactions and Event Publishing](../application/11-usecases-and-cqrs#transactions-and-event-publishing-usecasetransactionpipeline) - Pipeline automatic processing pattern
+- [13-adapters.md](../adapter/13-adapters) - UoW Adapter implementation
+- [19-observability-logging.md](../observability/19-observability-logging) - Logging and Ctx Enricher
+- [08-observability.md](../../spec/08-observability) - Observability specification
