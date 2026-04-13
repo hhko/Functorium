@@ -16,107 +16,107 @@ Domain events are the core mechanism for connecting state changes within Aggrega
 
 This document covers the following topics:
 
-1. **도메인 이벤트의 역할과 특성** — Aggregate 간 최종 일관성과 관심사 분리
-2. **IDomainEvent / DomainEvent 타입 계층** — 이벤트 추적성(EventId, CorrelationId, CausationId)
-3. **중첩 클래스 이벤트 정의 패턴** — `Product.CreatedEvent` 형태의 소유권 명시
-4. **UsecaseTransactionPipeline 통합** — SaveChanges 후 자동 event publishing 흐름
-5. **이벤트 핸들러 구현과 테스트** — `IDomainEventHandler<T>` 패턴과 단위 테스트
+1. **Role and characteristics of domain events** -- Eventual consistency between Aggregates and separation of concerns
+2. **IDomainEvent / DomainEvent type hierarchy** -- Event traceability (EventId, CorrelationId, CausationId)
+3. **Nested class event definition pattern** -- Explicit ownership in the form of `Product.CreatedEvent`
+4. **UsecaseTransactionPipeline integration** -- Automatic event publishing flow after SaveChanges
+5. **Event handler implementation and testing** -- `IDomainEventHandler<T>` pattern and unit testing
 
 ### Prerequisites
 
 A basic understanding of the following concepts is needed to understand this document:
 
-- [Entity/Aggregate 핵심 패턴](./06b-entity-aggregate-core) — AggregateRoot의 `AddDomainEvent()` 사용법
-- [에러 시스템: 기초와 네이밍](./08a-error-system) — `Fin<T>` 반환 패턴
+- [Entity/Aggregate Core Patterns](./06b-entity-aggregate-core) -- How to use `AddDomainEvent()` in AggregateRoot
+- [Error System: Basics and Naming](./08a-error-system) -- `Fin<T>` return pattern
 
-> 도메인 이벤트는 "이미 발생한 사실"을 표현하는 불변 객체입니다. Aggregate 경계를 넘는 부수 효과(재고 차감, 알림 발송 등)를 결합 없이 연결하고, `UsecaseTransactionPipeline`이 SaveChanges 후 자동으로 발행을 처리합니다.
+> Domain events are immutable objects representing "facts that have already occurred." They connect side effects across Aggregate boundaries (stock deduction, notification sending, etc.) without coupling, and `UsecaseTransactionPipeline` automatically handles publishing after SaveChanges.
 
 ## Summary
 
 ### Key Commands
 
 ```csharp
-// Domain event definition (Aggregate 내 중첩 record)
+// Domain event definition (nested record within Aggregate)
 public sealed record CreatedEvent(OrderId OrderId, Money TotalAmount) : DomainEvent;
 
-// Event publishing (AggregateRoot 내부)
+// Event publishing (inside AggregateRoot)
 AddDomainEvent(new CreatedEvent(Id, totalAmount));
 
-// Event Handler 구현
+// Event Handler implementation
 public sealed class OnProductCreated : IDomainEventHandler<Product.CreatedEvent>
 
-// 핸들러 등록 (DI)
+// Handler registration (DI)
 services.RegisterDomainEventHandlersFromAssembly(AssemblyReference.Assembly);
 ```
 
 ### Key Procedures
 
-1. **이벤트 정의**: Aggregate Root 내부에 `sealed record`로 `DomainEvent` 상속, 과거형 이름 사용
-2. **event publishing**: 상태 변경 직후 `AddDomainEvent()` 호출
-3. **이벤트 핸들러 작성**: `IDomainEventHandler<T>` 구현, `On{EventName}` 네이밍 패턴
-4. **핸들러 등록**: `RegisterDomainEventHandlersFromAssembly`로 스캔 등록
-5. **자동 처리**: `UsecaseTransactionPipeline`이 SaveChanges 후 event publishing 자동 수행
+1. **Event definition**: Inherit `DomainEvent` as `sealed record` inside Aggregate Root, use past-tense names
+2. **Event publishing**: Call `AddDomainEvent()` immediately after state changes
+3. **Event handler creation**: Implement `IDomainEventHandler<T>`, `On{EventName}` naming pattern
+4. **Handler registration**: Scan-register with `RegisterDomainEventHandlersFromAssembly`
+5. **Automatic processing**: `UsecaseTransactionPipeline` automatically performs event publishing after SaveChanges
 
 ### Key Concepts
 
 | Concept | Description |
 |------|------|
-| `IDomainEvent` | `INotification` 확장, `OccurredAt`, `EventId`, `CorrelationId`, `CausationId` 포함 |
-| `DomainEvent` | 기반 abstract record, 시각/ID 자동 설정 |
-| `IHasDomainEvents` | 읽기 전용 이벤트 조회 (public) |
-| `IDomainEventDrain` | 이벤트 정리 인터페이스 (internal, 인프라 전용) |
-| `UsecaseTransactionPipeline` | SaveChanges → event publishing 자동 처리 |
-| 중첩 클래스 이벤트 | `Product.CreatedEvent` 형태로 소유권 명시 |
+| `IDomainEvent` | Extends `INotification`, includes `OccurredAt`, `EventId`, `CorrelationId`, `CausationId` |
+| `DomainEvent` | Base abstract record, auto-sets timestamp/ID |
+| `IHasDomainEvents` | Read-only event querying (public) |
+| `IDomainEventDrain` | Event cleanup interface (internal, infrastructure only) |
+| `UsecaseTransactionPipeline` | Automatic SaveChanges -> event publishing |
+| Nested class events | Explicit ownership in `Product.CreatedEvent` form |
 
 ---
 
 ## Why Domain Events
 
-도메인 이벤트는 DDD(Domain-Driven Design)에서 **"도메인에서 발생한 중요한 사건"을** 명시적으로 표현하는 전술 패턴입니다.
+Domain events are a tactical pattern in DDD (Domain-Driven Design) that **explicitly represents "significant occurrences in the domain."**
 
-### 도메인 이벤트가 해결하는 문제
+### Problems Domain Events Solve
 
-**Aggregate 간 최종 일관성 (Eventual Consistency)**:
-하나의 트랜잭션에서 하나의 Aggregate만 변경하고, 다른 Aggregate의 변경은 이벤트를 통해 비동기로 처리합니다. 이를 통해 Aggregate 경계를 깨뜨리지 않으면서도 도메인 간 협업이 가능합니다.
+**Eventual Consistency Between Aggregates:**
+Only one Aggregate is changed per transaction, and changes to other Aggregates are handled asynchronously via events. This enables collaboration between domains without breaking Aggregate boundaries.
 
-**관심사 분리**:
-핵심 도메인 로직과 부수 효과(로깅, 알림, 외부 시스템 연동)를 분리합니다. 주문 생성 로직은 "주문을 만드는 것"에만 집중하고, 이메일 발송이나 재고 차감은 이벤트 핸들러에서 처리합니다.
+**Separation of Concerns:**
+Separates core domain logic from side effects (logging, notifications, external system integration). Order creation logic focuses only on "creating the order," while email sending and stock deduction are handled by event handlers.
 
-**감사 추적 (Audit Trail)**:
-도메인에서 무슨 일이 발생했는지 이벤트로 기록합니다. 각 이벤트는 발생 시각(`OccurredAt`)을 포함하므로 시간 순서대로 도메인의 변화를 추적할 수 있습니다.
+**Audit Trail:**
+Records what happened in the domain via events. Each event includes the occurrence time (`OccurredAt`), enabling chronological tracking of domain changes.
 
-**확장성**:
-새로운 부수 효과가 필요할 때 기존 코드를 수정하지 않고 새 이벤트 핸들러를 추가하면 됩니다 (Open-Closed Principle).
+**Extensibility:**
+When new side effects are needed, simply add a new event handler without modifying existing code (Open-Closed Principle).
 
 Now that we understand the problems domain events solve, let us examine what types are used to represent events in Functorium.
 
 ---
 
-## 도메인 이벤트란 무엇인가 (WHAT)
+## What Are Domain Events (WHAT)
 
-도메인 이벤트는 도메인에서 발생한 중요한 사건을 표현합니다. AggregateRoot에서만 발행할 수 있습니다.
+Domain events represent significant occurrences in the domain. They can only be published from AggregateRoot.
 
-### 도메인 이벤트의 특성
+### Characteristics of Domain Events
 
-도메인 이벤트가 갖추어야 하는 핵심 특성을 정리하면 다음과 같습니다.
+The core characteristics that domain events should have are as follows.
 
 | Property | Description | Example |
 |------|------|------|
-| **과거형 (Past Tense)** | 이미 발생한 사실을 표현 | `CreatedEvent`, `ConfirmedEvent` |
-| **불변 (Immutable)** | 한번 생성되면 변경 불가 | `sealed record`로 정의 |
-| **시간 정보 포함** | 발생 시각을 기록 | `OccurredAt` 속성 |
-| **이벤트 식별** | 고유 ID로 중복 방지 | `EventId` (Ulid) |
-| **요청 추적** | 동일 요청의 이벤트 연결 | `CorrelationId` |
-| **인과 관계** | 이벤트 간 원인-결과 추적 | `CausationId` |
+| **Past Tense** | Represents facts that have already occurred | `CreatedEvent`, `ConfirmedEvent` |
+| **Immutable** | Cannot be changed once created | Defined as `sealed record` |
+| **Includes Time Information** | Records occurrence time | `OccurredAt` 속성 |
+| **Event Identification** | Prevents duplication via unique ID | `EventId` (Ulid) |
+| **Request Tracking** | Links events from the same request | `CorrelationId` |
+| **Causation** | Tracks cause-effect between events | `CausationId` |
 
 ### IDomainEvent / DomainEvent
 
 **Location**: `Functorium.Domains.Events`
 
-The key point to note in the following code is `IDomainEvent`가 `INotification`을 확장하여 Mediator Pub/Sub과 자연스럽게 통합된다는 것입니다.
+The key point to note in the following code is that `IDomainEvent` extends `INotification`, naturally integrating with Mediator Pub/Sub.
 
 ```csharp
-// Interface — Mediator.INotification 확장으로 Pub/Sub 통합
+// Interface -- Pub/Sub integration by extending Mediator.INotification
 public interface IDomainEvent : INotification
 {
     DateTimeOffset OccurredAt { get; }
@@ -138,85 +138,85 @@ public abstract record DomainEvent(
 }
 ```
 
-모든 convenience 생성자는 `protected`입니다. `DomainEvent`를 직접 생성하지 않고, `sealed record`로 상속하여 사용합니다.
+All convenience constructors are `protected`. `DomainEvent` is not created directly but used by inheriting as `sealed record`.
 
-**이벤트 추적성 (Traceability)**:
-- `EventId`: 이벤트 고유 식별자. 중복 처리 방지(멱등성) 및 이벤트 추적에 사용됩니다.
-- `CorrelationId`: 동일한 요청에서 발생한 이벤트를 그룹으로 추적합니다.
-- `CausationId`: 이 이벤트를 발생시킨 이전 이벤트의 ID로, 이벤트 간 인과 관계를 추적합니다.
+**Event Traceability:**
+- `EventId`: Unique event identifier. Used for deduplication (idempotency) and event tracking.
+- `CorrelationId`: Tracks events from the same request as a group.
+- `CausationId`: The ID of the previous event that caused this event, tracking causation between events.
 
-### CorrelationId 전파 흐름
+### CorrelationId Propagation Flow
 
-`CorrelationId`는 하나의 요청에서 발생한 모든 도메인 이벤트를 연결하는 비즈니스 수준 식별자입니다:
+`CorrelationId` is a business-level identifier connecting all domain events from a single request:
 
 ```
 HTTP Request
-  → 미들웨어: CorrelationId 생성 또는 헤더에서 추출
-    → Usecase 실행
+  -> Middleware: Generate CorrelationId or extract from header
+    -> Usecase execution
       → Entity.AddDomainEvent(new CreatedEvent(...) { CorrelationId = correlationId })
-        → Event Handler: 동일 CorrelationId로 이벤트 추적
+        -> Event Handler: Track events with same CorrelationId
 ```
 
-두 식별자의 역할은 다음과 같이 구분됩니다.
+The roles of the two identifiers are distinguished as follows.
 
-| 식별자 | 수준 | Purpose |
+| Identifier | Level | Purpose |
 |--------|------|------|
-| `CorrelationId` | 비즈니스 | 동일 요청에서 발생한 이벤트 그룹핑 |
-| OpenTelemetry `TraceId` | 인프라 | 분산 시스템 간 요청 추적 (span 기반) |
+| `CorrelationId` | Business | Grouping events from the same request |
+| OpenTelemetry `TraceId` | Infrastructure | Distributed system request tracing (span-based) |
 
-두 식별자는 독립적이지만 보완적입니다. `CorrelationId`로 비즈니스 흐름을 추적하고, `TraceId`로 인프라 성능을 분석합니다.
+The two identifiers are independent but complementary. `CorrelationId` tracks business flows, `TraceId` analyzes infrastructure performance.
 
-### 이벤트 명명 규칙
+### Event Naming Conventions
 
-이벤트 이름은 과거형을 사용합니다:
+Event names use past tense:
 
-| 도메인 행위 | 이벤트 이름 |
+| Domain Action | Event Name |
 |------------|------------|
-| 생성 | `CreatedEvent` |
-| 확정 | `ConfirmedEvent` |
-| 취소 | `CancelledEvent` |
-| 배송 | `ShippedEvent` |
+| Creation | `CreatedEvent` |
+| Confirmation | `ConfirmedEvent` |
+| Cancellation | `CancelledEvent` |
+| Shipping | `ShippedEvent` |
 
-### Functorium 타입 계층
+### Functorium Type Hierarchy
 
 ```
-IDomainEvent : INotification (인터페이스)
+IDomainEvent : INotification (interface)
 ├── OccurredAt (DateTimeOffset)
 ├── EventId (Ulid)
 ├── CorrelationId (string?)
 └── CausationId (string?)
     │
     └── DomainEvent (abstract record)
-        ├── 기본 생성자: OccurredAt, EventId 자동 설정
-        ├── CorrelationId 생성자: 요청 추적 ID 지정
-        ├── 전체 생성자: CorrelationId + CausationId 지정
-        └── 사용자 정의 이벤트들이 상속
+        ├── Default constructor: Auto-sets OccurredAt, EventId
+        ├── CorrelationId constructor: Specifies request tracking ID
+        ├── Full constructor: Specifies CorrelationId + CausationId
+        └── User-defined events inherit from this
 ```
 
-### IHasDomainEvents / IDomainEventDrain 패턴
+### IHasDomainEvents / IDomainEventDrain Pattern
 
-AggregateRoot에서 도메인 이벤트를 관리하는 두 인터페이스가 분리되어 있습니다:
+The two interfaces managing domain events in AggregateRoot are separated:
 
 ```csharp
-// 도메인 계층의 읽기 전용 계약 — 이벤트 조회만 허용
+// Read-only contract of the domain layer -- allows only event querying
 public interface IHasDomainEvents
 {
     IReadOnlyList<IDomainEvent> DomainEvents { get; }
 }
 
-// 인프라용 이벤트 정리 인터페이스 (internal)
+// Event cleanup interface for infrastructure (internal)
 internal interface IDomainEventDrain : IHasDomainEvents
 {
     void ClearDomainEvents();
 }
 ```
 
-**설계 원칙**: 도메인 이벤트는 **불변의 사실(fact)입니다**. 도메인 계약(`IHasDomainEvents`)에서는 이벤트 삭제를 허용하지 않으며, 이벤트 정리는 인프라 관심사(`IDomainEventDrain`)로 분리합니다.
+**Design Principle**: Domain events are **immutable facts.** The domain contract (`IHasDomainEvents`) does not allow event deletion, and event cleanup is separated as an infrastructure concern (`IDomainEventDrain`).
 
-| 인터페이스 | 가시성 | 역할 |
+| Interface | Visibility | Role |
 |-----------|--------|------|
-| `IHasDomainEvents` | `public` | 도메인 계층에서 이벤트 목록 조회 |
-| `IDomainEventDrain` | `internal` | event publishing 후 정리 (인프라 전용) |
+| `IHasDomainEvents` | `public` | Query event list from domain layer |
+| `IDomainEventDrain` | `internal` | Cleanup after event publishing (infrastructure only) |
 
 > **Note**: `IDomainEventDrain`은 `internal`이지만, `AggregateRoot<TId>.ClearDomainEvents()`는 `public`입니다. 이는 테스트 코드에서 `order.ClearDomainEvents()`를 직접 호출하여 이전 이벤트를 정리할 수 있도록 하기 위한 의도적인 설계입니다. 프로덕션 코드에서 `ClearDomainEvents()`는 인프라(Publisher)만 호출해야 합니다.
 
