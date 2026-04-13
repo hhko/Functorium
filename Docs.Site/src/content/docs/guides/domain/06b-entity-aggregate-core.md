@@ -763,7 +763,7 @@ public sealed class Tag : Entity<TagId>
 When a child Entity has domain invariants, `Create()` returns `Fin<T>`:
 
 ```csharp
-// OrderLine: Order Aggregate의 자식 Entity
+// OrderLine: Child Entity of Order Aggregate
 [GenerateEntityId]
 public sealed class OrderLine : Entity<OrderLineId>
 {
@@ -951,13 +951,13 @@ public class Order : AggregateRoot<OrderId>
 
 ## Troubleshooting
 
-### `[GenerateEntityId]` 적용 후 EntityId 타입이 생성되지 않음
-**Cause:** Source Generator가 빌드 시점에 실행되지 않았거나, IDE 캐시가 오래된 상태일 수 있습니다.
-**Solution:** `dotnet build`로 전체 빌드를 실행하세요. IDE에서 인식되지 않으면 솔루션을 닫고 다시 열거나, `dotnet clean` 후 빌드하세요.
+### EntityId type is not generated after applying `[GenerateEntityId]`
+**Cause:** The Source Generator may not have run at build time, or the IDE cache may be stale.
+**Solution:** Run a full build with `dotnet build`. If the IDE does not recognize it, close and reopen the solution, or run `dotnet clean` then build.
 
-### ORM 복원 시 `#pragma warning disable CS8618` 누락으로 경고 발생
-**Cause:** EF Core 등 ORM은 파라미터 없는 private 생성자를 요구하는데, 이 생성자에서 non-nullable 속성이 초기화되지 않아 CS8618 경고가 발생합니다.
-**Solution:** ORM용 기본 생성자에 `#pragma warning disable CS8618` / `#pragma warning restore CS8618`를 적용하세요. 이는 ORM 프록시 생성을 위한 관례적 패턴입니다.
+### Warning occurs due to missing `#pragma warning disable CS8618` during ORM restoration
+**Cause:** ORMs like EF Core require a parameterless private constructor, and non-nullable properties are not initialized in this constructor, causing CS8618 warnings.
+**Solution:** Apply `#pragma warning disable CS8618` / `#pragma warning restore CS8618` to the ORM default constructor. This is a conventional pattern for ORM proxy creation.
 
 ---
 

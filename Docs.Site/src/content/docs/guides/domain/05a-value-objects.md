@@ -1299,7 +1299,7 @@ The core of Value Object implementation is the **Create/Validate separation patt
 
 This separation allows **the Validate method to be reused elsewhere (such as FluentValidation pipelines).**
 
-> **Note**: Entities follow the same Create/Validate separation pattern. For details, see the [Entity Implementation Guide - Creation Patterns](./06b-entity-aggregate-core#생성-패턴).
+> **Note**: Entities follow the same Create/Validate separation pattern. For details, see the [Entity Implementation Guide - Creation Patterns](./06b-entity-aggregate-core#creation-patterns).
 
 ### CreateFromValidated: Factory for ORM/Repository Restoration
 

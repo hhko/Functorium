@@ -653,13 +653,13 @@ The Product + Inventory diagram above shows the result after splitting.
 - After separation, `IConcurrencyAware` (RowVersion) applied only to Inventory -- detects only stock conflicts
 
 **Connection Method:**
-- Inventory references Product by `ProductId` via **ID reference** (not object reference, see [Cross-Aggregate Relationships](./06c-entity-aggregate-advanced#cross-aggregate-관계))
+- Inventory references Product by `ProductId` via **ID reference** (not object reference, see [Cross-Aggregate Relationships](./06c-entity-aggregate-advanced#cross-aggregate-relationships))
 - When creating Product in Application Layer, Inventory is also created (same Usecase)
 - Stock deduction is requested directly to Inventory Aggregate
 
 #### Transaction Boundary Practical Guidelines
 
-The principle from [Section 1](#트랜잭션-경계로서의-aggregate) is **one transaction = one Aggregate change.** In practice, patterns are classified as follows.
+The principle from [Section 1](#aggregate-as-a-transaction-boundary) is **one transaction = one Aggregate change.** In practice, patterns are classified as follows.
 
 **Pattern Classification:**
 

@@ -30,86 +30,86 @@ A basic understanding of the following concepts is needed to understand this doc
 - Basic concepts of GitHub Actions workflows (trigger, jobs, steps)
 - Semantic Versioning (SemVer 2.0) rules
 
-> **CI/CD와 버전 관리의 핵심은** Git 태그 하나로 버전 계산부터 패키지 배포까지 전 과정을 자동화하여, 수동 관리의 오류를 원천적으로 제거하는 것입니다.
+> **The core of CI/CD and version management is** automating the entire process from version calculation to package deployment with a single Git tag, fundamentally eliminating manual management errors.
 
 ## Summary
 
-### CI/CD 워크플로우
+### CI/CD Workflows
 
 #### Key Commands
 
 ```bash
-# CI 자동 실행 (Push to main 또는 PR)
+# CI auto-execution (Push to main or PR)
 git push origin main
 
-# 릴리스 배포 (태그 푸시)
+# Release deployment (tag push)
 git tag -a v1.0.0 -m "Release 1.0.0"
 git push origin v1.0.0
 
-# 로컬 패키지 생성
+# Local package creation
 ./Build-Local.ps1
 dotnet pack -c Release -o .nupkg
 ```
 
 #### Key Procedures
 
-**1. 일반 개발 (CI만 실행):**
-1. 코드 변경 후 `git push origin main` 또는 PR 생성
-2. Build 워크플로우 자동 실행 (빌드 → 테스트 → 커버리지)
+**1. Normal development (CI only):**
+1. After code changes, `git push origin main` or create a PR
+2. Build workflow auto-executes (build -> test -> coverage)
 
-**2. 릴리스 배포:**
+**2. Release deployment:**
 1. `git tag -a v1.0.0 -m "Release 1.0.0"` 태그 생성
 2. `git push origin v1.0.0` 태그 푸시
-3. Publish 워크플로우 자동 실행 (빌드 → 테스트 → 패키지 배포 → GitHub Release)
+3. Publish workflow auto-executes (build -> test -> package deployment -> GitHub Release)
 
 #### Key Concepts
 
 | Concept | Description |
 |------|------|
-| Build 워크플로우 | PR/Push 시 빌드, 테스트, 커버리지 수집 |
-| Publish 워크플로우 | 태그 푸시(v*.*.*) 시 빌드 + 패키지 배포 + GitHub Release |
-| NuGet 메타데이터 | `Directory.Build.props`에서 공통 설정, csproj에서 프로젝트별 설정 |
-| SourceLink + 심볼 패키지 | 디버깅 시 라이브러리 소스 Step-into 지원 |
-| Deterministic Build | CI 환경에서 재현 가능한 빌드 보장 |
+| Build workflow | Build, test, coverage collection on PR/Push |
+| Publish workflow | Build + package deployment + GitHub Release on tag push (v*.*.*) |
+| NuGet metadata | Common settings in `Directory.Build.props`, project-specific settings in csproj |
+| SourceLink + symbol packages | Step-into library source support during debugging |
+| Deterministic Build | Ensures reproducible builds in CI environments |
 
-### 버전 관리
+### Version Management
 
 #### Key Commands
 
 ```bash
-# 버전 확인
+# Check version
 dotnet build -p:MinVerVerbosity=normal
 
-# 태그 생성 및 릴리스
+# Create tag and release
 git tag -a v1.0.0 -m "Release 1.0.0"
 git push origin v1.0.0
 
-# 다음 버전 제안
+# Suggest next version
 /suggest-next-version
 /suggest-next-version alpha
 ```
 
 #### Key Procedures
 
-**1. Pre-release에서 Stable까지:**
+**1. From Pre-release to Stable:**
 1. Alpha 태그: `git tag v1.0.0-alpha.0`
-2. Beta 태그: `git tag v1.0.0-beta.0` (선택)
-3. RC 태그: `git tag v1.0.0-rc.0` (선택)
-4. 정식 릴리스: `git tag v1.0.0`
+2. Beta 태그: `git tag v1.0.0-beta.0` (optional)
+3. RC 태그: `git tag v1.0.0-rc.0` (optional)
+4. Stable release: `git tag v1.0.0`
 
 **2. 다음 Patch 릴리스:**
-1. 정식 릴리스 후 개발 계속 (자동으로 `X.Y.Z+1-alpha.0.N` 표시)
+1. 정식 릴리스 후 개발 계속 (Automatic으로 `X.Y.Z+1-alpha.0.N` 표시)
 2. 준비되면 `git tag vX.Y.Z+1`
 
 #### Key Concepts
 
 | Concept | Description |
 |------|------|
-| MinVer | Git 태그 기반 자동 버전 계산 MSBuild 도구 |
-| Height | 최근 태그 이후 커밋 수 (자동 증가) |
-| MinVerAutoIncrement | RTM 태그 후 자동 증가 단위 (patch/minor/major) |
-| AssemblyVersion 전략 | `Major.Minor.0.0` (Patch 미포함 — 재컴파일 방지) |
-| Conventional Commits | 커밋 타입(feat/fix/feat!)으로 버전 증가 결정 |
+| MinVer | Git tag-based automatic version calculation MSBuild tool |
+| Height | Number of commits since latest tag (auto-increment) |
+| MinVerAutoIncrement | Auto-increment unit after RTM tag (patch/minor/major) |
+| AssemblyVersion strategy | `Major.Minor.0.0` (Patch excluded -- prevents recompilation) |
+| Conventional Commits | Version increment determined by commit type (feat/fix/feat!) |
 
 ---
 
@@ -117,36 +117,36 @@ git push origin v1.0.0
 
 ### Purpose
 
-Git 태그 기반 자동 버전 관리와 CI/CD 파이프라인을 통해 안정적인 빌드와 배포를 자동화합니다.
+Automates stable builds and deployments through Git tag-based automatic version management and CI/CD pipelines.
 
-### 워크플로우 구성
+### Workflow Configuration
 
 The following table 두 개의 워크플로우와 각각의 트리거 조건을 정리한 것입니다.
 
-| 워크플로우 | 트리거 | 주요 작업 |
+| Workflow | Trigger | Main Tasks |
 |-----------|--------|----------|
-| CI (build.yml) | PR, Push to main | 빌드, 테스트, 커버리지 |
-| Release (publish.yml) | 태그 푸시 (v*.*.*) | 빌드, 테스트, 패키지 배포 |
+| CI (build.yml) | PR, Push to main | Build, test, coverage |
+| Release (publish.yml) | Tag push (v*.*.*) | Build, test, package deployment |
 
-### 생성되는 패키지
+### Generated Packages
 
-| 패키지 | Description |
+| Package | Description |
 |--------|------|
-| `Functorium` | .NET용 함수형 도메인 프레임워크 |
-| `Functorium.Testing` | Functorium 테스트 유틸리티 |
+| `Functorium` | Functional domain framework for .NET |
+| `Functorium.Testing` | Functorium test utilities |
 
-### 파일 위치
+### File Locations
 
 ```
-프로젝트루트/
+ProjectRoot/
 ├── .github/
 │   └── workflows/
-│       ├── build.yml        # Build 워크플로우 (CI)
-│       └── publish.yml      # Publish 워크플로우 (Release)
-├── Directory.Build.props    # 공통 NuGet 설정
+│       ├── build.yml        # Build workflow (CI)
+│       └── publish.yml      # Publish workflow (Release)
+├── Directory.Build.props    # Common NuGet settings
 ├── Directory.Packages.props # Central package version management
-├── Functorium.png              # 패키지 아이콘 (128x128 PNG)
-├── .nupkg/                  # 생성된 패키지 출력 디렉토리
+├── Functorium.png              # Package icon (128x128 PNG)
+├── .nupkg/                  # Generated package output directory
 └── Src/
     ├── Functorium/
     │   └── Functorium.csproj
@@ -156,45 +156,45 @@ The following table 두 개의 워크플로우와 각각의 트리거 조건을 
 
 ---
 
-## 워크플로우 구성
+## Workflow Configuration
 
-### Build 워크플로우 (build.yml)
+### Build Workflow (build.yml)
 
-**트리거:**
+**Trigger:**
 - Pull Request to main
-- Push to main 브랜치
-- 문서/스크립트 파일은 제외 (*.md, Docs/**, .claude/**, *.ps1)
-- 수동 실행 (workflow_dispatch)
+- Push to main branch
+- Excludes documentation/script files (*.md, Docs/**, .claude/**, *.ps1)
+- Manual execution (workflow_dispatch)
 
-**작업:**
-1. 코드 체크아웃
-2. .NET 10 설정
-3. NuGet 패키지 캐시
-4. 의존성 복원
-5. 취약점 패키지 검사
-6. Release 모드 빌드
-7. 테스트 실행 및 커버리지 수집
-8. 테스트 결과 업로드
-9. ReportGenerator로 커버리지 리포트 생성
-10. 커버리지 요약 표시 (GITHUB_STEP_SUMMARY)
-11. 커버리지 리포트 업로드
+**Tasks:**
+1. Code checkout
+2. .NET 10 setup
+3. NuGet package cache
+4. Dependency restore
+5. Vulnerable package inspection
+6. Release mode build
+7. Test execution and coverage collection
+8. Upload test results
+9. Generate coverage report with ReportGenerator
+10. Display coverage summary (GITHUB_STEP_SUMMARY)
+11. Upload coverage report
 
-### Publish 워크플로우 (publish.yml)
+### Publish Workflow (publish.yml)
 
-**트리거:**
-- 태그 푸시: v*.*.* (예: v1.0.0, v1.2.3)
+**Trigger:**
+- Tag push: v*.*.* (e.g., v1.0.0, v1.2.3)
 
-**작업:**
-1. Build 워크플로우의 모든 작업 수행
-2. NuGet 패키지 생성
-3. NuGet.org에 배포
-4. GitHub Release 생성
+**Tasks:**
+1. Perform all Build workflow tasks
+2. Generate NuGet packages
+3. Deploy to NuGet.org
+4. Create GitHub Release
 
 ---
 
-## Build 워크플로우
+## Build Workflow
 
-### 워크플로우 파일
+### Workflow File
 
 `.github/workflows/build.yml`:
 
@@ -314,23 +314,23 @@ jobs:
         retention-days: 30
 ```
 
-### 실행 방법
+### Execution Methods
 
 ```bash
-# Push to main - Build 워크플로우 자동 실행
+# Push to main - Build workflow auto-executes
 git push origin main
 
-# Pull Request - Build 워크플로우 자동 실행
+# Pull Request - Build workflow auto-executes
 gh pr create --base main --head feature/new-feature
 
-# 수동 실행 - GitHub Actions 탭 > Build > Run workflow
+# Manual execution - GitHub Actions tab > Build > Run workflow
 ```
 
 ---
 
-## Publish 워크플로우
+## Publish Workflow
 
-### 워크플로우 파일
+### Workflow File
 
 `.github/workflows/publish.yml`:
 
@@ -557,29 +557,29 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-### 릴리스 프로세스
+### Release Process
 
 ```bash
-# 1. 버전 태그 생성
+# 1. Create version tag
 git tag -a v1.0.0 -m "Release 1.0.0"
 
-# 2. 태그 푸시 (Release 워크플로우 자동 실행)
+# 2. Push tag (Release workflow auto-executes)
 git push origin v1.0.0
 
-# 3. GitHub에서 확인
-# - Actions 탭: 워크플로우 실행 상태
-# - Releases 탭: 생성된 릴리스
+# 3. Verify on GitHub
+# - Actions tab: workflow execution status
+# - Releases tab: created release
 ```
 
 ---
 
-워크플로우가 빌드와 배포를 자동화한다면, NuGet 패키지 설정은 배포되는 패키지의 메타데이터와 디버깅 지원을 결정합니다.
+While workflows automate builds and deployments, NuGet package settings determine the metadata and debugging support for deployed packages.
 
-## NuGet 패키지 설정
+## NuGet Package Settings
 
-### Directory.Build.props 공통 설정
+### Directory.Build.props Common Settings
 
-모든 프로젝트에 적용되는 NuGet 메타데이터 설정입니다.
+NuGet metadata settings applied to all projects.
 
 ```xml
 <!-- NuGet Package Common Settings -->
@@ -597,9 +597,9 @@ git push origin v1.0.0
 </PropertyGroup>
 ```
 
-### 심볼 패키지 설정
+### Symbol Package Settings
 
-디버깅 지원을 위한 심볼 패키지 생성 설정입니다.
+Symbol package generation settings for debugging support.
 
 ```xml
 <!-- Symbol Package for Debugging -->
@@ -609,13 +609,13 @@ git push origin v1.0.0
 </PropertyGroup>
 ```
 
-- `.snupkg` 파일에 PDB 포함
-- NuGet.org 심볼 서버에 자동 업로드
-- Visual Studio에서 Step-into 디버깅 가능
+- PDB included in `.snupkg` files
+- Auto-uploaded to NuGet.org symbol server
+- Step-into debugging available in Visual Studio
 
-### SourceLink 설정
+### SourceLink Settings
 
-GitHub 소스와 연결하여 디버깅 시 원본 코드 접근을 지원합니다.
+Links to GitHub source to support accessing original code during debugging.
 
 ```xml
 <!-- Source Link for Debugging -->
@@ -629,9 +629,9 @@ GitHub 소스와 연결하여 디버깅 시 원본 코드 접근을 지원합니
 </ItemGroup>
 ```
 
-### Deterministic Build 설정
+### Deterministic Build Settings
 
-CI 환경에서 재현 가능한 빌드를 위한 설정입니다.
+Settings for reproducible builds in CI environments.
 
 ```xml
 <!-- Deterministic Build -->
@@ -646,14 +646,14 @@ The following table 심볼 패키지와 SourceLink가 디버깅에서 각각 어
 
 | Feature | Role | 제공 정보 |
 |------|------|----------|
-| **심볼 패키지 (.snupkg)** | "어디서" 실행 중인지 | 메서드 이름, 라인 번호, 변수 이름 |
-| **SourceLink** | "무엇을" 실행 중인지 | 실제 소스 코드 내용 |
+| **Symbol packages (.snupkg)** | "Where" it is executing | Method names, line numbers, variable names |
+| **SourceLink** | "What" is executing | Actual source code contents |
 
-둘 다 있어야 디버깅 시 라이브러리 소스에 Step-into 가능합니다.
+Both are needed to Step-into library source during debugging.
 
 ---
 
-## 프로젝트별 패키지 설정
+## Per-Project Package Settings
 
 ### Functorium.csproj
 
@@ -694,9 +694,9 @@ The following table 심볼 패키지와 SourceLink가 디버깅에서 각각 어
 </Project>
 ```
 
-> **Note**: `IsTestProject`를 `false`로 설정해야 NuGet 패키지 생성이 가능합니다.
+> **Note**: `IsTestProject` must be set to `false` to enable NuGet package generation.
 
-### 새 패키지 프로젝트 추가
+### Adding a New Package Project
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -713,189 +713,189 @@ The following table 심볼 패키지와 SourceLink가 디버깅에서 각각 어
 </Project>
 ```
 
-필수 설정:
-1. `PackageId`: 고유한 패키지 이름
-2. `Description`: 패키지 설명
-3. `PackageTags`: 공통 태그 + 추가 태그
-4. Package Files: README.md, Functorium.png 포함
+Required settings:
+1. `PackageId`: Unique package name
+2. `Description`: Package description
+3. `PackageTags`: Common tags + additional tags
+4. Package Files: Include README.md, Functorium.png
 
 ---
 
-## 패키지 생성
+## Package Creation
 
-### Build-Local.ps1 사용 (권장)
+### Using Build-Local.ps1 (Recommended)
 
 ```bash
 # full 빌드 및 패키지 생성
 ./Build-Local.ps1
 
-# 패키지 생성 건너뛰기
+# Skip package creation
 ./Build-Local.ps1 -SkipPack
 ```
 
-### dotnet CLI 직접 사용
+### Using dotnet CLI Directly
 
 ```bash
 # 솔루션 full 패키지 생성
 dotnet pack -c Release -o .nupkg
 
-# 특정 프로젝트만
+# Specific project only
 dotnet pack Src/Functorium/Functorium.csproj -c Release -o .nupkg
 
-# 버전 지정
+# Specify version
 dotnet pack -c Release -o .nupkg -p:Version=1.0.0
 ```
 
-### 출력 파일
+### Output Files
 
 | File | Description |
 |------|------|
-| `*.nupkg` | NuGet 패키지 (배포용) |
-| `*.snupkg` | 심볼 패키지 (디버깅용) |
+| `*.nupkg` | NuGet package (for deployment) |
+| `*.snupkg` | Symbol package (for debugging) |
 
 ---
 
-## 패키지 검증
+## Package Verification
 
-### 패키지 내용 확인
+### Checking Package Contents
 
 ```bash
-# 패키지 내용 확인
+# Check package contents
 unzip -l .nupkg/Functorium.1.0.0.nupkg
 
-# dotnet CLI 검증
+# dotnet CLI verification
 dotnet nuget verify .nupkg/Functorium.1.0.0.nupkg
 ```
 
-### 로컬 테스트
+### Local Testing
 
 ```bash
-# 1. 로컬 NuGet 소스 추가
+# 1. Add local NuGet source
 dotnet nuget add source .nupkg/ --name local
 
-# 2. 패키지 설치 테스트
+# 2. Test package installation
 dotnet add package Functorium --source local
 
-# 3. 빌드 확인
+# 3. Verify build
 dotnet build
 ```
 
 ---
 
-## 초기 설정
+## Initial Setup
 
 ### GitHub Secrets
 
 | Secret | Purpose | required | 획득 방법 |
 |--------|------|----------|----------|
-| `NUGET_API_KEY` | NuGet.org 배포 | Release 시 필수 | NuGet.org > Account > API Keys |
-| `CODECOV_TOKEN` | Codecov 업로드 | 선택 (현재 비활성화) | Codecov.io |
+| `NUGET_API_KEY` | NuGet.org 배포 | Required for Release | NuGet.org > Account > API Keys |
+| `CODECOV_TOKEN` | Codecov 업로드 | Optional (currently disabled) | Codecov.io |
 
-`GITHUB_TOKEN`은 자동 제공됩니다 (GitHub Packages, Release 생성).
+`GITHUB_TOKEN` is automatically provided (GitHub Packages, Release creation).
 
-### GitHub Secrets 추가 방법
+### How to Add GitHub Secrets
 
 1. GitHub 저장소 > **Settings** > **Secrets and variables** > **Actions**
 2. **New repository secret** 클릭
-3. Name: `NUGET_API_KEY`, Secret: [NuGet API Key 값]
-4. **Add secret** 클릭
+3. Name: `NUGET_API_KEY`, Secret: [NuGet API Key value]
+4. Click **Add secret**
 
-### NuGet.org API Key 생성
+### Creating NuGet.org API Key
 
-1. NuGet.org 로그인 > 계정 > **API Keys**
-2. **Create** 클릭
-3. 설정: Key Name, Package Owner, Glob Pattern: `Functorium.*`, Scopes: **Push**
-4. **Create** 클릭 후 API Key 복사
+1. NuGet.org login > Account > **API Keys**
+2. Click **Create**
+3. Settings: Key Name, Package Owner, Glob Pattern: `Functorium.*`, Scopes: **Push**
+4. Click **Create** and copy the API Key
 
-### 워크플로우 권한 설정
+### Workflow Permission Settings
 
 Settings > Actions > General:
 - Workflow permissions: **Read and write permissions**
-- **Allow GitHub Actions to create and approve pull requests** 체크
+- Check **Allow GitHub Actions to create and approve pull requests**
 
 ---
 
-CI/CD 파이프라인과 패키지 설정이 갖춰졌으면, 이제 패키지 버전을 자동으로 결정하는 MinVer 기반 버전 관리를 살펴봅니다.
+With CI/CD pipelines and package settings in place, let us now look at MinVer-based version management that automatically determines package versions.
 
-## 버전 관리 개요
+## Version Management Overview
 
-### MinVer란?
+### What is MinVer?
 
-MinVer는 Git 태그를 기반으로 .NET 프로젝트의 버전을 자동으로 계산하는 MSBuild 도구입니다.
+MinVer is an MSBuild tool that automatically calculates .NET project versions based on Git tags.
 
-### 주요 특징
+### Key Features
 
-- **태그 기반**: Git 태그만으로 버전 관리
-- **제로 설정**: 기본 설정만으로 바로 사용 가능
-- **빠른 속도**: 최소한의 Git 명령만 실행
-- **SemVer 2.0**: 시맨틱 버전 규칙 준수
+- **Tag-based**: Version management with Git tags only
+- **Zero configuration**: Ready to use with just default settings
+- **Fast speed**: Runs only minimal Git commands
+- **SemVer 2.0**: Follows semantic versioning rules
 
-### 기존 방식과 비교
+### Comparison with Traditional Methods
 
-The following table 수동 버전 관리와 MinVer 자동 버전 관리의 차이를 비교합니다.
+The following table 수동 버전 관리와 MinVer Automatic 버전 관리의 차이를 비교합니다.
 
-| 기존 방식 | MinVer 방식 |
+| Traditional Method | MinVer Method |
 |----------|------------|
-| 수동으로 버전 파일 수정 | Git 태그로 자동 계산 |
-| 버전 불일치 위험 | 태그와 항상 일치 |
-| 릴리스 시 추가 작업 | 태그만 푸시 |
+| Manually edit version files | Automatically calculated from Git tags |
+| Risk of version mismatch | Always matches tags |
+| Additional work at release | Just push the tag |
 
 ---
 
-## 버전 구조
+## Version Structure
 
 ### full 구조
 
 ```
 {Major}.{Minor}.{Patch}-{Identifier}.{Phase}.{Height}+{Commit}
     |      |      |         |         |        |        |
-    |      |      |         |         |        |        +-- 커밋 해시 (short)
-    |      |      |         |         |        +----------- Height (자동 증가: 커밋 건수)
-    |      |      |         |         +-------------------- Phase (수동 변경)
-    |      |      |         +------------------------------ Identifier (수동 변경)
-    |      |      +---------------------------------------- Patch (자동 증가*: RTM 태그 후)
+    |      |      |         |         |        |        +-- Commit hash (short)
+    |      |      |         |         |        +----------- Height (auto-increment: commit count)
+    |      |      |         |         +-------------------- Phase (manual change)
+    |      |      |         +------------------------------ Identifier (manual change)
+    |      |      +---------------------------------------- Patch (auto-increment*: after RTM tag)
     |      +----------------------------------------------- Minor
     +------------------------------------------------------ Major
 ```
 
-### 요소별 설명
+### Element Descriptions
 
-| 요소 | Description | 변경 방식 |
+| Element | Description | Change Method |
 |------|------|----------|
-| **Major** | 호환성을 깨는 변경 시 증가 | 수동 (태그) |
-| **Minor** | 새로운 기능 추가 시 증가 | 수동 (태그) |
-| **Patch** | 버그 수정 시 증가 | 수동 (태그) / 자동 표시* |
-| **Identifier** | Pre-release 단계 (alpha, beta, rc) | 수동 (태그) |
-| **Phase** | 동일 Identifier 내 단계 번호 (0부터 시작) | 수동 (태그) |
-| **Height** | 최근 태그 이후 커밋 수 | 자동 증가 |
-| **Commit** | 현재 커밋의 short 해시 (빌드 메타데이터) | 자동 |
+| **Major** | Incremented for breaking changes | Manual (tag) |
+| **Minor** | Incremented for new features | Manual (tag) |
+| **Patch** | Incremented for bug fixes | Manual (tag) / Automatic 표시* |
+| **Identifier** | Pre-release stage (alpha, beta, rc) | Manual (tag) |
+| **Phase** | Stage number within same Identifier (starts from 0) | Manual (tag) |
+| **Height** | Number of commits since latest tag | Auto-increment |
+| **Commit** | Short hash of current commit (build metadata) | Automatic |
 
-\* RTM 태그 후 `MinVerAutoIncrement` 설정에 따라 자동 +1 표시
+\* RTM 태그 후 `MinVerAutoIncrement` 설정에 따라 Automatic +1 표시
 
-### 태그 형식
+### Tag Format
 
 ```bash
-vX.X.0-alpha.0   # 처음 pre-release
-vX.X.0           # 처음 stable release
-vX.X.1           # 다음 patch release
-vX.Y.0           # 다음 minor release
-vY.0.0           # 다음 major release
+vX.X.0-alpha.0   # First pre-release
+vX.X.0           # First stable release
+vX.X.1           # Next patch release
+vX.Y.0           # Next minor release
+vY.0.0           # Next major release
 ```
 
-### 자동 vs 수동 증가
+### Automatic vs 수동 증가
 
-| 요소 | 증가 방식 | 트리거 |
+| Element | Increment Method | Trigger |
 |------|----------|--------|
-| **Height** | 자동 증가 | 커밋할 때마다 |
-| **Phase** | 수동 변경 | Git 태그 생성 시에만 |
-| **Identifier** | 수동 변경 | Git 태그 생성 시에만 |
-| **Patch/Minor/Major** | 자동 표시 | RTM 태그 후 (실제 변경은 태그만) |
+| **Height** | Auto-increment | On every commit |
+| **Phase** | Manual change | Only when creating Git tags |
+| **Identifier** | Manual change | Only when creating Git tags |
+| **Patch/Minor/Major** | Automatic 표시 | After RTM tag (actual change is tag only) |
 
 ---
 
-## 설치 및 설정
+## Installation and Configuration
 
-### Central Package Management 사용 시
+### When Using Central Package Management
 
 **Directory.Packages.props:**
 
@@ -920,7 +920,7 @@ vY.0.0           # 다음 major release
 </Project>
 ```
 
-### 권장 설정 (현재 프로젝트)
+### Recommended Settings (Current Project)
 
 ```xml
 <PropertyGroup>
@@ -932,7 +932,7 @@ vY.0.0           # 다음 major release
   <MinVerWorkingDirectory>$(MSBuildThisFileDirectory)</MinVerWorkingDirectory>
 </PropertyGroup>
 
-<!-- AssemblyVersion은 MSBuild Target에서 설정 (MinVer 계산 후 실행) -->
+<!-- AssemblyVersion is set in MSBuild Target (executed after MinVer calculation) -->
 <Target Name="SetAssemblyVersion" AfterTargets="MinVer">
   <PropertyGroup>
     <AssemblyVersion>$(MinVerMajor).$(MinVerMinor).0.0</AssemblyVersion>
@@ -940,22 +940,22 @@ vY.0.0           # 다음 major release
 </Target>
 ```
 
-### 버전 확인 명령
+### Check version 명령
 
 ```bash
-# 기본 빌드
+# Default build
 dotnet build
 
-# 상세 버전 정보
+# Detailed version information
 dotnet build -p:MinVerVerbosity=normal
 
-# 진단 정보
+# Diagnostic information
 dotnet build -p:MinVerVerbosity=diagnostic
 ```
 
 ---
 
-## 주요 설정 옵션
+## Key Configuration Options
 
 ### MinVerTagPrefix
 
@@ -963,153 +963,153 @@ dotnet build -p:MinVerVerbosity=diagnostic
 <MinVerTagPrefix>v</MinVerTagPrefix>
 ```
 
-| 설정 값 | 인식 태그 | 무시 태그 |
+| Setting Value | Recognized Tags | Ignored Tags |
 |--------|---------|----------|
 | `v` | v1.0.0, v2.0.0 | 1.0.0, ver1.0.0 |
 | `ver` | ver1.0.0 | v1.0.0, 1.0.0 |
-| (빈 문자열) | 1.0.0 | v1.0.0 |
+| (empty string) | 1.0.0 | v1.0.0 |
 
-권장: `v` (GitHub 표준)
+Recommended: `v` (GitHub standard)
 
 ### MinVerVerbosity
 
-| Value | 출력 내용 | 사용 시기 |
+| Value | Output Content | When to Use |
 |----|---------|----------|
-| `minimal` | 경고/오류만 | 일반 빌드 |
-| `normal` | 버전 계산 과정 | 버전 확인 |
-| `diagnostic` | 상세 디버그 정보 | 문제 해결 |
+| `minimal` | Warnings/errors only | Normal builds |
+| `normal` | Version calculation process | 버전 확인 |
+| `diagnostic` | Detailed debug information | Troubleshooting |
 
 ### MinVerDefaultPreReleaseIdentifiers
 
-태그 없을 때 사용할 prerelease suffix:
+Prerelease suffix used when there are no tags:
 
 ```xml
 <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
 ```
 
-**Pre-release 단계:**
+**Pre-release stages:**
 
-| 단계 | 의미 | 사용 시점 |
+| Stage | Meaning | When to Use |
 |------|------|-----------|
-| `alpha` | 알파 버전 | 초기 개발, 기능 불완전, 불안정 (기본값) |
-| `beta` | 베타 버전 | 기능 완성, 테스트 중, 버그 수정 중 |
-| `rc` | Release Candidate | 릴리스 후보, 최종 테스트 |
+| `alpha` | Alpha version | Early development, incomplete features, unstable (default) |
+| `beta` | Beta version | Feature complete, under testing, fixing bugs |
+| `rc` | Release Candidate | Release candidate, final testing |
 
-버전 비교 순서: `alpha < beta < rc < (stable)`
+Version comparison order: `alpha < beta < rc < (stable)`
 
 ### MinVerAutoIncrement
 
-RTM 태그 후 자동 증가 단위:
+RTM 태그 후 Auto-increment 단위:
 
-| Value | 동작 | Example |
+| Value | Behavior | Example |
 |----|------|------|
-| `patch` (기본값) | Patch 버전 +1 표시 | v1.0.0 → 1.0.1-alpha.0.1 |
-| `minor` | Minor 버전 +1 표시 | v1.0.0 → 1.1.0-alpha.0.1 |
-| `major` | Major 버전 +1 표시 | v1.0.0 → 2.0.0-alpha.0.1 |
+| `patch` (default) | Patch version +1 display | v1.0.0 → 1.0.1-alpha.0.1 |
+| `minor` | Minor version +1 display | v1.0.0 → 1.1.0-alpha.0.1 |
+| `major` | Major version +1 display | v1.0.0 → 2.0.0-alpha.0.1 |
 
-> **중요:** 이것은 "표시만" 증가시킵니다. 실제 버전은 Git 태그로만 변경됩니다.
+> **Important:** This only increases the "display." Actual versions are changed only by Git tags.
 
 ### MinVerMinimumMajorMinor
 
-태그 없을 때 최소 버전 설정:
+Minimum version setting when there are no tags:
 
 ```xml
 <MinVerMinimumMajorMinor>1.0</MinVerMinimumMajorMinor>
 ```
 
-`0.0.0` 버전 방지 효과: 태그 없어도 `1.0.0-alpha.0.N` 사용
+`0.0.0` version prevention effect: even without tags, `1.0.0-alpha.0.N` uses
 
 ---
 
-## 버전 계산 방식
+## Version Calculation Method
 
-### 태그 없을 때
+### When There Are No Tags
 
 ```bash
-# Git 히스토리: 18개 커밋, 태그 없음
-# 계산 결과: 0.0.0-alpha.0.18
+# Git history: 18 commits, no tags
+# Calculated result: 0.0.0-alpha.0.18
 ```
 
-### 태그가 있을 때 (Height = 0)
+### When There Are Tags (Height = 0)
 
 ```bash
-# HEAD에 v1.0.0 태그
-# 계산 결과: 1.0.0
+# v1.0.0 tag on HEAD
+# Calculated result: 1.0.0
 ```
 
-### 태그 후 커밋 (Height > 0)
+### After Tag Commits (Height > 0)
 
 ```bash
-# v1.0.0 태그 후 5개 커밋
-# 계산 결과: 1.0.1-alpha.0.5
+# 5 commits after v1.0.0 tag
+# Calculated result: 1.0.1-alpha.0.5
 ```
 
-### Prerelease 태그
+### Prerelease Tags
 
 ```bash
-# v1.0.0-rc.1 태그
-# 계산 결과: 1.0.0-rc.1
+# v1.0.0-rc.1 tag
+# Calculated result: 1.0.0-rc.1
 
-# 이후 1개 커밋
-# 계산 결과: 1.0.0-rc.1.1
+# 1 commit after
+# Calculated result: 1.0.0-rc.1.1
 ```
 
-### 여러 태그가 있을 때
+### When There Are Multiple Tags
 
-현재 커밋의 조상 중 가장 가까운 태그를 사용합니다:
+현재 커밋의 조상 중 가장 가까운 태그를 uses합니다:
 
 ```bash
-# v1.1.0 태그 후 3개 커밋
-# 계산 결과: 1.1.1-alpha.0.3
+# 3 commits after v1.1.0 tag
+# Calculated result: 1.1.1-alpha.0.3
 ```
 
 ---
 
-## 버전 진행 시나리오
+## Version Progression Scenarios
 
-### Pre-release에서 Stable까지
+### From Pre-release to Stable
 
 ```bash
-# Alpha 단계
+# Alpha stage
 git tag v25.13.0-alpha.0     # → 25.13.0-alpha.0
-# 3개 커밋                    # → 25.13.0-alpha.0.1 ~ .3
+# 3 commits                    # → 25.13.0-alpha.0.1 ~ .3
 
-# Beta 단계
+# Beta stage
 git tag v25.13.0-beta.0      # → 25.13.0-beta.0
-# 2개 커밋                    # → 25.13.0-beta.0.1 ~ .2
+# 2 commits                    # → 25.13.0-beta.0.1 ~ .2
 
 # Release Candidate
 git tag v25.13.0-rc.0        # → 25.13.0-rc.0
-# 1개 커밋                    # → 25.13.0-rc.0.1
+# 1 commit                    # → 25.13.0-rc.0.1
 
-# 정식 릴리스
+# Stable release
 git tag v25.13.0             # → 25.13.0 (stable)
 ```
 
-### 다음 Patch 버전
+### Next Patch Version
 
 ```bash
-# v25.13.0 릴리스 후 개발 계속
-# (MinVerAutoIncrement=patch → Patch +1 자동 표시)
-# 2개 커밋                    # → 25.13.1-alpha.0.1 ~ .2
+# Continue development after v25.13.0 release
+# (MinVerAutoIncrement=patch → Patch +1 Automatic 표시)
+# 2 commits                    # → 25.13.1-alpha.0.1 ~ .2
 
-# 다음 Patch 릴리스
+# Next Patch release
 git tag v25.13.1             # → 25.13.1 (stable)
 ```
 
-### 주요 포인트
+### Key Points
 
-1. Height는 커밋할 때마다 자동 증가
-2. Phase는 Git 태그로만 변경 가능
-3. alpha -> beta -> rc 진행은 선택적 (단계 생략 가능)
+1. Height는 On every commit Auto-increment
+2. Phase can only be changed via Git tags
+3. alpha -> beta -> rc progression is optional (stages can be skipped)
 
 ---
 
-## Height의 실질적 활용
+## Practical Use of Height
 
-### 빌드 고유성 보장
+### Ensuring Build Uniqueness
 
-태그 없이도 모든 빌드가 고유한 버전 번호를 가집니다:
+Every build has a unique version number even without tags:
 
 ```bash
 v1.0.0-alpha.0.3  # 3번째 커밋
@@ -1117,48 +1117,48 @@ v1.0.0-alpha.0.4  # 4번째 커밋
 v1.0.0-alpha.0.5  # 5번째 커밋
 ```
 
-NuGet 패키지 관리자에서 각 버전을 명확히 구분하며, 버전 충돌 없이 CI/CD 자동 배포가 가능합니다.
+NuGet 패키지 관리자에서 각 버전을 명확히 구분하며, 버전 충돌 없이 CI/CD Automatic 배포가 가능합니다.
 
-### 추적 가능성
+### Traceability
 
 ```bash
-# 버전에서 커밋 위치 파악
+# Determine commit position from version
 1.0.0-alpha.0.47
 # → "alpha.0 태그로부터 47 커밋 후" 즉시 확인
 ```
 
-### SemVer 2.0 정렬 규칙
+### SemVer 2.0 Ordering Rules
 
 ```bash
 1.0.0-alpha.0.5   <
 1.0.0-alpha.0.6   <
-1.0.0-alpha.1     <  (태그 생성 시 자동 "승격")
+1.0.0-alpha.1     <  (태그 생성 시 Automatic "승격")
 1.0.0-alpha.1.1   <
 1.0.0-alpha.2
 ```
 
-### 철학
+### Philosophy
 
-MinVer의 철학은 **"태그는 의미 있는 마일스톤에만, 나머지는 자동"**입니다.
+MinVer의 철학은 **"태그는 의미 있는 마일스톤에만, 나머지는 Automatic"**입니다.
 
 ---
 
-## 어셈블리 버전 전략
+## Assembly Version Strategy
 
-.NET 어셈블리는 3가지 버전 속성을 가집니다:
+.NET assemblies have 3 version properties:
 
-| 속성 | 목적 | 형식 | 값 예시 |
+| Property | Purpose | Format | Example Value |
 |------|------|------|---------|
-| **AssemblyVersion** | 바이너리 호환성 | Major.Minor.0.0 | 1.0.0.0 |
-| **FileVersion** | 파일 속성 표시 | Major.Minor.Patch.0 | 1.0.1.0 |
-| **InformationalVersion** | 제품 버전 (사용자용) | full SemVer | 1.0.1-alpha.0.5+abc123 |
+| **AssemblyVersion** | Binary compatibility | Major.Minor.0.0 | 1.0.0.0 |
+| **FileVersion** | File property display | Major.Minor.Patch.0 | 1.0.1.0 |
+| **InformationalVersion** | 제품 버전 (uses자용) | full SemVer | 1.0.1-alpha.0.5+abc123 |
 
-### AssemblyVersion에 Patch를 포함하지 않는 이유
+### Why AssemblyVersion Does Not Include Patch
 
-AssemblyVersion은 바이너리 호환성을 결정합니다. Patch를 포함하면 버그 수정마다 참조하는 모든 어셈블리를 재컴파일해야 합니다.
+AssemblyVersion은 Binary compatibility을 결정합니다. Patch를 포함하면 버그 수정마다 참조하는 모든 어셈블리를 재컴파일해야 합니다.
 
 ```xml
-<!-- 권장 (현재 프로젝트 설정) -->
+<!-- Recommended (current project settings) -->
 <Target Name="SetAssemblyVersion" AfterTargets="MinVer">
   <PropertyGroup>
     <AssemblyVersion>$(MinVerMajor).$(MinVerMinor).0.0</AssemblyVersion>
@@ -1166,120 +1166,120 @@ AssemblyVersion은 바이너리 호환성을 결정합니다. Patch를 포함하
 </Target>
 ```
 
-**예시:**
+**Examples:**
 
 ```bash
 v1.0.0: AssemblyVersion=1.0.0.0, FileVersion=1.0.0.0
-v1.0.1: AssemblyVersion=1.0.0.0, FileVersion=1.0.1.0  # 재컴파일 불필요
-v1.0.2: AssemblyVersion=1.0.0.0, FileVersion=1.0.2.0  # 재컴파일 불필요
-v1.1.0: AssemblyVersion=1.1.0.0, FileVersion=1.1.0.0  # Minor 변경 - 재컴파일 필요
+v1.0.1: AssemblyVersion=1.0.0.0, FileVersion=1.0.1.0  # No recompilation needed
+v1.0.2: AssemblyVersion=1.0.0.0, FileVersion=1.0.2.0  # No recompilation needed
+v1.1.0: AssemblyVersion=1.1.0.0, FileVersion=1.1.0.0  # Minor change - recompilation needed
 ```
 
-### MSBuild 속성
+### MSBuild Properties
 
-| 속성 | 값 예시 | Description |
+| Property | Example Value | Description |
 |------|---------|------|
 | `$(MinVerVersion)` | 1.0.0 | full SemVer 버전 |
 | `$(MinVerMajor)` | 1 | Major 버전 |
 | `$(MinVerMinor)` | 0 | Minor 버전 |
 | `$(MinVerPatch)` | 0 | Patch 버전 |
-| `$(MinVerPreRelease)` | alpha.0.5 | Prerelease 부분 |
-| `$(MinVerBuildMetadata)` | abc123 | 빌드 메타데이터 |
+| `$(MinVerPreRelease)` | alpha.0.5 | Prerelease part |
+| `$(MinVerBuildMetadata)` | abc123 | Build metadata |
 
 ---
 
-버전 계산 방식을 이해했으면, 마지막으로 커밋 히스토리에서 다음 버전을 자동으로 제안하는 명령을 살펴봅니다.
+버전 계산 방식을 이해했으면, 마지막으로 커밋 히스토리에서 다음 버전을 Automatic으로 제안하는 명령을 살펴봅니다.
 
-## 다음 버전 제안 명령
+## Suggest next version 명령
 
-### 개요
+### Overview
 
-`/suggest-next-version` 명령은 Conventional Commits 히스토리를 분석하여 Semantic Versioning에 따른 다음 릴리스 버전 태그를 제안합니다.
+`/suggest-next-version` command analyzes Conventional Commits history and suggests the next release version tag according to Semantic Versioning.
 
-### 사용법
+### uses법
 
 ```bash
-/suggest-next-version          # 정식 버전 제안
-/suggest-next-version alpha    # 알파 버전 제안
-/suggest-next-version beta     # 베타 버전 제안
-/suggest-next-version rc       # RC 버전 제안
+/suggest-next-version          # Suggest stable version
+/suggest-next-version alpha    # Alpha version 제안
+/suggest-next-version beta     # Beta version 제안
+/suggest-next-version rc       # Suggest RC version
 ```
 
-### 버전 증가 규칙 (Conventional Commits)
+### Version Increment Rules (Conventional Commits)
 
-| 커밋 타입 | 버전 증가 | Example |
+| Commit Type | Version Increment | Example |
 |-----------|-----------|------|
 | `feat!`, `BREAKING CHANGE` | Major | v1.0.0 → v2.0.0 |
 | `feat` | Minor | v1.0.0 → v1.1.0 |
 | `fix`, `perf` | Patch | v1.0.0 → v1.0.1 |
-| `docs`, `style`, `refactor`, `test`, `build`, `ci`, `chore` | 없음 | 버전 증가 불필요 |
+| `docs`, `style`, `refactor`, `test`, `build`, `ci`, `chore` | None | No version increment needed |
 
-우선순위: `Major > Minor > Patch`
+Priority: `Major > Minor > Patch`
 
-### 실행 절차
+### Execution Procedure
 
-1. **현재 버전 확인**: `git describe --tags --abbrev=0`
-2. **커밋 히스토리 분석**: 마지막 태그 이후 커밋 분류
-3. **버전 증가 결정**: 가장 높은 수준의 변경 기준
-4. **결과 출력**: 제안 버전과 git 명령어 표시
+1. **Check current version**: `git describe --tags --abbrev=0`
+2. **Analyze commit history**: Classify commits since last tag
+3. **Determine version increment**: Based on highest level of change
+4. **Output results**: Display suggested version and git commands
 
-### 출력 예시
+### Output Example
 
 ```
-태그 제안 결과
+Tag Suggestion Results
 
-현재 버전: v1.2.3
-제안 버전: v1.3.0
+Current version: v1.2.3
+Suggested version: v1.3.0
 
-버전 증가 이유:
-  - feat 커밋 3개 발견 (Minor 증가)
-  - fix 커밋 5개 발견
+Reason for version increment:
+  - 3 feat commits found (Minor increment)
+  - 5 fix commits found
 
-태그 생성 명령어:
+Tag creation commands:
   git tag v1.3.0
   git push origin v1.3.0
 ```
 
-### 프리릴리스 지원
+### Pre-release Support
 
-| Type | Description | 버전 예시 |
+| Type | Description | Version Example |
 |------|------|----------|
-| `alpha` | 알파 버전 (초기 개발 단계) | v1.3.0-alpha.0 |
-| `beta` | 베타 버전 (기능 완료, 테스트 단계) | v1.3.0-beta.0 |
-| `rc` | Release Candidate (출시 후보) | v1.3.0-rc.0 |
+| `alpha` | Alpha version (초기 개발 단계) | v1.3.0-alpha.0 |
+| `beta` | Beta version (기능 완료, 테스트 단계) | v1.3.0-beta.0 |
+| `rc` | Release Candidate | v1.3.0-rc.0 |
 
-> **Note**: `/suggest-next-version` 명령은 제안만 합니다. 실제 태그 생성은 사용자가 명령어를 직접 실행해야 합니다.
+> **Note**: `/suggest-next-version` 명령은 제안만 합니다. 실제 태그 생성은 uses자가 명령어를 직접 실행해야 합니다.
 
 ---
 
 ## Troubleshooting
 
-### 워크플로우가 실행되지 않을 때
+### When Workflows Do Not Execute
 
-**원인**: 워크플로우 파일 구문 오류 또는 권한 부족
+**Cause**: Workflow file syntax error or insufficient permissions
 
 **Resolution:**
-1. YAML 파일 검증 (VS Code YAML extension 또는 yamllint.com)
-2. Settings > Actions > General에서 권한 확인
+1. Validate YAML file (VS Code YAML extension or yamllint.com)
+2. Check permissions in Settings > Actions > General
 
-### 버전이 0.0.0으로 표시될 때
+### When Version Shows as 0.0.0
 
 ```bash
-# 프로젝트 Version 속성 확인
+# Check project Version property
 dotnet build -v detailed | grep Version
 ```
 
-### NuGet 배포 실패
+### NuGet Deployment Failure
 
 | Cause | Solution |
 |------|------|
-| API Key 없음 | GitHub Secrets에 `NUGET_API_KEY` 확인 |
-| 패키지 이름 중복 | 프로젝트 이름 변경 또는 패키지 소유자에게 권한 요청 |
-| API Key 권한 부족 | NuGet.org에서 Push 권한과 Glob Pattern 확인 |
+| No API Key | Check `NUGET_API_KEY` in GitHub Secrets |
+| Duplicate package name | Change project name or request permissions from package owner |
+| Insufficient API Key permissions | Check Push permissions and Glob Pattern on NuGet.org |
 
-### CI에서 버전이 0.0.0으로 나올 때
+### When Version Shows as 0.0.0 in CI
 
-Shallow clone으로 Git 히스토리가 누락된 경우:
+When Git history is missing due to shallow clone:
 
 ```yaml
 # GitHub Actions
@@ -1289,9 +1289,9 @@ Shallow clone으로 Git 히스토리가 누락된 경우:
     fetch-depth: 0  # full 히스토리 가져오기
 ```
 
-### README.md가 패키지에 포함되지 않음
+### README.md Not Included in Package
 
-csproj에 Pack 설정 추가:
+Add Pack settings to csproj:
 
 ```xml
 <ItemGroup>
@@ -1299,61 +1299,61 @@ csproj에 Pack 설정 추가:
 </ItemGroup>
 ```
 
-### 버전이 0.0.0-alpha.0.N으로 표시될 때
+### When Version Shows as 0.0.0-alpha.0.N
 
 | Cause | Solution |
 |------|------|
-| Git 태그 없음 | `git tag -a v0.1.0 -m "Initial version"` |
-| 태그 접두사 불일치 | `<MinVerTagPrefix>` 설정 확인 |
-| 최소 버전 미설정 | `<MinVerMinimumMajorMinor>1.0</MinVerMinimumMajorMinor>` |
+| No Git tag | `git tag -a v0.1.0 -m "Initial version"` |
+| Tag prefix mismatch | Check `<MinVerTagPrefix>` setting |
+| Minimum version not set | `<MinVerMinimumMajorMinor>1.0</MinVerMinimumMajorMinor>` |
 
-### 태그를 생성했는데도 버전이 안 바뀔 때
+### When Version Does Not Change Even After Creating a Tag
 
 ```bash
-# 태그 형식 확인
-git tag v1.0.0       # O - 올바른 형식
-git tag 1.0.0        # X - 접두사 없음
-git tag v1.0         # X - Patch 버전 누락
+# Check tag format
+git tag v1.0.0       # O - correct format
+git tag 1.0.0        # X - no prefix
+git tag v1.0         # X - missing Patch version
 
-# 현재 브랜치의 태그 확인
+# Check tags on current branch
 git tag --merged
 ```
 
-### MinVer가 실행되지 않을 때
+### When MinVer Does Not Execute
 
 ```bash
-# 캐시 정리 후 재빌드
+# Rebuild after clearing cache
 dotnet clean
 dotnet nuget locals all --clear
 dotnet restore
 dotnet build
 ```
 
-### 한글 경로 문제
+### Korean Path Issue
 
-Git 저장소가 한글 경로에 있으면 MinVer가 경로 인식에 실패할 수 있습니다. 프로젝트를 영문 경로로 이동하세요.
+If the Git repository is in a path containing Korean characters, MinVer may fail to recognize the path. Move the project to an English-character path.
 
 ---
 
 ## FAQ
 
-### Q1. 매번 태그를 푸시해야 하나요?
+### Q1. Do I need to push a tag every time?
 
-**A:** 릴리스를 배포할 때만 태그를 푸시합니다.
+**A:** Push tags only when deploying releases.
 
 ```bash
-# 일반 개발 - CI만 실행 (빌드, 테스트)
+# Normal development - CI only (build, test)
 git commit -m "feat: new feature"
 git push origin main
 
-# 릴리스 - Release 워크플로우 실행 (빌드, 테스트, 배포)
+# Release - Release workflow execution (build, test, deploy)
 git tag -a v1.0.0 -m "Release 1.0.0"
 git push origin v1.0.0
 ```
 
-### Q2. Preview 버전도 배포할 수 있나요?
+### Q2. Can Preview versions also be deployed?
 
-**A:** 네, prerelease 태그를 사용합니다. 워크플로우가 자동으로 prerelease 감지합니다:
+**A:** 네, prerelease 태그를 uses합니다. 워크플로우가 Automatic으로 prerelease 감지합니다:
 
 ```bash
 git tag -a v1.0.0-rc.1 -m "Release Candidate 1"
@@ -1364,9 +1364,9 @@ git push origin v1.0.0-rc.1
 prerelease: ${{ contains(github.ref, '-') }}
 ```
 
-### Q3. 특정 프로젝트만 배포하려면?
+### Q3. How to deploy only specific projects?
 
-**A:** `dotnet pack`에서 프로젝트를 지정합니다:
+**A:** Specify the project in `dotnet pack`:
 
 ```yaml
 - name: Pack NuGet packages
@@ -1375,17 +1375,17 @@ prerelease: ${{ contains(github.ref, '-') }}
     dotnet pack Src/Functorium.Testing/Functorium.Testing.csproj -c Release --no-build --output ./packages
 ```
 
-### Q4. 배포 전 수동 승인이 필요하다면?
+### Q4. What if manual approval is needed before deployment?
 
-**A:** GitHub Environment protection rules를 사용합니다:
+**A:** GitHub Environment protection rules를 uses합니다:
 
 1. Settings > Environments > **New environment** (`production`)
 2. **Required reviewers** 추가
 3. publish.yml에 `environment: production` 추가
 
-### Q5. 여러 .NET 버전에서 테스트하려면?
+### Q5. How to test across multiple .NET versions?
 
-**A:** Matrix 빌드를 사용합니다:
+**A:** Matrix 빌드를 uses합니다:
 
 ```yaml
 strategy:
@@ -1393,56 +1393,56 @@ strategy:
     dotnet-version: ['8.0.x', '9.0.x', '10.0.x']
 ```
 
-### Q6. 배포된 패키지를 어떻게 사용하나요?
+### Q6. 배포된 패키지를 어떻게 uses하나요?
 
 **A:**
 
 ```bash
-# NuGet.org에서 설치
+# Install from NuGet.org
 dotnet add package Functorium --version 1.0.0
 
-# Pre-release 설치
+# Install pre-release
 dotnet add package Functorium --prerelease
 ```
 
-### Q7. PackageId는 어떻게 정하나요?
+### Q7. How to determine PackageId?
 
-**A:** 네임스페이스와 일치시키고, 소문자와 점(.)을 사용합니다:
+**A:** 네임스페이스와 일치시키고, 소문자와 점(.)을 uses합니다:
 
 ```xml
-<!-- 권장 -->
+<!-- Recommended -->
 <PackageId>Functorium</PackageId>
 <PackageId>Functorium.Testing</PackageId>
 <PackageId>Functorium.Extensions.Http</PackageId>
 ```
 
-### Q8. Directory.Build.props와 csproj 설정이 충돌하면?
+### Q8. What if Directory.Build.props and csproj settings conflict?
 
-**A:** csproj 설정이 우선합니다:
+**A:** csproj settings take priority:
 
 ```xml
 <!-- Directory.Build.props -->
 <PackageTags>functorium;functional</PackageTags>
 
-<!-- Functorium.csproj - 태그 추가 -->
+<!-- Functorium.csproj - add tags -->
 <PackageTags>$(PackageTags);ddd</PackageTags>
-<!-- 결과: functorium;functional;ddd -->
+<!-- Result: functorium;functional;ddd -->
 ```
 
-### Q9. MinVer와 GitVersion의 차이점은?
+### Q9. What are the differences between MinVer and GitVersion?
 
 **A:**
 
 | Item | MinVer | GitVersion |
 |------|--------|-----------|
-| 복잡도 | 단순 (태그만) | 복잡 (브랜치 전략) |
-| 설정 | 최소 설정 | 상세 설정 파일 필요 |
-| 브랜치 전략 | 지원 안 함 | GitFlow, GitHub Flow 등 |
-| 속도 | 빠름 | 상대적으로 느림 |
+| Complexity | Simple (tags only) | Complex (branch strategy) |
+| Configuration | Minimal settings | Detailed configuration file needed |
+| Branch strategy | Not supported | GitFlow, GitHub Flow, etc. |
+| Speed | Fast | Relatively slow |
 
-### Q10. Pre-release 단계를 변경하려면?
+### Q10. How to change the Pre-release stage?
 
-**A:** `MinVerDefaultPreReleaseIdentifiers`를 변경합니다:
+**A:** Change `MinVerDefaultPreReleaseIdentifiers`:
 
 ```xml
 <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
@@ -1450,18 +1450,18 @@ dotnet add package Functorium --prerelease
 <MinVerDefaultPreReleaseIdentifiers>rc.0</MinVerDefaultPreReleaseIdentifiers>
 ```
 
-### Q11. 태그 없이 특정 버전으로 빌드하려면?
+### Q11. How to build with a specific version without tags?
 
-**A:** `MinVerVersion`으로 재정의합니다:
+**A:** Override with `MinVerVersion`:
 
 ```bash
 dotnet build -p:MinVerVersion=1.2.3
 dotnet pack -p:MinVerVersion=1.2.3
 ```
 
-### Q12. Hotfix 릴리스를 어떻게 관리하나요?
+### Q12. How to manage Hotfix releases?
 
-**A:** 이전 릴리스 태그에서 브랜치를 생성하고 새 태그를 만듭니다:
+**A:** Create a branch from the previous release tag and create a new tag:
 
 ```bash
 git checkout v1.0.0
@@ -1473,18 +1473,18 @@ git checkout main
 git merge hotfix/1.0.1
 ```
 
-### Q13. NuGet 패키지 버전은 어떻게 설정되나요?
+### Q13. How are NuGet package versions set?
 
-**A:** MinVer가 자동으로 `<Version>` 속성을 설정합니다:
+**A:** MinVer가 Automatic으로 `<Version>` 속성을 설정합니다:
 
 ```bash
 dotnet pack
 # Functorium.1.0.0.nupkg
 ```
 
-### Q14. 로컬 빌드와 CI 빌드 버전을 구분하려면?
+### Q14. How to distinguish local build and CI build versions?
 
-**A:** 빌드 메타데이터를 사용합니다:
+**A:** Build metadata를 uses합니다:
 
 ```yaml
 # CI (GitHub Actions)
@@ -1492,28 +1492,28 @@ dotnet pack
   # 결과: 1.0.0+ci.123
 ```
 
-### Q15. Breaking Change는 어떻게 감지하나요?
+### Q15. How to detect Breaking Changes?
 
-**A:** 두 가지 방법으로 감지합니다:
+**A:** Detected in two ways:
 
-1. 타입 뒤 느낌표: `feat!`, `fix!`
-2. 푸터의 `BREAKING CHANGE:` 포함
+1. Exclamation mark after type: `feat!`, `fix!`
+2. Footer includes `BREAKING CHANGE:`
 
 ```
-feat!: API 응답 형식 변경
+feat!: Change API response format
 
-BREAKING CHANGE: 응답이 배열에서 객체로 변경됨
+BREAKING CHANGE: Response changed from array to object
 ```
 
 ---
 
 ## References
 
-| 문서 | Description |
+| Document | Description |
 |------|------|
-| [GitHub Actions 문서](https://docs.github.com/actions) | GitHub Actions 공식 문서 |
-| [NuGet 배포 가이드](https://learn.microsoft.com/nuget/nuget-org/publish-a-package) | NuGet.org 배포 공식 가이드 |
-| [SourceLink 문서](https://github.com/dotnet/sourcelink) | SourceLink 디버깅 설정 |
-| [MinVer GitHub](https://github.com/adamralph/minver) | MinVer 공식 저장소 |
-| [Semantic Versioning 2.0.0](https://semver.org/) | SemVer 공식 문서 |
-| [Conventional Commits 1.0.0](https://www.conventionalcommits.org/) | Conventional Commits 공식 문서 |
+| [GitHub Actions Documentation](https://docs.github.com/actions) | GitHub Actions official documentation |
+| [NuGet Deployment Guide](https://learn.microsoft.com/nuget/nuget-org/publish-a-package) | NuGet.org deployment official guide |
+| [SourceLink Documentation](https://github.com/dotnet/sourcelink) | SourceLink debugging configuration |
+| [MinVer GitHub](https://github.com/adamralph/minver) | MinVer official repository |
+| [Semantic Versioning 2.0.0](https://semver.org/) | SemVer official documentation |
+| [Conventional Commits 1.0.0](https://www.conventionalcommits.org/) | Conventional Commits official documentation |

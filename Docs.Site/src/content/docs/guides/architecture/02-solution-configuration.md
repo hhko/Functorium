@@ -22,7 +22,7 @@ This document covers the following topics:
 4. **.editorconfig code style rules** - Enforcing code quality at build time
 5. **Build-Local.ps1 build pipeline** - Automating build, test, coverage, and package creation
 
-> **솔루션 구성의 핵심은** 빌드 속성, 패키지 버전, 코드 스타일을 at the solution root서 중앙 관리하여 모든 프로젝트의 일관성을 보장하는 것입니다.
+> **솔루션 구성의 핵심은** Build 속성, 패키지 버전, 코드 스타일을 at the solution root서 중앙 관리하여 모든 프로젝트의 일관성을 보장하는 것.
 
 ## Summary
 
@@ -33,7 +33,7 @@ This document covers the following topics:
 dotnet build Functorium.slnx
 dotnet test --solution Functorium.slnx
 
-# full 빌드 파이프라인 (빌드 + 테스트 + 커버리지 + 패키지)
+# full Build 파이프라인 (Build + Test + coverage + 패키지)
 ./Build-Local.ps1
 
 # Clean build artifacts
@@ -48,13 +48,13 @@ dotnet test --solution Functorium.slnx
 **1. 새 솔루션 구성:**
 1. Git 초기화 (`git init`, `.gitignore`, `.gitattributes`)
 2. SDK 및 도구 (`global.json`, `dotnet new tool-manifest`)
-3. 빌드 시스템 (`Directory.Build.props`, `Directory.Packages.props`)
+3. Build 시스템 (`Directory.Build.props`, `Directory.Packages.props`)
 4. 코드 품질 (`.editorconfig`, `nuget.config`)
 5. Solution file (`.slnx` 생성)
 
-**2. 패키지 추가:**
-1. `Directory.Packages.props`에 `<PackageVersion>` 추가
-2. `.csproj`에 **Version 없이** `<PackageReference>` 추가
+**2. 패키지 Add:**
+1. `Directory.Packages.props`에 `<PackageVersion>` Add
+2. `.csproj`에 **Version 없이** `<PackageReference>` Add
 
 ### Key Concepts
 
@@ -63,8 +63,8 @@ dotnet test --solution Functorium.slnx
 | `.slnx` | XML 기반 Solution file (.NET 10+) |
 | `Directory.Build.props` | 모든 프로젝트에 적용되는 Common build properties (SDK import 전) |
 | `Directory.Build.targets` | SDK 기본 항목 처리 후 적용되는 타겟 (Compile Remove 등) |
-| `Directory.Packages.props` | 중앙 집중식 패키지 버전 관리 (CPM) |
-| `Build-Local.ps1` | 10단계 빌드 파이프라인 (빌드 → 테스트 → 커버리지 → 패키지) |
+| `Directory.Packages.props` | 중앙 집중식 패키지 Versioning (CPM) |
+| `Build-Local.ps1` | 10단계 Build 파이프라인 (Build → 테스트 → 커버리지 → 패키지) |
 
 ---
 
@@ -75,7 +75,7 @@ This guide covers how to create and configure root-level configuration files and
 
 ### Files Required at the Solution Root
 
-The following table at the solution root 배치해야 하는 파일의 full 목록과 각 파일의 Role입니다.
+The following table at the solution root 배치해야 하는 파일의 full 목록과 각 파일의 Role.
 
 | 파일 | Role | Creation method |
 |------|------|----------|
@@ -191,7 +191,7 @@ dotnet sln MyApp.slnx list
 | Solution | Included Projects | Purpose |
 |--------|--------------|------|
 | `{Name}.slnx` | Src/, Tests/ | Core library development (default) |
-| `{Name}.All.slnx` | full 프로젝트 | Tutorials, Books 등 포함 full 빌드 |
+| `{Name}.All.slnx` | full 프로젝트 | Tutorials, Books 등 포함 full Build |
 
 ### Build/Test Commands
 
@@ -279,7 +279,7 @@ dotnet --list-sdks
 # 3. 적용된 버전 확인
 dotnet --version
 
-# 4. 빌드 및 테스트 검증
+# 4. Build 및 테스트 검증
 dotnet build
 dotnet test --solution Functorium.slnx
 
@@ -481,25 +481,25 @@ To enable Source Link in GitHub-hosted projects, add the package to all projects
 
 ### Role
 
-SDK 기본 항목 처리 **후에** 적용되는 타겟 파일입니다. `Compile` 항목에서 특정 파일을 제외할 때 사용합니다.
+A target file applied **after** SDK default item processing. Used to exclude specific files from `Compile` items.
 
 ### Differences Between props and targets
 
 | | `Directory.Build.props` | `Directory.Build.targets` |
 |---|---|---|
-| 적용 시점 | SDK import **전** | SDK import **후** |
-| Purpose | 속성(Property) 설정 | 기본 항목(Item) 수정 |
-| Example | `TargetFramework`, `Nullable` | `Compile Remove`, 조건부 항목 제거 |
+| Application timing | Before SDK import | After SDK import |
+| Purpose | Property settings | Default item modification |
+| Example | `TargetFramework`, `Nullable` | `Compile Remove`, conditional item removal |
 
 ### Why Removal Must Be Done in targets
 
-SDK는 props 처리 후 `**/*.cs`를 자동으로 `Compile` 항목에 추가합니다. props에서 `<Compile Remove="...">`를 해도 SDK가 다시 추가하므로, targets에서 제거해야 효과가 있습니다.
+The SDK automatically adds `**/*.cs` to `Compile` items after props processing. Even if you do `<Compile Remove="...">` in props, the SDK adds them back, so removal must be done in targets to be effective.
 
 ### Creation Method
 
 at the solution root `Directory.Build.targets` 파일을 create directly. 필요할 때만 만들면 됩니다.
 
-**PublicApiGenerator 사용 시:**
+**When using PublicApiGenerator:**
 
 ```xml
 <Project>
@@ -512,15 +512,15 @@ at the solution root `Directory.Build.targets` 파일을 create directly. 필요
 </Project>
 ```
 
-> PublicApiGenerator를 사용하지 않으면 이 파일은 불필요합니다.
+> This file is unnecessary if you are not using PublicApiGenerator.
 
-빌드 속성이 통일되었으면, 다음으로 패키지 버전을 한 곳에서 관리하는 CPM을 설정합니다.
+Once build properties are unified, next set up CPM to manage package versions in one place.
 
 ## Directory.Packages.props
 
 ### Role
 
-중앙 집중식 패키지 버전 관리(Central Package Management, CPM)를 활성화합니다. 모든 프로젝트의 패키지 버전을 한 곳에서 관리합니다.
+Enables Central Package Management (CPM). Manages all project package versions in one place.
 
 ### Creation Method
 
@@ -534,62 +534,62 @@ at the solution root `Directory.Packages.props` 파일을 create directly.
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
-  <!-- Label로 카테고리를 구분하여 관리합니다 -->
+  <!-- Categories are organized and managed by Label -->
   <ItemGroup Label="Source Link">
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup Label="Basic">
-    <!-- 프로젝트에서 사용할 패키지 버전을 여기에 추가 -->
+    <!-- Add package versions to use in projects here -->
   </ItemGroup>
 
   <ItemGroup Label="Testing">
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageVersion Include="xunit.v3" Version="3.2.1" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <!-- 추가 테스트 패키지 -->
+    <!-- Additional test packages -->
   </ItemGroup>
 </Project>
 ```
 
 ### Package Addition Procedure
 
-1. `Directory.Packages.props`에 적절한 Label 그룹에 `<PackageVersion>` 추가:
+1. Add `<PackageVersion>` to the appropriate Label group in `Directory.Packages.props`:
    ```xml
    <ItemGroup Label="Basic">
      <PackageVersion Include="NewPackage" Version="1.0.0" />
    </ItemGroup>
    ```
 
-2. 사용할 프로젝트 `.csproj`에 **Version 없이** `<PackageReference>` 추가:
+2. Add `<PackageReference>` **without Version** to the project `.csproj`:
    ```xml
    <ItemGroup>
      <PackageReference Include="NewPackage" />
    </ItemGroup>
    ```
 
-> CPM 활성화 시 csproj에서 `Version`을 지정하면 빌드 오류가 발생합니다. 버전은 반드시 `Directory.Packages.props`에서만 관리합니다.
+> When CPM is enabled, specifying `Version` in csproj causes build errors. Versions must be managed only in `Directory.Packages.props`.
 
 ### Version Update
 
-`Directory.Packages.props`의 `Version` 속성만 수정하면 해당 패키지를 참조하는 모든 프로젝트에 일괄 적용됩니다.
+Simply modifying the `Version` property in `Directory.Packages.props` applies it to all projects referencing that package.
 
 ### Label Category Configuration Example
 
-The following table `Label` 속성으로 패키지를 분류하는 구성 예시입니다.
+The following table `Label` 속성으로 패키지를 분류하는 구성 예시.
 
-| Label | Purpose | 대표 패키지 |
+| Label | Purpose | Representative Package |
 |-------|------|------------|
-| Source Link | 소스 링크 디버깅 | `Microsoft.SourceLink.GitHub` |
-| API Generation | Public API 표면 생성 | `PublicApiGenerator` |
-| Source Generator | 소스 생성기 개발 | `Microsoft.CodeAnalysis.CSharp` |
-| Basic | 핵심 라이브러리 | `LanguageExt.Core`, `Mediator.*`, `FluentValidation` |
-| Observability | 로깅/메트릭/트레이싱 | `Serilog.*`, `OpenTelemetry.*` |
+| Source Link | Source Link debugging | `Microsoft.SourceLink.GitHub` |
+| API Generation | Public API surface generation | `PublicApiGenerator` |
+| Source Generator | Source generator development | `Microsoft.CodeAnalysis.CSharp` |
+| Basic | Core libraries | `LanguageExt.Core`, `Mediator.*`, `FluentValidation` |
+| Observability | Logging/metrics/tracing | `Serilog.*`, `OpenTelemetry.*` |
 | WebApi | HTTP API | `FastEndpoints`, `Swashbuckle.AspNetCore` |
-| Versioning | 버전 관리 | `MinVer` |
-| ORM | 데이터 액세스 | `Dapper`, `Microsoft.EntityFrameworkCore.*` |
-| Scheduling | 작업 스케줄링 | `Quartz` |
-| Testing | 테스트 프레임워크 | `xunit.v3`, `Shouldly`, `NSubstitute` |
+| Versioning | Versioning | `MinVer` |
+| ORM | Data access | `Dapper`, `Microsoft.EntityFrameworkCore.*` |
+| Scheduling | Job scheduling | `Quartz` |
+| Testing | Testing framework | `xunit.v3`, `Shouldly`, `NSubstitute` |
 
 <details>
 <summary>Current Functorium Directory.Packages.props full</summary>
@@ -692,7 +692,7 @@ The following table `Label` 속성으로 패키지를 분류하는 구성 예시
 
 </details>
 
-패키지 버전 관리가 구성되었으면, 다음으로 코드 스타일과 포맷팅 규칙을 설정합니다.
+패키지 Versioning가 구성되었으면, 다음으로 코드 스타일과 포맷팅 규칙을 설정합니다.
 
 ## .editorconfig
 
@@ -702,7 +702,7 @@ The following table `Label` 속성으로 패키지를 분류하는 구성 예시
 dotnet new editorconfig
 ```
 
-이 명령은 .NET SDK 기본 규칙이 모두 포함된 `.editorconfig`를 생성합니다. 생성 후 프로젝트에 맞게 수정합니다.
+This command generates an `.editorconfig` containing all .NET SDK default rules. Modify it for your project after generation.
 
 ### Required Settings
 
@@ -742,14 +742,14 @@ trim_trailing_whitespace = false
 
 ```ini
 [*.{cs,vb}]
-# 네임스페이스 선언 기본 설정 (IDE0161)
+# Default namespace declaration setting (IDE0161)
 csharp_style_namespace_declarations = file_scoped:warning
 dotnet_diagnostic.IDE0161.severity = warning
 ```
 
 ### Default Value Strategy
 
-대부분의 .NET 코딩 규칙(using 정렬, 명명 규칙, 포맷팅 등)은 주석 처리하여 SDK 기본값을 사용합니다. 명시적으로 활성화할 규칙만 주석을 해제하세요. `dotnet new editorconfig`로 생성하면 모든 규칙이 주석 포함으로 나오므로, 원하는 규칙만 주석을 해제하는 방식이 편리합니다.
+Most .NET coding rules (using sorting, naming conventions, formatting, etc.) are commented out to use SDK defaults. Uncomment only the rules you want to explicitly enable. Since `dotnet new editorconfig` generates all rules with comments, it is convenient to uncomment only the desired rules.
 
 ### Code Style Rules and Diagnostic Rules
 
@@ -759,62 +759,62 @@ dotnet_diagnostic.IDE0161.severity = warning
 |------|--------------------------------------|--------------------------------------|
 | **유형** | Code style rules | 진단 규칙 |
 | **Role** | 선호 스타일 + 심각도 정의 | 심각도만 정의 |
-| **형식** | `값:심각도` (예: `file_scoped:warning`) | `심각도` (예: `warning`) |
-| **우선순위** | 낮음 | 높음 (재정의 가능) |
+| **Format** | `value:severity` (e.g., `file_scoped:warning`) | `severity` (e.g., `warning`) |
+| **Priority** | Low | High (can override) |
 
-둘 다 함께 사용하면 스타일 정의와 빌드 심각도를 명시적으로 강제할 수 있습니다.
+Using both together allows explicitly enforcing style definitions and build severity.
 
 ### Severity Levels
 
-| 수준 | IDE 표시 | 빌드 영향 |
+| Level | IDE Display | Build Impact |
 |------|----------|----------|
-| `none` | 표시 안 함 | 영향 없음 |
-| `silent` | 흐리게 표시 | 영향 없음 |
-| `suggestion` | 점선 표시 | 영향 없음 |
-| `warning` | 물결선 표시 | 경고 발생 |
-| `error` | 빨간 표시 | 빌드 실패 |
+| `none` | Not displayed | No impact |
+| `silent` | Dimmed display | No impact |
+| `suggestion` | Dotted line | No impact |
+| `warning` | Wavy line | Warning generated |
+| `error` | Red display | Build failure |
 
 ### Enabling Code Analysis at Build Time
 
-`Directory.Build.props`의 `EnforceCodeStyleInBuild`와 `.editorconfig` 규칙이 함께 동작합니다.
+`Directory.Build.props`'s `EnforceCodeStyleInBuild` and `.editorconfig` rules work together.
 
-| 설정 | IDE | 빌드 |
+| Setting | IDE | Build |
 |------|-----|------|
-| `EnforceCodeStyleInBuild = false` (기본) | 실시간 경고 | 무시 |
-| `EnforceCodeStyleInBuild = true` | 실시간 경고 | 빌드 경고 |
+| `EnforceCodeStyleInBuild = false` (default) | Real-time warnings | Ignored |
+| `EnforceCodeStyleInBuild = true` | Real-time warnings | Build warnings |
 
 ### Code Quality Verification Workflow
 
 ```powershell
-# 기본 빌드 (증분)
+# Default build (incremental)
 dotnet build
 
-# 설정 변경 후 (캐시 무시)
+# After setting changes (ignore cache)
 dotnet build --no-incremental
 
-# 완전히 새로 빌드
+# Complete fresh build
 dotnet clean && dotnet build --no-incremental
 
-# 경고를 오류로 처리 (CI 환경)
+# Treat warnings as errors (CI environment)
 dotnet build /p:TreatWarningsAsErrors=true
 ```
 
-> `.editorconfig`나 `Directory.Build.props`를 변경한 후에는 반드시 `--no-incremental` 옵션을 사용하세요. 증분 빌드는 설정 변경을 감지하지 못합니다.
+> After changing `.editorconfig` or `Directory.Build.props`, you must use the `--no-incremental` option. Incremental builds do not detect configuration changes.
 
 ### Enabling Rules by Category
 
 ```ini
-# 모든 스타일 규칙
+# All style rules
 dotnet_analyzer_diagnostic.category-Style.severity = warning
 
-# 모든 성능 규칙
+# All performance rules
 dotnet_analyzer_diagnostic.category-Performance.severity = warning
 
-# 모든 보안 규칙
+# All security rules
 dotnet_analyzer_diagnostic.category-Security.severity = error
 ```
 
-> 처음부터 모두 활성화하면 경고가 많을 수 있습니다. 점진적으로 적용하세요.
+> Enabling all rules from the start may generate many warnings. Apply gradually.
 
 ## .gitignore / .gitattributes
 
@@ -824,9 +824,9 @@ dotnet_analyzer_diagnostic.category-Security.severity = error
 dotnet new gitignore
 ```
 
-이 명령은 Visual Studio/dotnet 표준 `.gitignore`를 생성합니다. 생성 후 프로젝트에 맞는 항목을 추가합니다.
+This command generates a standard Visual Studio/dotnet `.gitignore`. After generation, add items appropriate for your project.
 
-**추가할 항목:**
+**Items to add:**
 
 ```gitignore
 # Verify
@@ -844,14 +844,14 @@ dotnet new gitignore
 
 ### Main .gitignore Categories
 
-| 카테고리 | Pattern | Description |
+| Category | Pattern | Description |
 |---------|------|------|
-| 빌드 결과 | `[Dd]ebug/`, `[Rr]elease/`, `[Oo]bj/`, `**/[Bb]in/*` | 빌드 아티팩트 |
-| NuGet | `*.nupkg`, `*.snupkg`, `**/[Pp]ackages/*` | 패키지 파일 |
-| 테스트 결과 | `[Tt]est[Rr]esult*/`, `*.trx` | 테스트 리포트 |
-| 커버리지 | `coverage*.json`, `coverage*.xml`, `.coverage/reports/` | 코드 커버리지 |
-| Verify | `*.received.*` | Verify 스냅샷 중간 파일 |
-| IDE | `.vs/`, `.vscode/*` | Visual Studio/VS Code 설정 |
+| Build output | `[Dd]ebug/`, `[Rr]elease/`, `[Oo]bj/`, `**/[Bb]in/*` | Build artifacts |
+| NuGet | `*.nupkg`, `*.snupkg`, `**/[Pp]ackages/*` | Package files |
+| Test results | `[Tt]est[Rr]esult*/`, `*.trx` | Test reports |
+| 커버리지 | `coverage*.json`, `coverage*.xml`, `.coverage/reports/` | Code coverage |
+| Verify | `*.received.*` | Verify snapshot intermediate files |
+| IDE | `.vs/`, `.vscode/*` | Visual Studio/VS Code settings |
 
 ### Creating .gitattributes (When Using Verify.Xunit)
 
@@ -864,9 +864,9 @@ Verify 스냅샷 파일의 줄바꿈과 인코딩을 강제하는 `.gitattribute
 *.verified.bin binary
 ```
 
-**필요 이유:** Verify 스냅샷은 OS에 관계없이 동일한 내용이어야 합니다. Windows의 CRLF가 섞이면 불필요한 diff가 발생하므로 LF를 강제합니다.
+**Reason:** Verify snapshots must have identical content regardless of OS. Since mixing Windows CRLF causes unnecessary diffs, LF is enforced.
 
-> Verify.Xunit을 사용하지 않으면 `.gitattributes`는 불필요합니다.
+> `.gitattributes` is unnecessary if you are not using Verify.Xunit.
 
 ## nuget.config
 
@@ -876,7 +876,7 @@ Verify 스냅샷 파일의 줄바꿈과 인코딩을 강제하는 `.gitattribute
 dotnet new nugetconfig
 ```
 
-생성된 파일을 다음과 같이 수정합니다.
+Modify the generated file as follows.
 
 ### Configuration Content
 
@@ -890,16 +890,16 @@ dotnet new nugetconfig
 </configuration>
 ```
 
-### `<clear />`를 추가하는 이유
+### `<clear />`를 Add하는 이유
 
-`<clear />`는 시스템/사용자 레벨에서 설정된 모든 NuGet 소스를 제거하고, 이 파일에 명시된 소스만 사용합니다.
+`<clear />` removes all NuGet sources set at the system/user level and uses only the sources specified in this file.
 
-- 예측 가능한 패키지 해석 (어떤 환경에서든 동일한 소스)
-- 의도치 않은 사설 피드에서 패키지가 해석되는 것을 방지
+- Predictable package resolution (same sources in any environment)
+- Prevents packages from being resolved from unintended private feeds
 
-> `dotnet new nugetconfig`으로 생성하면 `<clear />`가 포함되지 않으므로 수동으로 추가해야 합니다.
+> `<clear />` is not included when generated with `dotnet new nugetconfig`, so it must be added manually.
 
-### 사설 피드 추가
+### Adding Private Feeds
 
 ```xml
 <packageSources>
@@ -917,19 +917,19 @@ dotnet new nugetconfig
 dotnet new tool-manifest
 ```
 
-이 명령은 `.config/dotnet-tools.json` 매니페스트 파일을 생성합니다.
+This command generates the `.config/dotnet-tools.json` manifest file.
 
 ### Tool Installation
 
 ```powershell
-# 코드 커버리지 리포트 생성 도구
+# Code coverage 리포트 생성 도구
 dotnet tool install dotnet-reportgenerator-globaltool
 
-# Verify 스냅샷 관리 도구
+# Verify snapshot management tool
 dotnet tool install verify.tool
 ```
 
-설치하면 매니페스트에 자동으로 등록됩니다.
+Upon installation, it is automatically registered in the manifest.
 
 ### Tool Restoration (After Cloning)
 
@@ -937,171 +937,171 @@ dotnet tool install verify.tool
 dotnet tool restore
 ```
 
-> `Build-Local.ps1`은 실행 시 자동으로 `dotnet tool restore`를 수행합니다.
+> `Build-Local.ps1` automatically performs `dotnet tool restore` when executed.
 
 ### Installed Tool List
 
-| Tool | 명령 | Purpose |
+| Tool | Command | Purpose |
 |------|------|------|
-| `dotnet-reportgenerator-globaltool` | `reportgenerator` | 코드 커버리지 HTML 리포트 생성 |
-| `verify.tool` | `dotnet-verify` | Verify 스냅샷 관리 (accept/reject) |
-| `gman.siren` | `siren-gen` | EF Core DbContext → Mermaid ER 다이어그램 생성 |
+| `dotnet-reportgenerator-globaltool` | `reportgenerator` | Code coverage HTML report 생성 |
+| `verify.tool` | `dotnet-verify` | Verify snapshot management (accept/reject) |
+| `gman.siren` | `siren-gen` | EF Core DbContext -> Mermaid ER diagram generation |
 
-> 각 도구의 상세 사용법(파라미터, 실행 예시)은 [03-dotnet-tools.md](./03-dotnet-tools)를 참조하세요.
+> For detailed usage of each tool (parameters, execution examples), see [03-dotnet-tools.md](./03-dotnet-tools)를 참조하세요.
 
 ### Adding/Updating New Tools
 
 ```powershell
-# 새 도구 추가 (매니페스트에 자동 등록)
+# Add new tool (auto-registered in manifest)
 dotnet tool install <package-name>
 
-# 도구 업데이트
+# Update tool
 dotnet tool update <package-name>
 
-# 도구 제거
+# Remove tool
 dotnet tool uninstall <package-name>
 ```
 
-구성 파일 설정이 완료되었으면, 마지막으로 빌드 파이프라인을 자동화하는 스크립트를 살펴봅니다.
+Once configuration file setup is complete, let us finally look at the scripts that automate the build pipeline.
 
 ## Build Scripts
 
 ### Script List
 
-The following table 프로젝트에서 제공하는 빌드 스크립트의 full 목록입니다.
+The following table 프로젝트에서 제공하는 Build 스크립트의 full 목록.
 
 | 스크립트 | Role | 주요 파라미터 |
 |----------|------|-------------|
-| `Build-Local.ps1` | 빌드, 테스트, 커버리지, NuGet 패키지 | `-Solution`, `-SkipPack`, `-SlowTestThreshold` |
-| `Build-Clean.ps1` | bin/obj 폴더 삭제 | `-Help` |
-| `Build-VerifyAccept.ps1` | Verify 스냅샷 일괄 승인 | `-Help` |
-| `Build-CleanRunFileCache.ps1` | .NET 10 runfile 캐시 정리 | `-Pattern`, `-WhatIf` |
-| `Build-SetAsSetupProject.ps1` | Tests.Hosts 프로젝트 Setup 설정 | — |
-| `Build-ERDiagram.ps1` | EF Core DbContext → Mermaid ER 다이어그램 생성 | — |
+| `Build-Local.ps1` | Build, test, coverage, NuGet packages | `-Solution`, `-SkipPack`, `-SlowTestThreshold` |
+| `Build-Clean.ps1` | Delete bin/obj folders | `-Help` |
+| `Build-VerifyAccept.ps1` | Batch approve Verify snapshots | `-Help` |
+| `Build-CleanRunFileCache.ps1` | .NET 10 runfile cache cleanup | `-Pattern`, `-WhatIf` |
+| `Build-SetAsSetupProject.ps1` | Tests.Hosts project setup configuration | — |
+| `Build-ERDiagram.ps1` | EF Core DbContext -> Mermaid ER diagram generation | — |
 
 ### Build-Local.ps1
 
-full 빌드 파이프라인을 10단계로 실행합니다.
+full Build 파이프라인을 10단계로 실행합니다.
 
-| 단계 | 작업 | Description |
+| Step | Task | Description |
 |------|------|------|
-| 1 | 도구 복원 | `dotnet tool restore` |
-| 2 | 솔루션 검색 | `-Solution` 파라미터 또는 자동 검색 |
-| 3 | 빌드 | `dotnet build -c Release` |
-| 4 | 버전 정보 | 빌드된 DLL의 ProductVer, FileVer, Assembly 출력 |
-| 5 | 테스트 + 커버리지 | `dotnet test` + MTP 코드 커버리지 수집 |
-| 6 | 커버리지 병합 | 여러 테스트 프로젝트의 커버리지 파일 수집 |
-| 7 | HTML 리포트 | ReportGenerator로 HTML + Cobertura + Markdown 리포트 생성 |
-| 8 | 커버리지 출력 | Project 커버리지 + Full 커버리지 콘솔 출력 |
-| 9 | 느린 테스트 분석 | 지정 임계값 초과 테스트 리포트 생성 |
-| 10 | NuGet 패키지 | `dotnet pack` (Src/ 내 프로젝트) |
+| 1 | Tool restore | `dotnet tool restore` |
+| 2 | Solution search | `-Solution` parameter or auto-search |
+| 3 | Build | `dotnet build -c Release` |
+| 4 | Version info | Build된 DLL의 ProductVer, FileVer, Assembly 출력 |
+| 5 | Test + coverage | `dotnet test` + MTP Code coverage 수집 |
+| 6 | Coverage merge | Collect coverage files from multiple test projects |
+| 7 | HTML report | Generate HTML + Cobertura + Markdown reports with ReportGenerator |
+| 8 | Coverage output | Project coverage + Full coverage console output |
+| 9 | Slow test analysis | 지정 임계값 초과 Test reports 생성 |
+| 10 | NuGet packages | `dotnet pack` (projects in Src/) |
 
-**주요 파라미터:**
+**Key parameters:**
 
-| 파라미터 | 별칭 | Default | Description |
+| Parameter | Alias | Default | Description |
 |---------|------|--------|------|
 | `-Solution` | `-s` | `Functorium.slnx` | Solution file 경로 |
-| `-ProjectPrefix` | `-p` | `Functorium` | 커버리지 필터링 접두사 |
-| `-SkipPack` | — | `$false` | NuGet 패키지 생성 건너뛰기 |
-| `-SlowTestThreshold` | `-t` | `30` | 느린 테스트 판단 기준 (초) |
+| `-ProjectPrefix` | `-p` | `Functorium` | Coverage filtering prefix |
+| `-SkipPack` | — | `$false` | NuGet packages 생성 건너뛰기 |
+| `-SlowTestThreshold` | `-t` | `30` | Slow test threshold (seconds) |
 
-**출력 디렉토리:**
+**Output directories:**
 
 ```
 {SolutionDir}/
-├── .coverage/reports/              ← HTML 리포트, 병합 커버리지 (Cobertura.xml)
-├── .nupkg/                         ← NuGet 패키지 (.nupkg, .snupkg)
+├── .coverage/reports/              ← HTML report, 병합 커버리지 (Cobertura.xml)
+├── .nupkg/                         ← NuGet packages (.nupkg, .snupkg)
 └── Tests/
     └── {TestProject}/
         └── TestResults/
             ├── {GUID}/
-            │   └── coverage.cobertura.xml  ← 원본 커버리지
-            └── *.trx                       ← 테스트 결과
+            │   └── coverage.cobertura.xml  <- Original coverage
+            └── *.trx                       ← Test results
 ```
 
-**커버리지 분류 (콘솔 출력):**
+**Coverage classification (console output):**
 
-| 분류 | 포함 패턴 | Description |
+| Classification | Include Pattern | Description |
 |------|-----------|------|
-| Project Coverage | `{Prefix}.*` | 지정된 접두사로 시작하는 프로젝트 |
-| Full Coverage | full (테스트 제외) | 모든 프로덕션 코드 |
+| Project Coverage | `{Prefix}.*` | Projects starting with specified prefix |
+| Full Coverage | full (테스트 제외) | All production code |
 
-**사용 예시:**
+**Usage examples:**
 
 ```powershell
-# 기본 실행 (빌드 + 테스트 + 패키지)
+# 기본 실행 (Build + 테스트 + 패키지)
 ./Build-Local.ps1
 
-# full 솔루션 빌드
+# full 솔루션 Build
 ./Build-Local.ps1 -s Functorium.All.slnx
 
-# 패키지 생성 건너뛰기
+# Skip package creation
 ./Build-Local.ps1 -SkipPack
 
-# 느린 테스트 임계값 변경
+# Change slow test threshold
 ./Build-Local.ps1 -t 60
 ```
 
 ### Build-Clean.ps1
 
-모든 프로젝트의 `bin/` 및 `obj/` 폴더를 일괄 삭제합니다.
+Batch deletes all `bin/` and `obj/` folders from all projects.
 
 ```powershell
 ./Build-Clean.ps1
 ```
 
-**사용 시기:**
-- 빌드 아티팩트를 완전히 초기화하고 싶을 때
-- 빌드 오류가 캐시된 바이너리로 인해 발생할 때
-- 브랜치 전환 후 이전 빌드 결과물을 정리할 때
+**When to use:**
+- Build artifacts를 완전히 초기화하고 싶을 때
+- Build 오류가 캐시된 바이너리로 인해 발생할 때
+- 브랜치 전환 후 이전 Build output물을 정리할 때
 
 ### Build-VerifyAccept.ps1
 
-Verify.Xunit 스냅샷 테스트 결과를 일괄 승인합니다.
+Verify.Xunit 스냅샷 Test results를 일괄 승인합니다.
 
 ```powershell
 ./Build-VerifyAccept.ps1
 ```
 
-**사용 시기:**
-- 테스트 실행 후 `*.received.*` 파일이 생성되어 pending 상태의 스냅샷이 있을 때
-- 의도적으로 출력이 변경되어 새 스냅샷을 승인해야 할 때
+**When to use:**
+- When `*.received.*` files are generated after test execution and there are pending snapshots
+- When output has intentionally changed and new snapshots need to be approved
 
-**동작 과정:**
-1. `dotnet tool restore`로 `verify.tool` 복원
-2. `dotnet verify accept -y`로 모든 pending 스냅샷 승인
+**Operation process:**
+1. `dotnet tool restore`로 `verify.tool` restore
+2. `dotnet verify accept -y`to approve all pending snapshots
 
 ### Build-CleanRunFileCache.ps1
 
-.NET 10 파일 기반 프로그램(`.cs` 직접 실행)의 캐시를 정리합니다.
+Cleans the cache for .NET 10 file-based programs (`.cs` direct execution).
 
 ```powershell
-# SummarizeSlowestTests 캐시만 정리 (기본)
+# Clean only SummarizeSlowestTests cache (default)
 ./Build-CleanRunFileCache.ps1
 
-# 모든 runfile 캐시 정리
+# Clean all runfile caches
 ./Build-CleanRunFileCache.ps1 -Pattern "All"
 
-# 삭제 대상만 확인 (실제 삭제 안 함)
+# Check deletion targets only (no actual deletion)
 ./Build-CleanRunFileCache.ps1 -WhatIf
 ```
 
-**사용 시기:** `System.CommandLine` 등 패키지 로딩 오류가 발생할 때. 캐시 위치는 `%TEMP%\dotnet\runfile\`입니다.
+**When to use:** `System.CommandLine` and other package loading errors occur. Cache location is `%TEMP%\dotnet\runfile\`.
 
 | 파라미터 | Default | Description |
 |---------|--------|------|
-| `-Pattern` | `SummarizeSlowestTests` | 삭제할 캐시 패턴 (`All`이면 full) |
-| `-WhatIf` | — | 삭제 대상만 표시 |
+| `-Pattern` | `SummarizeSlowestTests` | Cache pattern to delete (`All`이면 full) |
+| `-WhatIf` | — | Display deletion targets only |
 
 ## Nested Configuration Files
 
 ### When Parent Import Blocking Is Needed
 
-.NET 10 파일 기반 프로그램(runfile)처럼 독립 실행되는 `.cs` 파일이 포함된 하위 폴더에서는 루트 `Directory.Build.props`의 설정(Source Link 패키지 등)이 불필요하거나 오류를 유발할 수 있습니다.
+In subfolders containing independently-executed `.cs` files like .NET 10 file-based programs (runfile), root `Directory.Build.props` settings (Source Link packages, etc.) may be unnecessary or cause errors.
 
 ### Blocking Method
 
-해당 폴더에 자체 `Directory.Build.props`를 배치합니다. MSBuild는 가장 가까운 `Directory.Build.props`만 적용하므로, 상위 파일을 자동으로 import하지 않습니다.
+Place a self-contained `Directory.Build.props` in that folder. MSBuild applies only the nearest `Directory.Build.props`, so it does not automatically import the parent file.
 
 ```xml
 <Project>
@@ -1118,65 +1118,65 @@ Verify.Xunit 스냅샷 테스트 결과를 일괄 승인합니다.
 </Project>
 ```
 
-> 현재 `.coverage/scripts/`와 `.release-notes/scripts/`에 이 패턴이 적용되어 있습니다.
+> This pattern is currently applied in `.coverage/scripts/` and `.release-notes/scripts/`.
 
 ### When You Want to Inherit from Parent Instead
 
-하위 `Directory.Build.props`에서 상위 파일도 함께 적용하려면 명시적으로 import합니다.
+To also apply the parent file from a child `Directory.Build.props`, explicitly import it.
 
 ```xml
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
-  <!-- 추가 설정 -->
+  <!-- Additional settings -->
 </Project>
 ```
 
 ## New Solution Configuration Checklist
 
-새 솔루션을 만들 때 다음 순서로 파일을 생성합니다.
+When creating a new solution, generate files in the following order.
 
-1. **Git 초기화**
+1. **Git initialization**
    - [ ] `git init`
-   - [ ] `dotnet new gitignore` → 프로젝트별 항목 추가
-   - [ ] `.gitattributes` 생성 (Verify 사용 시)
+   - [ ] `dotnet new gitignore` → Add project-specific items
+   - [ ] `.gitattributes` Create (when using Verify)
 
-2. **SDK 및 도구 설정**
-   - [ ] `dotnet new globaljson --sdk-version 10.0.100 --roll-forward latestFeature` → `test` 섹션 추가
-   - [ ] `dotnet new tool-manifest` → 필요한 도구 설치
+2. **SDK and tools setup**
+   - [ ] `dotnet new globaljson --sdk-version 10.0.100 --roll-forward latestFeature` → `test` Add section
+   - [ ] `dotnet new tool-manifest` → Install required tools
 
-3. **빌드 시스템 구성**
-   - [ ] `Directory.Build.props` 생성 (기본 템플릿 + 필요한 섹션)
-   - [ ] `Directory.Build.targets` 생성 (필요 시)
-   - [ ] `Directory.Packages.props` 생성 (CPM 활성화 + 패키지 추가)
+3. **Build 시스템 구성**
+   - [ ] `Directory.Build.props` Create (default template + required sections)
+   - [ ] `Directory.Build.targets` Create (if needed)
+   - [ ] `Directory.Packages.props` Create (CPM activation + add packages)
 
-4. **코드 품질 설정**
-   - [ ] `dotnet new editorconfig` → 필요한 규칙만 활성화
-   - [ ] `dotnet new nugetconfig` → `<clear />` 추가
+4. **Code quality setup**
+   - [ ] `dotnet new editorconfig` → Enable only required rules
+   - [ ] `dotnet new nugetconfig` → `<clear />` Add
 
 5. **Solution file 생성**
-   - [ ] `dotnet new sln -n {Name}` → `dotnet sln migrate`로 `.slnx` 변환
+   - [ ] `dotnet new sln -n {Name}` → `dotnet sln migrate`to convert to `.slnx`
    - [ ] 또는 `.slnx` write directly
-   - [ ] 프로젝트 추가 (`dotnet sln add` 또는 XML 편집)
+   - [ ] 프로젝트 Add (`dotnet sln add` or XML editing)
 
 ## PowerShell Script Development Standards
 
 ### Requirements and Structure
 
-- PowerShell 7.0 이상 (`#Requires -Version 7.0`)
-- 각 스크립트는 자체 완결형으로, 필요한 헬퍼 함수를 `#region Helpers` 블록에 직접 포함
+- PowerShell 7.0 or higher (`#Requires -Version 7.0`)
+- Each script is self-contained, directly including required helper functions in the `#region Helpers` block
 
 ### File Naming Rules
 
-| 유형 | Pattern | Example |
+| Type | Pattern | Example |
 |------|------|------|
-| 빌드 스크립트 | `Build-*.ps1` | `Build-Local.ps1` |
-| 배포 스크립트 | `Deploy-*.ps1` | `Deploy-Production.ps1` |
-| 유틸리티 스크립트 | `Invoke-*.ps1` | `Invoke-Migration.ps1` |
+| Build 스크립트 | `Build-*.ps1` | `Build-Local.ps1` |
+| Deployment scripts | `Deploy-*.ps1` | `Deploy-Production.ps1` |
+| Utility scripts | `Invoke-*.ps1` | `Invoke-Migration.ps1` |
 
 ### Required Settings
 
-모든 스크립트는 다음 설정으로 시작합니다.
+All scripts start with the following settings.
 
 ```powershell
 #!/usr/bin/env pwsh
@@ -1189,29 +1189,29 @@ $ErrorActionPreference = "Stop"
 
 ### Coding Rules
 
-**함수 명명:** `Get-`, `Set-`, `New-`, `Remove-`, `Invoke-`, `Test-`, `Show-`, `Write-` 접두사 사용
+**Function naming:** `Get-`, `Set-`, `New-`, `Remove-`, `Invoke-`, `Test-`, `Show-`, `Write-` prefix
 
-**변수 명명:** 스크립트 전역은 `$script:TOTAL_STEPS` (대문자), 함수 로컬은 `$result`
+**Variable naming:** Script global is `$script:TOTAL_STEPS` (uppercase), function local is `$result`
 
-**코드 구조:** `#region`으로 Constants, Helper Functions, Step N, Main, Entry Point 순서로 구분
+**Code structure:** `#region`으to organize in order: Constants, Helper Functions, Step N, Main, Entry Point
 
-**에러 처리:** Entry Point에서 `try-catch`로 감싸고 `exit 0`/`exit 1` 반환
+**Error handling:** Wrap in `try-catch`at Entry Point and return `exit 0`/`exit 1` 
 
 ### Console Output Helper Functions
 
-| 함수 | Purpose | 색상 |
+| Function | Purpose | Color |
 |------|------|------|
-| `Write-StepProgress` | `[1/5] Building...` 형식 진행 상황 | Gray |
-| `Write-Detail` | 상세 정보 (들여쓰기) | DarkGray |
-| `Write-Success` | 성공 메시지 | Green |
-| `Write-WarningMessage` | 경고 메시지 | Yellow |
-| `Write-StartMessage` | `[START] Title` 시작 메시지 | Blue |
-| `Write-DoneMessage` | `[DONE] Title` 완료 메시지 | Green |
-| `Write-ErrorMessage` | 에러 메시지 + 스택 트레이스 | Red |
+| `Write-StepProgress` | `[1/5] Building...` format progress | Gray |
+| `Write-Detail` | Detail info (indented) | DarkGray |
+| `Write-Success` | Success message | Green |
+| `Write-WarningMessage` | Warning message | Yellow |
+| `Write-StartMessage` | `[START] Title` Start message | Blue |
+| `Write-DoneMessage` | `[DONE] Title` Done message | Green |
+| `Write-ErrorMessage` | Error message + stack trace | Red |
 
 ### Script Template
 
-새 스크립트 작성 시 기본 구조입니다.
+새 스크립트 작성 시 기본 구조.
 
 ```powershell
 #!/usr/bin/env pwsh
@@ -1219,7 +1219,7 @@ $ErrorActionPreference = "Stop"
 
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory = $false, HelpMessage = "도움말 표시")]
+  [Parameter(Mandatory = $false, HelpMessage = "Display help")]
   [Alias("h", "?")]
   [switch]$Help
 )
@@ -1261,35 +1261,35 @@ catch { Write-ErrorMessage -ErrorRecord $_; exit 1 }
 
 ## Troubleshooting
 
-### .editorconfig 변경 후 경고가 반영되지 않을 때
+### When Warnings Are Not Reflected After .editorconfig Changes
 
-**Cause:** 증분 빌드는 `.editorconfig` 변경을 감지하지 못합니다.
+**Cause:** 증분 Build는 `.editorconfig` 변경을 감지하지 못합니다.
 
 **Resolution:**
 ```powershell
 dotnet build --no-incremental
-# 또는 완전히 새로 빌드
+# 또는 완전히 새로 Build
 dotnet clean && dotnet build --no-incremental
 ```
 
-### csproj에서 패키지 Version을 지정했을 때 빌드 오류
+### csproj에서 패키지 Version을 지정했을 때 Build 오류
 
-**Cause:** CPM(Central Package Management) 활성화 시 csproj에서 `Version`을 지정하면 빌드 오류가 발생합니다.
+**Cause:** CPM(Central Package Management) 활성화 시 csproj에서 `Version`을 지정하면 Build 오류가 발생합니다.
 
-**Resolution:** csproj에서 `Version` 속성을 제거하고, `Directory.Packages.props`에서만 버전을 관리합니다.
+**Resolution:** Remove the `Version` property from csproj and manage versions only in `Directory.Packages.props`.
 ```xml
-<!-- 잘못된 예 -->
+<!-- Incorrect example -->
 <PackageReference Include="NewPackage" Version="1.0.0" />
 
-<!-- 올바른 예 -->
+<!-- Correct example -->
 <PackageReference Include="NewPackage" />
 ```
 
-### 하위 폴더의 .cs 파일이 Source Link 오류를 발생시킬 때
+### When .cs Files in Subfolders Cause Source Link Errors
 
-**Cause:** 루트 `Directory.Build.props`의 Source Link 패키지가 파일 기반 프로그램 등 독립 실행 스크립트에 적용됩니다.
+**Cause:** The root `Directory.Build.props`'s Source Link package is applied to independently-executed scripts like file-based programs.
 
-**Resolution:** 해당 폴더에 자체 `Directory.Build.props`를 배치하여 부모 import을 차단합니다.
+**Resolution:** Place a self-contained `Directory.Build.props` in that folder to block parent import.
 ```xml
 <Project>
   <PropertyGroup>
@@ -1304,34 +1304,34 @@ dotnet clean && dotnet build --no-incremental
 
 ## FAQ
 
-### Q1. .sln과 .slnx의 차이점은 무엇인가요?
+### Q1. What is the difference between .sln and .slnx?
 
-`.sln`은 레거시 텍스트 기반 포맷으로 GUID가 나열되어 가독성이 낮습니다. `.slnx`는 .NET 10+에서 지원하는 XML 기반 포맷으로, 수동 편집이 용이하고 구조가 명확합니다.
+`.sln` is a legacy text-based format with listed GUIDs and low readability. `.slnx` is an XML-based format supported in .NET 10+ with easy manual editing and clear structure.
 
-### Q2. Directory.Build.props와 Directory.Build.targets는 언제 각각 사용하나요?
+### Q2. When should Directory.Build.props and Directory.Build.targets be used respectively?
 
-`Directory.Build.props`는 SDK import 전에 적용되므로 속성(Property) 설정에 사용합니다. `Directory.Build.targets`는 SDK import 후에 적용되므로 기본 항목(Item) 수정에 사용합니다. 예를 들어 `Compile Remove`는 targets에서 해야 SDK가 다시 추가하는 것을 방지할 수 있습니다.
+`Directory.Build.props`는 SDK import 전에 적용되므로 속성(Property) 설정에 사용합니다. `Directory.Build.targets`는 SDK import 후에 적용되므로 기본 항목(Item) 수정에 사용합니다. 예를 들어 `Compile Remove`는 targets에서 해야 SDK가 다시 Add하는 것을 방지할 수 있습니다.
 
-### Q3. Build-Local.ps1의 주요 파라미터는 무엇인가요?
+### Q3. What are the key parameters of Build-Local.ps1?
 
-| 파라미터 | 별칭 | Default | Description |
+| Parameter | Alias | Default | Description |
 |---------|------|--------|------|
 | `-Solution` | `-s` | `Functorium.slnx` | Solution file |
-| `-SkipPack` | — | `$false` | NuGet 패키지 생성 건너뛰기 |
-| `-SlowTestThreshold` | `-t` | `30` | 느린 테스트 판단 기준 (초) |
+| `-SkipPack` | — | `$false` | NuGet packages 생성 건너뛰기 |
+| `-SlowTestThreshold` | `-t` | `30` | Slow test threshold (seconds) |
 
-### Q4. nuget.config에서 `<clear />`를 추가하는 이유는 무엇인가요?
+### Q4. nuget.config에서 `<clear />`를 Add하는 이유는 무엇인가요?
 
-시스템/사용자 레벨에서 설정된 NuGet 소스를 제거하고, 파일에 명시된 소스만 사용하도록 합니다. 이를 통해 어떤 환경에서든 동일한 패키지 소스를 사용하고, 의도치 않은 사설 피드에서 패키지가 해석되는 것을 방지합니다.
+Removes NuGet sources set at the system/user level and ensures only sources specified in the file are used. This ensures the same package sources are used in any environment and prevents packages from being resolved from unintended private feeds.
 
 ### Q5. 복수 Solution file은 어떤 경우에 사용하나요?
 
-프로젝트가 많을 때 용도별로 분리합니다. `{Name}.slnx`는 핵심 라이브러리(Src/, Tests/) 개발용이고, `{Name}.All.slnx`는 Tutorials, Books 등을 포함한 full 빌드용입니다.
+프로젝트가 많을 때 용도별로 분리합니다. `{Name}.slnx`는 Core libraries(Src/, Tests/) 개발용이고, `{Name}.All.slnx`는 Tutorials, Books 등을 포함한 full Build용.
 
 ---
 
 ## References
 
-- [01-project-structure.md](./01-project-structure) — 프로젝트 수준 구성 (폴더, 네이밍, 의존성)
-- [15a-unit-testing.md](../testing/15a-unit-testing) — 테스트 작성 방법론 (MTP 설정 포함)
-- [16-testing-library.md](../testing/16-testing-library) — Functorium.Testing 라이브러리
+- [01-project-structure.md](./01-project-structure) -- Project-level configuration (folders, naming, dependencies)
+- [15a-unit-testing.md](../testing/15a-unit-testing) -- Test writing methodology (including MTP settings)
+- [16-testing-library.md](../testing/16-testing-library) -- Functorium.Testing library

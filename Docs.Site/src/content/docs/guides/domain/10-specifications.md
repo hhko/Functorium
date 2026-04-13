@@ -2,105 +2,105 @@
 title: "Specification Pattern"
 ---
 
-이 문서는 Functorium 프레임워크에서 Specification 패턴을 정의하고 사용하는 방법을 설명합니다.
+This document explains how to define and use the Specification pattern in the Functorium framework.
 
 ## Introduction
 
-"새로운 필터 조건이 필요할 때마다 Repository에 메서드를 추가해야 하는가?"
-"'가격이 100~200원이고 재고가 5개 이상'이라는 비즈니스 규칙을 어디에 캡슐화하는가?"
-"InMemory 테스트와 EF Core 운영 환경에서 동일한 비즈니스 조건을 어떻게 재사용하는가?"
+"Do we need to add a method to the Repository every time a new filter condition is needed?"
+"Where do we encapsulate the business rule 'price is between 100-200 and stock is 5 or more'?"
+"How do we reuse the same business conditions in InMemory tests and EF Core production environments?"
 
-이러한 문제는 비즈니스 규칙이 Repository 구현에 흩어지거나, 조건 조합이 늘어날 때마다 인터페이스가 비대해지는 현상으로 나타납니다. Specification 패턴은 비즈니스 규칙을 독립적인 도메인 객체로 캡슐화하고, `And`/`Or`/`Not` 조합으로 복잡한 조건을 구성합니다.
+These problems manifest as business rules being scattered across Repository implementations, or interfaces becoming bloated as condition combinations grow. The Specification pattern encapsulates business rules as independent domain objects and composes complex conditions with `And`/`Or`/`Not` combinations.
 
 ### What You Will Learn
 
-1. **Specification 패턴이 해결하는 문제** — Repository 메서드 폭발 방지와 비즈니스 규칙 캡슐화
-2. **`ExpressionSpecification<T>` 구현 패턴** — `ToExpression()` 정의와 SQL 자동 번역
-3. **조합과 항등원** — `&`/`|`/`!` 연산자와 `Specification<T>.All`
-4. **Repository/Usecase 통합** — InMemory, EF Core, Dapper 환경에서의 사용법
+1. **Problems the Specification pattern solves** -- Preventing Repository method explosion and encapsulating business rules
+2. **`ExpressionSpecification<T>` implementation pattern** -- `ToExpression()` definition and automatic SQL translation
+3. **Composition and identity element** -- `&`/`|`/`!` operators and `Specification<T>.All`
+4. **Repository/Usecase integration** -- Usage in InMemory, EF Core, Dapper environments
 
 ### Prerequisites
 
-- [Entity/Aggregate 핵심 패턴](./06b-entity-aggregate-core) — Entity와 Aggregate의 기본 구조
-- [Adapter 구현 가이드](../adapter/13-adapters) — Repository 구현 패턴
+- [Entity/Aggregate Core Patterns](./06b-entity-aggregate-core) -- Basic structure of Entity and Aggregate
+- [Adapter Implementation Guide](../adapter/13-adapters) -- Repository implementation patterns
 
-> Specification 패턴의 핵심 가치는 **비즈니스 규칙을 도메인 객체로 캡슐화하여 재사용하고, 조합 연산자로 복잡한 조건을 단순한 조건의 합성으로 표현하는 것입니다.**
+> The core value of the Specification pattern is **encapsulating business rules as domain objects for reuse, and expressing complex conditions as compositions of simple conditions using combination operators.**
 
 ## Summary
 
 ### Key Commands
 
 ```csharp
-// Specification 정의
+// Specification definition
 public sealed class ProductPriceRangeSpec : ExpressionSpecification<Product>
 {
     public override Expression<Func<Product, bool>> ToExpression() { ... }
 }
 
-// Specification 조합
-var spec = priceRange & !lowStock;          // 연산자 스타일
-var spec = priceRange.And(lowStock.Not());  // 메서드 스타일
+// Specification composition
+var spec = priceRange & !lowStock;          // operator style
+var spec = priceRange.And(lowStock.Not());  // method style
 
-// 선택적 필터 조합 (All 항등원)
+// Optional filter composition (All identity element)
 var spec = Specification<Product>.All;
 spec &= new ProductPriceRangeSpec(min, max);
 
-// Repository에서 사용
+// Used in Repository
 _productRepository.Exists(new ProductNameUniqueSpec(productName));
 _productRepository.FindAll(spec);
 ```
 
 ### Key Procedures
 
-1. **Specification 정의**: `ExpressionSpecification<T>` 상속, `ToExpression()` 구현
-2. **Value Object 변환**: `ToExpression()` 내에서 Value Object를 primitive로 변환 후 클로저 캡처
-3. **Repository Port 추가**: `Exists(Specification<T>)`, `FindAll(Specification<T>)` 메서드 정의
-4. **Adapter 구현**: InMemory는 `IsSatisfiedBy()`, EfCore는 `PropertyMap` + `SpecificationExpressionResolver` 사용
-5. **Usecase 통합**: 단일 Spec 또는 `&` / `|` / `!`로 조합하여 Repository에 전달
+1. **Specification definition**: Inherit `ExpressionSpecification<T>`, implement `ToExpression()`
+2. **Value Object conversion**: Convert Value Objects to primitives inside `ToExpression()` then capture in closure
+3. **Add Repository Port**: Define `Exists(Specification<T>)`, `FindAll(Specification<T>)` methods
+4. **Adapter implementation**: InMemory uses `IsSatisfiedBy()`, EfCore uses `PropertyMap` + `SpecificationExpressionResolver`
+5. **Usecase integration**: Pass single Spec or combine with `&` / `|` / `!` to Repository
 
 ### Key Concepts
 
 | Concept | Description |
 |------|------|
-| `ExpressionSpecification<T>` | Expression 기반 추상 클래스, SQL 자동 번역 지원 |
-| `IsSatisfiedBy()` | `ToExpression()` 컴파일 결과 자동 구현 (캐싱) |
-| `And()` / `Or()` / `Not()` | 조합 메서드, `&` / `\|` / `!` 연산자 오버로드 |
-| `Specification<T>.All` | 항등원 (Null Object), 선택적 필터 조합의 초기값 |
-| `PropertyMap<TEntity, TModel>` | Entity Expression → Model Expression 자동 변환 |
+| `ExpressionSpecification<T>` | Expression-based abstract class, supports automatic SQL translation |
+| `IsSatisfiedBy()` | Auto-implemented from `ToExpression()` compilation (cached) |
+| `And()` / `Or()` / `Not()` | Combination methods, `&` / `\|` / `!` operator overloads |
+| `Specification<T>.All` | Identity element (Null Object), initial value for optional filter composition |
+| `PropertyMap<TEntity, TModel>` | Entity Expression -> Model Expression automatic conversion |
 
-먼저 Specification 패턴이 해결하는 문제를 이해한 뒤, 정의와 구현을 거쳐 Repository 및 Usecase 통합까지 순서대로 진행합니다.
+First we understand the problems the Specification pattern solves, then proceed through definition and implementation to Repository and Usecase integration.
 
 ---
 
 ## Why the Specification Pattern
 
-Specification 패턴은 DDD에서 **비즈니스 규칙을 캡슐화하고 조합 가능하게** 만드는 빌딩블록입니다.
+The Specification pattern is a building block in DDD that **encapsulates business rules and makes them composable.**
 
-### Specification이 해결하는 문제
+### Problems Specifications Solve
 
-**비즈니스 규칙 캡슐화**:
-"가격이 100원 이상 200원 이하", "재고가 5개 미만" 같은 조건이 Repository 메서드에 흩어지면 재사용이 어렵습니다. Specification은 이 조건을 독립적인 도메인 객체로 캡슐화합니다.
+**Business Rule Encapsulation**:
+When conditions like "price between 100 and 200" or "stock below 5" are scattered across Repository methods, reuse becomes difficult. Specifications encapsulate these conditions as independent domain objects.
 
-**Repository 메서드 폭발 방지**:
-새 필터 조건마다 Repository에 메서드를 추가하면 인터페이스가 비대해집니다. Specification을 받는 `Exists(spec)`/`FindAll(spec)` 메서드 하나로 모든 조건을 처리합니다.
+**Preventing Repository Method Explosion**:
+Adding a method to the Repository for each new filter condition bloats the interface. A single `Exists(spec)`/`FindAll(spec)` method that accepts Specifications handles all conditions.
 
-**조합 가능성**:
-`And`, `Or`, `Not` 조합으로 단순한 Specification을 복잡한 비즈니스 규칙으로 합성할 수 있습니다. 각 Specification은 단일 책임을 유지합니다.
+**Composability**:
+Simple Specifications can be composed into complex business rules using `And`, `Or`, `Not` combinations. Each Specification maintains single responsibility.
 
-### Specification 없이 vs 있을 때
+### Without vs With Specifications
 
 ```csharp
-// ❌ Specification 없이: 조건마다 Repository 메서드 추가
+// ❌ Without Specification: add Repository method per condition
 public interface IProductRepository
 {
     FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeId = null);
     FinT<IO, Seq<Product>> FindByPriceRange(Money min, Money max);
     FinT<IO, Seq<Product>> FindByLowStock(Quantity threshold);
     FinT<IO, Seq<Product>> FindByPriceRangeAndLowStock(Money min, Money max, Quantity threshold);
-    // 조합이 늘어날수록 메서드가 폭발적으로 증가...
+    // Methods grow explosively as combinations increase...
 }
 
-// ✅ Specification 사용: 범용 메서드 + 조합
+// ✅ With Specification: generic methods + composition
 public interface IProductRepository
 {
     FinT<IO, bool> Exists(Specification<Product> spec);
@@ -110,122 +110,122 @@ public interface IProductRepository
 
 ---
 
-## Specification이란 무엇인가 (WHAT)
+## What Are Specifications (WHAT)
 
-### `Specification<T>` 추상 클래스
+### `Specification<T>` Abstract Class
 
-`Functorium.Domains.Specifications` 네임스페이스에 위치합니다.
+Located in the `Functorium.Domains.Specifications` namespace.
 
 ```csharp
 public abstract class Specification<T>
 {
-    // 엔터티가 조건을 만족하는지 확인
+    // Check if entity satisfies the condition
     public abstract bool IsSatisfiedBy(T entity);
 
-    // 메서드 조합
+    // Method composition
     public Specification<T> And(Specification<T> other);
     public Specification<T> Or(Specification<T> other);
     public Specification<T> Not();
 
-    // 연산자 오버로드
+    // Operator overloads
     public static Specification<T> operator &(Specification<T> left, Specification<T> right);
     public static Specification<T> operator |(Specification<T> left, Specification<T> right);
     public static Specification<T> operator !(Specification<T> spec);
 }
 ```
 
-### 조합 방식
+### Composition Methods
 
-메서드와 연산자 두 가지 스타일을 지원합니다:
+Two styles are supported: methods and operators:
 
 ```csharp
-// 메서드 스타일
+// Method style
 var spec = priceRange.And(lowStock.Not());
 
-// 연산자 스타일 (동일한 결과)
+// Operator style (same result)
 var spec = priceRange & !lowStock;
 ```
 
-### 내부 조합 클래스
+### Internal Composition Classes
 
-조합 클래스는 `internal sealed`로 프레임워크 내부에서만 사용됩니다. 아래 표는 각 조합 방식과 동작을 정리한 것입니다.
+Composition classes are `internal sealed` and used only within the framework. The following table summarizes each composition method and behavior.
 
-| 클래스 | 생성 방법 | 동작 |
+| Class | Creation Method | Behavior |
 |--------|----------|------|
-| `AndSpecification<T>` | `And()` / `&` | 양쪽 모두 만족 시 `true` |
-| `OrSpecification<T>` | `Or()` / `\|` | 한쪽이라도 만족 시 `true` |
-| `NotSpecification<T>` | `Not()` / `!` | 반전 |
+| `AndSpecification<T>` | `And()` / `&` | `true` when both sides are satisfied |
+| `OrSpecification<T>` | `Or()` / `\|` | `true` when either side is satisfied |
+| `NotSpecification<T>` | `Not()` / `!` | Inverted |
 
-### `Specification<T>.All` (항등원)
+### `Specification<T>.All` (Identity Element)
 
-`Specification<T>.All`은 모든 엔터티를 만족하는 Null Object Specification입니다. `&` 연산의 항등원으로 동작합니다:
+`Specification<T>.All` is a Null Object Specification that satisfies all entities. It acts as the identity element for the `&` operation:
 
 ```csharp
-// All & X = X, X & All = X (항등원)
+// All & X = X, X & All = X (identity element)
 Specification<Product>.All & priceRange  // → priceRange
 priceRange & Specification<Product>.All  // → priceRange
 ```
 
-**주요 용도 — 선택적 필터 조합의 초기값**:
+**Primary use -- initial value for optional filter composition**:
 
-필터 조건이 선택적일 때 `null` 대신 `All`을 초기값으로 사용하면 null 체크 없이 `&` 연산자로 점진적 조합이 가능합니다:
+When filter conditions are optional, using `All` as the initial value instead of `null` enables progressive composition with the `&` operator without null checks:
 
 ```csharp
 private static Specification<Product> BuildSpecification(Request request)
 {
-    var spec = Specification<Product>.All;  // null 대신 All로 시작
+    var spec = Specification<Product>.All;  // Start with All instead of null
 
-    // Option<T>.Iter(): Some이면 필터 추가, None이면 무시
+    // Option<T>.Iter(): Add filter if Some, ignore if None
     request.Name.Iter(name =>
         spec &= new ProductNameSpec(ProductName.Create(name).ThrowIfFail()));
 
-    // Bind().Map().Iter(): 두 Option이 모두 Some일 때만 범위 필터 추가
+    // Bind().Map().Iter(): Add range filter only when both Options are Some
     request.MinPrice.Bind(min => request.MaxPrice.Map(max => (min, max)))
         .Iter(t => spec &= new ProductPriceRangeSpec(
             Money.Create(t.min).ThrowIfFail(),
             Money.Create(t.max).ThrowIfFail()));
 
-    return spec;  // 필터 없으면 All 그대로 반환 → 전체 조회
+    return spec;  // Return All as-is if no filters -> full query
 }
 ```
 
-`Option<T>`와 `Iter()` 조합이 핵심입니다. `if (value.Length > 0)` 같은 원시 타입 기반 존재 여부 체크 대신, `Option<T>`로 **값의 유무를 타입 수준에서 표현**합니다. `Iter()`는 `Some`일 때만 액션을 실행하므로 필터 조합 코드가 선언적으로 바뀝니다. 두 필터가 쌍으로 존재해야 하는 경우 `Bind().Map().Iter()` 체인으로 **두 Option이 모두 Some일 때만** 실행하는 패턴을 사용합니다.
+The combination of `Option<T>` and `Iter()` is key. Instead of primitive type-based existence checks like `if (value.Length > 0)`, `Option<T>` **expresses the presence or absence of a value at the type level**. `Iter()` executes an action only when `Some`, making filter composition code declarative. When two filters must exist as a pair, the `Bind().Map().Iter()` chain pattern is used to **execute only when both Options are Some**.
 
-`AllSpecification<T>`는 `ExpressionSpecification<T>`을 상속하므로 EfCore `PropertyMap` 번역도 정상 동작합니다 (`_ => true`).
+`AllSpecification<T>` inherits from `ExpressionSpecification<T>`, so EfCore `PropertyMap` translation works correctly (`_ => true`).
 
 | Property/Method | Description |
 |------------|------|
-| `Specification<T>.All` | `AllSpecification<T>.Instance` (싱글턴) |
-| `IsAll` | `true` 반환. `&` 연산자에서 항등원 최적화에 사용 |
+| `Specification<T>.All` | `AllSpecification<T>.Instance` (singleton) |
+| `IsAll` | Returns `true`. Used for identity element optimization in `&` operator |
 | `ToExpression()` | `_ => true` |
 
-### Functorium 타입 계층에서의 위치
+### Position in Functorium Type Hierarchy
 
 ```
 Functorium.Domains.Specifications
-├── Specification<T>              (추상 기반 클래스)
-│   ├── IsSatisfiedBy()           (추상 메서드)
-│   ├── And() / Or() / Not()     (조합 메서드)
-│   └── & / | / !                (연산자 오버로드)
-├── ExpressionSpecification<T>    (추상, Expression 기반 — 권장)
-│   ├── ToExpression()            (추상 메서드)
-│   └── IsSatisfiedBy()           (자동 구현, delegate 캐싱)
-├── IExpressionSpec<T>            (Expression 제공 인터페이스)
+├── Specification<T>              (abstract base class)
+│   ├── IsSatisfiedBy()           (abstract method)
+│   ├── And() / Or() / Not()     (combination methods)
+│   └── & / | / !                (operator overloads)
+├── ExpressionSpecification<T>    (abstract, Expression-based -- recommended)
+│   ├── ToExpression()            (abstract method)
+│   └── IsSatisfiedBy()           (auto-implemented, delegate caching)
+├── IExpressionSpec<T>            (Expression provider interface)
 ├── AllSpecification<T>            (internal sealed, Null Object)
 ├── AndSpecification<T>           (internal sealed)
 ├── OrSpecification<T>            (internal sealed)
 └── NotSpecification<T>           (internal sealed)
 
 Functorium.Domains.Specifications.Expressions
-├── SpecificationExpressionResolver  (And/Or/Not Expression 합성)
-└── PropertyMap<TEntity, TModel>     (Entity → Model Expression 변환)
+├── SpecificationExpressionResolver  (And/Or/Not Expression composition)
+└── PropertyMap<TEntity, TModel>     (Entity -> Model Expression conversion)
 ```
 
 Now that we understand Specification concepts and composition, let us move on to implementation.
 
 ---
 
-## Specification 구현 (HOW)
+## Specification Implementation (HOW)
 
 ### Folder Structure
 
@@ -236,52 +236,52 @@ LayeredArch.Domain/
         ├── Product.cs
         ├── Ports/
         │   └── IProductRepository.cs
-        └── Specifications/           ← Aggregate 하위에 배치
+        └── Specifications/           <- Placed under Aggregate
             ├── ProductNameUniqueSpec.cs
             ├── ProductPriceRangeSpec.cs
             └── ProductLowStockSpec.cs
 ```
 
-**네임스페이스**: `{프로젝트}.Domain.AggregateRoots.{Aggregate}.Specifications`
+**Namespace**: `{Project}.Domain.AggregateRoots.{Aggregate}.Specifications`
 
 ### Basic Structure (template)
 
-`ToExpression()` 내부에서 Value Object를 primitive로 변환한 뒤 클로저에 캡처하는 패턴.
+Pattern of converting Value Objects to primitives inside `ToExpression()` then capturing in closures.
 
 ```csharp
 using System.Linq.Expressions;
 using Functorium.Domains.Specifications;
 
-namespace {프로젝트}.Domain.AggregateRoots.{Aggregate}.Specifications;
+namespace {Project}.Domain.AggregateRoots.{Aggregate}.Specifications;
 
-public sealed class {Aggregate}{조건}Spec : ExpressionSpecification<{Aggregate}>
+public sealed class {Aggregate}{Condition}Spec : ExpressionSpecification<{Aggregate}>
 {
     public {ValueObjectType} {PropertyName} { get; }
 
-    public {Aggregate}{조건}Spec({ValueObjectType} {paramName})
+    public {Aggregate}{Condition}Spec({ValueObjectType} {paramName})
     {
         {PropertyName} = {paramName};
     }
 
     public override Expression<Func<{Aggregate}, bool>> ToExpression()
     {
-        // Value Object → primitive 변환 후 클로저 캡처
+        // Convert Value Object -> primitive then capture in closure
         var {paramPrimitive} = ({PrimitiveType}){PropertyName};
         return entity => ({PrimitiveType})entity.{EntityProperty} == {paramPrimitive};
     }
-    // IsSatisfiedBy()는 ToExpression() 컴파일로 자동 구현됨
+    // IsSatisfiedBy() is auto-implemented via ToExpression() compilation
 }
 ```
 
 **Key Rules:**
-- `ExpressionSpecification<T>` 상속 (Expression 기반 자동 SQL 번역 지원)
-- `ToExpression()`에서 Value Object를 primitive로 변환하여 클로저에 캡처
-- Entity 프로퍼티 접근 시 `(primitiveType)entity.Property` 캐스트 사용
-- `IsSatisfiedBy()`는 `ToExpression()` 컴파일 결과를 내부 캐싱하여 자동 구현 — 별도 구현 불필요
+- Inherit `ExpressionSpecification<T>` (supports Expression-based automatic SQL translation)
+- Convert Value Objects to primitives in `ToExpression()` to capture in closures
+- Use `(primitiveType)entity.Property` cast when accessing Entity properties
+- `IsSatisfiedBy()` is auto-implemented with internal caching of `ToExpression()` compilation result -- no separate implementation needed
 
 ### Practical Examples
 
-#### 상품명 중복 확인 (ProductNameUniqueSpec)
+#### Product Name Uniqueness Check (ProductNameUniqueSpec)
 
 ```csharp
 public sealed class ProductNameUniqueSpec : ExpressionSpecification<Product>
@@ -305,7 +305,7 @@ public sealed class ProductNameUniqueSpec : ExpressionSpecification<Product>
 }
 ```
 
-#### 가격 범위 (ProductPriceRangeSpec)
+#### Price Range (ProductPriceRangeSpec)
 
 ```csharp
 public sealed class ProductPriceRangeSpec : ExpressionSpecification<Product>
@@ -328,7 +328,7 @@ public sealed class ProductPriceRangeSpec : ExpressionSpecification<Product>
 }
 ```
 
-#### 재고 부족 (ProductLowStockSpec)
+#### Low Stock (ProductLowStockSpec)
 
 ```csharp
 public sealed class ProductLowStockSpec : ExpressionSpecification<Product>
@@ -348,20 +348,20 @@ public sealed class ProductLowStockSpec : ExpressionSpecification<Product>
 }
 ```
 
-### Expression에서 Value Object 변환 패턴
+### Value Object Conversion Pattern in Expressions
 
-`ToExpression()`에서 Value Object를 primitive로 변환할 때:
+When converting Value Objects to primitives in `ToExpression()`:
 
 ```csharp
-// ✅ 클로저 캡처 전에 primitive로 변환
+// ✅ Convert to primitive before closure capture
 decimal min = MinPrice;  // Value Object → primitive (implicit operator)
 return product => (decimal)product.Price >= min;
 
-// ✅ EntityId는 ToString()으로 변환
+// ✅ EntityId converted with ToString()
 string? excludeIdStr = ExcludeId?.ToString();
 return product => product.Id.ToString() != excludeIdStr;
 
-// ❌ Expression 내부에서 Value Object 직접 비교 (PropertyMap이 변환 불가)
+// ❌ Direct Value Object comparison inside Expression (PropertyMap cannot convert)
 return product => product.Price >= MinPrice;
 ```
 
@@ -369,24 +369,24 @@ Now that Specification implementation is complete, let us see how to integrate w
 
 ---
 
-## Repository에서 사용 (HOW)
+## Usage in Repository (HOW)
 
-### Port 정의 (Domain Layer)
+### Port Definition (Domain Layer)
 
-Repository 인터페이스에 Specification을 받는 메서드를 추가합니다:
+Add methods that accept Specifications to the Repository interface:
 
 ```csharp
 public interface IProductRepository : IRepository<Product, ProductId>
 {
-    // Specification 기반 메서드
+    // Specification-based methods
     FinT<IO, bool> Exists(Specification<Product> spec);
     FinT<IO, Seq<Product>> FindAll(Specification<Product> spec);
 }
 ```
 
-### InMemory 구현 패턴
+### InMemory Implementation Pattern
 
-`IsSatisfiedBy()`를 직접 사용합니다:
+Use `IsSatisfiedBy()` directly:
 
 ```csharp
 public virtual FinT<IO, bool> Exists(Specification<Product> spec)
@@ -408,14 +408,14 @@ public virtual FinT<IO, Seq<Product>> FindAll(Specification<Product> spec)
 }
 ```
 
-### EfCore 구현 패턴 (Expression 기반 자동 SQL 번역)
+### EfCore Implementation Pattern (Expression-Based Automatic SQL Translation)
 
-`PropertyMap`으로 Entity Expression → Model Expression 자동 변환 후 EF Core LINQ에 적용합니다. **switch 케이스 불필요**:
+Auto-convert Entity Expression -> Model Expression with `PropertyMap` then apply to EF Core LINQ. **No switch cases needed**:
 
-`PropertyMap`에 Entity-Model 프로퍼티 매핑을 한 번만 구성하면, 새 Specification 추가 시 Adapter 코드를 수정할 필요가 없다는 점.
+Once Entity-Model property mapping is configured in `PropertyMap`, there is no need to modify Adapter code when adding new Specifications.
 
 ```csharp
-// PropertyMap 구성 (static readonly, 한 번만)
+// PropertyMap configuration (static readonly, once only)
 private static readonly PropertyMap<Product, ProductModel> _propertyMap =
     new PropertyMap<Product, ProductModel>()
         .Map(p => (decimal)p.Price, m => m.Price)
@@ -423,7 +423,7 @@ private static readonly PropertyMap<Product, ProductModel> _propertyMap =
         .Map(p => (int)p.StockQuantity, m => m.StockQuantity)
         .Map(p => p.Id.ToString(), m => m.Id);
 
-// BuildQuery — switch 제거, 자동 변환
+// BuildQuery -- switch removed, automatic conversion
 private IQueryable<ProductModel> BuildQuery(Specification<Product> spec)
 {
     var expression = SpecificationExpressionResolver.TryResolve(spec);
@@ -434,27 +434,27 @@ private IQueryable<ProductModel> BuildQuery(Specification<Product> spec)
     }
 
     throw new NotSupportedException(
-        $"Specification '{spec.GetType().Name}'에 대한 Expression이 정의되지 않았습니다. " +
-        $"ExpressionSpecification<T>을 상속하고 ToExpression()을 구현하세요.");
+        $"No Expression defined for Specification '{spec.GetType().Name}'. " +
+        $"Inherit ExpressionSpecification<T> and implement ToExpression().");
 }
 ```
 
-**새 Specification 추가 시 변경 사항:**
-- Domain: `ExpressionSpecification<T>`만 상속하고 `ToExpression()` 구현
-- Adapter: **변경 불필요** (PropertyMap에 이미 매핑된 프로퍼티만 사용한다면)
-- PropertyMap: 새 Entity 프로퍼티를 사용하는 Spec이면 매핑 추가
+**Changes when adding new Specifications:**
+- Domain: Only inherit `ExpressionSpecification<T>` and implement `ToExpression()`
+- Adapter: **No changes needed** (if only using properties already mapped in PropertyMap)
+- PropertyMap: Add mapping if the Spec uses new Entity properties
 
-> **설계 결정**: `ExpressionSpecification<T>`의 `ToExpression()`은 도메인 엔터티 기준으로 Expression을 정의하되, Value Object를 primitive로 캐스트합니다. `PropertyMap`의 `ExpressionVisitor`가 이 캐스트 패턴을 인식하여 Model 프로퍼티로 자동 변환합니다. And/Or/Not 조합도 `SpecificationExpressionResolver`가 자동 합성합니다.
+> **Design decision**: `ExpressionSpecification<T>`'s `ToExpression()` defines Expressions based on domain entities while casting Value Objects to primitives. `PropertyMap`'s `ExpressionVisitor` recognizes this cast pattern and automatically converts to Model properties. And/Or/Not combinations are also automatically composed by `SpecificationExpressionResolver`.
 
-> **Note**: 전체 Repository 구현 절차는 [Repository & Query 구현 가이드](../adapter/14c-repository-query-implementation-guide)를 참조하세요.
+> **Note**: For the complete Repository implementation procedure, see the [Repository & Query Implementation Guide](../adapter/14c-repository-query-implementation-guide).
 
 Now that Repository integration is complete, let us examine patterns for using Specifications individually or in combination within Usecases.
 
 ---
 
-## Usecase에서 사용 (HOW)
+## Usage in Usecase (HOW)
 
-### 단일 Spec 사용 — 중복 검사 (CreateProductCommand)
+### Single Spec Usage -- Duplicate Check (CreateProductCommand)
 
 ```csharp
 public sealed class Usecase(IProductRepository productRepository)
@@ -479,10 +479,10 @@ public sealed class Usecase(IProductRepository productRepository)
 }
 ```
 
-### 복합 Spec 조합 — 검색 필터 (SearchProductsQuery)
+### Composite Spec Combination -- Search Filter (SearchProductsQuery)
 
 ```csharp
-// 참조: samples/ecommerce-ddd/.../SearchProductsQuery.cs
+// Reference: samples/ecommerce-ddd/.../SearchProductsQuery.cs
 public sealed class Usecase(IProductQuery productQuery)
     : IQueryUsecase<Request, Response>
 {
@@ -528,16 +528,16 @@ public sealed class Usecase(IProductQuery productQuery)
 ```
 
 **Key Points:**
-- `Specification<T>.All`을 초기값으로 사용하여 null 체크 없이 `&` 연산자로 점진적 조합
-- `Option<T>.Iter()`: Some일 때만 필터 추가, None이면 무시 — 원시 타입 기반 `if` 체크 불필요
-- `Bind().Map().Iter()`: 두 Option이 모두 Some일 때만 범위 필터 추가
-- 필터가 없으면 `All` 그대로 반환 → 전체 조회. `All`은 `ExpressionSpecification<T>`을 상속하므로 EfCore에서도 정상 동작합니다
+- Use `Specification<T>.All` as the initial value for progressive composition with the `&` operator without null checks
+- `Option<T>.Iter()`: Add filter only when Some, ignore when None -- no primitive type-based `if` checks needed
+- `Bind().Map().Iter()`: Add range filter only when both Options are Some
+- If no filters, return `All` as-is -> full query. `All` inherits from `ExpressionSpecification<T>`, so it works correctly in EfCore
 
 ---
 
 ## Test Patterns
 
-### Specification 자체 테스트 (경계값)
+### Specification Self-Testing (Boundary Values)
 
 ```csharp
 public class ProductPriceRangeSpecTests
@@ -585,22 +585,22 @@ public class ProductPriceRangeSpecTests
 }
 ```
 
-### Specification 조합 테스트
+### Specification Composition Tests
 
 ```csharp
-// 메서드 스타일 조합
+// Method style composition
 var sut = new IsPositiveSpec().And(new IsEvenSpec());
-sut.IsSatisfiedBy(2).ShouldBe(true);   // 양수이면서 짝수
-sut.IsSatisfiedBy(3).ShouldBe(false);  // 양수이지만 홀수
+sut.IsSatisfiedBy(2).ShouldBe(true);   // positive and even
+sut.IsSatisfiedBy(3).ShouldBe(false);  // positive but odd
 
-// 연산자 스타일 조합
+// Operator style composition
 var sut = new IsPositiveSpec() & !new IsEvenSpec();
-sut.IsSatisfiedBy(3).ShouldBe(true);   // 양수이면서 짝수가 아닌 수
+sut.IsSatisfiedBy(3).ShouldBe(true);   // positive and not even
 ```
 
-### Usecase 테스트 (NSubstitute Mock)
+### Usecase Tests (NSubstitute Mock)
 
-Specification 타입까지 검증할 필요 없이 `Arg.Any<Specification<T>>()`로 Mock합니다:
+Mock with `Arg.Any<Specification<T>>()` without needing to verify Specification types:
 
 ```csharp
 public class SearchProductsQueryTests
@@ -636,119 +636,119 @@ public class SearchProductsQueryTests
 
 ## Checklist
 
-### Specification 구현 시
+### When Implementing Specifications
 
-- [ ] `ExpressionSpecification<T>` 상속 (`Functorium.Domains.Specifications`)
-- [ ] `sealed class`로 선언
-- [ ] `ToExpression()` 구현 — Value Object → primitive 캐스트 사용
-- [ ] `{Aggregate}/Specifications/` 폴더에 배치
-- [ ] 네이밍: `{Aggregate}{조건}Spec`
+- [ ] Inherits `ExpressionSpecification<T>` (`Functorium.Domains.Specifications`)
+- [ ] Declared as `sealed class`
+- [ ] `ToExpression()` implemented -- uses Value Object -> primitive casts
+- [ ] Placed in `{Aggregate}/Specifications/` folder
+- [ ] Naming: `{Aggregate}{Condition}Spec`
 
-### Repository 통합 시
+### When Integrating with Repository
 
-- [ ] Port에 `Exists(Specification<T>)` / `FindAll(Specification<T>)` 추가
-- [ ] InMemory 구현: `IsSatisfiedBy()` 직접 사용 (자동 구현됨)
-- [ ] EfCore 구현: `PropertyMap` 구성 + `SpecificationExpressionResolver.TryResolve()` 사용
-- [ ] 새 Entity 프로퍼티 사용 시 `PropertyMap.Map()` 추가
+- [ ] Added `Exists(Specification<T>)` / `FindAll(Specification<T>)` to Port
+- [ ] InMemory implementation: Use `IsSatisfiedBy()` directly (auto-implemented)
+- [ ] EfCore implementation: Configure `PropertyMap` + use `SpecificationExpressionResolver.TryResolve()`
+- [ ] Add `PropertyMap.Map()` when using new Entity properties
 
-### 테스트 시
+### When Testing
 
-- [ ] Specification 자체 테스트: 만족/불만족 경계값
-- [ ] 조합 테스트: `And`, `Or`, `Not` (메서드 + 연산자)
-- [ ] Usecase 테스트: `Arg.Any<Specification<T>>()` Mock
+- [ ] Specification self-tests: satisfied/unsatisfied boundary values
+- [ ] Composition tests: `And`, `Or`, `Not` (method + operator)
+- [ ] Usecase tests: `Arg.Any<Specification<T>>()` Mock
 
 ---
 
 ## Troubleshooting
 
-### EfCore에서 NotSupportedException이 발생한다
+### NotSupportedException occurs in EfCore
 
-**Cause:** Specification이 `ExpressionSpecification<T>`이 아닌 기본 `Specification<T>`을 상속하고 있어 `SpecificationExpressionResolver.TryResolve()`가 `null`을 반환합니다.
+**Cause:** The Specification inherits from the base `Specification<T>` instead of `ExpressionSpecification<T>`, causing `SpecificationExpressionResolver.TryResolve()` to return `null`.
 
-**Resolution:** 반드시 `ExpressionSpecification<T>`을 상속하고 `ToExpression()`을 구현하세요. `Specification<T>.All`도 `ExpressionSpecification<T>`을 상속하므로 EfCore에서 정상 동작합니다.
+**Resolution:** You must inherit `ExpressionSpecification<T>` and implement `ToExpression()`. `Specification<T>.All` also inherits from `ExpressionSpecification<T>`, so it works correctly in EfCore.
 
-### PropertyMap에 매핑되지 않은 프로퍼티를 사용한다
+### Using properties not mapped in PropertyMap
 
-**Cause:** `ToExpression()`에서 사용하는 Entity 프로퍼티가 `PropertyMap`에 등록되지 않았습니다.
+**Cause:** The Entity property used in `ToExpression()` is not registered in `PropertyMap`.
 
-**Resolution:** `PropertyMap`에 새 프로퍼티 매핑을 추가하세요:
+**Resolution:** Add new property mapping to `PropertyMap`:
 ```csharp
 private static readonly PropertyMap<Product, ProductModel> _propertyMap =
     new PropertyMap<Product, ProductModel>()
         .Map(p => (decimal)p.Price, m => m.Price)
-        .Map(p => (string)p.NewProperty, m => m.NewProperty);  // 추가
+        .Map(p => (string)p.NewProperty, m => m.NewProperty);  // Added
 ```
 
-### ToExpression()에서 Value Object를 직접 비교하면 번역 실패
+### Translation fails when directly comparing Value Objects in ToExpression()
 
-**Cause:** Expression 내부에서 Value Object를 직접 비교하면 `PropertyMap`이 변환할 수 없습니다.
+**Cause:** Direct Value Object comparison inside Expressions cannot be converted by `PropertyMap`.
 
-**Resolution:** `ToExpression()` 바깥에서 Value Object를 primitive로 변환한 후 클로저에 캡처하세요:
+**Resolution:** Convert Value Objects to primitives outside `ToExpression()` then capture in closures:
 ```csharp
-// 올바른 패턴
-decimal min = MinPrice;  // primitive로 변환
+// Correct pattern
+decimal min = MinPrice;  // Convert to primitive
 return product => (decimal)product.Price >= min;
 
-// 잘못된 패턴
-return product => product.Price >= MinPrice;  // Value Object 직접 비교
+// Incorrect pattern
+return product => product.Price >= MinPrice;  // Direct Value Object comparison
 ```
 
 ---
 
 ## FAQ
 
-### Q1. Specification과 Entity 메서드의 선택 기준은?
+### Q1. What are the criteria for choosing between Specification and Entity methods?
 
-Specification은 **조회 조건의 캡슐화와 조합이** 목적입니다. Entity 메서드는 상태 변경 로직에 사용합니다. "이 조건을 Repository 쿼리에서 재사용해야 하는가?"가 판단 기준입니다.
+Specifications are for **encapsulating and composing query conditions.** Entity methods are used for state change logic. The criterion is "Does this condition need to be reused in Repository queries?"
 
-### Q2. Specification<T>.All은 언제 사용하나요?
+### Q2. When should Specification<T>.All be used?
 
-선택적 필터를 점진적으로 조합할 때 `null` 대신 초기값으로 사용합니다. `All`은 `_ => true`를 반환하므로 `&` 연산의 항등원으로 동작하며, EfCore에서도 정상 동작합니다.
+Used as an initial value instead of `null` when progressively composing optional filters. `All` returns `_ => true`, acting as the identity element for the `&` operation, and works correctly in EfCore.
 
-### Q3. InMemory Repository와 EfCore Repository의 구현 차이는?
+### Q3. What is the implementation difference between InMemory Repository and EfCore Repository?
 
-InMemory는 `IsSatisfiedBy()`를 직접 사용하여 메모리에서 필터링합니다. EfCore는 `SpecificationExpressionResolver.TryResolve()`로 Expression을 추출하고, `PropertyMap.Translate()`로 Model Expression으로 변환 후 LINQ Where에 적용합니다.
+InMemory uses `IsSatisfiedBy()` directly to filter in memory. EfCore extracts the Expression with `SpecificationExpressionResolver.TryResolve()`, converts it to a Model Expression with `PropertyMap.Translate()`, and applies it to LINQ Where.
 
-### Q4. 새 Specification을 추가할 때 Adapter 코드를 수정해야 하나요?
+### Q4. Do I need to modify Adapter code when adding a new Specification?
 
-`PropertyMap`에 이미 매핑된 프로퍼티만 사용하는 Specification이면 Adapter 코드 수정이 불필요합니다. 새 Entity 프로퍼티를 사용하는 경우에만 `PropertyMap.Map()` 추가가 필요합니다.
+If the Specification only uses properties already mapped in `PropertyMap`, no Adapter code modification is needed. `PropertyMap.Map()` addition is only needed when using new Entity properties.
 
-### Q5. 메서드 스타일(.And(), .Or())과 연산자 스타일(&, |, !)의 차이는?
+### Q5. What is the difference between method style (.And(), .Or()) and operator style (&, |, !)?
 
-결과는 동일합니다. 연산자 스타일이 간결하지만, 메서드 스타일이 가독성이 높을 수 있습니다. 프로젝트 내에서 일관된 스타일을 선택하세요.
+The results are identical. Operator style is more concise, but method style may be more readable. Choose a consistent style within the project.
 
 ---
 
 ## References
 
-- [04-ddd-tactical-overview.md](./04-ddd-tactical-overview) — DDD 전술적 설계 개요
-- [09-domain-services.md](./09-domain-services) — 도메인 서비스
-- [12-ports.md](../adapter/12-ports) — Port 아키텍처
-- [15a-unit-testing.md](../testing/15a-unit-testing) — 단위 테스트 규칙
+- [04-ddd-tactical-overview.md](./04-ddd-tactical-overview) -- DDD tactical design overview
+- [09-domain-services.md](./09-domain-services) -- Domain Services
+- [12-ports.md](../adapter/12-ports) -- Port architecture
+- [15a-unit-testing.md](../testing/15a-unit-testing) -- Unit test rules
 
-### Practical Examples 파일
+### Practical Examples Files
 
 | Category | File |
 |------|------|
-| **프레임워크** | `Src/Functorium/Domains/Specifications/Specification.cs` |
+| **Framework** | `Src/Functorium/Domains/Specifications/Specification.cs` |
 | | `Src/Functorium/Domains/Specifications/AndSpecification.cs` |
 | | `Src/Functorium/Domains/Specifications/OrSpecification.cs` |
 | | `Src/Functorium/Domains/Specifications/NotSpecification.cs` |
-| **도메인 Spec** | `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Products/Specifications/ProductNameUniqueSpec.cs` |
+| **Domain Spec** | `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Products/Specifications/ProductNameUniqueSpec.cs` |
 | | `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Products/Specifications/ProductPriceRangeSpec.cs` |
 | | `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Products/Specifications/ProductLowStockSpec.cs` |
 | | `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Customers/Specifications/CustomerEmailSpec.cs` |
 | **Repository Port** | `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Products/Ports/IProductRepository.cs` |
 | | `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Customers/Ports/ICustomerRepository.cs` |
-| **Repository 구현** | `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryProductRepository.cs` |
+| **Repository Implementation** | `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryProductRepository.cs` |
 | | `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/EfCoreProductRepository.cs` |
 | **Usecase** | `Tests.Hosts/01-SingleHost/Src/LayeredArch.Application/Usecases/Products/CreateProductCommand.cs` |
 | | `Tests.Hosts/01-SingleHost/Src/LayeredArch.Application/Usecases/Products/SearchProductsQuery.cs` |
-| **프레임워크 테스트** | `Tests/Functorium.Tests.Unit/DomainsTests/Specifications/SpecificationTests.cs` |
+| **Framework Tests** | `Tests/Functorium.Tests.Unit/DomainsTests/Specifications/SpecificationTests.cs` |
 | | `Tests/Functorium.Tests.Unit/DomainsTests/Specifications/SpecificationOperatorTests.cs` |
-| **도메인 Spec 테스트** | `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Domain/Products/ProductPriceRangeSpecTests.cs` |
+| **Domain Spec Tests** | `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Domain/Products/ProductPriceRangeSpecTests.cs` |
 | | `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Domain/Products/ProductLowStockSpecTests.cs` |
 | | `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Domain/Products/ProductNameUniqueSpecTests.cs` |
 | | `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Domain/Products/ProductSpecificationCompositionTests.cs` |
 | | `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Domain/Customers/CustomerEmailSpecTests.cs` |
-| **Usecase 테스트** | `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Application/Products/SearchProductsQueryTests.cs` |
+| **Usecase Tests** | `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Application/Products/SearchProductsQueryTests.cs` |

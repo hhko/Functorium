@@ -198,7 +198,7 @@ The following table summarizes the key differences between Domain Service and Ap
 | **I/O** | None (Pure pattern) or Repository only (Evans pattern) | Present (Repository, Event publishing) |
 | **Role** | Business rules | Orchestration |
 | **Return** | `Fin<T>` or `FinT<IO, T>` | `FinResponse<T>` |
-| **마커** | `IDomainService` | `ICommandUsecase<T,R>` / `IQueryUsecase<T,R>` |
+| **Marker** | `IDomainService` | `ICommandUsecase<T,R>` / `IQueryUsecase<T,R>` |
 
 ### Position in Functorium Type Hierarchy
 
@@ -365,7 +365,7 @@ public sealed class {ServiceName} : IDomainService
     {
         if (condition)
             return DomainError.For<{ServiceName}>(
-                new {ErrorName}(), currentValue, "에러 메시지");
+                new {ErrorName}(), currentValue, "Error message");
         return unit;
     }
 }
@@ -441,7 +441,7 @@ Methods returning `Fin<T>` can be used directly in `FinT<IO, T>` LINQ chains wit
 ```csharp
 FinT<IO, Response> usecase =
     from customer in _customerRepository.GetById(customerId)      // FinT<IO, Customer>
-    from _2 in _creditCheckService.ValidateCreditLimit(customer, amount)  // Fin<Unit> → 자동 리프팅
+    from _2 in _creditCheckService.ValidateCreditLimit(customer, amount)  // Fin<Unit> -> auto-lifting
     from order in _orderRepository.Create(Order.Create(...))      // FinT<IO, Order>
     select new Response(...);
 ```
@@ -450,10 +450,10 @@ This pattern is identical to existing Entity methods like `Product.DeductStock()
 
 ```csharp
 // Entity method (existing pattern)
-from _1 in product.DeductStock(quantity)        // Fin<Unit> → 자동 리프팅
+from _1 in product.DeductStock(quantity)        // Fin<Unit> -> auto-lifting
 
 // Domain Service (same pattern)
-from _2 in _creditCheckService.ValidateCreditLimit(customer, amount)  // Fin<Unit> → 자동 리프팅
+from _2 in _creditCheckService.ValidateCreditLimit(customer, amount)  // Fin<Unit> -> auto-lifting
 ```
 
 #### Complete Usecase Example
@@ -524,7 +524,7 @@ public sealed class Usecase(
     {
         // ...
         FinT<IO, Response> usecase =
-            from _ in _emailCheckService.ValidateEmailUnique(email, excludeId)  // FinT<IO, Unit> 직접 체이닝
+            from _ in _emailCheckService.ValidateEmailUnique(email, excludeId)  // FinT<IO, Unit> direct chaining
             from saved in _repository.Create(contact)
             select new Response(...);
         // ...
@@ -849,7 +849,7 @@ LayeredArch.Tests.Unit/
 
 By default, **try the Pure pattern first,** and only consider the Repository pattern when the Usecase cannot easily load the data.
 
-### Inter-Domain Service Calls이 너무 복잡해졌다
+### Inter-Domain Service calls have become too complex
 
 **Cause:** Complexity increases when the call chain between Domain Services grows to 3 or more.
 
@@ -895,7 +895,7 @@ SingleHost's `DomainServiceArchitectureRuleTests` enforces the Pure pattern with
 
 This applies only to the Pure pattern. The Pure pattern has no state and no constructor parameters, so DI is unnecessary. The Repository pattern receives Repository injection in the constructor, so DI registration with `AddScoped<>()` is required.
 
-### Q6. Domain Service에서 에러를 어떻게 반환하나요?
+### Q6. How are errors returned from a Domain Service?
 
 Use the `DomainError.For<{ServiceName}>(new {ErrorType}(), currentValue, message)` pattern. Error codes are auto-generated in the format `DomainErrors.{ServiceName}.{ErrorType}`. Both patterns are identical.
 
@@ -919,7 +919,7 @@ The Pure pattern verifies only input/output directly without Mocks. The Reposito
 - [12-ports.md](../adapter/12-ports) - Port/Adapter pattern (difference from IPort)
 - [15a-unit-testing.md](../testing/15a-unit-testing) - Unit test rules (T1_T2_T3, AAA pattern)
 
-### Practical Examples 파일
+### Practical Examples Files
 
 | File | Description |
 |------|------|
