@@ -121,7 +121,7 @@ Git 태그 기반 자동 버전 관리와 CI/CD 파이프라인을 통해 안정
 
 ### 워크플로우 구성
 
-다음 테이블은 두 개의 워크플로우와 각각의 트리거 조건을 정리한 것입니다.
+The following table 두 개의 워크플로우와 각각의 트리거 조건을 정리한 것입니다.
 
 | 워크플로우 | 트리거 | 주요 작업 |
 |-----------|--------|----------|
@@ -144,7 +144,7 @@ Git 태그 기반 자동 버전 관리와 CI/CD 파이프라인을 통해 안정
 │       ├── build.yml        # Build 워크플로우 (CI)
 │       └── publish.yml      # Publish 워크플로우 (Release)
 ├── Directory.Build.props    # 공통 NuGet 설정
-├── Directory.Packages.props # 중앙 패키지 버전 관리
+├── Directory.Packages.props # Central package version management
 ├── Functorium.png              # 패키지 아이콘 (128x128 PNG)
 ├── .nupkg/                  # 생성된 패키지 출력 디렉토리
 └── Src/
@@ -640,11 +640,11 @@ CI 환경에서 재현 가능한 빌드를 위한 설정입니다.
 </PropertyGroup>
 ```
 
-### 심볼 패키지와 SourceLink의 역할 차이
+### 심볼 패키지와 SourceLink의 Role 차이
 
-다음 테이블은 심볼 패키지와 SourceLink가 디버깅에서 각각 어떤 정보를 제공하는지 비교합니다.
+The following table 심볼 패키지와 SourceLink가 디버깅에서 각각 어떤 정보를 제공하는지 비교합니다.
 
-| Feature | 역할 | 제공 정보 |
+| Feature | Role | 제공 정보 |
 |------|------|----------|
 | **심볼 패키지 (.snupkg)** | "어디서" 실행 중인지 | 메서드 이름, 라인 번호, 변수 이름 |
 | **SourceLink** | "무엇을" 실행 중인지 | 실제 소스 코드 내용 |
@@ -726,7 +726,7 @@ CI 환경에서 재현 가능한 빌드를 위한 설정입니다.
 ### Build-Local.ps1 사용 (권장)
 
 ```bash
-# 전체 빌드 및 패키지 생성
+# full 빌드 및 패키지 생성
 ./Build-Local.ps1
 
 # 패키지 생성 건너뛰기
@@ -736,7 +736,7 @@ CI 환경에서 재현 가능한 빌드를 위한 설정입니다.
 ### dotnet CLI 직접 사용
 
 ```bash
-# 솔루션 전체 패키지 생성
+# 솔루션 full 패키지 생성
 dotnet pack -c Release -o .nupkg
 
 # 특정 프로젝트만
@@ -786,7 +786,7 @@ dotnet build
 
 ### GitHub Secrets
 
-| Secret | Purpose | 필수 여부 | 획득 방법 |
+| Secret | Purpose | required | 획득 방법 |
 |--------|------|----------|----------|
 | `NUGET_API_KEY` | NuGet.org 배포 | Release 시 필수 | NuGet.org > Account > API Keys |
 | `CODECOV_TOKEN` | Codecov 업로드 | 선택 (현재 비활성화) | Codecov.io |
@@ -832,7 +832,7 @@ MinVer는 Git 태그를 기반으로 .NET 프로젝트의 버전을 자동으로
 
 ### 기존 방식과 비교
 
-다음 테이블은 수동 버전 관리와 MinVer 자동 버전 관리의 차이를 비교합니다.
+The following table 수동 버전 관리와 MinVer 자동 버전 관리의 차이를 비교합니다.
 
 | 기존 방식 | MinVer 방식 |
 |----------|------------|
@@ -844,7 +844,7 @@ MinVer는 Git 태그를 기반으로 .NET 프로젝트의 버전을 자동으로
 
 ## 버전 구조
 
-### 전체 구조
+### full 구조
 
 ```
 {Major}.{Minor}.{Patch}-{Identifier}.{Phase}.{Height}+{Commit}
@@ -1151,7 +1151,7 @@ MinVer의 철학은 **"태그는 의미 있는 마일스톤에만, 나머지는 
 |------|------|------|---------|
 | **AssemblyVersion** | 바이너리 호환성 | Major.Minor.0.0 | 1.0.0.0 |
 | **FileVersion** | 파일 속성 표시 | Major.Minor.Patch.0 | 1.0.1.0 |
-| **InformationalVersion** | 제품 버전 (사용자용) | 전체 SemVer | 1.0.1-alpha.0.5+abc123 |
+| **InformationalVersion** | 제품 버전 (사용자용) | full SemVer | 1.0.1-alpha.0.5+abc123 |
 
 ### AssemblyVersion에 Patch를 포함하지 않는 이유
 
@@ -1179,7 +1179,7 @@ v1.1.0: AssemblyVersion=1.1.0.0, FileVersion=1.1.0.0  # Minor 변경 - 재컴파
 
 | 속성 | 값 예시 | Description |
 |------|---------|------|
-| `$(MinVerVersion)` | 1.0.0 | 전체 SemVer 버전 |
+| `$(MinVerVersion)` | 1.0.0 | full SemVer 버전 |
 | `$(MinVerMajor)` | 1 | Major 버전 |
 | `$(MinVerMinor)` | 0 | Minor 버전 |
 | `$(MinVerPatch)` | 0 | Patch 버전 |
@@ -1286,7 +1286,7 @@ Shallow clone으로 Git 히스토리가 누락된 경우:
 - name: Checkout
   uses: actions/checkout@v4
   with:
-    fetch-depth: 0  # 전체 히스토리 가져오기
+    fetch-depth: 0  # full 히스토리 가져오기
 ```
 
 ### README.md가 패키지에 포함되지 않음

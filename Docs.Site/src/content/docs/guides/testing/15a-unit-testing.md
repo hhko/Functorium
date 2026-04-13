@@ -607,7 +607,7 @@ dotnet add package xunit.runner.visualstudio
 
 **원인**: `Microsoft.Testing.Extensions.TrxReport` 패키지 누락
 
-**증상:**
+**Symptom:**
 - `dotnet test`로 직접 실행하면 모든 테스트가 통과
 - `Build-Local.ps1` 실행 시 "오류: N" 메시지와 함께 일부 테스트만 실행됨
 
@@ -652,7 +652,7 @@ using Xunit;
 
 **원인**: xUnit v3(MTP 모드)에서는 VSTest의 `--filter` 옵션이 지원되지 않음
 
-**증상:**
+**Symptom:**
 ```
 알 수 없는 옵션 '--filter'
 ```

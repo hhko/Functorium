@@ -15,42 +15,42 @@ Domain/Application errors were covered in [08b-error-system-domain-app.md](./08b
 ### Key Commands
 
 ```csharp
-// Adapter 에러
-AdapterError.For<ProductRepository>(new NotFound(), id, "찾을 수 없습니다");
+// Adapter error
+AdapterError.For<ProductRepository>(new NotFound(), id, "Not found");
 AdapterError.FromException<MyAdapter>(new ConnectionFailed("DB"), exception);
 
-// 테스트 어설션
+// Test assertions
 error.ShouldBeAdapterError<ProductRepository>(new AdapterErrorType.NotFound());
 error.ShouldBeAdapterExceptionalError<UsecaseExceptionPipeline>(new AdapterErrorType.PipelineException());
 
-// 범용 어설션
+// Generic assertions
 result.ShouldFailWithErrorCode("AdapterErrors.ProductRepository.NotFound");
 error.ShouldBeErrorCodeExceptional<InvalidOperationException>("AdapterErrors.DatabaseAdapter.ConnectionFailed");
 ```
 
 ### Key Procedures
 
-1. Adapter 에러: 표준 에러 타입 선택 또는 Custom sealed record 정의
-2. `AdapterError.For` 또는 `AdapterError.FromException`으로 에러 생성
-3. Custom 에러가 필요하면 `AdapterErrorType.Custom`을 상속한 sealed record 정의
-4. 테스트 작성 - 레이어별 어설션 또는 범용 어설션 사용
+1. Adapter error: Select a standard error type or define a Custom sealed record
+2. Create errors with `AdapterError.For` or `AdapterError.FromException`
+3. If Custom error is needed, define a sealed record inheriting from `AdapterErrorType.Custom`
+4. Write tests - Use layer-specific assertions or generic assertions
 
 ### Key Concepts
 
-| 레이어 | 팩토리 | 에러 코드 접두사 | 사용 시점 |
+| Layer | Factory | Error Code Prefix | When to Use |
 |--------|--------|-----------------|----------|
-| Adapter | `AdapterError` | `AdapterErrors.` | 파이프라인, 외부 서비스, 데이터 |
-| Custom | 각 레이어별 | 레이어에 따름 | 표준 에러로 표현 불가능한 경우 |
+| Adapter | `AdapterError` | `AdapterErrors.` | Pipeline, external services, data |
+| Custom | Per layer | Depends on layer | When standard errors cannot express the situation |
 
-먼저 Adapter 에러의 생성 패턴을 살펴본 뒤, Custom 에러 정의, 테스트 모범 사례, 레이어별 체크리스트 순서로 진행합니다.
+First we examine Adapter error creation patterns, then Custom error definitions, testing best practices, and layer-specific checklists.
 
 ---
 
-## Adapter 에러
+## Adapter Errors
 
-### 에러 생성 및 반환
+### Error Creation and Return
 
-파이프라인, 외부 서비스, 데이터 처리 과정에서 발생하는 에러를 `AdapterError.For`로 생성합니다. 예외를 래핑할 때는 `AdapterError.FromException`을 사용합니다.
+Errors occurring in pipelines, external services, and data processing are created with `AdapterError.For`. When wrapping exceptions, use `AdapterError.FromException`.
 
 ```csharp
 using Functorium.Adapters.Errors;
@@ -60,13 +60,13 @@ using static Functorium.Adapters.Errors.AdapterErrorType;
 return AdapterError.For<ProductRepository>(
     new NotFound(),
     id.ToString(),
-    "상품을 찾을 수 없습니다");
+    "Product not found");
 
 // Generic value type
 return AdapterError.For<HttpClientAdapter, string>(
     new Timeout(Duration: TimeSpan.FromSeconds(30)),
     url,
-    "요청 타임아웃");
+    "Request timeout");
 
 // Exception wrapping
 return AdapterError.FromException<ExternalApiService>(
@@ -74,55 +74,55 @@ return AdapterError.FromException<ExternalApiService>(
     exception);
 ```
 
-### AdapterErrorType 전체 목록
+### Complete AdapterErrorType List
 
-아래 표는 Adapter 에러 타입을 범주별로 정리한 것입니다.
+The following table organizes Adapter error types by category.
 
-#### 공통 에러 타입 - R1, R3, R4, R5, R7
-
-| Error Type | Description | Usage Example |
-|-----------|------|----------|
-| `Empty` | 비어있음 | `new Empty()` |
-| `Null` | null임 | `new Null()` |
-| `NotFound` | 찾을 수 없음 | `new NotFound()` |
-| `AlreadyExists` | 이미 존재함 | `new AlreadyExists()` |
-| `Duplicate` | 중복됨 | `new Duplicate()` |
-| `InvalidState` | 유효하지 않은 상태 | `new InvalidState()` |
-| `Unauthorized` | 인증되지 않음 | `new Unauthorized()` |
-| `Forbidden` | 접근 금지 | `new Forbidden()` |
-
-#### Pipeline 관련 - R8
+#### Common Error Types - R1, R3, R4, R5, R7
 
 | Error Type | Description | Usage Example |
 |-----------|------|----------|
-| `PipelineValidation` | 파이프라인 검증 실패 | `new PipelineValidation(PropertyName: "Id")` |
-| `PipelineException` | 파이프라인 예외 발생 | `new PipelineException()` |
+| `Empty` | Empty | `new Empty()` |
+| `Null` | Null | `new Null()` |
+| `NotFound` | Not found | `new NotFound()` |
+| `AlreadyExists` | Already exists | `new AlreadyExists()` |
+| `Duplicate` | Duplicate | `new Duplicate()` |
+| `InvalidState` | Invalid state | `new InvalidState()` |
+| `Unauthorized` | Not authenticated | `new Unauthorized()` |
+| `Forbidden` | Access forbidden | `new Forbidden()` |
 
-#### 외부 서비스 관련 - R1, R8
-
-| Error Type | Description | Usage Example |
-|-----------|------|----------|
-| `ExternalServiceUnavailable` | 외부 서비스 사용 불가 | `new ExternalServiceUnavailable(ServiceName: "PaymentGateway")` |
-| `ConnectionFailed` | 연결 실패 | `new ConnectionFailed(Target: "database")` |
-| `Timeout` | 타임아웃 | `new Timeout(Duration: TimeSpan.FromSeconds(30))` |
-
-#### 데이터 관련 - R1, R8
+#### Pipeline Related - R8
 
 | Error Type | Description | Usage Example |
 |-----------|------|----------|
-| `Serialization` | 직렬화 실패 | `new Serialization(Format: "JSON")` |
-| `Deserialization` | 역직렬화 실패 | `new Deserialization(Format: "XML")` |
-| `DataCorruption` | 데이터 손상 | `new DataCorruption()` |
+| `PipelineValidation` | Pipeline validation failure | `new PipelineValidation(PropertyName: "Id")` |
+| `PipelineException` | Pipeline exception occurred | `new PipelineException()` |
 
-#### 커스텀
+#### External Service Related - R1, R8
 
 | Error Type | Description | Usage Example |
 |-----------|------|----------|
-| `Custom` | 어댑터 특화 에러 (abstract) | `sealed record RateLimited : AdapterErrorType.Custom;` → `new RateLimited()` |
+| `ExternalServiceUnavailable` | External service unavailable | `new ExternalServiceUnavailable(ServiceName: "PaymentGateway")` |
+| `ConnectionFailed` | Connection failed | `new ConnectionFailed(Target: "database")` |
+| `Timeout` | Timeout | `new Timeout(Duration: TimeSpan.FromSeconds(30))` |
 
-### Repository 구현 예시
+#### Data Related - R1, R8
 
-`GetById`에서 `AdapterError.For`로 Not Found를 직접 반환하는 암시적 변환 패턴.
+| Error Type | Description | Usage Example |
+|-----------|------|----------|
+| `Serialization` | Serialization failed | `new Serialization(Format: "JSON")` |
+| `Deserialization` | Deserialization failed | `new Deserialization(Format: "XML")` |
+| `DataCorruption` | Data corruption | `new DataCorruption()` |
+
+#### Custom
+
+| Error Type | Description | Usage Example |
+|-----------|------|----------|
+| `Custom` | Adapter-specific error (abstract) | `sealed record RateLimited : AdapterErrorType.Custom;` -> `new RateLimited()` |
+
+### Repository Implementation Example
+
+Implicit conversion pattern for directly returning Not Found with `AdapterError.For` in `GetById`.
 
 ```csharp
 [GenerateObservablePort]
@@ -139,11 +139,11 @@ public class InMemoryProductRepository : IProductRepository
             if (_products.TryGetValue(id, out Product? product))
                 return Fin.Succ(product);
 
-            // 암시적 변환으로 직접 반환
+            // Direct return via implicit conversion
             return AdapterError.For<InMemoryProductRepository>(
                 new NotFound(),
                 id.ToString(),
-                $"상품 ID '{id}'을(를) 찾을 수 없습니다");
+                $"Product ID '{id}' not found");
         });
     }
 
@@ -156,7 +156,7 @@ public class InMemoryProductRepository : IProductRepository
                 return AdapterError.For<InMemoryProductRepository>(
                     new NotFound(),
                     product.Id.ToString(),
-                    $"상품 ID '{product.Id}'을(를) 찾을 수 없습니다");
+                    $"Product ID '{product.Id}' not found");
             }
 
             _products[product.Id] = product;
@@ -173,7 +173,7 @@ public class InMemoryProductRepository : IProductRepository
                 return AdapterError.For<InMemoryProductRepository>(
                     new NotFound(),
                     id.ToString(),
-                    $"상품 ID '{id}'을(를) 찾을 수 없습니다");
+                    $"Product ID '{id}' not found");
             }
 
             return Fin.Succ(unit);
@@ -182,9 +182,9 @@ public class InMemoryProductRepository : IProductRepository
 }
 ```
 
-### 외부 API 서비스 구현 예시
+### External API Service Implementation Example
 
-HTTP 상태 코드별로 다른 에러 타입을 반환하는 `HandleHttpError` 패턴과, 예외 종류별 `FromException` 사용.
+The `HandleHttpError` pattern that returns different error types based on HTTP status codes, and `FromException` usage by exception type.
 
 ```csharp
 [GenerateObservablePort]
@@ -209,20 +209,20 @@ public class ExternalPricingApiService : IExternalPricingService
                     $"/api/pricing/{productCode}",
                     cancellationToken);
 
-                // HTTP 오류 응답 처리 - 암시적 변환 활용
+                // HTTP error response handling - using implicit conversion
                 if (!response.IsSuccessStatusCode)
                     return HandleHttpError<Money>(response, productCode);
 
                 var priceResponse = await response.Content
                     .ReadFromJsonAsync<ExternalPriceResponse>(cancellationToken: cancellationToken);
 
-                // null 응답 처리
+                // null response handling
                 if (priceResponse is null)
                 {
                     return AdapterError.For<ExternalPricingApiService>(
                         new Null(),
                         productCode,
-                        $"외부 API 응답이 null입니다. ProductCode: {productCode}");
+                        $"External API response is null. ProductCode: {productCode}");
                 }
 
                 return Money.Create(priceResponse.Price);
@@ -238,7 +238,7 @@ public class ExternalPricingApiService : IExternalPricingService
                 return AdapterError.For<ExternalPricingApiService>(
                     new OperationCancelled(),
                     productCode,
-                    "요청이 취소되었습니다");
+                    "Request was cancelled");
             }
             catch (TaskCanceledException ex)
             {
@@ -256,8 +256,8 @@ public class ExternalPricingApiService : IExternalPricingService
     }
 
     /// <summary>
-    /// HTTP 오류 응답을 AdapterError로 변환합니다.
-    /// switch 표현식에서 암시적 변환이 자동 적용됩니다.
+    /// Converts HTTP error responses to AdapterError.
+    /// Implicit conversion is automatically applied in switch expressions.
     /// </summary>
     private static Fin<T> HandleHttpError<T>(HttpResponseMessage response, string context) =>
         response.StatusCode switch
@@ -265,56 +265,56 @@ public class ExternalPricingApiService : IExternalPricingService
             HttpStatusCode.NotFound => AdapterError.For<ExternalPricingApiService>(
                 new NotFound(),
                 context,
-                $"외부 API에서 리소스를 찾을 수 없습니다. Context: {context}"),
+                $"Resource not found in external API. Context: {context}"),
 
             HttpStatusCode.Unauthorized => AdapterError.For<ExternalPricingApiService>(
                 new Unauthorized(),
                 context,
-                "외부 API 인증에 실패했습니다"),
+                "External API authentication failed"),
 
             HttpStatusCode.Forbidden => AdapterError.For<ExternalPricingApiService>(
                 new Forbidden(),
                 context,
-                "외부 API 접근이 금지되었습니다"),
+                "External API access forbidden"),
 
             HttpStatusCode.TooManyRequests => AdapterError.For<ExternalPricingApiService>(
                 new RateLimited(),
                 context,
-                "외부 API 요청 제한에 도달했습니다"),
+                "External API rate limit reached"),
 
             HttpStatusCode.ServiceUnavailable => AdapterError.For<ExternalPricingApiService>(
                 new ExternalServiceUnavailable("ExternalPricingApi"),
                 context,
-                "외부 가격 서비스를 사용할 수 없습니다"),
+                "External pricing service unavailable"),
 
             _ => AdapterError.For<ExternalPricingApiService, HttpStatusCode>(
                 new HttpError(),
                 response.StatusCode,
-                $"외부 API 호출 실패. Status: {response.StatusCode}")
+                $"External API call failed. Status: {response.StatusCode}")
         };
 }
 ```
 
-### Adapter 에러 테스트
+### Adapter Error Testing
 
-테스트 어설션 네임스페이스:
+Test assertion namespace:
 
 ```csharp
 using Functorium.Testing.Assertions.Errors;
 ```
 
-아래 표는 레이어별로 제공되는 어설션 메서드를 정리한 것입니다.
+The following table summarizes assertion methods provided per layer.
 
-| 레이어 | Error 검증 | Fin<T> 검증 | Validation<Error, T> 검증 |
+| Layer | Error Verification | Fin<T> Verification | Validation<Error, T> Verification |
 |--------|-----------|-------------|--------------------------|
 | Domain | `ShouldBeDomainError` | `ShouldBeDomainError` | `ShouldHaveDomainError`, `ShouldHaveOnlyDomainError`, `ShouldHaveDomainErrors` |
 | Application | `ShouldBeApplicationError` | `ShouldBeApplicationError` | `ShouldHaveApplicationError`, `ShouldHaveOnlyApplicationError`, `ShouldHaveApplicationErrors` |
 | Adapter | `ShouldBeAdapterError`, `ShouldBeAdapterExceptionalError` | `ShouldBeAdapterError`, `ShouldBeAdapterExceptionalError` | `ShouldHaveAdapterError`, `ShouldHaveOnlyAdapterError`, `ShouldHaveAdapterErrors` |
 
-#### Error 검증
+#### Error Verification
 
 ```csharp
-// 기본 에러 타입 검증
+// Basic error type verification
 [Fact]
 public void ShouldBeAdapterError_WhenValidationFails()
 {
@@ -329,7 +329,7 @@ public void ShouldBeAdapterError_WhenValidationFails()
         new AdapterErrorType.PipelineValidation("ProductName"));
 }
 
-// 현재 값 포함 검증
+// Verification including current value
 [Fact]
 public void ShouldBeAdapterError_WithValue_WhenTimeout()
 {
@@ -346,7 +346,7 @@ public void ShouldBeAdapterError_WithValue_WhenTimeout()
         expectedCurrentValue: url);
 }
 
-// Exception wrapping 에러 검증
+// Exception wrapping error verification
 [Fact]
 public void ShouldBeAdapterExceptionalError_WhenExceptionOccurs()
 {
@@ -376,7 +376,7 @@ public void ShouldBeAdapterExceptionalError_WithExceptionType()
 }
 ```
 
-#### Fin<T> 검증
+#### Fin<T> Verification
 
 ```csharp
 [Fact]
@@ -407,7 +407,7 @@ public void Fin_ShouldBeAdapterExceptionalError()
 }
 ```
 
-#### Validation<Error, T> 검증
+#### Validation<Error, T> Verification
 
 ```csharp
 [Fact]
@@ -463,70 +463,70 @@ public void Validation_ShouldHaveAdapterErrors()
 }
 ```
 
-Adapter 에러의 생성과 테스트 패턴을 확인했으니, 이제 표준 에러로 표현할 수 없는 상황을 위한 Custom 에러 정의 방법을 알아봅니다.
+Now that Adapter error creation and test patterns have been confirmed, let us learn how to define Custom errors for situations that cannot be expressed with standard errors.
 
 ---
 
-## Custom 에러
+## Custom Errors
 
-### 언제 Custom을 사용하는가?
+### When to Use Custom Errors?
 
-1. **표준 에러로 표현 불가능한 경우**: 도메인/애플리케이션/어댑터 특화 상황
-2. **의미가 명확한 경우**: 에러 이름만으로 상황을 이해할 수 있을 때
-3. **재사용 가능성이 낮은 경우**: 특정 상황에서만 발생하는 에러
+1. **When standard errors cannot express the situation**: Domain/application/adapter-specific scenarios
+2. **When the meaning is clear**: When the error name alone conveys the situation
+3. **When reuse potential is low**: Errors that occur only in specific situations
 
-### Custom 에러 명명 규칙
+### Custom Error Naming Rules
 
 ```csharp
-// ✅ Good - 명확하고 구체적
+// ✅ Good - clear and specific
 // public sealed record AlreadyShipped : DomainErrorType.Custom;
 // public sealed record PaymentDeclined : ApplicationErrorType.Custom;
 // public sealed record StockDepleted : DomainErrorType.Custom;
-new AlreadyShipped()     // 이미 배송됨
-new PaymentDeclined()    // 결제 거부됨
-new StockDepleted()      // 재고 소진
+new AlreadyShipped()     // Already shipped
+new PaymentDeclined()    // Payment declined
+new StockDepleted()      // Stock depleted
 
-// ❌ Bad - 모호하거나 너무 일반적
-// sealed record Error : XxxErrorType.Custom;       // 의미 없음
-// sealed record Failed : XxxErrorType.Custom;      // 너무 일반적
-// sealed record Invalid : XxxErrorType.Custom;     // 구체적이지 않음
+// ❌ Bad - ambiguous or too generic
+// sealed record Error : XxxErrorType.Custom;       // Meaningless
+// sealed record Failed : XxxErrorType.Custom;      // Too generic
+// sealed record Invalid : XxxErrorType.Custom;     // Not specific enough
 ```
 
-### 레이어별 Custom 에러 예시
+### Custom Error Examples by Layer
 
-다음 표는 각 레이어에서 흔히 정의되는 Custom 에러의 예시입니다.
+The following table shows commonly defined Custom errors in each layer.
 
-| 레이어 | Custom 에러 예시 | Description |
+| Layer | Custom Error Examples | Description |
 |--------|-----------------|------|
-| Domain | `AlreadyShipped`, `NotVerified`, `Expired` | 도메인 규칙 위반 |
-| Application | `PaymentDeclined`, `QuotaExceeded`, `MaintenanceMode` | 비즈니스 프로세스 실패 |
-| Adapter | `RateLimited`, `CircuitOpen`, `ServiceDegraded` | 인프라/외부 서비스 문제 |
+| Domain | `AlreadyShipped`, `NotVerified`, `Expired` | Domain rule violation |
+| Application | `PaymentDeclined`, `QuotaExceeded`, `MaintenanceMode` | Business process failure |
+| Adapter | `RateLimited`, `CircuitOpen`, `ServiceDegraded` | Infrastructure/external service issues |
 
-### 표준 에러로 승격 기준
+### Criteria for Promoting to Standard Error
 
-자주 사용되는 Custom 에러는 표준 에러 타입으로 승격을 고려합니다 ([08a 승격 기준](./08a-error-system#custom--표준-에러-승격-기준) 참조):
+Frequently used Custom errors should be considered for promotion to standard error types (see [08a promotion criteria](./08a-error-system#custom-to-standard-error-promotion-criteria)):
 
-> 1. **3개 이상의 서로 다른 위치에서** 동일 Custom 에러 사용
-> 2. **재사용 의미가 명확** (도메인 개념으로 자리잡음)
-> 3. 기존 네이밍 규칙(R1-R8)에 **자연스럽게 매핑** 가능
-> 4. **안정성 확인** (더 이상 의미가 변하지 않음)
+> 1. Used in **3 or more different locations** with the same Custom error
+> 2. **Reuse meaning is clear** (established as a domain concept)
+> 3. Can be **naturally mapped** to existing naming conventions (R1-R8)
+> 4. **Stability confirmed** (meaning no longer changes)
 
 ```csharp
-// 자주 사용되는 패턴 발견 시 표준 타입으로 추가
+// Add as standard type when frequently used patterns are discovered
 public sealed record Expired : DomainErrorType;
 public sealed record Suspended : ApplicationErrorType;
 public sealed record RateLimited : AdapterErrorType;
 ```
 
-Custom 에러의 정의와 승격 기준을 이해했다면, 이제 에러 테스트를 효과적으로 작성하는 모범 사례를 살펴봅니다.
+Now that Custom error definitions and promotion criteria are understood, let us examine best practices for writing error tests effectively.
 
 ---
 
-## 테스트 모범 사례
+## Testing Best Practices
 
-### 실패 케이스 테스트
+### Failure Case Testing
 
-에러가 발생하지 않아야 하는 성공 케이스도 테스트해야 합니다:
+Success cases where no error should occur must also be tested:
 
 ```csharp
 [Fact]
@@ -557,26 +557,26 @@ public void Validate_ShouldSucceed_WhenValidValue()
 }
 ```
 
-### 테스트 명명 규칙
+### Test Naming Conventions
 
 ```csharp
-// 패턴: [Method]_Should[Behavior]_When[Condition]
+// Pattern: [Method]_Should[Behavior]_When[Condition]
 
-// Error 검증
+// Error verification
 ShouldBeDomainError_WhenValueIsEmpty
 ShouldBeApplicationError_WhenProductNotFound
 ShouldBeAdapterError_WhenValidationFails
 
-// Fin 검증
+// Fin verification
 Create_ShouldFail_WhenEmailIsInvalid
 Execute_ShouldFail_WhenProductNotFound
 
-// Validation 검증
+// Validation verification
 Validate_ShouldHaveError_WhenPasswordTooShort
 Validate_ShouldHaveMultipleErrors_WhenMultipleValidationsFail
 ```
 
-### Arrange-Act-Assert 패턴
+### Arrange-Act-Assert Pattern
 
 ```csharp
 [Fact]
@@ -593,7 +593,7 @@ public void Create_ShouldFail_WhenEmailIsEmpty()
 }
 ```
 
-### Theory를 사용한 파라미터화 테스트
+### Parameterized Tests with Theory
 
 ```csharp
 [Theory]
@@ -623,7 +623,7 @@ public void Create_ShouldFail_WhenEmailFormatIsInvalid(string email)
 }
 ```
 
-### Custom 에러 테스트
+### Custom Error Testing
 
 ```csharp
 // Error type definition (nested in Order class):
@@ -643,48 +643,48 @@ public void Cancel_ShouldFail_WhenOrderAlreadyShipped()
 }
 ```
 
-### 범용 에러 Assertion 유틸리티
+### Generic Error Assertion Utilities
 
-레이어별 Assertion(`ShouldBeDomainError`, `ShouldBeApplicationError`, `ShouldBeAdapterError`)과 별도로, **레이어에 의존하지 않는 범용 에러 검증** 유틸리티가 제공됩니다.
+In addition to layer-specific Assertions (`ShouldBeDomainError`, `ShouldBeApplicationError`, `ShouldBeAdapterError`), **layer-independent generic error verification** utilities are provided.
 
 ```csharp
 using Functorium.Testing.Assertions.Errors;
 ```
 
-#### ErrorCodeAssertions — 범용 에러 코드 검증
+#### ErrorCodeAssertions -- Generic Error Code Verification
 
 | Method | Description |
 |--------|------|
-| `error.ShouldHaveErrorCode()` | `IHasErrorCode` 구현 여부 검증, 인터페이스 반환 |
-| `error.ShouldHaveErrorCode("code")` | 특정 에러 코드 일치 검증 |
-| `error.ShouldHaveErrorCodeStartingWith("prefix")` | 에러 코드 접두사 검증 |
-| `error.ShouldHaveErrorCode(predicate)` | predicate 기반 에러 코드 검증 |
-| `error.ShouldBeExpected()` | Expected 타입 검증 |
-| `error.ShouldBeExceptional()` | Exceptional 타입 검증 |
-| `error.ShouldBeErrorCodeExpected("code", "value")` | `ErrorCodeExpected` 타입 + 코드 + 값 검증 |
-| `error.ShouldBeErrorCodeExpected<T>("code", value)` | `ErrorCodeExpected<T>` 타입 + 코드 + 값 검증 |
-| `error.ShouldBeErrorCodeExpected<T1, T2>("code", v1, v2)` | `ErrorCodeExpected<T1, T2>` 검증 |
-| `error.ShouldBeErrorCodeExpected<T1, T2, T3>("code", v1, v2, v3)` | `ErrorCodeExpected<T1, T2, T3>` 검증 |
-| `fin.ShouldSucceed()` | 성공 검증, 성공 값 반환 |
-| `fin.ShouldSucceedWith(value)` | 성공 + 특정 값 검증 |
-| `fin.ShouldFail()` | 실패 검증 |
-| `fin.ShouldFail(errorAssertion)` | 실패 + 에러 assertion 실행 |
-| `fin.ShouldFailWithErrorCode("code")` | 실패 + 특정 에러 코드 검증 |
-| `validation.ShouldBeValid()` | 성공 검증, 성공 값 반환 |
-| `validation.ShouldBeInvalid(errorsAssertion)` | 실패 + 에러 목록 assertion |
-| `validation.ShouldContainErrorCode("code")` | 실패 + 특정 에러 코드 포함 검증 |
-| `validation.ShouldContainOnlyErrorCode("code")` | 실패 + 에러가 정확히 1개이고 해당 코드 검증 |
-| `validation.ShouldContainErrorCodes("code1", "code2")` | 실패 + 여러 에러 코드 포함 검증 |
+| `error.ShouldHaveErrorCode()` | Verify `IHasErrorCode` implementation, return interface |
+| `error.ShouldHaveErrorCode("code")` | Verify specific error code match |
+| `error.ShouldHaveErrorCodeStartingWith("prefix")` | Verify error code prefix |
+| `error.ShouldHaveErrorCode(predicate)` | Predicate-based error code verification |
+| `error.ShouldBeExpected()` | Expected type verification |
+| `error.ShouldBeExceptional()` | Exceptional type verification |
+| `error.ShouldBeErrorCodeExpected("code", "value")` | `ErrorCodeExpected` type + code + value verification |
+| `error.ShouldBeErrorCodeExpected<T>("code", value)` | `ErrorCodeExpected<T>` type + code + value verification |
+| `error.ShouldBeErrorCodeExpected<T1, T2>("code", v1, v2)` | `ErrorCodeExpected<T1, T2>` verification |
+| `error.ShouldBeErrorCodeExpected<T1, T2, T3>("code", v1, v2, v3)` | `ErrorCodeExpected<T1, T2, T3>` verification |
+| `fin.ShouldSucceed()` | Success verification, return success value |
+| `fin.ShouldSucceedWith(value)` | Success + specific value verification |
+| `fin.ShouldFail()` | Failure verification |
+| `fin.ShouldFail(errorAssertion)` | Failure + execute error assertion |
+| `fin.ShouldFailWithErrorCode("code")` | Failure + specific error code verification |
+| `validation.ShouldBeValid()` | Success verification, return success value |
+| `validation.ShouldBeInvalid(errorsAssertion)` | Failure + error list assertion |
+| `validation.ShouldContainErrorCode("code")` | Failure + verify specific error code inclusion |
+| `validation.ShouldContainOnlyErrorCode("code")` | Failure + verify exactly 1 error with that code |
+| `validation.ShouldContainErrorCodes("code1", "code2")` | Failure + verify multiple error code inclusion |
 
 ```csharp
-// 범용 에러 코드 검증 예시
+// Generic error code verification examples
 [Fact]
 public void Create_ShouldFail_WithExpectedErrorCode()
 {
     // Arrange & Act
     var result = Email.Create("");
 
-    // Assert — 레이어 무관하게 에러 코드만 검증
+    // Assert -- verify error code regardless of layer
     result.ShouldFailWithErrorCode("DomainErrors.Email.Empty");
 }
 
@@ -701,21 +701,21 @@ public void Validate_ShouldContain_MultipleErrorCodes()
 }
 ```
 
-#### ErrorCodeExceptionalAssertions — 예외 기반 에러 검증
+#### ErrorCodeExceptionalAssertions -- Exception-Based Error Verification
 
 | Method | Description |
 |--------|------|
-| `error.ShouldBeErrorCodeExceptional("code")` | `ErrorCodeExceptional` 타입 + 에러 코드 검증 |
-| `error.ShouldBeErrorCodeExceptional<TException>("code")` | 특정 예외 타입 래핑 검증 |
-| `error.ShouldWrapException<TException>("code", message?)` | 예외 타입 + 선택적 메시지 검증 |
-| `error.ShouldBeErrorCodeExceptional("code", exceptionAssertion)` | 예외 assertion 실행 |
-| `fin.ShouldFailWithException("code")` | `Fin` 실패 + `ErrorCodeExceptional` 검증 |
-| `fin.ShouldFailWithException<T, TException>("code")` | `Fin` 실패 + 특정 예외 타입 검증 |
-| `validation.ShouldContainException("code")` | `Validation` 실패 + `ErrorCodeExceptional` 포함 검증 |
-| `validation.ShouldContainException<T, TException>("code")` | `Validation` 실패 + 특정 예외 타입 포함 검증 |
+| `error.ShouldBeErrorCodeExceptional("code")` | `ErrorCodeExceptional` type + error code verification |
+| `error.ShouldBeErrorCodeExceptional<TException>("code")` | Specific exception type wrapping verification |
+| `error.ShouldWrapException<TException>("code", message?)` | Exception type + optional message verification |
+| `error.ShouldBeErrorCodeExceptional("code", exceptionAssertion)` | Execute exception assertion |
+| `fin.ShouldFailWithException("code")` | `Fin` failure + `ErrorCodeExceptional` verification |
+| `fin.ShouldFailWithException<T, TException>("code")` | `Fin` failure + specific exception type verification |
+| `validation.ShouldContainException("code")` | `Validation` failure + `ErrorCodeExceptional` inclusion verification |
+| `validation.ShouldContainException<T, TException>("code")` | `Validation` failure + specific exception type inclusion verification |
 
 ```csharp
-// Exception wrapping 에러 검증 예시
+// Exception wrapping error verification example
 [Fact]
 public void ShouldWrapException_WhenDatabaseFails()
 {
@@ -731,91 +731,91 @@ public void ShouldWrapException_WhenDatabaseFails()
 }
 ```
 
-#### ErrorAssertionHelpers — 확장 속성 (C# 14 Extension Members)
+#### ErrorAssertionHelpers -- Extension Properties (C# 14 Extension Members)
 
 | Extension Property | Target Type | Description |
 |-----------|----------|------|
-| `error.ErrorCode` | `Error` | 에러 코드 추출 (`IHasErrorCode` 미구현 시 `null`) |
-| `error.HasErrorCode` | `Error` | 에러 코드 존재 여부 |
-| `validation.Errors` | `Validation<Error, T>` | 에러 목록 추출 (`IReadOnlyList<Error>`) |
+| `error.ErrorCode` | `Error` | Extract error code (`null` if `IHasErrorCode` not implemented) |
+| `error.HasErrorCode` | `Error` | Whether error code exists |
+| `validation.Errors` | `Validation<Error, T>` | Extract error list (`IReadOnlyList<Error>`) |
 
 ```csharp
-// 확장 속성 사용 예시
+// Extension property usage examples
 [Fact]
 public void Error_ShouldHave_ErrorCode_Property()
 {
     // Arrange
-    var error = DomainError.For<Email>(new Empty(), "", "이메일은 비어있을 수 없습니다");
+    var error = DomainError.For<Email>(new Empty(), "", "Email cannot be empty");
 
-    // Assert — 확장 속성으로 간결하게 접근
+    // Assert -- concise access via extension properties
     error.HasErrorCode.ShouldBeTrue();
     error.ErrorCode.ShouldBe("DomainErrors.Email.Empty");
 }
 ```
 
-테스트 작성 패턴을 익혔다면, 마지막으로 전체 에러 시스템을 레이어별로 정리하고 체크리스트로 마무리합니다.
+Now that test writing patterns are familiar, let us summarize the entire error system by layer and conclude with checklists.
 
 ---
 
-## 레이어별 요약 + 체크리스트
+## Summary by Layer + Checklist
 
 ### Domain (DomainErrorType)
 
 ```
-값 존재:     Empty, Null
-길이:        TooShort, TooLong, WrongLength
-형식:        InvalidFormat
-대소문자:    NotUpperCase, NotLowerCase
-날짜:        DefaultDate, NotInPast, NotInFuture, TooLate, TooEarly
-범위:        RangeInverted, RangeEmpty
-숫자 범위:   Zero, Negative, NotPositive, OutOfRange, BelowMinimum, AboveMaximum
-존재 여부:   NotFound, AlreadyExists, Duplicate
-비교:        Mismatch
-커스텀:      Custom (abstract → sealed record MyError : DomainErrorType.Custom)
+Presence:    Empty, Null
+Length:      TooShort, TooLong, WrongLength
+Format:      InvalidFormat
+Case:        NotUpperCase, NotLowerCase
+DateTime:    DefaultDate, NotInPast, NotInFuture, TooLate, TooEarly
+Range:       RangeInverted, RangeEmpty
+Numeric:     Zero, Negative, NotPositive, OutOfRange, BelowMinimum, AboveMaximum
+Existence:   NotFound, AlreadyExists, Duplicate
+Comparison:  Mismatch
+Custom:      Custom (abstract -> sealed record MyError : DomainErrorType.Custom)
 ```
 
 ### Application (ApplicationErrorType)
 
 ```
-공통:        Empty, Null, NotFound, AlreadyExists, Duplicate, InvalidState
-권한:        Unauthorized, Forbidden
-검증:        ValidationFailed
-비즈니스:    BusinessRuleViolated, ConcurrencyConflict, ResourceLocked,
+Common:      Empty, Null, NotFound, AlreadyExists, Duplicate, InvalidState
+Auth:        Unauthorized, Forbidden
+Validation:  ValidationFailed
+Business:    BusinessRuleViolated, ConcurrencyConflict, ResourceLocked,
              OperationCancelled, InsufficientPermission
-커스텀:      Custom (abstract → sealed record MyError : ApplicationErrorType.Custom)
+Custom:      Custom (abstract -> sealed record MyError : ApplicationErrorType.Custom)
 ```
 
 ### Event (EventErrorType)
 
 ```
-발행:        PublishFailed, PublishCancelled
-핸들러:      HandlerFailed
-검증:        InvalidEventType
-커스텀:      Custom (abstract → sealed record MyError : EventErrorType.Custom)
+Publishing:  PublishFailed, PublishCancelled
+Handler:     HandlerFailed
+Validation:  InvalidEventType
+Custom:      Custom (abstract -> sealed record MyError : EventErrorType.Custom)
 ```
 
 ### Adapter (AdapterErrorType)
 
 ```
-공통:        Empty, Null, NotFound, AlreadyExists, Duplicate, InvalidState,
+Common:      Empty, Null, NotFound, AlreadyExists, Duplicate, InvalidState,
              Unauthorized, Forbidden
-파이프라인:  PipelineValidation, PipelineException
-외부서비스:  ExternalServiceUnavailable, ConnectionFailed, Timeout
-데이터:      Serialization, Deserialization, DataCorruption
-커스텀:      Custom (abstract → sealed record MyError : AdapterErrorType.Custom)
+Pipeline:    PipelineValidation, PipelineException
+External:    ExternalServiceUnavailable, ConnectionFailed, Timeout
+Data:        Serialization, Deserialization, DataCorruption
+Custom:      Custom (abstract -> sealed record MyError : AdapterErrorType.Custom)
 ```
 
-### 레이어별 사용 시점
+### When to Use Each Layer
 
 | Layer | When to Use |
 |--------|----------|
-| **Domain** | Value Object 검증 실패, Entity 불변성 위반, Aggregate 비즈니스 규칙 위반 |
-| **Application** | 유스케이스 실행 중 비즈니스 로직 오류, 권한/인증 오류, 데이터 조회 실패, 동시성 충돌 |
-| **Adapter** | 파이프라인 검증/예외 처리, 외부 서비스 호출 실패, 직렬화/역직렬화 오류, 연결/타임아웃 오류 |
+| **Domain** | Value Object validation failure, Entity invariant violation, Aggregate business rule violation |
+| **Application** | Business logic errors during Usecase execution, auth/permission errors, data retrieval failure, concurrency conflicts |
+| **Adapter** | Pipeline validation/exception handling, external service call failures, serialization/deserialization errors, connection/timeout errors |
 
-### 에러 코드 형식
+### Error Code Format
 
-모든 에러 코드는 다음 형식을 따릅니다:
+All error codes follow this format:
 
 ```
 {LayerPrefix}.{TypeName}.{ErrorName}
@@ -827,69 +827,69 @@ public void Error_ShouldHave_ErrorCode_Property()
 | Application | `ApplicationErrors` | `ApplicationErrors.CreateProductCommand.NotFound` |
 | Adapter | `AdapterErrors` | `AdapterErrors.ProductRepository.NotFound` |
 
-### 에러 정의 체크리스트
+### Error Definition Checklist
 
-- [ ] 적절한 레이어(Domain/Application/Adapter)를 선택했는가?
-- [ ] 표준 에러 타입으로 표현 가능한지 먼저 확인했는가?
-- [ ] Custom 에러 이름이 충분히 명확한가?
-- [ ] 컨텍스트 정보(파라미터)가 디버깅에 도움이 되는가?
-- [ ] 에러 메시지가 사용자/개발자에게 유용한가?
+- [ ] Was the appropriate layer (Domain/Application/Adapter) selected?
+- [ ] Was it first verified whether a standard error type can express it?
+- [ ] Is the Custom error name sufficiently clear?
+- [ ] Does the context information (parameters) help with debugging?
+- [ ] Is the error message useful to users/developers?
 
-### 에러 반환 체크리스트
+### Error Return Checklist
 
-- [ ] `Fin.Fail<T>(error)` 대신 암시적 변환을 사용했는가?
-- [ ] 성공 반환 시 `Fin.Succ(value)`를 사용했는가?
-- [ ] 예외 처리 시 `FromException` 메서드를 사용했는가?
-- [ ] 레이어에 맞는 에러 팩토리(`DomainError`, `ApplicationError`, `AdapterError`)를 사용했는가?
+- [ ] Was implicit conversion used instead of `Fin.Fail<T>(error)`?
+- [ ] Was `Fin.Succ(value)` used for success returns?
+- [ ] Was the `FromException` method used for exception handling?
+- [ ] Was the appropriate error factory for the layer (`DomainError`, `ApplicationError`, `AdapterError`) used?
 
-### 네이밍 체크리스트
+### Naming Checklist
 
-- [ ] 적절한 규칙(R1-R8)을 적용했는가?
-- [ ] 대칭 쌍이 있다면 일관성을 유지했는가? (Below ↔ Above)
-- [ ] 컨텍스트 정보가 필요한가? (MinLength, Pattern, PropertyName 등)
-- [ ] 에러 메시지가 에러 이름과 일관성 있는가?
+- [ ] Were the appropriate rules (R1-R8) applied?
+- [ ] If symmetric pairs exist, was consistency maintained? (Below <-> Above)
+- [ ] Is context information needed? (MinLength, Pattern, PropertyName, etc.)
+- [ ] Is the error message consistent with the error name?
 
-### 테스트 체크리스트
+### Test Checklist
 
-- [ ] 모든 에러 케이스에 대한 테스트가 있는가?
-- [ ] 에러 타입이 정확히 일치하는지 검증하는가?
-- [ ] 필요한 경우 현재 값도 검증하는가?
-- [ ] Custom 에러의 이름이 정확히 일치하는지 검증하는가?
-- [ ] 유효한 입력에 대한 성공 테스트가 있는가?
-- [ ] 경계값(boundary values)에 대한 테스트가 있는가?
-- [ ] 반환값이 예상과 일치하는지 검증하는가?
+- [ ] Are there tests for all error cases?
+- [ ] Is the error type verified to match exactly?
+- [ ] Is the current value also verified when needed?
+- [ ] Is the Custom error name verified to match exactly?
+- [ ] Are there success tests for valid input?
+- [ ] Are there tests for boundary values?
+- [ ] Is the return value verified to match expectations?
 
 ---
 
 ## Troubleshooting
 
-### `FromException` 사용 시 에러 코드가 기대와 다름
-**Cause:** `FromException`은 `ErrorCodeExceptional` 타입을 생성하므로 `ShouldBeAdapterError` 대신 `ShouldBeAdapterExceptionalError`를 사용해야 합니다.
-**Resolution:** 예외 래핑 에러는 `ShouldBeAdapterExceptionalError<TAdapter>(errorType)` 또는 `ShouldBeAdapterExceptionalError<TAdapter, TException>(errorType)`으로 검증하세요.
+### Error code differs from expectation when using `FromException`
+**Cause:** `FromException` creates an `ErrorCodeExceptional` type, so `ShouldBeAdapterExceptionalError` must be used instead of `ShouldBeAdapterError`.
+**Resolution:** Verify exception-wrapping errors with `ShouldBeAdapterExceptionalError<TAdapter>(errorType)` or `ShouldBeAdapterExceptionalError<TAdapter, TException>(errorType)`.
 
-### Custom 에러가 레이어별 어설션에서 인식되지 않음
-**Cause:** Custom 에러의 정의 위치가 잘못되었거나, 해당 레이어의 `Custom`을 상속하지 않았을 수 있습니다.
-**Resolution:** Custom 에러는 반드시 해당 레이어의 `Custom` abstract record를 상속해야 합니다. 예: `public sealed record RateLimited : AdapterErrorType.Custom;`
+### Custom error not recognized in layer-specific assertions
+**Cause:** The Custom error may be defined in the wrong location or may not inherit from the `Custom` of the corresponding layer.
+**Resolution:** Custom errors must inherit from the corresponding layer's `Custom` abstract record. Example: `public sealed record RateLimited : AdapterErrorType.Custom;`
 
 ---
 
 ## FAQ
 
-### Q1. 범용 어설션과 레이어별 어설션 중 어느 것을 사용해야 하나요?
-레이어별 어설션(`ShouldBeDomainError`, `ShouldBeApplicationError`, `ShouldBeAdapterError`)은 에러의 출처까지 검증하므로 더 엄격합니다. 범용 어설션(`ShouldFailWithErrorCode`, `ShouldContainErrorCode`)은 에러 코드만 검증하므로 레이어에 독립적인 테스트에 적합합니다. 일반적으로 레이어별 어설션을 권장합니다.
+### Q1. Should I use generic assertions or layer-specific assertions?
+Layer-specific assertions (`ShouldBeDomainError`, `ShouldBeApplicationError`, `ShouldBeAdapterError`) are stricter because they also verify the error's origin. Generic assertions (`ShouldFailWithErrorCode`, `ShouldContainErrorCode`) only verify error codes and are suitable for layer-independent tests. Generally, layer-specific assertions are recommended.
 
-### Q2. Custom 에러를 표준 에러로 승격해야 하는 시점은?
-4가지 조건을 모두 충족할 때입니다: (1) 3개 이상의 서로 다른 위치에서 사용, (2) 재사용 의미가 명확, (3) R1-R8 네이밍 규칙에 자연스럽게 매핑 가능, (4) 의미가 안정적(더 이상 변하지 않음).
+### Q2. When should Custom errors be promoted to standard errors?
+When all 4 conditions are met: (1) Used in 3 or more different locations, (2) Reuse meaning is clear, (3) Can be naturally mapped to R1-R8 naming conventions, (4) Meaning is stable (no longer changes).
 
-### Q3. 에러에 포함하는 현재 값(currentValue)은 어떤 정보를 넣어야 하나요?
-디버깅에 도움이 되는 정보를 넣습니다. 주로 검증 실패한 입력값(`id.ToString()`, `request.Name`), 현재 상태값(`Status.ToString()`, `(int)StockQuantity`) 등입니다. 민감 정보(비밀번호, 토큰)는 포함하지 마세요.
+### Q3. What information should be included in the currentValue of an error?
+Include information that helps with debugging. Mainly validation-failed input values (`id.ToString()`, `request.Name`), current state values (`Status.ToString()`, `(int)StockQuantity`), etc. Do not include sensitive information (passwords, tokens).
 
 ---
 
 ## References
 
-- [08a-error-system.md](./08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙
-- [08b-error-system-domain-app.md](./08b-error-system-domain-app) - Domain/Application/Event 에러 정의와 테스트
-- [13-adapters.md](../adapter/13-adapters) - Adapter 구현 가이드
-- [15a-unit-testing.md](../testing/15a-unit-testing) - 단위 테스트 가이드
-- [16-testing-library.md](../testing/16-testing-library) - 에러 외 테스트 유틸리티 (로그/아키텍처/소스생성기/Job 테스트)
+- [08a-error-system.md](./08a-error-system) - Error handling basic principles and naming conventions
+- [08b-error-system-domain-app.md](./08b-error-system-domain-app) - Domain/Application/Event error definition and testing
+- [13-adapters.md](../adapter/13-adapters) - Adapter implementation guide
+- [15a-unit-testing.md](../testing/15a-unit-testing) - Unit testing guide
+- [16-testing-library.md](../testing/16-testing-library) - Non-error test utilities (log/architecture/source generator/job testing)

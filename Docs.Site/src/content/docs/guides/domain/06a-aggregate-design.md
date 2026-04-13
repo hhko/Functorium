@@ -415,7 +415,7 @@ public static Order Create(
 // }
 ```
 
-> **Note**: Since multiple Aggregates cannot be changed simultaneously in a single transaction, Cross-Aggregate side effects are handled via event handlers (eventual consistency). 같은 Bounded Context 내에서 관련 Aggregate를 동시에 **생성하는** 경우 등 실용적 예외는 [§4 transaction boundary 실전 가이드라인](#트랜잭션-경계-실전-가이드라인)을 참조하세요.
+> **Note**: Since multiple Aggregates cannot be changed simultaneously in a single transaction, Cross-Aggregate side effects are handled via event handlers (eventual consistency). For practical exceptions such as simultaneously **creating** related Aggregates within the same Bounded Context, see [Section 4: Transaction Boundary Practical Guidelines](#transaction-boundary-practical-guidelines).
 
 Now that we understand the design rules, let us learn the criteria for classifying domain concepts as Value Object, Entity, or Aggregate Root.
 

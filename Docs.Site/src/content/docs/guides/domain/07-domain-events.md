@@ -104,7 +104,7 @@ The core characteristics that domain events should have are as follows.
 |------|------|------|
 | **Past Tense** | Represents facts that have already occurred | `CreatedEvent`, `ConfirmedEvent` |
 | **Immutable** | Cannot be changed once created | Defined as `sealed record` |
-| **Includes Time Information** | Records occurrence time | `OccurredAt` 속성 |
+| **Includes Time Information** | Records occurrence time | `OccurredAt` property |
 | **Event Identification** | Prevents duplication via unique ID | `EventId` (Ulid) |
 | **Request Tracking** | Links events from the same request | `CorrelationId` |
 | **Causation** | Tracks cause-effect between events | `CausationId` |
@@ -218,15 +218,15 @@ internal interface IDomainEventDrain : IHasDomainEvents
 | `IHasDomainEvents` | `public` | Query event list from domain layer |
 | `IDomainEventDrain` | `internal` | Cleanup after event publishing (infrastructure only) |
 
-> **Note**: `IDomainEventDrain`은 `internal`이지만, `AggregateRoot<TId>.ClearDomainEvents()`는 `public`입니다. 이는 테스트 코드에서 `order.ClearDomainEvents()`를 직접 호출하여 이전 이벤트를 정리할 수 있도록 하기 위한 의도적인 설계입니다. 프로덕션 코드에서 `ClearDomainEvents()`는 인프라(Publisher)만 호출해야 합니다.
+> **Note**: Although `IDomainEventDrain` is `internal`, `AggregateRoot<TId>.ClearDomainEvents()` is `public`. This is an intentional design to allow test code to directly call `order.ClearDomainEvents()` to clean up previous events. In production code, `ClearDomainEvents()` should only be called by infrastructure (Publisher).
 
 Now that we understand the event structure and characteristics, let us look at how to define and publish events.
 
 ---
 
-## 이벤트 정의 (HOW)
+## Event Definition (HOW)
 
-도메인 이벤트는 해당 Entity의 **중첩 클래스로** 정의합니다:
+Domain events are defined as **nested classes** within the corresponding Entity:
 
 ```csharp
 [GenerateEntityId]
@@ -234,41 +234,41 @@ public class Order : AggregateRoot<OrderId>
 {
     #region Domain Events
 
-    // Domain event (중첩 클래스)
+    // Domain event (nested class)
     public sealed record CreatedEvent(OrderId OrderId, CustomerId CustomerId, Money TotalAmount) : DomainEvent;
     public sealed record ConfirmedEvent(OrderId OrderId) : DomainEvent;
     public sealed record CancelledEvent(OrderId OrderId, string Reason) : DomainEvent;
 
     #endregion
 
-    // Entity 구현...
+    // Entity implementation...
 }
 ```
 
 **Advantages**:
-- 이벤트 소유권이 타입 시스템에서 명확 (`Order.CreatedEvent`)
-- IntelliSense에서 `Order.`만 치면 관련 이벤트 모두 표시
-- Entity 이름 중복 제거 (`OrderCreatedEvent` → `Order.CreatedEvent`)
-- **Event Handler에서 event publishing 주체 명시**: Handler가 `IDomainEventHandler<Product.CreatedEvent>`를 상속받으면, 코드를 읽는 것만으로 "Product Entity가 발행한 이벤트"임을 즉시 파악 가능
+- Event ownership is explicit in the type system (`Order.CreatedEvent`)
+- IntelliSense shows all related events when typing `Order.`
+- Eliminates Entity name duplication (`OrderCreatedEvent` -> `Order.CreatedEvent`)
+- **Event publishing origin is explicit in Handler**: When a Handler inherits `IDomainEventHandler<Product.CreatedEvent>`, reading the code alone immediately reveals "this is an event published by the Product Entity"
 
 **Usage Example**:
 ```csharp
-// Entity 내부에서 (짧게)
+// Inside Entity (concise)
 AddDomainEvent(new CreatedEvent(Id, customerId, totalAmount));
 
-// 외부에서 (명시적)
+// From outside (explicit)
 public void Handle(Order.CreatedEvent @event) { ... }
 ```
 
 ---
 
-## event publishing (HOW)
+## Event Publishing (HOW)
 
-이벤트 정의를 마쳤으므로, Aggregate 내부에서 이벤트를 수집하고 파이프라인이 자동으로 발행하는 흐름을 확인합니다.
+Now that event definition is covered, let us examine the flow of collecting events inside Aggregates and the pipeline automatically publishing them.
 
-### AggregateRoot에서 이벤트 수집
+### Collecting Events in AggregateRoot
 
-AggregateRoot 내에서 `AddDomainEvent()`를 사용하여 이벤트를 수집합니다.
+Events are collected using `AddDomainEvent()` within AggregateRoot.
 
 ```csharp
 [GenerateEntityId]
@@ -295,7 +295,7 @@ public class Order : AggregateRoot<OrderId>
     {
         var id = OrderId.New();
         var order = new Order(id, totalAmount);
-        // 생성 event publishing (내부에서는 짧게)
+        // Publish creation event (concise from inside)
         order.AddDomainEvent(new CreatedEvent(id, totalAmount));
         return order;
     }
@@ -311,38 +311,38 @@ public class Order : AggregateRoot<OrderId>
                 "Order must be confirmed before shipping");
 
         Status = OrderStatus.Shipped;
-        // 배송 event publishing
+        // Publish shipping event
         AddDomainEvent(new ShippedEvent(Id, address));
         return unit;
     }
 }
 ```
 
-### UsecaseTransactionPipeline 통합
+### UsecaseTransactionPipeline Integration
 
-`IDomainEvent`는 Mediator의 `INotification`을 확장하여 Pub/Sub 통합을 지원합니다.
+`IDomainEvent` extends Mediator's `INotification` to support Pub/Sub integration.
 
-**SaveChanges와 도메인 event publishing은 `UsecaseTransactionPipeline`이 자동으로 처리합니다.** Usecase에서 `IUnitOfWork`나 `IDomainEventPublisher`를 직접 주입할 필요가 없습니다.
+**SaveChanges and domain event publishing are handled automatically by `UsecaseTransactionPipeline`.** There is no need to directly inject `IUnitOfWork` or `IDomainEventPublisher` in the Usecase.
 
-The key point to note in the following code is Usecase가 Repository만 주입받고, SaveChanges와 event publishing을 직접 호출하지 않는다는 것입니다.
+The key point to note in the following code is that the Usecase only injects the Repository and does not directly call SaveChanges or event publishing.
 
 ```csharp
 internal sealed class Usecase(
-    IProductRepository productRepository)   // Repository만 주입
+    IProductRepository productRepository)   // Only inject Repository
     : ICommandUsecase<Request, Response>
 {
     private readonly IProductRepository _productRepository = productRepository;
 
     public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
     {
-        // ... 기존 검증 로직 ...
+        // ... existing validation logic ...
 
         FinT<IO, Response> usecase =
             from exists in _productRepository.ExistsByName(productName)
             from _ in guard(!exists, /* error */)
-            from product in _productRepository.Create(newProduct)  // Repository가 IDomainEventCollector.Track() 자동 호출
+            from product in _productRepository.Create(newProduct)  // Repository automatically calls IDomainEventCollector.Track()
             select new Response(...);
-        // SaveChanges + 도메인 event publishing은 UsecaseTransactionPipeline이 자동 처리
+        // SaveChanges + domain event publishing are automatically handled by UsecaseTransactionPipeline
 
         Fin<Response> response = await usecase.Run().RunAsync();
         return response.ToFinResponse();
@@ -350,95 +350,95 @@ internal sealed class Usecase(
 }
 ```
 
-### 파이프라인 발행 흐름
+### Pipeline Publishing Flow
 
-`UsecaseTransactionPipeline`은 Command Usecase에 대해 UoW 커밋과 도메인 event publishing을 자동 처리합니다 (Query는 `where ICommand<TResponse>` 제약으로 컴파일 타임 제외).
+`UsecaseTransactionPipeline` automatically handles UoW commit and domain event publishing for Command Usecases (Queries are excluded at compile time via the `where ICommand<TResponse>` constraint).
 
-**이벤트 수집 시점**: Usecase 실행 중 Repository의 `Create`/`Update` 메서드가 `IDomainEventCollector.Track(aggregate)`를 호출하여 변경된 Aggregate를 추적 대상으로 등록합니다. (`IDomainEventCollector`는 `Functorium.Applications.Events` 네임스페이스에 정의되며, Adapter Layer의 `DomainEventCollector`가 구현합니다.) Aggregate 내부에서는 `AddDomainEvent()`로 이벤트를 수집합니다.
+**Event collection timing**: During Usecase execution, the Repository's `Create`/`Update` methods call `IDomainEventCollector.Track(aggregate)` to register changed Aggregates for tracking. (`IDomainEventCollector` is defined in the `Functorium.Applications.Events` namespace, and the Adapter Layer's `DomainEventCollector` implements it.) Inside the Aggregate, events are collected via `AddDomainEvent()`.
 
-**파이프라인 실행 순서**:
+**Pipeline execution order**:
 
-1. **Handler 실행** (`next()`) → 실패 시 커밋 안함, 실패 응답 즉시 반환
-2. **`UoW.SaveChanges()`** → 트랜잭션 커밋. 실패 시 event publishing 안함, 실패 응답 반환
-3. **`IDomainEventPublisher.PublishTrackedEvents()`** → `IDomainEventCollector`에서 추적된 Aggregate의 이벤트를 수집, Mediator를 통해 발행, 발행 후 `ClearDomainEvents()` 호출
+1. **Handler execution** (`next()`) -> On failure, no commit, immediately returns failure response
+2. **`UoW.SaveChanges()`** -> Transaction commit. On failure, no event publishing, returns failure response
+3. **`IDomainEventPublisher.PublishTrackedEvents()`** -> Collects events from tracked Aggregates in `IDomainEventCollector`, publishes via Mediator, calls `ClearDomainEvents()` after publishing
 
 ```
-Usecase Handler 실행
-  → Repository.Create(entity)  ─→ IDomainEventCollector.Track(entity)
-  → entity.AddDomainEvent(...)  ─→ entity.DomainEvents에 이벤트 축적
-  → Handler 완료 (성공)
-    → UoW.SaveChanges()         ─→ DB 커밋
-    → PublishTrackedEvents()    ─→ 추적된 Aggregate의 event publishing → ClearDomainEvents()
+Usecase Handler execution
+  -> Repository.Create(entity)  --> IDomainEventCollector.Track(entity)
+  -> entity.AddDomainEvent(...)  --> Events accumulate in entity.DomainEvents
+  -> Handler complete (success)
+    -> UoW.SaveChanges()         --> DB commit
+    -> PublishTrackedEvents()    --> Publish tracked Aggregate events -> ClearDomainEvents()
 ```
 
-### 트랜잭션 고려사항
+### Transaction Considerations
 
-저장과 event publishing의 성공/실패 조합에 따른 동작을 정리하면 다음과 같습니다.
+The following summarizes behavior based on success/failure combinations of save and event publishing.
 
 | Situation | Behavior |
 |------|------|
-| 저장 성공, event publishing 성공 | 정상 처리 |
-| 저장 실패 | event publishing 안 함 (파이프라인이 Fail 응답 반환) |
-| 저장 성공, event publishing 실패 | 저장은 커밋됨, 성공 응답 유지 (eventual consistency) |
+| Save success, event publishing success | Normal processing |
+| Save failure | No event publishing (pipeline returns Fail response) |
+| Save success, event publishing failure | Save is committed, success response maintained (eventual consistency) |
 
-- event publishing은 `SaveChanges()` 성공 후에만 실행됩니다 (파이프라인 보장)
-- 발행 실패 시 비즈니스 로직은 이미 커밋됨 (eventual consistency, 경고 로그 기록)
-- 강한 일관성이 필요하면 Outbox 패턴을 고려하세요
+- Event publishing runs only after `SaveChanges()` succeeds (guaranteed by pipeline)
+- On publishing failure, business logic is already committed (eventual consistency, warning logged)
+- If strong consistency is needed, consider the Outbox pattern
 
-> **Reference**: 파이프라인 상세는 [11-usecases-and-cqrs.md §트랜잭션과 event publishing](../application/11-usecases-and-cqrs#트랜잭션과-이벤트-발행-usecasetransactionpipeline)을 참조하세요.
+> **Reference**: For pipeline details, see [11-usecases-and-cqrs.md -- Transactions and Event Publishing](../application/11-usecases-and-cqrs#transactions-and-event-publishing-usecasetransactionpipeline).
 
 Now that we understand the event publishing flow, let us look at how to implement handlers that receive published events and process side effects.
 
 ---
 
-## 이벤트 핸들러 구현 (HOW)
+## Event Handler Implementation (HOW)
 
-### Event Handler란?
+### What is an Event Handler?
 
-Event Handler는 **Event-Driven Use Case입니다.** Command/Query Use Case와 동일하게 Application Layer에 속하지만, 트리거가 다릅니다:
+An Event Handler is an **Event-Driven Use Case.** Like Command/Query Use Cases, it belongs to the Application Layer, but the trigger is different:
 
-| Use Case 유형 | 트리거 | 역할 |
+| Use Case Type | Trigger | Role |
 |---------------|--------|------|
-| Command | 외부 요청 (쓰기) | 상태 변경 |
-| Query | 외부 요청 (읽기) | 데이터 조회 |
-| **Event Handler** | 도메인 이벤트 | 부수 효과 수행 |
+| Command | External request (write) | State change |
+| Query | External request (read) | Data retrieval |
+| **Event Handler** | Domain event | Perform side effects |
 
-### 중첩 클래스 이벤트의 장점
+### Advantages of Nested Class Events
 
-도메인 이벤트가 Entity의 중첩 클래스로 정의되면(`Product.CreatedEvent`), Event Handler 선언만으로 **event publishing 주체가** 명확해집니다:
+When domain events are defined as nested classes of an Entity (`Product.CreatedEvent`), the **event publishing origin** becomes clear from the Handler declaration alone:
 
 ```csharp
-// Handler 선언만 보면 "Product가 발행한 CreatedEvent"임을 즉시 파악
+// Just looking at the Handler declaration reveals "this is a CreatedEvent published by Product"
 public sealed class OnProductCreated : IDomainEventHandler<Product.CreatedEvent>
 ```
 
 | Comparison | Nested Class Event | Independent Class Event |
 |------|-------------------|-------------------|
-| Handler 선언 | `IDomainEventHandler<Product.CreatedEvent>` | `IDomainEventHandler<ProductCreatedEvent>` |
-| 발행 주체 파악 | **타입 시스템에서 명시** (`Product.`) | 네이밍 컨벤션에 의존 |
-| IntelliSense | `Product.` 입력 시 관련 이벤트 목록 표시 | 전체 이벤트 중 검색 필요 |
-| 응집도 | Entity와 이벤트가 함께 배치 | 이벤트가 별도 파일/폴더에 분산 |
+| Handler declaration | `IDomainEventHandler<Product.CreatedEvent>` | `IDomainEventHandler<ProductCreatedEvent>` |
+| Identifying publisher | **Explicit in the type system** (`Product.`) | Depends on naming conventions |
+| IntelliSense | Shows related event list when typing `Product.` | Requires searching among all events |
+| Cohesion | Entity and events placed together | Events scattered in separate files/folders |
 
 ### Naming Conventions
 
-| 핸들러 유형 | 명명 패턴 | Example |
+| Handler Type | Naming Pattern | Example |
 |------------|----------|------|
 | Command/Query Handler | `{Command/Query}Handler` | `CreateProductHandler`, `GetProductHandler` |
 | Domain Event Handler | `On{EventName}` | `OnProductCreated`, `OnOrderConfirmed` |
 
-Domain Event Handler는 `On` 접두사만 사용합니다:
-- `On` 접두사가 이미 이벤트 핸들러임을 나타내므로 `Handler` 접미사는 중복
-- Command/Query Handler와 자연스럽게 구분됨
-- 간결하고 가독성 향상
+Domain Event Handlers use only the `On` prefix:
+- The `On` prefix already indicates it is an event handler, so the `Handler` suffix is redundant
+- Naturally distinguished from Command/Query Handlers
+- Concise and improved readability
 
 | Category | Pattern | Example |
 |------|------|------|
-| 파일명 | `On{EventName}.cs` | `OnProductCreated.cs` |
-| 클래스명 | `On{EventName}` | `OnProductCreated` |
+| File name | `On{EventName}.cs` | `OnProductCreated.cs` |
+| Class name | `On{EventName}` | `OnProductCreated` |
 
 ### Folder Location
 
-Event Handler는 관련 엔티티의 Usecases 폴더에 Command, Query와 함께 배치합니다:
+Event Handlers are placed alongside Commands and Queries in the Usecases folder of the related entity:
 
 ```
 Usecases/
@@ -453,20 +453,20 @@ Usecases/
 ```csharp
 using Functorium.Applications.Events;
 
-namespace {프로젝트}.Application.Usecases.{엔티티};
+namespace {Project}.Application.Usecases.{Entity};
 
 /// <summary>
-/// {이벤트} 핸들러 - {처리 내용 설명}
+/// {Event} handler - {description of processing}
 /// </summary>
 public sealed class On{EventName} : IDomainEventHandler<{Entity}.{Event}>
 {
-    public On{EventName}(/* 의존성 주입 */)
+    public On{EventName}(/* dependency injection */)
     {
     }
 
     public ValueTask Handle({Entity}.{Event} notification, CancellationToken cancellationToken)
     {
-        // 부수 효과 처리: 로깅, 알림, 외부 시스템 연동 등
+        // Side effect processing: logging, notifications, external system integration, etc.
         return ValueTask.CompletedTask;
     }
 }
@@ -474,7 +474,7 @@ public sealed class On{EventName} : IDomainEventHandler<{Entity}.{Event}>
 
 ### Complete Example
 
-The key point to note in the following code is `IDomainEventHandler<Product.CreatedEvent>`를 구현하여, 핸들러 선언만으로 어떤 Aggregate의 이벤트를 처리하는지 즉시 파악할 수 있다는 것입니다.
+The key point to note in the following code is that by implementing `IDomainEventHandler<Product.CreatedEvent>`, the handler declaration alone immediately reveals which Aggregate's event is being handled.
 
 ```csharp
 using Functorium.Applications.Events;
@@ -484,7 +484,7 @@ using Microsoft.Extensions.Logging;
 namespace LayeredArch.Application.Usecases.Products;
 
 /// <summary>
-/// Product.CreatedEvent 핸들러 - 상품 생성 로깅.
+/// Product.CreatedEvent handler - logs product creation.
 /// </summary>
 public sealed class OnProductCreated : IDomainEventHandler<Product.CreatedEvent>
 {
@@ -508,13 +508,13 @@ public sealed class OnProductCreated : IDomainEventHandler<Product.CreatedEvent>
 }
 ```
 
-### 핸들러 관찰 가능성 (Handler Observability)
+### Handler Observability
 
-Event Handler는 Event-Driven Usecase입니다. 따라서 Command/Query Usecase와 동일한 관찰 가능성 패턴이 적용됩니다. `ObservableDomainEventNotificationPublisher`가 Handler 관점의 관찰 가능성을 자동으로 제공합니다.
+Event Handlers are Event-Driven Usecases. Therefore, the same observability patterns as Command/Query Usecases apply. `ObservableDomainEventNotificationPublisher` automatically provides Handler-perspective observability.
 
-#### ObservableDomainEventNotificationPublisher 설정
+#### ObservableDomainEventNotificationPublisher Configuration
 
-Handler 관점 관찰 가능성을 활성화하려면 `NotificationPublisherType`을 설정해야 합니다:
+To enable Handler-perspective observability, set `NotificationPublisherType`:
 
 ```csharp
 services.AddMediator(options =>
@@ -525,35 +525,35 @@ services.AddMediator(options =>
 services.RegisterDomainEventPublisher();
 ```
 
-- `NotificationPublisherType`: Mediator가 `INotification`을 발행할 때 사용할 Publisher 타입. `ObservableDomainEventNotificationPublisher`를 지정하면 Handler별 Logging(Event ID 1001-1004), Metrics, Tracing이 자동 적용됩니다.
-- `RegisterDomainEventPublisher()`: `IDomainEventPublisher`, `IDomainEventCollector`, `ObservableDomainEventNotificationPublisher` 3개를 DI에 등록합니다.
+- `NotificationPublisherType`: The Publisher type used when Mediator publishes `INotification`. Specifying `ObservableDomainEventNotificationPublisher` automatically applies per-Handler Logging (Event ID 1001-1004), Metrics, and Tracing.
+- `RegisterDomainEventPublisher()`: Registers 3 services in DI: `IDomainEventPublisher`, `IDomainEventCollector`, `ObservableDomainEventNotificationPublisher`.
 
-#### 자동 생성되는 관찰 가능성
+#### Auto-Generated Observability
 
-| 신호 | 자동 생성 내용 |
+| Signal | Auto-Generated Content |
 |------|--------------|
-| **Logging** | Handler Request/Response 로그 (Event ID 1001-1004), `request.category.type: "event"` |
+| **Logging** | Handler Request/Response logs (Event ID 1001-1004), `request.category.type: "event"` |
 | **Metrics** | `application.usecase.event.requests/responses/duration` Counter/Histogram |
 | **Tracing** | `application usecase.event {Handler}.Handle` Span |
 
-#### IDomainEventCtxEnricher\<TEvent\> — 비즈니스 컨텍스트 필드 추가
+#### IDomainEventCtxEnricher\<TEvent\> -- Adding Business Context Fields
 
-자동 생성된 표준 관찰 가능성 외에, `DomainEventCtxEnricherGenerator`가 `IDomainEventHandler<T>` 구현 클래스를 감지하여 비즈니스 맥락에 맞는 `ctx.*` 필드를 자동 생성합니다:
+In addition to the auto-generated standard observability, `DomainEventCtxEnricherGenerator` detects `IDomainEventHandler<T>` implementation classes and auto-generates `ctx.*` fields suited to the business context:
 
 ```csharp
-// Handler 정의 → DomainEventCtxEnricherGenerator가 감지하여 Enricher 자동 생성
+// Handler definition -> DomainEventCtxEnricherGenerator detects and auto-generates Enricher
 public sealed class OrderPlacedEventHandler : IDomainEventHandler<OrderPlacedEvent>
 {
     public ValueTask Handle(OrderPlacedEvent notification, CancellationToken ct) { ... }
 }
 
-// ↓ 자동 생성: OrderPlacedEventCtxEnricher
+// Auto-generated: OrderPlacedEventCtxEnricher
 //   ctx.customer_id (Root), ctx.order_placed_event.order_id, ctx.order_placed_event.total_amount, ...
 ```
 
-- `[CtxRoot]`: 이벤트 속성/인터페이스에 적용 → `ctx.{field}` Root Level 승격.
-- `[CtxIgnore]`: 이벤트 클래스/속성에 적용 → 생성 제외.
-- `partial void OnEnrichLog()`: 자동 생성 Enricher에 computed 필드를 추가하는 확장 포인트.
+- `[CtxRoot]`: Applied to event properties/interfaces -> Promoted to `ctx.{field}` Root Level.
+- `[CtxIgnore]`: Applied to event classes/properties -> Excluded from generation.
+- `partial void OnEnrichLog()`: Extension point for adding computed fields to auto-generated Enrichers.
 
 DI 등록:
 ```csharp
@@ -562,53 +562,53 @@ services.AddScoped<
     OrderPlacedEventCtxEnricher>();
 ```
 
-> **상세**: [Logging 매뉴얼 §IDomainEventCtxEnricher](../observability/19-observability-logging#idomaineventctxenrichertvent--이벤트-핸들러-로그-enrichment) 참조.
+> **Details**: See [Logging Manual - IDomainEventCtxEnricher](../observability/19-observability-logging#idomaineventctxenrichertvent--event-handler-log-enrichment).
 
 ### Usage Scenarios
 
 | Scenario | Description |
 |----------|------|
-| 로깅/감사 | 도메인 이벤트 기록 |
-| 알림 발송 | 이메일, 푸시 알림 등 |
-| 외부 시스템 연동 | 결제, 배송 시스템 호출 |
-| 캐시 무효화 | 관련 캐시 갱신 |
-| 검색 인덱스 업데이트 | Elasticsearch 등 동기화 |
+| Logging/Auditing | Record domain events |
+| Notification sending | Email, push notifications, etc. |
+| External system integration | Payment, shipping system calls |
+| Cache invalidation | Update related caches |
+| Search index update | Synchronize Elasticsearch, etc. |
 
 ### Handler Registration
 
-> **Caution**: `Mediator.SourceGenerator`는 해당 패키지가 참조된 프로젝트 내의 핸들러만 자동 등록합니다.
-> 다른 어셈블리(예: Application 레이어)의 핸들러는 명시적으로 등록해야 합니다.
+> **Caution**: `Mediator.SourceGenerator` only auto-registers handlers within the project where the package is referenced.
+> Handlers in other assemblies (e.g., the Application layer) must be registered explicitly.
 
-Scrutor를 사용하여 어셈블리에서 핸들러를 스캔하고 등록합니다:
+Scrutor is used to scan and register handlers from assemblies:
 
 ```csharp
 services.AddMediator(options =>
 {
     options.ServiceLifetime = ServiceLifetime.Scoped;
-    // Handler 관점 관찰 가능성 활성화
+    // Enable Handler-perspective observability
     options.NotificationPublisherType = typeof(ObservableDomainEventNotificationPublisher);
 });
-// IDomainEventPublisher, IDomainEventCollector, ObservableDomainEventNotificationPublisher 등록
+// Register IDomainEventPublisher, IDomainEventCollector, ObservableDomainEventNotificationPublisher
 services.RegisterDomainEventPublisher();
 
-// Application 레이어의 도메인 이벤트 핸들러 등록
+// Register domain event handlers from the Application layer
 services.RegisterDomainEventHandlersFromAssembly(
     YourApp.Application.AssemblyReference.Assembly);
 
 ```
 
-- `NotificationPublisherType = typeof(ObservableDomainEventNotificationPublisher)`: Handler 실행 시 Logging, Metrics, Tracing을 자동으로 적용합니다. 이 설정이 없으면 Handler 관점 관찰 가능성이 비활성화됩니다.
-- `RegisterDomainEventPublisher()`: `IDomainEventPublisher`(발행), `IDomainEventCollector`(수집), `ObservableDomainEventNotificationPublisher`(관찰 가능성) 3개를 DI에 등록합니다.
-- `RegisterDomainEventHandlersFromAssembly()`: Scrutor의 `Scan()` API를 사용하여 지정된 어셈블리에서 `IDomainEventHandler<T>` 구현체를 스캔하여 등록합니다.
+- `NotificationPublisherType = typeof(ObservableDomainEventNotificationPublisher)`: Automatically applies Logging, Metrics, and Tracing when Handlers execute. Without this setting, Handler-perspective observability is disabled.
+- `RegisterDomainEventPublisher()`: Registers 3 services in DI: `IDomainEventPublisher` (publishing), `IDomainEventCollector` (collection), `ObservableDomainEventNotificationPublisher` (observability).
+- `RegisterDomainEventHandlersFromAssembly()`: Uses Scrutor's `Scan()` API to scan and register `IDomainEventHandler<T>` implementations from the specified assembly.
 
 ---
 
-## 벌크 이벤트 처리 (Domain Service 패턴)
+## Bulk Event Processing (Domain Service Pattern)
 
-벌크 연산(`CreateRange`, `DeleteRange`)에서 N개의 이벤트가 발생할 때, **Domain Service**에서 `IDomainEventCollector.TrackEvent()`를 사용하여 이벤트를 직접 등록할 수 있습니다. 이벤트는 `UsecaseTransactionPipeline`이 SaveChanges 후 자동으로 발행합니다.
+When N events are generated in bulk operations (`CreateRange`, `DeleteRange`), **Domain Services** can use `IDomainEventCollector.TrackEvent()` to directly register events. Events are automatically published by `UsecaseTransactionPipeline` after SaveChanges.
 
 ```csharp
-// Domain Service에서 벌크 생성 + 이벤트 직접 등록
+// Bulk creation + direct event registration in Domain Service
 public class ProductBulkOperations
 {
     private readonly IDomainEventCollector _collector;
@@ -630,15 +630,15 @@ public class ProductBulkOperations
 }
 ```
 
-Use Case에서 Domain Service를 호출하면, `UsecaseTransactionPipeline`이 추적된 이벤트를 자동 발행합니다.
+When a Usecase calls the Domain Service, `UsecaseTransactionPipeline` automatically publishes the tracked events.
 
 ---
 
 ## Test Patterns
 
-### event publishing 검증
+### Event Publishing Verification
 
-Entity의 상태 변경 후 `DomainEvents` 컬렉션에 올바른 이벤트가 추가되었는지 검증합니다:
+Verify that the correct events have been added to the `DomainEvents` collection after Entity state changes:
 
 ```csharp
 [Fact]
@@ -656,7 +656,7 @@ public void Confirm_ShouldRaise_ConfirmedEvent()
 {
     // Arrange
     var order = Order.Create(Money.Create(10000m).ThrowIfFail());
-    order.ClearDomainEvents();  // 생성 이벤트 제거
+    order.ClearDomainEvents();  // Remove creation events
 
     // Act
     var result = order.Confirm();
@@ -667,9 +667,9 @@ public void Confirm_ShouldRaise_ConfirmedEvent()
 }
 ```
 
-### 이벤트 데이터 검증
+### Event Data Verification
 
-이벤트에 올바른 데이터가 포함되어 있는지 검증합니다:
+Verify that events contain the correct data:
 
 ```csharp
 [Fact]
@@ -689,9 +689,9 @@ public void Create_CreatedEvent_ShouldContainCorrectData()
 }
 ```
 
-### 이벤트 핸들러 단위 테스트
+### Event Handler Unit Tests
 
-Event Handler는 의존성을 모킹하여 단위 테스트합니다:
+Event Handlers are unit tested by mocking dependencies:
 
 ```csharp
 [Fact]
@@ -714,88 +714,88 @@ public async Task Handle_ShouldLogProductCreation()
 
 ## Checklist
 
-### 이벤트 정의
+### Event Definition
 
-- [ ] 이벤트 이름이 과거형인가? (`CreatedEvent`, `UpdatedEvent`)
-- [ ] 이벤트가 Aggregate Root의 중첩 record로 정의되어 있는가?
-- [ ] `DomainEvent` 기반 record를 상속하는가?
-- [ ] 이벤트에 필요한 식별자(EntityId)가 포함되어 있는가?
+- [ ] Are event names in past tense? (`CreatedEvent`, `UpdatedEvent`)
+- [ ] Are events defined as nested records of the Aggregate Root?
+- [ ] Do they inherit from `DomainEvent` base record?
+- [ ] Are the necessary identifiers (EntityId) included in the event?
 
-### event publishing
+### Event Publishing
 
-- [ ] `AddDomainEvent()`가 상태 변경 직후 호출되는가?
-- [ ] `UsecaseTransactionPipeline`이 자동 발행하도록 구성되었는가? (`UseTransaction()` 등록 확인)
+- [ ] Is `AddDomainEvent()` called immediately after state changes?
+- [ ] Is `UsecaseTransactionPipeline` configured for automatic publishing? (Verify `UseTransaction()` registration)
 
-### 이벤트 핸들러
+### Event Handlers
 
-- [ ] Event Handler 이름이 `On{EventName}` 패턴을 따르는가?
-- [ ] Event Handler가 Usecases 폴더에 Command/Query와 함께 배치되어 있는가?
-- [ ] `IDomainEventHandler<T>`를 구현하는가?
-- [ ] `RegisterDomainEventHandlersFromAssembly`로 핸들러가 등록되어 있는가?
-- [ ] `NotificationPublisherType = typeof(ObservableDomainEventNotificationPublisher)` 설정이 되어 있는가?
-- [ ] `DomainEventCtxEnricherGenerator`가 자동 생성한 `IDomainEventCtxEnricher<TEvent>`의 DI 등록을 확인했는가?
+- [ ] Does the Event Handler name follow the `On{EventName}` pattern?
+- [ ] Is the Event Handler placed alongside Command/Query in the Usecases folder?
+- [ ] Does it implement `IDomainEventHandler<T>`?
+- [ ] Is the handler registered with `RegisterDomainEventHandlersFromAssembly`?
+- [ ] Is `NotificationPublisherType = typeof(ObservableDomainEventNotificationPublisher)` configured?
+- [ ] Has the DI registration of `IDomainEventCtxEnricher<TEvent>` auto-generated by `DomainEventCtxEnricherGenerator` been verified?
 
 ---
 
 ## Future Advanced Patterns
 
-서비스 성숙도가 높아질 때 필요한 고급 패턴입니다. 현재는 미구현이며, 필요 시 단계적으로 도입합니다.
+Advanced patterns needed as service maturity increases. Currently unimplemented and will be introduced incrementally as needed.
 
-- **Outbox 패턴**: DB 트랜잭션과 event publishing의 원자성 보장
-- **Event Versioning**: 이벤트 스키마 변경 시 하위 호환 전략
-- **Saga / Process Manager**: 다중 Aggregate 간 장기 트랜잭션 조율
-- **이벤트 재처리 전략**: 멱등성(Idempotency) 보장 패턴
+- **Outbox pattern**: Guarantee atomicity between DB transactions and event publishing
+- **Event Versioning**: Backward compatibility strategy for event schema changes
+- **Saga / Process Manager**: Long-running transaction coordination across multiple Aggregates
+- **Event reprocessing strategy**: Idempotency guarantee patterns
 
 ---
 
 ## Troubleshooting
 
-### 도메인 이벤트가 핸들러에서 수신되지 않는다
+### Domain events are not received by handlers
 
-**Cause:** Event Handler가 DI 컨테이너에 등록되지 않았을 수 있습니다. `Mediator.SourceGenerator`는 해당 패키지가 참조된 프로젝트 내의 핸들러만 자동 등록합니다.
+**Cause:** The Event Handler may not be registered in the DI container. `Mediator.SourceGenerator` only auto-registers handlers within the project where the package is referenced.
 
-**Resolution:** Application 레이어 등 다른 어셈블리의 핸들러는 `RegisterDomainEventHandlersFromAssembly`로 명시적으로 등록하세요:
+**Resolution:** Handlers in other assemblies such as the Application layer must be explicitly registered with `RegisterDomainEventHandlersFromAssembly`:
 ```csharp
 services.RegisterDomainEventHandlersFromAssembly(
     YourApp.Application.AssemblyReference.Assembly);
 ```
 
-### SaveChanges 성공 후 event publishing이 실패한다
+### Event publishing fails after SaveChanges succeeds
 
-**Cause:** `UsecaseTransactionPipeline`은 SaveChanges 성공 후 이벤트를 발행합니다. 핸들러에서 예외가 발생하면 event publishing은 실패하지만 데이터는 이미 커밋된 상태입니다 (eventual consistency).
+**Cause:** `UsecaseTransactionPipeline` publishes events after SaveChanges succeeds. If an exception occurs in a handler, event publishing fails but data is already committed (eventual consistency).
 
-**Resolution:** 강한 일관성이 필요하면 Outbox 패턴을 도입하세요. 현재 구조에서는 핸들러 내부에서 예외를 적절히 처리하고, 경고 로그를 기록하는 것이 권장됩니다.
+**Resolution:** If strong consistency is needed, introduce the Outbox pattern. In the current structure, it is recommended to properly handle exceptions inside handlers and record warning logs.
 
-### 테스트에서 이전 이벤트가 Assert를 방해한다
+### Previous events interfere with Assert in tests
 
-**Cause:** `Create()`에서 발행된 이벤트가 `DomainEvents` 컬렉션에 남아있어 후속 행위 검증을 방해합니다.
+**Cause:** Events published in `Create()` remain in the `DomainEvents` collection, interfering with subsequent behavior verification.
 
-**Resolution:** 테스트의 Arrange 단계에서 `entity.ClearDomainEvents()`를 호출하여 이전 이벤트를 정리한 후 Act를 수행하세요:
+**Resolution:** Call `entity.ClearDomainEvents()` in the Arrange step of the test to clean up previous events before performing the Act:
 ```csharp
 var order = Order.Create(...);
-order.ClearDomainEvents();  // 생성 이벤트 제거
-order.Confirm();            // 이후 행위 테스트
+order.ClearDomainEvents();  // Remove creation events
+order.Confirm();            // Test subsequent behavior
 ```
 
 ---
 
 ## FAQ
 
-### Q1. 도메인 이벤트를 독립 클래스가 아닌 중첩 클래스로 정의하는 이유는?
+### Q1. Why are domain events defined as nested classes rather than independent classes?
 
-중첩 클래스로 정의하면 `Product.CreatedEvent`처럼 타입 시스템에서 이벤트 소유권이 명확해집니다. IntelliSense에서 `Product.`만 입력하면 관련 이벤트가 모두 표시되고, Event Handler 선언만으로 발행 주체를 즉시 파악할 수 있습니다.
+Defining as nested classes makes event ownership explicit in the type system, as in `Product.CreatedEvent`. Typing `Product.` in IntelliSense displays all related events, and the publishing origin can be immediately identified from the Event Handler declaration alone.
 
-### Q2. CorrelationId와 OpenTelemetry TraceId의 차이는?
+### Q2. What is the difference between CorrelationId and OpenTelemetry TraceId?
 
-`CorrelationId`는 비즈니스 수준 식별자로 동일 요청에서 발생한 이벤트를 그룹핑합니다. `TraceId`는 인프라 수준 식별자로 분산 시스템 간 요청을 추적합니다. 두 식별자는 독립적이지만 보완적으로 사용됩니다.
+`CorrelationId` is a business-level identifier that groups events from the same request. `TraceId` is an infrastructure-level identifier that traces requests across distributed systems. The two identifiers are independent but used complementarily.
 
-### Q3. Event Handler에서 다른 Aggregate를 변경해도 되나요?
+### Q3. Can an Event Handler modify another Aggregate?
 
-가능하지만, Event Handler에서 직접 다른 Aggregate를 변경하면 transaction boundary가 모호해집니다. 다른 Aggregate의 변경이 필요하면 해당 Aggregate의 Command를 발행하거나, 별도 Usecase를 호출하는 방식을 권장합니다.
+It is possible, but directly modifying another Aggregate in an Event Handler makes the transaction boundary ambiguous. If modification of another Aggregate is needed, it is recommended to issue a Command to that Aggregate or call a separate Usecase.
 
-### Q4. Usecase에서 IUnitOfWork나 IDomainEventPublisher를 직접 주입해야 하나요?
+### Q4. Should IUnitOfWork or IDomainEventPublisher be directly injected in the Usecase?
 
-아닙니다. `UsecaseTransactionPipeline`이 SaveChanges와 event publishing을 자동으로 처리합니다. Usecase에서는 Repository만 주입하면 됩니다.
+No. `UsecaseTransactionPipeline` automatically handles SaveChanges and event publishing. Only the Repository needs to be injected in the Usecase.
 
 ### Q5. 이벤트 핸들러의 실행 순서를 보장할 수 있나요?
 

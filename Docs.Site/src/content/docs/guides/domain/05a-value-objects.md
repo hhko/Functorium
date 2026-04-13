@@ -504,7 +504,7 @@ using Functorium.Domains.ValueObjects.Validations.Contextual;
 | Application Layer | Context Class (IValidationContext) | `ValidationRules<ProductValidation>.NotEmpty(name)` |
 | Presentation Layer | Named Context (Contextual) | `ValidationRules.For("ProductName").NotEmpty(name)` |
 
-> **Context Class** is an empty class that implements `IValidationContext`. It is used when reusing validation contexts in the Application Layer. See the [IValidationContext-based Validation](#ivalidationcontext를-이용한-검증-context-class) section for details.
+> **Context Class** is an empty class that implements `IValidationContext`. It is used when reusing validation contexts in the Application Layer. See the [IValidationContext-based Validation](#validation-using-ivalidationcontext-context-class) section for details.
 
 ### Validation Category Summary
 

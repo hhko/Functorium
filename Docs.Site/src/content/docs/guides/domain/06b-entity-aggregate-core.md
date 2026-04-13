@@ -20,7 +20,7 @@ Through this document, you will learn:
 2. **Ulid-based Entity ID system** — Automatic generation of type-safe identifiers via source generators
 3. **Create / CreateFromValidated creation patterns** — Separation of new Entity creation and ORM restoration
 4. **Command methods and invariant protection** — Expressing business rule violations as types via `Fin<T>` return
-5. **자식 Entity 구현과 event publishing** — Aggregate Root를 통한 자식 관리와 도메인 이벤트
+5. **Child Entity implementation and event publishing** — Child management through Aggregate Root and domain events
 
 ### Prerequisites
 
@@ -37,16 +37,16 @@ A basic understanding of the following concepts is required to understand this d
 ### Key Commands
 
 ```csharp
-// Entity ID 생성 (Ulid 기반)
+// Entity ID creation (Ulid-based)
 var productId = ProductId.New();
 
-// Aggregate Root 생성 (검증된 VO를 직접 받음)
+// Aggregate Root creation (receives validated VOs directly)
 var product = Product.Create(name, description, price, stockQuantity);
 
 // Factory for ORM restoration
 var product = Product.CreateFromValidated(id, name, ..., createdAt, updatedAt);
 
-// 커맨드 메서드 (invariant protection, Fin<T> 반환)
+// Command method (invariant protection, Fin<T> return)
 Fin<Unit> result = order.Confirm(updatedBy);
 
 // Domain event publishing
@@ -55,21 +55,21 @@ AddDomainEvent(new CreatedEvent(Id, customerId, totalAmount));
 
 ### Key Procedures
 
-1. `[GenerateEntityId]` 속성 적용하여 EntityId 소스 생성
-2. `AggregateRoot<TId>` (또는 `Entity<TId>`) 상속
-3. `Create()` 팩토리 메서드 구현 - 검증된 VO를 받아 Entity 생성 + 도메인 event publishing
-4. `CreateFromValidated()` 메서드 구현 - ORM 복원용 (검증 없음)
-5. 커맨드 메서드 구현 - Immutable식 검사 후 `Fin<T>` 반환
-6. 도메인 이벤트를 중첩 record로 정의하고 상태 변경 시 발행
+1. Apply `[GenerateEntityId]` attribute to generate EntityId source
+2. Inherit from `AggregateRoot<TId>` (or `Entity<TId>`)
+3. Implement `Create()` factory method - Receive validated VOs to create Entity + publish domain events
+4. Implement `CreateFromValidated()` method - For ORM restoration (no validation)
+5. Implement command methods - Check invariants then return `Fin<T>`
+6. Define domain events as nested records and publish on state changes
 
 ### Key Concepts
 
 | Concept | Description |
 |------|------|
-| Entity vs AggregateRoot | Entity는 ID 기반 동등성, AggregateRoot는 transaction boundary + event publishing |
-| Create / CreateFromValidated | Create는 새 Entity 생성(검증), CreateFromValidated는 DB 복원(검증 없음) |
-| 커맨드 메서드 | Immutable식 위반 시 `Fin.Fail` 반환, 성공 시 상태 변경 + event publishing |
-| Ulid 기반 ID | 분산 생성 가능, 시간 순서 보장, 인덱스 성능 우수 |
+| Entity vs AggregateRoot | Entity has ID-based equality, AggregateRoot has transaction boundary + event publishing |
+| Create / CreateFromValidated | Create is for new Entity creation (validated), CreateFromValidated is for DB restoration (no validation) |
+| Command methods | Returns `Fin.Fail` on invariant violation, performs state change + event publishing on success |
+| Ulid-based ID | Distributed generation, time-ordered, excellent index performance |
 
 ---
 
@@ -80,20 +80,20 @@ AddDomainEvent(new CreatedEvent(Id, customerId, totalAmount));
 Functorium provides a base class hierarchy for Entity implementation.
 
 ```
-IEntity<TId> (인터페이스)
+IEntity<TId> (interface)
 +-- TId Id
-+-- CreateMethodName 상수
-`-- CreateFromValidatedMethodName 상수
++-- CreateMethodName constant
+`-- CreateFromValidatedMethodName constant
     |
-    `-- Entity<TId> (추상 클래스)
-        +-- Id 속성 (protected init)
-        +-- Equals() / GetHashCode() - ID 기반 동등성
-        +-- == / != 연산자
-        +-- CreateFromValidation<TEntity, TValue>() 헬퍼
-        `-- GetUnproxiedType() - ORM 프록시 지원
+    `-- Entity<TId> (abstract class)
+        +-- Id property (protected init)
+        +-- Equals() / GetHashCode() - ID-based equality
+        +-- == / != operators
+        +-- CreateFromValidation<TEntity, TValue>() helper
+        `-- GetUnproxiedType() - ORM proxy support
             |
             `-- AggregateRoot<TId> : IDomainEventDrain
-                +-- DomainEvents (읽기 전용, IHasDomainEvents)
+                +-- DomainEvents (read-only, IHasDomainEvents)
                 +-- AddDomainEvent() (protected)
                 `-- ClearDomainEvents() (IDomainEventDrain)
 ```
@@ -145,13 +145,13 @@ The items that must be included when implementing an Entity are as follows.
 
 | Item | Description |
 |------|------|
-| `[GenerateEntityId]` 속성 | EntityId 자동 생성 |
-| Private 생성자 (ORM용) | 파라미터 없는 기본 생성자 + `#pragma warning disable CS8618` |
-| Private 생성자 (내부용) | ID를 받는 생성자 |
-| `Create()` | Entity 생성 팩토리 메서드 |
-| `CreateFromValidated()` | ORM 복원용 메서드 |
+| `[GenerateEntityId]` attribute | Auto-generates EntityId |
+| Private constructor (for ORM) | Parameterless default constructor + `#pragma warning disable CS8618` |
+| Private constructor (internal) | Constructor that receives ID |
+| `Create()` | Entity creation factory method |
+| `CreateFromValidated()` | ORM restoration method |
 
-> Entity 구현 예제는 [§생성 패턴](#생성-패턴)에서 확인할 수 있습니다.
+> Entity implementation examples can be found in the [Creation Patterns](#creation-patterns) section.
 
 ### AggregateRoot\<TId\>
 
@@ -182,10 +182,10 @@ public abstract class AggregateRoot<TId> : Entity<TId>, IDomainEventDrain
 
 **Interface Segregation Principle:**
 - `IHasDomainEvents`: Read-only contract for the domain layer (allows only event querying)
-- `IDomainEventDrain` (internal): event publishing 후 정리를 위한 인프라 인터페이스
+- `IDomainEventDrain` (internal): Infrastructure interface for cleanup after event publishing
 - Domain events are immutable facts, so the domain contract does not provide individual deletion methods
 
-다음 예제에서 The key point is `AddDomainEvent()`로 이벤트를 발행하고, 커맨드 메서드가 `Fin<Unit>`을 반환하여 Immutable식 위반을 표현하는 구조입니다.
+The key point in the following example is the structure where `AddDomainEvent()` publishes events and command methods return `Fin<Unit>` to express invariant violations.
 
 ```csharp
 [GenerateEntityId]
@@ -271,13 +271,13 @@ public interface IEntityId<T> : IEquatable<T>, IComparable<T>, IParsable<T>
     // Ulid value
     Ulid Value { get; }
 
-    // 새로운 EntityId 생성
+    // Create new EntityId
     static abstract T New();
 
-    // Ulid로부터 EntityId 생성
+    // Create EntityId from Ulid
     static abstract T Create(Ulid id);
 
-    // 문자열로부터 EntityId 생성
+    // Create EntityId from string
     static abstract T Create(string id);
 }
 ```
@@ -304,7 +304,7 @@ When the `[GenerateEntityId]` attribute is applied to an Entity class, the ID ty
 ```csharp
 using Functorium.Domains.Entities;
 
-[GenerateEntityId]  // ProductId, ProductIdComparer, ProductIdConverter 자동 생성
+[GenerateEntityId]  // Auto-generates ProductId, ProductIdComparer, ProductIdConverter
 public class Product : Entity<ProductId>
 {
     // ...
@@ -317,11 +317,11 @@ public class Product : Entity<ProductId>
 
 | Generated Type | Purpose |
 |----------|------|
-| `{Entity}Id` struct | Entity 식별자 (Ulid 기반) |
+| `{Entity}Id` struct | Entity identifier (Ulid-based) |
 | `{Entity}IdComparer` | EF Core ValueComparer |
 | `{Entity}IdConverter` | EF Core ValueConverter (string ↔ EntityId) |
-| `{Entity}IdJsonConverter` | System.Text.Json 직렬화 (내장) |
-| `{Entity}IdTypeConverter` | TypeConverter 지원 (내장) |
+| `{Entity}IdJsonConverter` | System.Text.Json serialization (built-in) |
+| `{Entity}IdTypeConverter` | TypeConverter support (built-in) |
 
 **Generated EntityId Structure:**
 
@@ -344,8 +344,8 @@ public readonly partial record struct ProductId :
 
     // Factory methods
     public static ProductId New();              // New ID generation
-    public static ProductId Create(Ulid id);    // Ulid에서 생성
-    public static ProductId Create(string id);  // 문자열에서 생성
+    public static ProductId Create(Ulid id);    // Create from Ulid
+    public static ProductId Create(string id);  // Create from string
 
     // Comparison operators
     public int CompareTo(ProductId other);
@@ -354,7 +354,7 @@ public readonly partial record struct ProductId :
     public static bool operator <=(ProductId left, ProductId right);
     public static bool operator >=(ProductId left, ProductId right);
 
-    // IParsable 구현
+    // IParsable implementation
     public static ProductId Parse(string s, IFormatProvider? provider);
     public static bool TryParse(string? s, IFormatProvider? provider, out ProductId result);
 
@@ -374,7 +374,7 @@ The core of Entity implementation is **separation of validation responsibilities
 - **Value Object**: Receives primitive values and validates its own validity
 - **Entity**: Receives already-validated Value Objects and composes them. Defines Validate only when there are Entity-level business rules
 
-### Value Object vs Entity의 역할 차이
+### Role Differences Between Value Object and Entity
 
 | Category | Value Object | Entity |
 |------|--------------|--------|
@@ -382,9 +382,9 @@ The core of Entity implementation is **separation of validation responsibilities
 | **Create** | Receives primitive values | **Receives Value Objects directly** |
 | **Validation responsibility** | Validates own values | Validates relationships/rules between VOs |
 
-> **Note**: Value Object의 검증 패턴은 [값 객체 구현 가이드 - 구현 패턴](./05a-value-objects#구현-패턴)을 참고하세요.
+> **Note**: For Value Object validation patterns, see the [Value Object Implementation Guide - Implementation Patterns](./05a-value-objects#implementation-patterns).
 
-### Create / CreateFromValidated 패턴
+### Create / CreateFromValidated Pattern
 
 Entities provide two creation paths. Check the purpose and behavioral differences of each path.
 
@@ -393,7 +393,7 @@ Entities provide two creation paths. Check the purpose and behavioral difference
 | `Create()` | New Entity creation | VOs already validated | Newly generated |
 | `CreateFromValidated()` | ORM/Repository restoration | None | Uses existing ID |
 
-**Create 메서드:**
+**Create Method:**
 
 Used when creating a new Entity. **Receives already validated Value Objects directly.**
 
@@ -408,7 +408,7 @@ public static Product Create(ProductName name, ProductDescription description, M
 }
 ```
 
-**CreateFromValidated 메서드:**
+**CreateFromValidated Method:**
 
 Used when restoring an Entity from ORM or Repository. Values read from the database are already validated, so they are not validated again.
 
@@ -502,21 +502,21 @@ public static Product CreateFromValidated(
 }
 ```
 
-**Create vs CreateFromValidated 비교:**
+**Create vs CreateFromValidated Comparison:**
 
 | Item | `Create()` | `CreateFromValidated()` |
 |------|-----------|------------------------|
-| Purpose | 새 Aggregate 생성 | ORM/Repository 복원 |
-| ID 생성 | `XxxId.New()` 자동 발급 | 외부에서 전달 |
-| 검증 | VO가 이미 검증됨 | 검증 스킵 (DB 데이터 신뢰) |
-| event publishing | `AddDomainEvent()` 호출 | 이벤트 없음 |
-| Audit 필드 | 자동 설정 (`DateTime.UtcNow`) | 외부에서 전달 |
+| Purpose | New Aggregate creation | ORM/Repository restoration |
+| ID generation | `XxxId.New()` auto-issued | Passed from outside |
+| Validation | VOs are already validated | Validation skipped (trusts DB data) |
+| Event publishing | Calls `AddDomainEvent()` | No events |
+| Audit fields | Auto-set (`DateTime.UtcNow`) | Passed from outside |
 
-### Entity.Validate가 필요한 경우 vs 불필요한 경우
+### When Entity.Validate Is Needed vs Not Needed
 
-**불필요한 경우** — VO 단순 조합:
+**Not needed** -- Simple VO composition:
 ```csharp
-// Value Object가 이미 검증됨 → Entity.Validate 불필요
+// Value Objects are already validated -> Entity.Validate not needed
 public static Order Create(Money amount, CustomerId customerId)
 {
     var id = OrderId.New();
@@ -524,12 +524,12 @@ public static Order Create(Money amount, CustomerId customerId)
 }
 ```
 
-**필요한 경우** — Entity 레벨 비즈니스 규칙 (VO 간 관계):
+**Needed** -- Entity-level business rules (relationships between VOs):
 
-다음 예제에서 The key point is `Validate`가 `Validation<Error, Unit>`을 반환하고, `Create`가 이를 호출한 뒤 `ToFin()`으로 변환하는 흐름입니다.
+The key point in the following example is the flow where `Validate` returns `Validation<Error, Unit>` and `Create` calls it then converts with `ToFin()`.
 
 ```csharp
-// 판매가 > 원가 규칙은 Entity 레벨의 검증
+// Selling price > cost rule is Entity-level validation
 [GenerateEntityId]
 public class Product : Entity<ProductId>
 {
@@ -543,7 +543,7 @@ public class Product : Entity<ProductId>
     public Price SellingPrice { get; private set; }
     public Money Cost { get; private set; }
 
-    // Validate: Entity 레벨 비즈니스 규칙 (판매가 > 원가)
+    // Validate: Entity-level business rule (selling price > cost)
     public static Validation<Error, Unit> Validate(Price sellingPrice, Money cost) =>
         sellingPrice.Value > cost.Amount
             ? Success<Error, Unit>(unit)
@@ -552,7 +552,7 @@ public class Product : Entity<ProductId>
                 sellingPrice.Value,
                 $"Selling price must be greater than cost. Price: {sellingPrice.Value}, Cost: {cost.Amount}");
 
-    // Create: Validate 호출 후 Entity 생성
+    // Create: Create Entity after calling Validate
     public static Fin<Product> Create(ProductName name, Price sellingPrice, Money cost) =>
         Validate(sellingPrice, cost)
             .Map(_ => new Product(ProductId.New(), name, sellingPrice, cost))
@@ -561,7 +561,7 @@ public class Product : Entity<ProductId>
 ```
 
 ```csharp
-// 시작일 < 종료일 규칙은 Entity 레벨
+// Start date < end date rule is Entity-level
 [GenerateEntityId]
 public class Subscription : Entity<SubscriptionId>
 {
@@ -575,7 +575,7 @@ public class Subscription : Entity<SubscriptionId>
     public Date EndDate { get; private set; }
     public CustomerId CustomerId { get; private set; }
 
-    // Validate: Entity 레벨 비즈니스 규칙 (시작일 < 종료일)
+    // Validate: Entity-level business rule (start date < end date)
     public static Validation<Error, Unit> Validate(Date startDate, Date endDate) =>
         startDate < endDate
             ? Success<Error, Unit>(unit)
@@ -584,7 +584,7 @@ public class Subscription : Entity<SubscriptionId>
                 startDate.Value,
                 $"Start date must be before end date. Start: {startDate.Value}, End: {endDate.Value}");
 
-    // Create: Validate 호출 후 Entity 생성
+    // Create: Create Entity after calling Validate
     public static Fin<Subscription> Create(Date startDate, Date endDate, CustomerId customerId) =>
         Validate(startDate, endDate)
             .Map(_ => new Subscription(SubscriptionId.New(), startDate, endDate, customerId))
@@ -594,23 +594,23 @@ public class Subscription : Entity<SubscriptionId>
 
 ### Factory Pattern Design Guidelines
 
-| Scenario | 권장 방식 | Example |
+| Scenario | Recommended Approach | Example |
 |---------|---------|------|
-| 단순 생성 (VO만 필요) | 정적 `Create()` 직접 호출 | `Customer.Create(name, email, creditLimit)` |
-| 병렬 VO 검증 필요 | Apply 패턴 (Usecase 내부) | `CreateProductCommand.CreateProduct()` |
-| 외부 데이터 필요 | Usecase에서 Port 조율 후 `Create()` | `CreateOrderCommand` + `IProductCatalog` |
-| DB에서 복원 | `CreateFromValidated()` (검증 스킵) | Repository Mapper |
+| Simple creation (only VOs needed) | Call static `Create()` directly | `Customer.Create(name, email, creditLimit)` |
+| Parallel VO validation needed | Apply pattern (inside Usecase) | `CreateProductCommand.CreateProduct()` |
+| External data needed | Orchestrate via Port in Usecase then call `Create()` | `CreateOrderCommand` + `IProductCatalog` |
+| Restore from DB | `CreateFromValidated()` (validation skipped) | Repository Mapper |
 
-> **Apply 패턴**: Usecase에서 `(v1, v2, v3).Apply(...)` 튜플로 VO를 병렬 검증한 뒤 `Create()`를 호출합니다. 자세한 내용은 [유스케이스 구현 가이드 — Value Object 검증과 Apply 병합 패턴](../application/11-usecases-and-cqrs)을 참조하세요.
+> **Apply Pattern**: In the Usecase, validate VOs in parallel using `(v1, v2, v3).Apply(...)` tuples then call `Create()`. For details, see [Usecase Implementation Guide -- Value Object Validation and Apply Merge Pattern](../application/11-usecases-and-cqrs).
 >
-> **교차 Aggregate 조율**: 다른 Aggregate 데이터가 필요하면 Usecase의 LINQ 체인에서 Port를 통해 조회한 뒤 `Create()`를 호출합니다. 자세한 내용은 [유스케이스 구현 가이드](../application/11-usecases-and-cqrs)를 참조하세요.
+> **Cross-Aggregate Orchestration**: When data from another Aggregate is needed, query via Port in the Usecase's LINQ chain then call `Create()`. For details, see [Usecase Implementation Guide](../application/11-usecases-and-cqrs).
 
 **DDD Principle Compliance:**
-- **캡슐화**: `private` 생성자로 직접 인스턴스화 차단, 팩토리 메서드만 공개
-- **Immutable식 보호**: `Create()`에서 검증된 VO만 수용, primitive 직접 전달 불가
-- **재구성 분리**: `Create()` (새 생성) vs `CreateFromValidated()` (복원) 명확 구분
-- **이벤트 일관성**: 새 생성 시에만 도메인 event publishing, 복원 시 이벤트 없음
-- **레이어 책임**: Aggregate는 자기 생성만 담당, 외부 조율은 Usecase 책임
+- **Encapsulation**: Block direct instantiation with `private` constructor, expose only factory methods
+- **Invariant protection**: `Create()` accepts only validated VOs, direct primitive passing not possible
+- **Reconstruction separation**: Clear distinction between `Create()` (new creation) vs `CreateFromValidated()` (restoration)
+- **Event consistency**: Domain event publishing only on new creation, no events on restoration
+- **Layer responsibility**: Aggregate handles only its own creation, external orchestration is Usecase's responsibility
 
 Having covered how to create Entities, let us now examine command methods that safely change the state of created Entities.
 
@@ -620,12 +620,12 @@ Having covered how to create Entities, let us now examine command methods that s
 
 ### Command Methods That Protect Invariants
 
-State changes are only possible through Aggregate Root methods. 비즈니스 규칙 위반 시 `Fin<Unit>`으로 실패를 반환합니다.
+State changes are only possible through Aggregate Root methods. When business rules are violated, failure is returned as `Fin<Unit>`.
 
-The key point in the following code is Immutable식 검사 후 실패 시 `DomainError`를 반환하고, 성공 시 상태 변경과 event publishing을 수행하는 패턴입니다.
+The key point in the following code is the pattern of returning `DomainError` on invariant violation failure and performing state change and event publishing on success.
 
 ```csharp
-// Inventory: 재고 차감 (불변식: 재고 ≥ 0)
+// Inventory: Stock deduction (invariant: stock >= 0)
 // Error type definition: public sealed record InsufficientStock : DomainErrorType.Custom;
 public Fin<Unit> DeductStock(Quantity quantity)
 {
@@ -643,7 +643,7 @@ public Fin<Unit> DeductStock(Quantity quantity)
 ```
 
 ```csharp
-// Product: 정보 업데이트 (항상 성공하는 커맨드)
+// Product: Info update (command that always succeeds)
 public Product Update(
     ProductName name,
     ProductDescription description,
@@ -664,18 +664,18 @@ public Product Update(
 
 ### Child Entity Management (Add/Remove)
 
-자식 Entity 컬렉션은 `private List<T>` + `public IReadOnlyList<T>` 패턴으로 캡슐화합니다.
+Child Entity collections are encapsulated with the `private List<T>` + `public IReadOnlyList<T>` pattern.
 
 ```csharp
 public sealed class Product : AggregateRoot<ProductId>
 {
-    // private 변경 가능 컬렉션
+    // private mutable collection
     private readonly List<Tag> _tags = [];
 
-    // public 읽기 전용 뷰
+    // public read-only view
     public IReadOnlyList<Tag> Tags => _tags.AsReadOnly();
 
-    // Root를 통해서만 자식 Entity 추가
+    // Add child Entity only through Root
     public Product AddTag(Tag tag)
     {
         if (_tags.Any(t => t.Id == tag.Id))
@@ -686,7 +686,7 @@ public sealed class Product : AggregateRoot<ProductId>
         return this;
     }
 
-    // Root를 통해서만 자식 Entity 제거
+    // Remove child Entity only through Root
     public Product RemoveTag(TagId tagId)
     {
         var tag = _tags.FirstOrDefault(t => t.Id == tagId);
@@ -702,29 +702,29 @@ public sealed class Product : AggregateRoot<ProductId>
 
 ### Query Methods (State Inspection)
 
-Entity의 상태를 확인하는 메서드입니다. 부작용이 없고, 상태를 변경하지 않습니다.
+Methods that inspect the state of an Entity. They have no side effects and do not change state.
 
 ```csharp
-// 상품이 만료되었는지 확인
+// Check if product is expired
 public bool IsExpired() => ExpirationDate < DateTime.UtcNow;
 
-// 주문이 배송 가능한 상태인지 확인
+// Check if order is in a shippable state
 public bool IsShippable() => Status == OrderStatus.Confirmed;
 ```
 
 ### Return Types by Method Type
 
-메서드의 성격에 따라 적절한 반환 타입을 Optional하세요.
+Choose the appropriate return type based on the nature of the method.
 
 | Method Type | Return Type | Description |
 |------------|----------|------|
 | Query (simple check) | `bool`, `int`, etc. | Side-effect-free state check |
 | Query (VO calculation) | `Money`, `Quantity`, etc. | Returns calculated value object |
-| Command (always succeeds) | `void` 또는 `this` | State change without validation |
+| Command (always succeeds) | `void` or `this` | State change without validation |
 | Command (can fail) | `Fin<Unit>` | Possible business rule violation |
 | Command (returns result) | `Fin<T>` | Can fail + returns calculated result |
 
-An Aggregate Root's command methods only change its own state. 그렇다면 Aggregate 내부의 자식 Entity는 어떻게 관리할까요?
+An Aggregate Root's command methods only change its own state. So how are child Entities inside the Aggregate managed?
 
 ---
 
@@ -735,7 +735,7 @@ An Aggregate Root's command methods only change its own state. 그렇다면 Aggr
 Child Entities do not have independent Repositories and must be created/modified/deleted through the Aggregate Root.
 
 ```csharp
-// Tag: 자식 Entity (SharedModels)
+// Tag: Child Entity (SharedModels)
 [GenerateEntityId]
 public sealed class Tag : Entity<TagId>
 {
@@ -758,9 +758,9 @@ public sealed class Tag : Entity<TagId>
 }
 ```
 
-### 검증이 필요한 자식 Entity (OrderLine 예시)
+### Child Entity Requiring Validation (OrderLine Example)
 
-자식 Entity가 도메인 Immutable식을 가질 때는 `Create()`가 `Fin<T>`를 반환합니다:
+When a child Entity has domain invariants, `Create()` returns `Fin<T>`:
 
 ```csharp
 // OrderLine: Order Aggregate의 자식 Entity
@@ -783,7 +783,7 @@ public sealed class OrderLine : Entity<OrderLineId>
         LineTotal = lineTotal;
     }
 
-    // Create: 수량 > 0 불변식 검증, LineTotal 자동 계산
+    // Create: Validate invariant quantity > 0, auto-calculate LineTotal
     public static Fin<OrderLine> Create(ProductId productId, Quantity quantity, Money unitPrice)
     {
         if ((int)quantity <= 0)
@@ -795,21 +795,21 @@ public sealed class OrderLine : Entity<OrderLineId>
         return new OrderLine(OrderLineId.New(), productId, quantity, unitPrice, lineTotal);
     }
 
-    // CreateFromValidated: ORM/Repository 복원용 (검증 없음)
+    // CreateFromValidated: For ORM/Repository restoration (no validation)
     public static OrderLine CreateFromValidated(
         OrderLineId id, ProductId productId, Quantity quantity, Money unitPrice, Money lineTotal)
         => new(id, productId, quantity, unitPrice, lineTotal);
 }
 ```
 
-> **Note**: 실전 코드는 `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Orders/OrderLine.cs`를 참조하세요.
+> **Note**: For production code, see `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Orders/OrderLine.cs`.
 
 ### Having Its Own Identifier
 
-자식 Entity는 Value Object와 달리 **고유 식별자를** 가집니다. 이를 통해 컬렉션 내에서 특정 요소를 식별할 수 있습니다.
+Unlike Value Objects, child Entities have **unique identifiers.** This allows identifying specific elements within a collection.
 
 ```csharp
-// Aggregate Root에서 TagId로 특정 Tag를 찾아 제거
+// Find and remove a specific Tag by TagId from the Aggregate Root
 public Product RemoveTag(TagId tagId)
 {
     var tag = _tags.FirstOrDefault(t => t.Id == tagId);
@@ -824,32 +824,32 @@ public Product RemoveTag(TagId tagId)
 
 ### Event Publishing from Child Entities
 
-Child Entities do not directly publish domain events. 대신 **Aggregate Root가 자식 Entity 변경에 대한 이벤트를 발행합니다.**
+Child Entities do not directly publish domain events. Instead, **the Aggregate Root publishes events for child Entity changes.**
 
 ```csharp
-// Aggregate Root(Product)가 Tag 관련 event publishing
+// Aggregate Root (Product) publishes Tag-related events
 public Product AddTag(Tag tag)
 {
     _tags.Add(tag);
-    AddDomainEvent(new TagAssignedEvent(tag.Id, tag.Name));  // Root가 발행
+    AddDomainEvent(new TagAssignedEvent(tag.Id, tag.Name));  // Root publishes
     return this;
 }
 
-// 자식 Entity(Tag)가 직접 event publishing
-// Tag는 Entity<TId>를 상속하므로 AddDomainEvent()를 사용할 수 없음
+// Child Entity (Tag) directly publishing events
+// Tag inherits Entity<TId> so it cannot use AddDomainEvent()
 ```
 
 ---
 
 ## Domain Events
 
-Domain events represent significant occurrences in the domain. AggregateRoot에서만 발행할 수 있습니다.
+Domain events represent significant occurrences in the domain. They can only be published from AggregateRoot.
 
-> **Note**: 도메인 이벤트의 전체 설계(`IDomainEvent`/`DomainEvent` 정의, Pub/Sub, 핸들러 구독/등록, 트랜잭션 고려사항)는 [도메인 이벤트 가이드](./07-domain-events)를 참조하세요.
+> **Note**: For the complete design of domain events (`IDomainEvent`/`DomainEvent` definition, Pub/Sub, handler subscription/registration, transaction considerations), see the [Domain Events Guide](./07-domain-events).
 
 ### Event Definition Location
 
-도메인 이벤트는 해당 Entity의 **중첩 클래스로** 정의합니다:
+Domain events are defined as **nested classes** within the corresponding Entity:
 
 ```csharp
 [GenerateEntityId]
@@ -857,35 +857,35 @@ public class Order : AggregateRoot<OrderId>
 {
     #region Domain Events
 
-    // Domain event (중첩 클래스)
+    // Domain event (nested class)
     public sealed record CreatedEvent(OrderId OrderId, CustomerId CustomerId, Money TotalAmount) : DomainEvent;
     public sealed record ConfirmedEvent(OrderId OrderId) : DomainEvent;
     public sealed record CancelledEvent(OrderId OrderId, string Reason) : DomainEvent;
 
     #endregion
 
-    // Entity 구현...
+    // Entity implementation...
 }
 ```
 
 **Advantages**:
-- 이벤트 소유권이 타입 시스템에서 명확 (`Order.CreatedEvent`)
-- IntelliSense에서 `Order.`만 치면 관련 이벤트 모두 표시
-- Entity 이름 중복 제거 (`OrderCreatedEvent` → `Order.CreatedEvent`)
-- **Event Handler에서 event publishing 주체 명시**: Handler가 `IDomainEventHandler<Product.CreatedEvent>`를 상속받으면, 코드를 읽는 것만으로 "Product Entity가 발행한 이벤트"임을 즉시 파악 가능
+- Event ownership is explicit in the type system (`Order.CreatedEvent`)
+- IntelliSense shows all related events when typing `Order.`
+- Eliminates Entity name duplication (`OrderCreatedEvent` -> `Order.CreatedEvent`)
+- **Event publishing origin is explicit in Handler**: When a Handler inherits `IDomainEventHandler<Product.CreatedEvent>`, reading the code alone immediately reveals "this is an event published by the Product Entity"
 
-**사용 예시**:
+**Usage Examples**:
 ```csharp
-// Entity 내부에서 (짧게)
+// Inside Entity (concise)
 AddDomainEvent(new CreatedEvent(Id, customerId, totalAmount));
 
-// 외부에서 (명시적)
+// From outside (explicit)
 public void Handle(Order.CreatedEvent @event) { ... }
 ```
 
 ### Event Publishing Pattern
 
-AggregateRoot 내에서 `AddDomainEvent()`를 사용하여 이벤트를 수집합니다. 비즈니스적으로 의미 있는 상태 변화가 발생할 때 발행합니다.
+Events are collected using `AddDomainEvent()` within AggregateRoot. They are published when a business-significant state change occurs.
 
 ```csharp
 [GenerateEntityId]
@@ -904,7 +904,7 @@ public class Order : AggregateRoot<OrderId>
 
     #endregion
 
-    // Create: 생성 event publishing
+    // Create: Publish creation event
     public static Order Create(Money totalAmount)
     {
         var id = OrderId.New();
@@ -913,7 +913,7 @@ public class Order : AggregateRoot<OrderId>
         return order;
     }
 
-    // Ship: 상태 변경 시 event publishing
+    // Ship: Publish event on state change
     public Fin<Unit> Ship(Address address)
     {
         if (Status != OrderStatus.Confirmed)
@@ -935,17 +935,17 @@ public class Order : AggregateRoot<OrderId>
 
 ### Functorium Implementation Checklist
 
-- [ ] Aggregate Root는 `AggregateRoot<TId>` 상속
-- [ ] 자식 Entity는 `Entity<TId>` 상속
-- [ ] `[GenerateEntityId]` 속성 적용
-- [ ] 자식 Entity 컬렉션: `private List<T>` + `public IReadOnlyList<T>`
-- [ ] 비즈니스 규칙 위반 시 `Fin<Unit>` 반환
-- [ ] 상태 변경 시 `AddDomainEvent()` 호출
-- [ ] ORM용 기본 생성자 + `#pragma warning disable CS8618`
-- [ ] `Create()` 팩토리 메서드 (새 Entity 생성)
-- [ ] `CreateFromValidated()` 메서드 (ORM 복원용)
-- [ ] Entity 레벨 비즈니스 규칙이 있으면 `Validate()` 메서드 정의
-- [ ] 도메인 이벤트는 중첩 record로 정의 (`Order.CreatedEvent`)
+- [ ] Aggregate Root inherits `AggregateRoot<TId>`
+- [ ] Child Entity inherits `Entity<TId>`
+- [ ] `[GenerateEntityId]` attribute applied
+- [ ] Child Entity collections: `private List<T>` + `public IReadOnlyList<T>`
+- [ ] Return `Fin<Unit>` on business rule violation
+- [ ] Call `AddDomainEvent()` on state change
+- [ ] Default constructor for ORM + `#pragma warning disable CS8618`
+- [ ] `Create()` factory method (new Entity creation)
+- [ ] `CreateFromValidated()` method (for ORM restoration)
+- [ ] Define `Validate()` method when there are Entity-level business rules
+- [ ] Domain events defined as nested records (`Order.CreatedEvent`)
 
 ---
 
@@ -963,14 +963,14 @@ public class Order : AggregateRoot<OrderId>
 
 ## FAQ
 
-### Q1. Entity vs AggregateRoot Optional 기준은?
+### Q1. What are the criteria for choosing between Entity and AggregateRoot?
 
-**AggregateRoot는 "transaction boundary"입니다.**
+**AggregateRoot is a "transaction boundary."**
 
-Aggregate Root는:
-- 외부에서 직접 접근할 수 있는 유일한 Entity입니다.
-- 트랜잭션의 일관성 경계를 정의합니다.
-- 도메인 이벤트를 발행할 수 있습니다.
+Aggregate Root:
+- Is the only Entity that can be accessed directly from outside.
+- Defines the consistency boundary of transactions.
+- Can publish domain events.
 
 ```csharp
 // Order는 AggregateRoot - 외부에서 직접 접근
@@ -982,72 +982,72 @@ public class Order : AggregateRoot<OrderId> { }
 public class OrderItem : Entity<OrderItemId> { }
 ```
 
-| 질문 | 예 | 아니오 |
+| Question | Yes | No |
 |------|-----|--------|
-| 외부에서 직접 접근하나요? | AggregateRoot | Entity |
-| 도메인 이벤트를 발행하나요? | AggregateRoot | Entity |
-| 독립적으로 저장/조회하나요? | AggregateRoot | Entity |
+| Accessed directly from outside? | AggregateRoot | Entity |
+| Publishes domain events? | AggregateRoot | Entity |
+| Independently stored/queried? | AggregateRoot | Entity |
 
-### Q2. 왜 Ulid를 사용하나요?
+### Q2. Why use Ulid?
 
-**Ulid는 GUID의 장점 + 시간 순서를 제공합니다.**
+**Ulid provides the advantages of GUID + time ordering.**
 
 | Characteristics | GUID | Auto-increment | Ulid |
 |------|------|----------------|------|
-| 분산 생성 | O | X | O |
-| 시간 순서 | X | O | O |
-| 인덱스 성능 | 낮음 | 높음 | 높음 |
-| 추측 가능성 | 낮음 | 높음 | 낮음 |
+| Distributed generation | O | X | O |
+| Time ordering | X | O | O |
+| Index performance | Low | High | High |
+| Predictability | Low | High | Low |
 
 ```csharp
 var id1 = ProductId.New();  // 01ARZ3NDEKTSV4RRFFQ69G5FAV
 var id2 = ProductId.New();  // 01ARZ3NDEKTSV4RRFFQ69G5FAW
 
-// Ulid는 시간 순서를 보장
+// Ulid guarantees time ordering
 id1 < id2  // true
 ```
 
-### Q3. CreateFromValidated는 언제 사용하나요?
+### Q3. When should CreateFromValidated be used?
 
-**데이터베이스에서 Entity를 복원할 때 사용합니다.**
+**It is used when restoring an Entity from the database.**
 
-| 상황 | 사용 메서드 | Reason |
+| Situation | Method to Use | Reason |
 |------|------------|------|
-| 새 Entity 생성 | `Create()` | 입력값 검증 필요 |
-| DB에서 복원 | `CreateFromValidated()` | 이미 검증된 데이터 |
-| API 요청 처리 | `Create()` | 외부 입력 검증 필요 |
+| New Entity creation | `Create()` | Input validation required |
+| Restore from DB | `CreateFromValidated()` | Already validated data |
+| API request processing | `Create()` | External input validation required |
 
-### Q4. 도메인 이벤트는 언제 발행하나요?
+### Q4. When should domain events be published?
 
-**비즈니스적으로 의미 있는 상태 변화가 발생했을 때 발행합니다.**
+**They are published when a business-significant state change occurs.**
 
 ```csharp
-// 좋음: 비즈니스 의미가 있는 이벤트
+// Good: Events with business significance
 AddDomainEvent(new OrderCreatedEvent(Id, CustomerId, TotalAmount));
 AddDomainEvent(new OrderConfirmedEvent(Id));
 
-// 나쁨: 너무 세부적인 이벤트
-AddDomainEvent(new OrderStatusChangedEvent(Id, OldStatus, NewStatus));  // 너무 일반적
-AddDomainEvent(new PropertyUpdatedEvent(Id, "Name", OldValue, NewValue));  // CRUD 수준
+// Bad: Events that are too granular
+AddDomainEvent(new OrderStatusChangedEvent(Id, OldStatus, NewStatus));  // Too generic
+AddDomainEvent(new PropertyUpdatedEvent(Id, "Name", OldValue, NewValue));  // CRUD level
 ```
 
-> 이벤트 핸들러 등록, 트랜잭션 고려사항 등 자세한 내용은 [도메인 이벤트 가이드](./07-domain-events)를 참조하세요.
+> For details on event handler registration, transaction considerations, etc., see the [Domain Events Guide](./07-domain-events).
 
-### Q5. Entity에서 Validate 메서드가 필요한 경우는?
+### Q5. When is a Validate method needed in an Entity?
 
-Entity 레벨 비즈니스 규칙(VO 간 관계 검증)이 있을 때만 정의합니다. [§생성 패턴 — Entity.Validate](#entityvalidate가-필요한-경우-vs-불필요한-경우)를 참조하세요.
+It is defined only when there are Entity-level business rules (validation of relationships between VOs). See [Creation Patterns -- Entity.Validate](#when-entityvalidate-is-needed-vs-not-needed).
 
 ---
 
 ## Reference Documents
 
-- [Aggregate 설계 원칙 (WHY)](./06a-aggregate-design) - Aggregate 설계 원칙과 개념
-- [Entity/Aggregate Advanced Patterns](./06c-entity-aggregate-advanced) - Cross-Aggregate 관계, 부가 인터페이스, 실전 예제
-- [값 객체 구현 가이드](./05a-value-objects) - Value Object 구현 패턴, [검증·열거형 가이드](./05b-value-objects-validation) - 열거형·Application 검증·FAQ
-- [도메인 이벤트 가이드](./07-domain-events) - 도메인 이벤트 전체 설계 (IDomainEvent, Pub/Sub, 핸들러, 트랜잭션)
-- [에러 시스템: 기초와 네이밍](./08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙
-- [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app) - Domain/Application 에러 정의 및 테스트 패턴
-- [도메인 모델링 개요](./04-ddd-tactical-overview) - 도메인 모델링 개요
-- [유스케이스 구현 가이드](../application/11-usecases-and-cqrs) - Application Layer에서의 Aggregate 사용 (Apply 패턴, 교차 Aggregate 조율)
-- [Adapter 구현 가이드](../adapter/13-adapters) - EF Core 통합, Persistence Model 매핑
-- [단위 테스트 가이드](../testing/15a-unit-testing)
+- [Aggregate Design Principles (WHY)](./06a-aggregate-design) - Aggregate design principles and concepts
+- [Entity/Aggregate Advanced Patterns](./06c-entity-aggregate-advanced) - Cross-Aggregate relationships, supplementary interfaces, practical examples
+- [Value Object Implementation Guide](./05a-value-objects) - Value Object implementation patterns, [Validation and Enumeration Guide](./05b-value-objects-validation) - Enumerations, Application validation, FAQ
+- [Domain Events Guide](./07-domain-events) - Complete domain event design (IDomainEvent, Pub/Sub, handlers, transactions)
+- [Error System: Basics and Naming](./08a-error-system) - Error handling basic principles and naming conventions
+- [Error System: Domain/Application Errors](./08b-error-system-domain-app) - Domain/Application error definition and test patterns
+- [Domain Modeling Overview](./04-ddd-tactical-overview) - Domain modeling overview
+- [Usecase Implementation Guide](../application/11-usecases-and-cqrs) - Using Aggregates in Application Layer (Apply pattern, Cross-Aggregate orchestration)
+- [Adapter Implementation Guide](../adapter/13-adapters) - EF Core integration, Persistence Model mapping
+- [Unit Testing Guide](../testing/15a-unit-testing)

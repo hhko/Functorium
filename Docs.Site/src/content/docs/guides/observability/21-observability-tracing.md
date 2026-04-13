@@ -996,9 +996,9 @@ service=orderservice tags={"request.handler.name":"CreateOrderCommandHandler"}
 
 ### Scenario: Slow Order Creation
 
-**상황:** "주문 생성" API의 P99 응답 시간이 3초를 초과합니다.
+**Situation:** "주문 생성" API의 P99 응답 시간이 3초를 초과합니다.
 
-**단계 1: 느린 Trace 예제 조회**
+**Step 1: 느린 Trace 예제 조회**
 
 Jaeger에서 다음 조건으로 검색:
 ```
@@ -1007,7 +1007,7 @@ operation=application usecase.command CreateOrderCommandHandler.Handle
 minDuration=2s
 ```
 
-**단계 2: Trace 상세 분석**
+**Step 2: Trace 상세 분석**
 
 조회된 Trace를 펼쳐 각 Span의 Duration을 확인합니다:
 
@@ -1019,7 +1019,7 @@ CreateOrderCommandHandler.Handle (2.8s)
 +-- NotificationService.SendEmail (0.2s)
 ```
 
-**단계 3: 병목 Span 분석**
+**Step 3: 병목 Span 분석**
 
 `PaymentGateway.ProcessPayment` Span의 태그 확인:
 ```json
@@ -1031,7 +1031,7 @@ CreateOrderCommandHandler.Handle (2.8s)
 }
 ```
 
-**단계 4: 추가 조사**
+**Step 4: 추가 조사**
 
 PaymentGateway의 외부 호출 Span(Client Kind)이 있다면 확인:
 ```
@@ -1039,7 +1039,7 @@ PaymentGateway.ProcessPayment (2.3s)
 +-- HTTP POST payment-provider.com/api/charge (2.2s)  <-- External service delay
 ```
 
-**결론:** 외부 결제 서비스(payment-provider.com)의 응답 지연이 근본 원인입니다.
+**Conclusion:** 외부 결제 서비스(payment-provider.com)의 응답 지연이 근본 원인입니다.
 
 **대응 방안:**
 1. 결제 서비스 타임아웃 설정 확인
@@ -1048,26 +1048,26 @@ PaymentGateway.ProcessPayment (2.3s)
 
 ### Scenario: Intermittent Errors
 
-**상황:** 특정 시간대에 "주문 생성" 에러가 급증합니다.
+**Situation:** 특정 시간대에 "주문 생성" 에러가 급증합니다.
 
-**단계 1: 에러 Trace 조회**
+**Step 1: 에러 Trace 조회**
 
 ```
 service=orderservice
 tags={"response.status":"failure","error.type":"exceptional"}
 ```
 
-**단계 2: 에러 패턴 분석**
+**Step 2: 에러 패턴 분석**
 
 여러 Trace를 비교하여 공통점 확인:
 - 모두 `DatabaseRepository.Save`에서 failure
 - `error.code = "Database.ConnectionFailed"`
 
-**단계 3: 시간대 상관관계**
+**Step 3: 시간대 상관관계**
 
 에러 발생 시간대와 다른 이벤트(배포, 트래픽 급증, 인프라 변경) 비교
 
-**결론:** 데이터베이스 커넥션 풀 고갈이 원인으로 추정
+**Conclusion:** 데이터베이스 커넥션 풀 고갈이 원인으로 추정
 
 ---
 
@@ -1075,9 +1075,9 @@ tags={"response.status":"failure","error.type":"exceptional"}
 
 ### Span이 생성되지 않는 경우
 
-**증상:** Trace에 특정 Span이 보이지 않습니다.
+**Symptom:** Trace에 특정 Span이 보이지 않습니다.
 
-**확인 사항:**
+**Check the following:**
 
 1. **Pipeline 등록 확인:**
    ```csharp
@@ -1101,11 +1101,11 @@ tags={"response.status":"failure","error.type":"exceptional"}
 
 ### Parent-Child 관계가 끊어진 경우
 
-**증상:** 자식 Span이 별도 Trace로 표시됩니다.
+**Symptom:** 자식 Span이 별도 Trace로 표시됩니다.
 
 **Cause:** Context가 전파되지 않았습니다.
 
-**확인 사항:**
+**Check the following:**
 
 1. **비동기 호출에서 Context 전파:**
    ```csharp
@@ -1123,7 +1123,7 @@ tags={"response.status":"failure","error.type":"exceptional"}
 
 ### Duration이 예상보다 긴 경우
 
-**증상:** Span의 Duration이 자식 Span 합계보다 훨씬 큽니다.
+**Symptom:** Span의 Duration이 자식 Span 합계보다 훨씬 큽니다.
 
 **가능한 원인:**
 
@@ -1206,7 +1206,7 @@ A: OpenTelemetry의 오버헤드는 일반적으로 매우 낮습니다:
 
 A: Span이 시작되지 않았거나 Context가 전파되지 않은 경우입니다.
 
-**확인 사항:**
+**Check the following:**
 1. ActivitySource가 등록되었는지 확인
 2. ActivityListener가 해당 소스를 수신하고 있는지 확인
 3. Sampler가 해당 Activity를 제외하지 않는지 확인

@@ -14,19 +14,19 @@ As a project grows, decisions about code placement become increasingly difficult
 
 Through this document, you will learn:
 
-1. **8개 프로젝트 구성과 의존성 방향** - Domain, Application, Adapter 3개, Host, Tests 2개의 역할과 참조 규칙
-2. **코드 배치 3단계 의사결정** - 레이어 결정 → 프로젝트/폴더 결정 → Port 배치 판단
-3. **주 목표와 부수 목표 개념** - 각 프로젝트의 핵심 코드와 보조 인프라 구분
-4. **Host의 Composition Root 역할** - 레이어 등록 순서와 미들웨어 파이프라인 구성
-5. **테스트 프로젝트 구성** - 단위 테스트와 통합 테스트의 폴더 구조 및 설정
+1. **8-project structure and dependency direction** - Roles and reference rules for Domain, Application, 3 Adapters, Host, and 2 Test projects
+2. **3-step code placement decision** - Layer decision → project/folder decision → Port placement judgment
+3. **Primary and secondary objective concepts** - Distinguishing core code from supporting infrastructure in each project
+4. **Host's Composition Root role** - Layer registration order and middleware pipeline configuration
+5. **Test project configuration** - Folder structure and settings for unit tests and integration tests
 
 ### Prerequisites
 
 A basic understanding of the following concepts is required to understand this document:
 
-- 헥사고날 아키텍처(Ports and Adapters)의 기본 개념
-- .NET 프로젝트 참조(`ProjectReference`)와 NuGet 패키지 참조
-- DI(Dependency Injection) 컨테이너의 기본 원리
+- Basic concepts of Hexagonal Architecture (Ports and Adapters)
+- .NET project references (`ProjectReference`) and NuGet package references
+- Basic principles of DI (Dependency Injection) containers
 
 > **The core of project structure is** establishing consistent rules for code placement, maintaining dependency direction from outside to inside between layers.
 
@@ -35,39 +35,39 @@ A basic understanding of the following concepts is required to understand this d
 ### Key Commands
 
 ```bash
-# 빌드
+# Build
 dotnet build {ServiceName}.slnx
 
-# 테스트
+# Test
 dotnet test --solution {ServiceName}.slnx
 
-# 아키텍처 테스트 (의존성 방향 검증)
-# LayerDependencyArchitectureRuleTests로 자동 검증
+# Architecture test (dependency direction verification)
+# Automatically verified by LayerDependencyArchitectureRuleTests
 ```
 
 ### Key Procedures
 
-**1. 코드 배치 결정 (3단계):**
-1. **레이어 결정** — 비즈니스 규칙(Domain), 유스케이스 조율(Application), 기술적 구현(Adapter)
-2. **프로젝트 및 폴더 결정** — 코드 유형별 프로젝트/폴더 매핑 테이블 참조
-3. **Port 배치 판단** — 도메인 타입만 사용하면 Domain, 외부 DTO 포함하면 Application
+**1. Code placement decision (3 steps):**
+1. **Layer decision** — Business rules (Domain), use case orchestration (Application), technical implementation (Adapter)
+2. **Project and folder decision** — Refer to the project/folder mapping table by code type
+3. **Port placement judgment** — Domain if method signatures use only domain types, Application if external DTOs are included
 
-**2. 새 서비스 프로젝트 생성:**
-1. Domain 프로젝트 (AssemblyReference.cs, Using.cs, AggregateRoots/)
-2. Application 프로젝트 (Usecases/, Ports/)
-3. Adapter 3개 (Presentation, Persistence, Infrastructure)
-4. Host 프로젝트 (Program.cs — 레이어 등록)
+**2. New service project creation:**
+1. Domain project (AssemblyReference.cs, Using.cs, AggregateRoots/)
+2. Application project (Usecases/, Ports/)
+3. 3 Adapters (Presentation, Persistence, Infrastructure)
+4. Host project (Program.cs — layer registration)
 5. Tests.Unit + Tests.Integration
 
 ### Key Concepts
 
 | Concept | Description |
 |------|------|
-| 8개 프로젝트 구성 | Domain, Application, Adapter 3개, Host, Tests 2개 |
-| 의존성 방향 | 바깥 → 안쪽 (Host → Adapter → Application → Domain) |
-| 주 목표 / 부수 목표 | 주 목표는 비즈니스/기술 코드, 부수 목표는 DI 등록 등 보조 인프라 |
-| Abstractions/ 폴더 | Adapter 프로젝트의 부수 목표 (Registrations/, Options/, Extensions/) |
-| Port 위치 | Aggregate 전용 CRUD → Domain, 외부 시스템 → Application |
+| 8-project structure | Domain, Application, 3 Adapters, Host, 2 Tests |
+| Dependency direction | Outside → inside (Host → Adapter → Application → Domain) |
+| Primary / secondary objectives | Primary is business/technical code, secondary is supporting infrastructure like DI registration |
+| Abstractions/ folder | Secondary objectives of Adapter projects (Registrations/, Options/, Extensions/) |
+| Port location | Aggregate-specific CRUD → Domain, external systems → Application |
 
 ---
 
@@ -76,32 +76,32 @@ dotnet test --solution {ServiceName}.slnx
 This guide covers the **project structure** of a service — folder names, file placement, and dependency direction.
 "HOW to implement" is delegated to other guides, and we focus only on "WHERE to place."
 
-| WHERE (이 가이드) | HOW (참조 가이드) |
+| WHERE (this guide) | HOW (reference guides) |
 |---|---|
-| AggregateRoots 폴더 구조 | [06a-aggregate-design.md](../domain/06a-aggregate-design) (설계) + [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) (핵심 패턴) + [06c-entity-aggregate-advanced.md](../domain/06c-entity-aggregate-advanced) (고급 패턴) |
-| ValueObjects 위치 규칙 | [05a-value-objects.md](../domain/05a-value-objects) — 값 객체 구현 패턴 |
-| Specifications 위치 규칙 | [10-specifications.md](../domain/10-specifications) — Specification 패턴 구현 |
-| Domain Ports 위치 결정 기준 | [12-ports.md](../adapter/12-ports) — Port 아키텍처와 설계 원칙 |
-| Usecases 폴더/파일 네이밍 | [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) — 유스케이스 구현 |
-| Abstractions/Registrations 구조 | [14a-adapter-pipeline-di.md](../adapter/14a-adapter-pipeline-di) — DI 등록 코드 패턴 |
-| WHY (모듈 매핑 근거) | [04-ddd-tactical-overview.md §6](../domain/04-ddd-tactical-overview) — Module과 프로젝트 구조 매핑 |
+| AggregateRoots folder structure | [06a-aggregate-design.md](../domain/06a-aggregate-design) (design) + [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) (core patterns) + [06c-entity-aggregate-advanced.md](../domain/06c-entity-aggregate-advanced) (advanced patterns) |
+| ValueObjects location rules | [05a-value-objects.md](../domain/05a-value-objects) — Value Object implementation patterns |
+| Specifications location rules | [10-specifications.md](../domain/10-specifications) — Specification pattern implementation |
+| Domain Ports location criteria | [12-ports.md](../adapter/12-ports) — Port architecture and design principles |
+| Usecases folder/file naming | [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) — Use case implementation |
+| Abstractions/Registrations structure | [14a-adapter-pipeline-di.md](../adapter/14a-adapter-pipeline-di) — DI registration code patterns |
+| WHY (module mapping rationale) | [04-ddd-tactical-overview.md §6](../domain/04-ddd-tactical-overview) — Module and project structure mapping |
 
 ### Overall Project Structure Overview
 
-The following 서비스를 구성하는 8개 프로젝트의 전체 구조와 각 프로젝트의 역할입니다.
+The following shows the overall structure of the 8 projects composing a service and the role of each project.
 
 A service is divided into `Src/` (source) and `Tests/` (test) folders, consisting of 8 projects total.
 
 ```
 {ServiceRoot}/
-├── Src/                              ← 소스 프로젝트
+├── Src/                              ← Source projects
 │   ├── {ServiceName}/                ← Host (Composition Root)
 │   ├── {ServiceName}.Domain/
 │   ├── {ServiceName}.Application/
 │   ├── {ServiceName}.Adapters.Presentation/
 │   ├── {ServiceName}.Adapters.Persistence/
 │   └── {ServiceName}.Adapters.Infrastructure/
-└── Tests/                            ← 테스트 프로젝트
+└── Tests/                            ← Test projects
     ├── {ServiceName}.Tests.Unit/
     └── {ServiceName}.Tests.Integration/
 ```
@@ -121,11 +121,11 @@ A service is divided into `Src/` (source) and `Tests/` (test) folders, consistin
 
 ```
 {ServiceName}                          ← Host
-{ServiceName}.Domain                   ← Domain 레이어
-{ServiceName}.Application              ← Application 레이어
-{ServiceName}.Adapters.{Category}      ← Adapter 레이어 (Presentation | Persistence | Infrastructure)
-{ServiceName}.Tests.Unit               ← 단위 테스트
-{ServiceName}.Tests.Integration        ← 통합 테스트
+{ServiceName}.Domain                   ← Domain layer
+{ServiceName}.Application              ← Application layer
+{ServiceName}.Adapters.{Category}      ← Adapter layer (Presentation | Persistence | Infrastructure)
+{ServiceName}.Tests.Unit               ← Unit tests
+{ServiceName}.Tests.Integration        ← Integration tests
 ```
 
 ### Project Dependency Direction
@@ -144,20 +144,20 @@ flowchart TB
 **csproj reference example:**
 
 ```xml
-<!-- Host → 모든 Adapter + Application -->
+<!-- Host → all Adapters + Application -->
 <ProjectReference Include="..\LayeredArch.Adapters.Infrastructure\..." />
 <ProjectReference Include="..\LayeredArch.Adapters.Persistence\..." />
 <ProjectReference Include="..\LayeredArch.Adapters.Presentation\..." />
 <ProjectReference Include="..\LayeredArch.Application\..." />
 
-<!-- Adapter → Application (간접적으로 Domain 포함) -->
+<!-- Adapter → Application (transitively includes Domain) -->
 <ProjectReference Include="..\LayeredArch.Application\..." />
 
 <!-- Application → Domain -->
 <ProjectReference Include="..\LayeredArch.Domain\..." />
 ```
 
-> **Rules:** 의존성은 항상 바깥에서 안쪽으로만 향합니다. Domain은 아무것도 참조하지 않고, Application은 Domain만, Adapter는 Application만 참조합니다.
+> **Rules:** Dependencies always flow from outside to inside only. Domain references nothing, Application references only Domain, and Adapter references only Application.
 
 ### Inter-Project Reference Rules Matrix
 
@@ -167,25 +167,25 @@ The following matrix summarizes which project can reference which project.
 |-----------|--------|-------------|--------------|-------------|----------------|------|
 | **Domain** | — | ✗ | ✗ | ✗ | ✗ | ✗ |
 | **Application** | ✓ | — | ✗ | ✗ | ✗ | ✗ |
-| **Presentation** | (전이) | ✓ | — | ✗ | ✗ | ✗ |
-| **Persistence** | (전이) | ✓ | ✗ | — | ✗ | ✗ |
-| **Infrastructure** | (전이) | ✓ | ✗ | ✗ | — | ✗ |
-| **Host** | (전이) | ✓ | ✓ | ✓ | ✓ | — |
+| **Presentation** | (transitive) | ✓ | — | ✗ | ✗ | ✗ |
+| **Persistence** | (transitive) | ✓ | ✗ | — | ✗ | ✗ |
+| **Infrastructure** | (transitive) | ✓ | ✗ | ✗ | — | ✗ |
+| **Host** | (transitive) | ✓ | ✓ | ✓ | ✓ | — |
 
-- **✓**: 직접 참조 허용 (csproj `ProjectReference`)
-- **✗**: 참조 금지
-- **(전이)**: 직접 참조 없음, 상위 참조를 통한 전이 참조로 타입 접근
-- **—**: 자기 자신
+- **✓**: Direct reference allowed (csproj `ProjectReference`)
+- **✗**: Reference prohibited
+- **(transitive)**: No direct reference; type access via transitive reference through upstream reference
+- **—**: Self
 
 **Core Principles:**
 
-1. **Domain은 아무것도 참조하지 않습니다** — 순수한 비즈니스 규칙만 포함
-2. **Application은 Domain만 직접 참조합니다** — 유스케이스 조율 레이어
-3. **Adapter는 Application만 직접 참조합니다** — Domain은 Application 전이 참조로 접근
-4. **Adapter 간 상호 참조는 금지합니다** — Presentation, Persistence, Infrastructure는 서로 독립
-5. **Host만 모든 레이어를 참조할 수 있습니다** — Composition Root 역할
+1. **Domain references nothing** — Contains only pure business rules
+2. **Application directly references only Domain** — Use case orchestration layer
+3. **Adapter directly references only Application** — Domain is accessed via transitive reference through Application
+4. **Cross-references between Adapters are prohibited** — Presentation, Persistence, and Infrastructure are independent of each other
+5. **Only Host can reference all layers** — Composition Root role
 
-> **Verification:** 이 매트릭스는 `LayerDependencyArchitectureRuleTests` 아키텍처 테스트로 자동 검증됩니다.
+> **Verification:** This matrix is automatically verified by `LayerDependencyArchitectureRuleTests` architecture tests.
 
 ### Test Projects 의존성
 
@@ -234,7 +234,7 @@ public static class AssemblyReference
 **Purpose:** FluentValidation 자동 등록, Mediator 핸들러 스캔 등 `Assembly` 참조가 필요한 곳에서 사용합니다.
 
 ```csharp
-// 사용 예 — Infrastructure Registration에서
+// Usage example — in Infrastructure Registration
 services.AddValidatorsFromAssembly(AssemblyReference.Assembly);
 services.AddValidatorsFromAssembly(LayeredArch.Application.AssemblyReference.Assembly);
 ```
@@ -373,7 +373,7 @@ When writing new code, decide "where to place this code?" in 3 steps.
 | 외부 API 서비스 | Infrastructure | `ExternalApis/` |
 | 횡단 관심사 (Mediator 등) | Infrastructure | `Abstractions/Registrations/` |
 
-> 각 프로젝트의 상세 폴더 구조는 [Domain 레이어](#domain-레이어), [Application 레이어](#application-레이어), [Adapter 레이어](#adapter-레이어) 섹션을 참조하세요.
+> 각 프로젝트의 상세 폴더 구조는 [Domain 레이어](#domain-레이어), [Application 레이어](#application-레이어), [Adapter 레이어](#adapter-레이어) 섹션.
 
 ### Step 3. Port Placement Decision
 
@@ -539,7 +539,7 @@ Usecases/
 
 Adapters are always split into 3 projects.
 
-| Project | Concern | 헥사고날 역할 | 대표 폴더 |
+| Project | Concern | 헥사고날 Role | 대표 폴더 |
 |---------|--------|---------------|----------|
 | `Adapters.Presentation` | HTTP 입출력 | **Driving** (Outside → Inside) | `Endpoints/` |
 | `Adapters.Persistence` | 데이터 저장/조회 | **Driven** (Inside → Outside) | `Repositories/` |
@@ -549,7 +549,7 @@ Adapters are always split into 3 projects.
 
 ### Primary Objective Folders가 고정되지 않는 이유
 
-The primary objective folder name of an Adapter varies depending on the implementation technology. Presentation은 `Endpoints/`가 되지만, gRPC라면 `Services/`가 될 수 있습니다. Persistence도 ORM에 따라 `Repositories/`, `DbContexts/` 등 다양합니다. **폴더 이름은 구현 기술을 반영합니다.**
+The primary objective folder name of an Adapter varies depending on the implementation technology. Presentation becomes `Endpoints/`, but could be `Services/` for gRPC. Persistence also varies by ORM, such as `Repositories/`, `DbContexts/`, etc. **Folder names reflect the implementation technology.**
 
 ### Adapters.Presentation 구조
 
@@ -579,7 +579,7 @@ The primary objective folder name of an Adapter varies depending on the implemen
 └── Using.cs
 ```
 
-**Endpoints Folder Rules:** Aggregate별 하위 폴더, 엔드포인트 파일명은 `{동사}{Aggregate}Endpoint.cs` 패턴을 따릅니다. 여러 Endpoint에서 공유하는 DTO가 있으면 `Dtos/` 하위 폴더에 배치합니다. 각 Endpoint의 Request/Response DTO는 Endpoint 클래스 내부에 nested record로 정의합니다.
+**Endpoints Folder Rules:** Subfolders per Aggregate, endpoint file names follow the `{Verb}{Aggregate}Endpoint.cs` pattern. DTOs shared across multiple Endpoints are placed in a `Dtos/` subfolder. Each Endpoint's Request/Response DTOs are defined as nested records inside the Endpoint class.
 
 ### Adapters.Persistence 구조
 
@@ -687,7 +687,7 @@ public static IServiceCollection RegisterAdapterInfrastructure(this IServiceColl
 public static IApplicationBuilder UseAdapterInfrastructure(this IApplicationBuilder app) { ... }
 ```
 
-> **Note**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [14a-adapter-pipeline-di.md §4.6](../adapter/14a-adapter-pipeline-di#options-패턴-optionsconfigurator)을 참조하세요.
+> **Note**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [14a-adapter-pipeline-di.md §4.6](../adapter/14a-adapter-pipeline-di#options-패턴-optionsconfigurator).
 
 Now that we understand the folder structure of each layer, let us examine the Host project that assembles all layers.
 
@@ -1102,7 +1102,7 @@ Initially place as Aggregate-specific, and move to SharedModels when sharing bec
 
 ### Infrastructure에 Observability 설정이 들어가는 이유
 
-Observability(OpenTelemetry, Serilog 등)는 횡단 관심사로, 특정 Adapter 카테고리에 속하지 않습니다. Infrastructure Adapter가 Mediator, Validator, OpenTelemetry, Pipeline 등 횡단 관심사를 종합적으로 관리하는 역할을 담당하기 때문에 이곳에 배치합니다.
+Observability(OpenTelemetry, Serilog 등)는 횡단 관심사로, 특정 Adapter 카테고리에 속하지 않습니다. Infrastructure Adapter가 Mediator, Validator, OpenTelemetry, Pipeline 등 횡단 관심사를 종합적으로 관리하는 Role을 담당하기 때문에 이곳에 배치합니다.
 
 ### 통합 테스트에서 Host 참조 시 ExcludeAssets=analyzers가 필요한 이유
 
@@ -1118,7 +1118,7 @@ Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 
 
 ## Reference Documents
 
-- [02-solution-configuration.md](./02-solution-configuration) — 솔루션 루트 구성 파일 및 빌드 스크립트
+- [02-solution-configuration.md](./02-solution-configuration) — solution root 구성 파일 및 빌드 스크립트
 - [06a-aggregate-design.md](../domain/06a-aggregate-design) — Aggregate 설계 원칙, [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) — Entity/Aggregate 핵심 패턴, [06c-entity-aggregate-advanced.md](../domain/06c-entity-aggregate-advanced) — 고급 패턴
 - [05a-value-objects.md](../domain/05a-value-objects) — 값 객체 구현 패턴, [05b-value-objects-validation.md](../domain/05b-value-objects-validation) — 열거형·검증·FAQ
 - [10-specifications.md](../domain/10-specifications) — Specification 패턴 구현

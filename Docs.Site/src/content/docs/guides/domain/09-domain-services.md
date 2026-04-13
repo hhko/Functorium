@@ -2,53 +2,53 @@
 title: "Domain Services"
 ---
 
-여러 Aggregate에 걸친 비즈니스 규칙은 어디에 두어야 할까요? Entity에 넣으면 경계를 넘고, Usecase에 넣으면 도메인 로직이 유출됩니다. 도메인 서비스는 이 문제를 해결합니다.
+Where should business rules that span multiple Aggregates be placed? Putting them in an Entity crosses boundaries, and putting them in a Usecase leaks domain logic. Domain Services solve this problem.
 
 ## Introduction
 
-"주문 금액이 고객의 신용 한도를 초과하는지 검증하는 로직은 Order에 넣어야 하나, Customer에 넣어야 하나?"
-"여러 Aggregate를 참조하는 비즈니스 규칙이 Usecase에 있으면 도메인 로직이 유출되는 것 아닌가?"
-"Domain Service와 Application Service(Usecase)의 경계는 어디인가?"
-"Domain Service가 Repository를 사용해도 되는가?"
+"Should the logic to verify whether an order amount exceeds a customer's credit limit go in Order or Customer?"
+"If a business rule referencing multiple Aggregates is in a Usecase, doesn't that leak domain logic?"
+"Where is the boundary between Domain Service and Application Service (Usecase)?"
+"Is it acceptable for a Domain Service to use a Repository?"
 
-이러한 질문은 비즈니스 로직이 단일 Aggregate의 경계를 넘어설 때 반복적으로 발생합니다. 도메인 서비스는 여러 Aggregate를 참조하는 도메인 로직을 Domain Layer에 유지하는 빌딩블록입니다.
+These questions arise repeatedly when business logic crosses the boundary of a single Aggregate. Domain Services are building blocks that keep domain logic referencing multiple Aggregates in the Domain Layer.
 
 ### What You Will Learn
 
-1. **도메인 서비스의 배치 판단 기준** — Entity 메서드, Usecase, Domain Service 중 어디에 로직을 둘지 결정하는 의사결정 트리
-2. **두 가지 구현 패턴** — 순수 패턴(기본)과 Repository 패턴(Evans Ch.9)의 차이와 선택 기준
-3. **Usecase에서의 통합 방법** — 패턴별 생성 방식과 LINQ 체인 사용법
+1. **Placement decision criteria for Domain Services** -- Decision tree for determining whether to place logic in Entity methods, Usecases, or Domain Services
+2. **Two implementation patterns** -- Differences and selection criteria between the Pure pattern (default) and Repository pattern (Evans Ch.9)
+3. **Integration methods from Usecases** -- Creation approach per pattern and LINQ chain usage
 
 ### Prerequisites
 
-- [Aggregate 설계 원칙](./06a-aggregate-design) — Aggregate 경계와 트랜잭션 원칙
-- [에러 시스템: 기초와 네이밍](./08a-error-system) — `Fin<T>` 반환 패턴
+- [Aggregate Design Principles](./06a-aggregate-design) -- Aggregate boundaries and transaction principles
+- [Error System: Basics and Naming](./08a-error-system) -- `Fin<T>` return patterns
 
-> Evans는 Domain Service에 **Stateless**(호출 간 가변 상태 없음)를 요구하지만, **Pure**(I/O 없음)를 요구하지 않습니다.
-> Functorium은 기본적으로 더 엄격한 순수 함수 패턴을 권장하며, 교차 데이터 규모에 따라 Repository 사용 패턴도 제시합니다.
+> Evans requires Domain Services to be **Stateless** (no mutable state between calls), but does not require them to be **Pure** (no I/O).
+> Functorium recommends the stricter pure function pattern by default and also presents the Repository usage pattern depending on cross-data scale.
 
 ## Summary
 
-### 순수 패턴 (기본) — 소규모 교차 데이터
+### Pure Pattern (Default) -- Small-Scale Cross Data
 
 ```csharp
-// Domain Service 정의 — 상태 없음, I/O 없음
+// Domain Service definition -- no state, no I/O
 public sealed class OrderCreditCheckService : IDomainService
 {
     public Fin<Unit> ValidateCreditLimit(Customer customer, Money orderAmount) { ... }
 }
 
-// Usecase에서 직접 생성 (DI 불필요)
+// Directly instantiate in Usecase (DI not needed)
 private readonly OrderCreditCheckService _creditCheckService = new();
 
-// FinT<IO, T> LINQ 체인에서 사용 (Fin<T> 자동 리프팅)
+// Used in FinT<IO, T> LINQ chain (Fin<T> auto-lifting)
 from _2 in _creditCheckService.ValidateCreditLimit(customer, amount)
 ```
 
-### Repository 패턴 (Evans Ch.9) — 대규모 교차 데이터
+### Repository Pattern (Evans Ch.9) -- Large-Scale Cross Data
 
 ```csharp
-// Domain Service 정의 — Repository 인터페이스 의존
+// Domain Service definition -- depends on Repository interface
 public sealed class ContactEmailCheckService : IDomainService
 {
     private readonly IContactRepository _repository;
@@ -58,127 +58,127 @@ public sealed class ContactEmailCheckService : IDomainService
         EmailAddress email, Option<ContactId> excludeId = default) { ... }
 }
 
-// Usecase에서 DI 주입
+// DI injection in Usecase
 public sealed class Usecase(
     IContactRepository repository,
     ContactEmailCheckService emailCheckService) { ... }
 
-// FinT<IO, T> LINQ 체인에서 직접 사용 (이미 FinT<IO, T>)
+// Used directly in FinT<IO, T> LINQ chain (already FinT<IO, T>)
 from _ in _emailCheckService.ValidateEmailUnique(email, excludeId)
 ```
 
-### 패턴 선택 기준
+### Pattern Selection Criteria
 
-| 판단 질문 | 순수 패턴 | Repository 패턴 |
+| Decision Question | Pure Pattern | Repository Pattern |
 |----------|----------|----------------|
-| Usecase가 필요한 데이터를 로드할 수 있는 규모인가? | YES | NO (전체 테이블 스캔 필요) |
-| 교차 데이터가 1~수건인가? | YES | NO (대량) |
-| Service가 쿼리 규칙을 소유해야 하는가? | NO | YES (Specification 생성) |
+| Is the data scale loadable by the Usecase? | YES | NO (requires full table scan) |
+| Is cross data 1 to a few records? | YES | NO (large volume) |
+| Does the Service need to own query rules? | NO | YES (Specification creation) |
 
 ### Key Procedures
 
-1. **배치 판단**: 로직이 여러 Aggregate에 걸치는지, 교차 데이터 규모가 어느 정도인지 확인
-2. **패턴 선택**: 순수 패턴(기본) 또는 Repository 패턴(Evans Ch.9) 결정
-3. **클래스 정의**: `sealed class`, `IDomainService` 마커 구현
-4. **메서드 작성**: 순수 패턴은 `Fin<T>`, Repository 패턴은 `FinT<IO, T>` 반환
-5. **에러 정의**: `DomainError.For<{ServiceName}>()` 패턴으로 에러 코드 생성
-6. **Usecase 통합**: 순수 패턴은 `new()` 직접 생성, Repository 패턴은 DI 주입
+1. **Placement decision**: Verify whether logic spans multiple Aggregates and the cross-data scale
+2. **Pattern selection**: Decide between Pure pattern (default) or Repository pattern (Evans Ch.9)
+3. **Class definition**: `sealed class`, implement `IDomainService` marker
+4. **Method implementation**: Pure pattern returns `Fin<T>`, Repository pattern returns `FinT<IO, T>`
+5. **Error definition**: Generate error codes with `DomainError.For<{ServiceName}>()` pattern
+6. **Usecase integration**: Pure pattern uses `new()` direct creation, Repository pattern uses DI injection
 
 ### Key Concepts
 
 | Concept | Description |
 |------|------|
-| `IDomainService` | 빈 마커 인터페이스, 아키텍처 테스트 검증용 |
-| 순수 패턴 (기본) | 외부 I/O 없음, 상태 없음, `Fin<T>` 반환, DI 불필요 |
-| Repository 패턴 (Evans Ch.9) | Repository 인터페이스 의존, `FinT<IO, T>` 반환, DI 필요 |
-| 자동 리프팅 | `FinT<IO, T>` LINQ 체인에서 `Fin<T>` 자동 리프팅 (순수 패턴만) |
+| `IDomainService` | Empty marker interface, for architecture test verification |
+| Pure Pattern (default) | No external I/O, no state, returns `Fin<T>`, DI not needed |
+| Repository Pattern (Evans Ch.9) | Depends on Repository interface, returns `FinT<IO, T>`, DI needed |
+| Auto-lifting | `Fin<T>` auto-lifted in `FinT<IO, T>` LINQ chain (pure pattern only) |
 
 ---
 
 ## Why Domain Services
 
-도메인 서비스는 DDD(Domain-Driven Design)에서 **여러 Aggregate에 걸친 도메인 로직을** 배치하는 빌딩블록입니다.
+Domain Services are building blocks in DDD (Domain-Driven Design) for **placing domain logic that spans multiple Aggregates.**
 
-### 도메인 서비스가 해결하는 문제
+### Problems Domain Services Solve
 
-**도메인 로직 유출 방지**:
-비즈니스 규칙이 여러 Aggregate를 참조해야 할 때, 해당 로직이 Application Layer(Usecase)로 유출되기 쉽습니다. 도메인 서비스는 이 로직을 Domain Layer에 유지합니다.
+**Preventing Domain Logic Leakage**:
+When business rules need to reference multiple Aggregates, the logic easily leaks to the Application Layer (Usecase). Domain Services keep this logic in the Domain Layer.
 
-**역할 구분 명확화**:
-Domain Service(도메인 로직)와 Application Service(Usecase, I/O 조율)의 경계가 명확해집니다.
+**Clear Role Separation**:
+The boundary between Domain Service (domain logic) and Application Service (Usecase, I/O orchestration) becomes clear.
 
-**아키텍처 테스트 가능**:
-`IDomainService` 마커 인터페이스로 아키텍처 규칙을 검증할 수 있습니다 (예: Domain Service가 [IObservablePort](../adapter/12-ports)를 의존하지 않는지).
+**Architecture Testability**:
+Architecture rules can be verified with the `IDomainService` marker interface (e.g., whether a Domain Service does not depend on [IObservablePort](../adapter/12-ports)).
 
-### 도메인 로직 배치 판단
+### Domain Logic Placement Decision
 
-아래 의사결정 트리는 로직의 특성에 따라 어디에 배치해야 하는지 안내합니다.
+The following decision tree guides where to place logic based on its characteristics.
 
 ```
-로직이 단일 Aggregate에 속하는가?
-├── YES → Entity 메서드 또는 Value Object
+Does the logic belong to a single Aggregate?
+├── YES -> Entity method or Value Object
 └── NO
-    ├── 외부 I/O가 필요한가?
-    │   ├── 교차 데이터를 Usecase가 로드할 수 있는 규모인가?
-    │   │   ├── YES → 순수 Domain Service (Usecase가 데이터 전달)
-    │   │   └── NO → Repository 사용 Domain Service (Evans Ch.9)
-    │   └── I/O 불필요 → 순수 Domain Service
-    └── 여러 Aggregate의 상태를 변경하는가?
-        ├── YES → Domain Event + 별도 Handler
-        └── NO → Domain Service
+    ├── Is external I/O needed?
+    │   ├── Is the cross data loadable by the Usecase?
+    │   │   ├── YES -> Pure Domain Service (Usecase passes data)
+    │   │   └── NO -> Repository-using Domain Service (Evans Ch.9)
+    │   └── I/O not needed -> Pure Domain Service
+    └── Does it change the state of multiple Aggregates?
+        ├── YES -> Domain Event + separate Handler
+        └── NO -> Domain Service
 ```
 
 **Summary:**
 
-| 조건 | 배치 |
+| Condition | Placement |
 |------|------|
-| 단일 Aggregate 내 로직 | Entity 메서드 또는 Value Object |
-| 다수 Aggregate 읽기 + 순수 로직 | Domain Service (순수 패턴) |
-| 다수 Aggregate + 대규모 교차 데이터 | Domain Service (Repository 패턴) |
-| 다수 Aggregate 쓰기 또는 외부 I/O 조율 | Usecase |
+| Logic within a single Aggregate | Entity method or Value Object |
+| Multiple Aggregate reads + pure logic | Domain Service (Pure pattern) |
+| Multiple Aggregates + large-scale cross data | Domain Service (Repository pattern) |
+| Multiple Aggregate writes or external I/O orchestration | Usecase |
 
-다음 표는 위 트리의 결과를 요약한 것입니다.
+The following table summarizes the results of the decision tree above.
 
-| 배치 위치 | 기준 | Example |
+| Placement Location | Criteria | Example |
 |----------|------|------|
-| **Entity 메서드** | 단일 Aggregate 내부 상태 변경 | `Product.DeductStock()` |
-| **Value Object** | 값의 검증, 변환, 연산 | `Money.Add()` |
-| **Domain Service (순수)** | 여러 Aggregate 참조, Usecase가 데이터 로드 가능 | `OrderCreditCheckService.ValidateCreditLimit()` |
-| **Domain Service (Repository)** | 여러 Aggregate 참조, 대규모 교차 데이터 | `ContactEmailCheckService.ValidateEmailUnique()` |
-| **Usecase** | 조율, I/O 위임 | Repository 호출, Event 발행 |
+| **Entity method** | State change within a single Aggregate | `Product.DeductStock()` |
+| **Value Object** | Value validation, conversion, operations | `Money.Add()` |
+| **Domain Service (Pure)** | References multiple Aggregates, Usecase can load data | `OrderCreditCheckService.ValidateCreditLimit()` |
+| **Domain Service (Repository)** | References multiple Aggregates, large-scale cross data | `ContactEmailCheckService.ValidateEmailUnique()` |
+| **Usecase** | Orchestration, I/O delegation | Repository calls, Event publishing |
 
 Now that we understand the need for domain services, let us examine their precise definition and characteristics.
 
 ---
 
-## 도메인 서비스란 무엇인가 (WHAT)
+## What Are Domain Services (WHAT)
 
-### Evans의 Domain Service 정의
+### Evans's Domain Service Definition
 
-Evans Blue Book Ch.9에서 Domain Service의 3가지 특성:
+Three characteristics of Domain Services from Evans Blue Book Ch.9:
 
-1. **도메인 개념에 해당하지만 Entity나 Value Object에 속하지 않는 연산**
-2. **인터페이스가 도메인 모델의 다른 요소로 정의됨**
-3. **Stateless** — 호출 간 가변 상태 없음
+1. **Operations that correspond to domain concepts but do not belong to Entity or Value Object**
+2. **The interface is defined in terms of other elements of the domain model**
+3. **Stateless** -- no mutable state between calls
 
-Evans는 **Stateless**를 요구하지만 **Pure**(I/O 없음)를 요구하지 않습니다. Repository 인터페이스는 도메인 레이어에 정의되므로, Domain Service가 이를 사용하는 것은 Evans DDD에서 정당합니다.
+Evans requires **Stateless** but not **Pure** (no I/O). Since Repository interfaces are defined in the domain layer, it is legitimate in Evans DDD for Domain Services to use them.
 
-### Functorium의 두 가지 패턴
+### Functorium's Two Patterns
 
-Functorium은 Evans의 Stateless 원칙을 기반으로, 교차 데이터 규모에 따라 두 가지 패턴을 제시합니다.
+Based on Evans's Stateless principle, Functorium presents two patterns depending on cross-data scale.
 
-| 특성 | 순수 패턴 (기본) | Repository 패턴 (Evans Ch.9) |
+| Characteristic | Pure Pattern (default) | Repository Pattern (Evans Ch.9) |
 |------|-----------------|---------------------------|
-| **생성 방식** | `new()` 직접 생성 | DI 주입 |
-| **I/O** | 없음 | Repository 인터페이스 사용 |
-| **반환 타입** | `Fin<T>` | `FinT<IO, T>` |
-| **인스턴스 필드** | 없음 | Repository 참조만 허용 |
-| **테스트** | Mock 불필요 | Repository 스텁 필요 |
-| **적용 시나리오** | 소규모 교차 데이터 | 대규모 교차 데이터 (DB 쿼리 필수) |
+| **Creation** | `new()` direct creation | DI injection |
+| **I/O** | None | Uses Repository interface |
+| **Return type** | `Fin<T>` | `FinT<IO, T>` |
+| **Instance fields** | None | Only Repository references allowed |
+| **Testing** | No mocks needed | Repository stub needed |
+| **Application scenario** | Small-scale cross data | Large-scale cross data (DB query required) |
 
-두 패턴 모두 Evans의 Stateless 요구사항을 충족합니다. 순수 패턴은 인스턴스 필드가 없고, Repository 패턴은 불변 Repository 참조만 보유합니다.
+Both patterns satisfy Evans's Stateless requirement. The Pure pattern has no instance fields, and the Repository pattern holds only immutable Repository references.
 
-### IDomainService 마커 인터페이스
+### IDomainService Marker Interface
 
 **Location**: `Functorium.Domains.Services`
 
@@ -186,28 +186,28 @@ Functorium은 Evans의 Stateless 원칙을 기반으로, 교차 데이터 규모
 public interface IDomainService { }
 ```
 
-빈 마커 인터페이스입니다. Domain Service임을 선언하고 아키텍처 테스트에서 검증할 수 있게 합니다. 두 패턴 모두 이 인터페이스를 구현합니다.
+An empty marker interface. It declares a class as a Domain Service and enables verification in architecture tests. Both patterns implement this interface.
 
 ### Domain Service vs Application Service (Usecase)
 
-아래 표는 Domain Service와 Application Service의 핵심 차이를 정리한 것입니다.
+The following table summarizes the key differences between Domain Service and Application Service.
 
 | Category | Domain Service | Application Service (Usecase) |
 |------|---------------|-------------------------------|
-| **위치** | Domain Layer | Application Layer |
-| **I/O** | 없음 (순수 패턴) 또는 Repository만 (Evans 패턴) | 있음 (Repository, Event 발행) |
-| **역할** | 비즈니스 규칙 | 조율 (orchestration) |
-| **반환** | `Fin<T>` 또는 `FinT<IO, T>` | `FinResponse<T>` |
+| **Location** | Domain Layer | Application Layer |
+| **I/O** | None (Pure pattern) or Repository only (Evans pattern) | Present (Repository, Event publishing) |
+| **Role** | Business rules | Orchestration |
+| **Return** | `Fin<T>` or `FinT<IO, T>` | `FinResponse<T>` |
 | **마커** | `IDomainService` | `ICommandUsecase<T,R>` / `IQueryUsecase<T,R>` |
 
-### Functorium 타입 계층에서의 위치
+### Position in Functorium Type Hierarchy
 
 ```
 Domain Layer
 ├── Value Object     (SimpleValueObject<T>, ...)
 ├── Entity           (Entity<TId>, AggregateRoot<TId>)
 ├── Domain Event     (IDomainEvent, DomainEvent)
-├── Domain Service   (IDomainService)         ← 여기
+├── Domain Service   (IDomainService)         <- here
 ├── Domain Error     (DomainError, DomainErrorType)
 └── Repository       (IRepository<TAggregate, TId>)
 ```
@@ -216,7 +216,7 @@ Now that we have confirmed the definition and location of Domain Services, let u
 
 ---
 
-## 도메인 서비스 구현 (HOW)
+## Domain Service Implementation (HOW)
 
 ### Folder Structure
 
@@ -225,21 +225,21 @@ LayeredArch.Domain/
 ├── AggregateRoots/
 │   ├── Customers/
 │   └── Orders/
-├── Services/                              ← Domain Service 배치
+├── Services/                              <- Domain Service placement
 │   └── OrderCreditCheckService.cs
 └── Using.cs
 ```
 
 ### Namespace
 
-- 프레임워크 인터페이스: `Functorium.Domains.Services`
-- 구현 클래스: `{프로젝트}.Domain.Services`
+- Framework interface: `Functorium.Domains.Services`
+- Implementation class: `{Project}.Domain.Services`
 
-### 순수 패턴 (기본)
+### Pure Pattern (Default)
 
-Usecase가 교차 데이터를 로드할 수 있는 소규모 시나리오에 적합합니다.
+Suitable for small-scale scenarios where the Usecase can load cross data.
 
-**기본 구조:**
+**Basic Structure:**
 
 ```csharp
 using Functorium.Domains.Errors;
@@ -247,29 +247,29 @@ using Functorium.Domains.Services;
 using static Functorium.Domains.Errors.DomainErrorType;
 using static LanguageExt.Prelude;
 
-namespace {프로젝트}.Domain.Services;
+namespace {Project}.Domain.Services;
 
 public sealed class {ServiceName} : IDomainService
 {
     public sealed record {ErrorName} : DomainErrorType.Custom;
 
-    public Fin<Unit> {메서드명}({AggregateA} a, {AggregateB 데이터} b)
+    public Fin<Unit> {MethodName}({AggregateA} a, {AggregateB data} b)
     {
-        // 교차 Aggregate 비즈니스 규칙 검증
-        if (/* 규칙 위반 */)
+        // Cross-Aggregate business rule validation
+        if (/* rule violation */)
             return DomainError.For<{ServiceName}>(
                 new {ErrorName}(),
                 currentValue,
-                "에러 메시지");
+                "Error message");
 
         return unit;
     }
 }
 ```
 
-**완전한 예제: OrderCreditCheckService**
+**Complete Example: OrderCreditCheckService**
 
-Customer의 신용 한도와 Order의 주문 금액 간 교차 Aggregate 비즈니스 규칙을 구현합니다:
+Implements a cross-Aggregate business rule between Customer credit limit and Order amount:
 
 ```csharp
 using Functorium.Domains.Errors;
@@ -286,7 +286,7 @@ public sealed class OrderCreditCheckService : IDomainService
     public sealed record CreditLimitExceeded : DomainErrorType.Custom;
 
     /// <summary>
-    /// 주문 금액이 고객의 신용 한도 내에 있는지 검증합니다.
+    /// Validates whether the order amount is within the customer's credit limit.
     /// </summary>
     public Fin<Unit> ValidateCreditLimit(Customer customer, Money orderAmount)
     {
@@ -294,13 +294,13 @@ public sealed class OrderCreditCheckService : IDomainService
             return DomainError.For<OrderCreditCheckService>(
                 new CreditLimitExceeded(),
                 customer.Id.ToString(),
-                $"주문 금액 {(decimal)orderAmount}이(가) 고객 신용 한도 {(decimal)customer.CreditLimit}을(를) 초과합니다");
+                $"Order amount {(decimal)orderAmount} exceeds customer credit limit {(decimal)customer.CreditLimit}");
 
         return unit;
     }
 
     /// <summary>
-    /// 기존 주문들과 신규 주문을 합산하여 신용 한도 내에 있는지 검증합니다.
+    /// Validates whether the sum of existing orders and the new order is within the credit limit.
     /// </summary>
     public Fin<Unit> ValidateCreditLimitWithExistingOrders(
         Customer customer,
@@ -314,7 +314,7 @@ public sealed class OrderCreditCheckService : IDomainService
             return DomainError.For<OrderCreditCheckService>(
                 new CreditLimitExceeded(),
                 customer.Id.ToString(),
-                $"총 주문 금액 {totalWithNew}이(가) 고객 신용 한도 {(decimal)customer.CreditLimit}을(를) 초과합니다");
+                $"Total order amount {totalWithNew} exceeds customer credit limit {(decimal)customer.CreditLimit}");
 
         return unit;
     }
@@ -323,17 +323,17 @@ public sealed class OrderCreditCheckService : IDomainService
 
 **Key Points:**
 
-- `sealed class` — 상속 의도 없음
-- `Fin<Unit>` 반환 — 성공(`unit`) 또는 `DomainError`
-- `DomainError.For<OrderCreditCheckService>` — 에러 코드 자동 생성 (`DomainErrors.OrderCreditCheckService.CreditLimitExceeded`)
-- `Money` 비교는 `ComparableSimpleValueObject<decimal>` 연산자 (`>`, `<`, `>=`, `<=`) 사용
-- `Seq<T>.Fold` 사용 — `Sum()` 대신 사용 (LanguageExt와 System.Linq 간 모호성 방지)
+- `sealed class` -- no inheritance intended
+- Returns `Fin<Unit>` -- success (`unit`) or `DomainError`
+- `DomainError.For<OrderCreditCheckService>` -- auto-generates error code (`DomainErrors.OrderCreditCheckService.CreditLimitExceeded`)
+- `Money` comparison uses `ComparableSimpleValueObject<decimal>` operators (`>`, `<`, `>=`, `<=`)
+- Uses `Seq<T>.Fold` -- used instead of `Sum()` (to avoid ambiguity between LanguageExt and System.Linq)
 
-### Repository 패턴 (Evans Ch.9)
+### Repository Pattern (Evans Ch.9)
 
-Usecase가 교차 데이터를 로드하기 어려운 대규모 시나리오에 적합합니다. Domain Service가 Repository 인터페이스를 통해 직접 데이터를 조회합니다.
+Suitable for large-scale scenarios where the Usecase cannot easily load cross data. The Domain Service directly queries data through the Repository interface.
 
-**기본 구조:**
+**Basic Structure:**
 
 ```csharp
 using Functorium.Domains.Errors;
@@ -341,7 +341,7 @@ using Functorium.Domains.Services;
 using static Functorium.Domains.Errors.DomainErrorType;
 using static LanguageExt.Prelude;
 
-namespace {프로젝트}.Domain.Services;
+namespace {Project}.Domain.Services;
 
 public sealed class {ServiceName} : IDomainService
 {
@@ -352,10 +352,10 @@ public sealed class {ServiceName} : IDomainService
 
     public sealed record {ErrorName} : DomainErrorType.Custom;
 
-    public FinT<IO, Unit> {메서드명}({파라미터})
+    public FinT<IO, Unit> {MethodName}({Parameters})
     {
-        // Specification 생성 → Repository 조회 → 검증
-        var spec = new {Specification}({파라미터});
+        // Specification creation -> Repository query -> validation
+        var spec = new {Specification}({Parameters});
         return from exists in _repository.Exists(spec)
                from _ in CheckCondition(exists)
                select unit;
@@ -371,9 +371,9 @@ public sealed class {ServiceName} : IDomainService
 }
 ```
 
-**완전한 예제: ContactEmailCheckService**
+**Complete Example: ContactEmailCheckService**
 
-Contact의 이메일 고유성을 검증하는 교차 Aggregate 비즈니스 규칙을 구현합니다. 전체 Contact 테이블을 스캔해야 하므로 Usecase가 데이터를 전달하는 순수 패턴으로는 구현할 수 없습니다:
+Implements a cross-Aggregate business rule that validates Contact email uniqueness. Since it requires scanning the entire Contact table, it cannot be implemented with the Pure pattern where the Usecase passes data:
 
 ```csharp
 public sealed class ContactEmailCheckService : IDomainService
@@ -386,7 +386,7 @@ public sealed class ContactEmailCheckService : IDomainService
     public sealed record EmailAlreadyInUse : DomainErrorType.Custom;
 
     /// <summary>
-    /// 이메일 주소가 다른 Contact에서 사용되지 않는지 검증합니다.
+    /// Validates that the email address is not used by another Contact.
     /// </summary>
     public FinT<IO, Unit> ValidateEmailUnique(
         EmailAddress email, Option<ContactId> excludeId = default)
@@ -403,7 +403,7 @@ public sealed class ContactEmailCheckService : IDomainService
             return DomainError.For<ContactEmailCheckService>(
                 new EmailAlreadyInUse(),
                 (string)email,
-                $"이메일 '{(string)email}'은(는) 이미 사용 중입니다");
+                $"Email '{(string)email}' is already in use");
         return unit;
     }
 }
@@ -411,14 +411,14 @@ public sealed class ContactEmailCheckService : IDomainService
 
 **Key Points:**
 
-- `FinT<IO, Unit>` 반환 — Repository I/O를 포함하므로 `Fin<T>`가 아닌 `FinT<IO, T>`
-- Repository는 **인터페이스로만 의존** — Domain Layer에 정의된 인터페이스
-- `Specification` 생성 — 쿼리 규칙을 Domain Service가 소유
-- LINQ query syntax — `from ... in ...` 체인으로 I/O와 순수 검증을 합성
+- Returns `FinT<IO, Unit>` -- `FinT<IO, T>` not `Fin<T>` because it includes Repository I/O
+- Depends on Repository **via interface only** -- interfaces defined in Domain Layer
+- `Specification` creation -- Domain Service owns query rules
+- LINQ query syntax -- composes I/O and pure validation via `from ... in ...` chain
 
-### Global Using 설정
+### Global Using Configuration
 
-Domain 프로젝트의 `Using.cs`에 추가:
+Add to the Domain project's `Using.cs`:
 
 ```csharp
 global using Functorium.Domains.Services;
@@ -428,15 +428,15 @@ Now that we have completed the Domain Service implementation, let us see how to 
 
 ---
 
-## Usecase에서 사용 (HOW)
+## Usage from Usecase (HOW)
 
-### 순수 패턴: 직접 생성 + 자동 리프팅
+### Pure Pattern: Direct Creation + Auto-Lifting
 
-순수 패턴의 Domain Service는 상태와 I/O가 없으므로 Usecase에서 **멤버 변수로 직접 생성합니다.** `Fin<Unit>` 반환값은 `FinT<IO, T>` LINQ 체인에서 **자동 리프팅됩니다.**
+Pure pattern Domain Services have no state or I/O, so they are **directly created as member variables** in the Usecase. `Fin<Unit>` return values are **auto-lifted** in `FinT<IO, T>` LINQ chains.
 
-#### Fin<T> 자동 리프팅
+#### Fin<T> Auto-Lifting
 
-`FinT<IO, T>` LINQ 체인에서 `Fin<T>`를 반환하는 메서드를 `from ... in` 구문으로 직접 사용할 수 있습니다:
+Methods returning `Fin<T>` can be used directly in `FinT<IO, T>` LINQ chains with `from ... in` syntax:
 
 ```csharp
 FinT<IO, Response> usecase =
@@ -446,17 +446,17 @@ FinT<IO, Response> usecase =
     select new Response(...);
 ```
 
-이 패턴은 `Product.DeductStock()` 같은 기존 Entity 메서드와 동일합니다:
+This pattern is identical to existing Entity methods like `Product.DeductStock()`:
 
 ```csharp
-// Entity 메서드 (기존 패턴)
+// Entity method (existing pattern)
 from _1 in product.DeductStock(quantity)        // Fin<Unit> → 자동 리프팅
 
-// Domain Service (동일 패턴)
+// Domain Service (same pattern)
 from _2 in _creditCheckService.ValidateCreditLimit(customer, amount)  // Fin<Unit> → 자동 리프팅
 ```
 
-#### 완전한 Usecase 예제
+#### Complete Usecase Example
 
 ```csharp
 public sealed class Usecase(
@@ -468,11 +468,11 @@ public sealed class Usecase(
     private readonly ICustomerRepository _customerRepository = customerRepository;
     private readonly IOrderRepository _orderRepository = orderRepository;
     private readonly IProductCatalog _productCatalog = productCatalog;
-    private readonly OrderCreditCheckService _creditCheckService = new();  // 직접 생성
+    private readonly OrderCreditCheckService _creditCheckService = new();  // Direct creation
 
     public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
     {
-        // 1. Value Object 생성 (순수 검증)
+        // 1. Value Object creation (pure validation)
         var shippingAddressResult = ShippingAddress.Create(request.ShippingAddress);
         var quantityResult = Quantity.Create(request.Quantity);
 
@@ -488,18 +488,18 @@ public sealed class Usecase(
         var shippingAddress = (ShippingAddress)shippingAddressResult;
         var quantity = (Quantity)quantityResult;
 
-        // 2. 조회 → 신용 검증(Domain Service) → 주문 생성 → event publishing
+        // 2. Query -> Credit check (Domain Service) -> Order creation -> event publishing
         FinT<IO, Response> usecase =
-            from customer in _customerRepository.GetById(customerId)           // 1. 고객 조회
-            from exists in _productCatalog.ExistsById(productId)               // 2. 상품 존재 확인
-            from _1 in guard(exists, ApplicationError.For<...>(...))            // 3. 상품 없으면 실패
-            from unitPrice in _productCatalog.GetPrice(productId)              // 4. 가격 조회
-            from _2 in _creditCheckService.ValidateCreditLimit(                 // 5. 신용 한도 검증
+            from customer in _customerRepository.GetById(customerId)           // 1. Customer lookup
+            from exists in _productCatalog.ExistsById(productId)               // 2. Product existence check
+            from _1 in guard(exists, ApplicationError.For<...>(...))            // 3. Fail if product not found
+            from unitPrice in _productCatalog.GetPrice(productId)              // 4. Price lookup
+            from _2 in _creditCheckService.ValidateCreditLimit(                 // 5. Credit limit validation
                 customer, unitPrice.Multiply(quantity))
-            from order in _orderRepository.Create(                             // 6. 주문 생성
+            from order in _orderRepository.Create(                             // 6. Order creation
                 Order.Create(productId, quantity, unitPrice, shippingAddress))
             select new Response(...);
-            // SaveChanges + event publishing은 UsecaseTransactionPipeline이 자동 처리
+            // SaveChanges + event publishing are automatically handled by UsecaseTransactionPipeline
 
         Fin<Response> response = await usecase.Run().RunAsync();
         return response.ToFinResponse();
@@ -507,9 +507,9 @@ public sealed class Usecase(
 }
 ```
 
-### Repository 패턴: DI 주입 + 직접 체이닝
+### Repository Pattern: DI Injection + Direct Chaining
 
-Repository 패턴의 Domain Service는 DI를 통해 주입받습니다. `FinT<IO, T>`를 반환하므로 자동 리프팅이 아닌 **직접 체이닝됩니다.**
+Repository pattern Domain Services are injected via DI. Since they return `FinT<IO, T>`, they are **directly chained** rather than auto-lifted.
 
 ```csharp
 public sealed class Usecase(
@@ -534,61 +534,61 @@ public sealed class Usecase(
 
 ### Flow Comparison
 
-**순수 패턴:**
+**Pure Pattern:**
 
 ```
-Usecase (Application Layer, I/O 조율)
+Usecase (Application Layer, I/O orchestration)
 │
 ├── Repository.GetById()        ← I/O (Adapter)
 ├── ProductCatalog.GetPrice()   ← I/O (Adapter)
-├── CreditCheckService.Validate()  ← 순수 로직 (Domain Service)
+├── CreditCheckService.Validate()  <- pure logic (Domain Service)
 └── Repository.Create()         ← I/O (Adapter)
-    // SaveChanges + event publishing은 UsecaseTransactionPipeline이 자동 처리
+    // SaveChanges + event publishing are automatically handled by UsecaseTransactionPipeline
 ```
 
-**Repository 패턴:**
+**Repository Pattern:**
 
 ```
-Usecase (Application Layer, I/O 조율)
+Usecase (Application Layer, I/O orchestration)
 │
-├── EmailCheckService.ValidateEmailUnique()  ← Domain Service (내부에서 Repository 사용)
+├── EmailCheckService.ValidateEmailUnique()  <- Domain Service (uses Repository internally)
 └── Repository.Create()                      ← I/O (Adapter)
-    // SaveChanges + event publishing은 UsecaseTransactionPipeline이 자동 처리
+    // SaveChanges + event publishing are automatically handled by UsecaseTransactionPipeline
 ```
 
 ---
 
 ## DI Registration
 
-### 순수 패턴: DI 등록 불필요
+### Pure Pattern: DI Registration Not Needed
 
-순수 패턴의 Domain Service는 상태와 생성자 파라미터가 없으므로 **DI 컨테이너에 등록하지 않습니다**. Usecase에서 멤버 변수로 직접 생성합니다.
+Pure pattern Domain Services have no state or constructor parameters, so they are **not registered in the DI container**. They are directly created as member variables in the Usecase.
 
 ```csharp
-// Usecase 내부에서 직접 생성
+// Directly created inside Usecase
 private readonly OrderCreditCheckService _creditCheckService = new();
 ```
 
-### Repository 패턴: DI 등록 필요
+### Repository Pattern: DI Registration Needed
 
-Repository 패턴의 Domain Service는 생성자에서 Repository를 주입받으므로 **DI 컨테이너에 등록해야 합니다**.
+Repository pattern Domain Services receive Repository injection in the constructor, so they **must be registered in the DI container**.
 
 ```csharp
 services.AddScoped<ContactEmailCheckService>();
 ```
 
-### IObservablePort와의 차이
+### Differences from IObservablePort
 
-| Category | Domain Service (순수) | Domain Service (Repository) | Adapter (IObservablePort) |
+| Category | Domain Service (Pure) | Domain Service (Repository) | Adapter (IObservablePort) |
 |------|---------------------|---------------------------|-------------------|
-| **생성 방식** | `new()` 직접 생성 | DI `AddScoped<>()` | DI `RegisterScopedObservablePort<I, P>()` |
-| **Pipeline** | 불필요 | 불필요 | 자동 생성 (관찰 가능성) |
-| **Lifetime** | Usecase와 동일 | Scoped (요청별) | Scoped (요청별) |
-| **관찰 가능성** | 불필요 | 불필요 | 자동 적용 |
+| **Creation** | `new()` direct creation | DI `AddScoped<>()` | DI `RegisterScopedObservablePort<I, P>()` |
+| **Pipeline** | Not needed | Not needed | Auto-generated (observability) |
+| **Lifetime** | Same as Usecase | Scoped (per request) | Scoped (per request) |
+| **Observability** | Not needed | Not needed | Auto-applied |
 
-### Domain Service 간 상호 호출
+### Inter-Domain Service Calls
 
-순수 패턴의 Domain Service는 다른 순수 Domain Service를 호출할 수 있습니다:
+Pure pattern Domain Services can call other pure Domain Services:
 
 ```csharp
 public sealed class OrderPricingService : IDomainService
@@ -597,22 +597,22 @@ public sealed class OrderPricingService : IDomainService
 
     public Fin<Money> CalculateFinalPrice(Order order, Customer customer)
     {
-        // 다른 Domain Service 호출
+        // Call another Domain Service
         var discount = _discountService.CalculateDiscount(customer, order.TotalAmount);
         return discount.Map(d => order.TotalAmount.Subtract(d));
     }
 }
 ```
 
-**Caution**: Domain Service 간 호출이 3개 이상으로 빈번해지면, 상위 조율 서비스(orchestrating Domain Service)를 도입하거나 Usecase에서 직접 조율하는 것을 검토하세요.
+**Caution**: If inter-Domain Service calls become frequent with 3 or more, consider introducing a higher-level orchestrating Domain Service or orchestrating directly in the Usecase.
 
 ---
 
 ## Test Patterns
 
-### 순수 패턴 단위 테스트
+### Pure Pattern Unit Tests
 
-순수 패턴의 Domain Service는 Mock 없이 직접 테스트합니다:
+Pure pattern Domain Services are tested directly without Mocks:
 
 ```csharp
 public class OrderCreditCheckServiceTests
@@ -673,13 +673,13 @@ public class OrderCreditCheckServiceTests
 
 **Test Characteristics:**
 
-- Mock 불필요 — 순수 함수이므로 입력/출력만 검증
-- `_sut = new()` — 의존성 없이 직접 생성
-- 경계값 테스트 — `=` (한도와 동일), `<` (한도 미만), `>` (한도 초과)
+- No mocks needed -- pure function so only input/output is verified
+- `_sut = new()` -- directly created without dependencies
+- Boundary value tests -- `=` (equal to limit), `<` (below limit), `>` (above limit)
 
-### Repository 패턴 단위 테스트
+### Repository Pattern Unit Tests
 
-Repository 패턴의 Domain Service는 Repository 스텁을 사용하여 테스트합니다:
+Repository pattern Domain Services are tested using Repository stubs:
 
 ```csharp
 public class ContactEmailCheckServiceTests
@@ -724,13 +724,13 @@ public class ContactEmailCheckServiceTests
 
 **Test Characteristics:**
 
-- Repository 스텁 필요 — `Substitute.For<IContactRepository>()`
-- `async Task` — `FinT<IO, T>`는 비동기 실행
-- `.Run().RunAsync()` — IO 모나드 실행
+- Repository stub needed -- `Substitute.For<IContactRepository>()`
+- `async Task` -- `FinT<IO, T>` runs asynchronously
+- `.Run().RunAsync()` -- IO monad execution
 
-### Usecase 단위 테스트 (Domain Service 포함)
+### Usecase Unit Tests (Including Domain Service)
 
-**순수 패턴**: Domain Service는 Usecase 내부에서 직접 생성되므로 별도 설정이 불필요합니다. Repository/Adapter만 Mock합니다:
+**Pure Pattern**: Domain Service is directly created inside the Usecase, so no separate setup is needed. Only Repository/Adapter are mocked:
 
 ```csharp
 public class CreateOrderWithCreditCheckCommandTests
@@ -767,21 +767,21 @@ public class CreateOrderWithCreditCheckCommandTests
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
 
-        // Assert — 1000m × 2 = 2000m > 1000m 신용 한도
+        // Assert -- 1000m x 2 = 2000m > 1000m credit limit
         actual.IsSucc.ShouldBeFalse();
     }
 }
 ```
 
-**Repository 패턴**: Domain Service도 DI로 주입되므로 Usecase 테스트에서 직접 생성하여 전달합니다:
+**Repository Pattern**: Since the Domain Service is also DI-injected, it is directly created and passed in Usecase tests:
 
 ```csharp
-// Repository 스텁을 사용하여 Domain Service 생성 후 Usecase에 주입
+// Create Domain Service using Repository stub then inject into Usecase
 var emailCheckService = new ContactEmailCheckService(stubRepository);
 var sut = new CreateContactCommand.Usecase(contactRepository, emailCheckService);
 ```
 
-### 테스트 폴더 구조
+### Test Folder Structure
 
 ```
 LayeredArch.Tests.Unit/
@@ -789,148 +789,148 @@ LayeredArch.Tests.Unit/
 │   ├── Customers/
 │   ├── Orders/
 │   ├── Products/
-│   ├── Services/                              ← Domain Service 테스트
+│   ├── Services/                              <- Domain Service tests
 │   │   └── OrderCreditCheckServiceTests.cs
 │   └── SharedModels/
 └── Application/
     └── Orders/
         ├── CreateOrderCommandTests.cs
-        └── CreateOrderWithCreditCheckCommandTests.cs  ← Usecase 테스트
+        └── CreateOrderWithCreditCheckCommandTests.cs  <- Usecase tests
 ```
 
 ---
 
 ## Checklist
 
-### 공통 (두 패턴 모두)
+### Common (Both Patterns)
 
-- [ ] `IDomainService` 마커 인터페이스를 구현하는가?
-- [ ] `sealed class`로 선언되어 있는가?
-- [ ] Domain Layer (`{프로젝트}.Domain.Services` 네임스페이스)에 배치되어 있는가?
-- [ ] `IObservablePort`를 상속하지 않는가?
-- [ ] 로직이 실제로 여러 Aggregate에 걸쳐 있는가? (단일 Aggregate 로직은 Entity 메서드에 배치)
-- [ ] `DomainError.For<{ServiceName}>`으로 에러를 생성하는가?
-- [ ] 상태 변경 없이 검증/계산만 수행하는가?
+- [ ] Does it implement the `IDomainService` marker interface?
+- [ ] Is it declared as `sealed class`?
+- [ ] Is it placed in the Domain Layer (`{Project}.Domain.Services` namespace)?
+- [ ] Does it NOT inherit from `IObservablePort`?
+- [ ] Does the logic actually span multiple Aggregates? (Single Aggregate logic belongs in Entity methods)
+- [ ] Are errors created with `DomainError.For<{ServiceName}>`?
+- [ ] Does it only perform validation/calculation without state changes?
 
-### 순수 패턴 추가 체크리스트
+### Pure Pattern Additional Checklist
 
-- [ ] 외부 I/O 의존성이 없는가? (Repository, HttpClient 등)
-- [ ] 인스턴스 필드가 없는가?
-- [ ] `Fin<T>` 또는 `Fin<Unit>`을 반환하는가?
-- [ ] Usecase에서 멤버 변수로 직접 생성하는가? (`new()`)
-- [ ] `FinT<IO, T>` LINQ 체인에서 `from ... in` 구문으로 호출하는가?
-- [ ] Domain Service 자체에 대한 단위 테스트가 Mock 없이 작성되어 있는가?
+- [ ] Are there no external I/O dependencies? (Repository, HttpClient, etc.)
+- [ ] Are there no instance fields?
+- [ ] Does it return `Fin<T>` or `Fin<Unit>`?
+- [ ] Is it directly created as a member variable in the Usecase? (`new()`)
+- [ ] Is it called with `from ... in` syntax in the `FinT<IO, T>` LINQ chain?
+- [ ] Are unit tests for the Domain Service itself written without Mocks?
 
-### Repository 패턴 추가 체크리스트
+### Repository Pattern Additional Checklist
 
-- [ ] 인스턴스 필드가 Repository 인터페이스 참조만 보유하는가?
-- [ ] `FinT<IO, T>` 또는 `FinT<IO, Unit>`을 반환하는가?
-- [ ] DI 컨테이너에 `AddScoped<>()`으로 등록되어 있는가?
-- [ ] Usecase에서 생성자 주입으로 받는가?
-- [ ] Repository 스텁을 사용한 단위 테스트가 있는가?
+- [ ] Do instance fields hold only Repository interface references?
+- [ ] Does it return `FinT<IO, T>` or `FinT<IO, Unit>`?
+- [ ] Is it registered in the DI container with `AddScoped<>()`?
+- [ ] Is it received via constructor injection in the Usecase?
+- [ ] Are there unit tests using Repository stubs?
 
 ---
 
 ## Troubleshooting
 
-### Domain Service에서 Repository를 사용해야 할지 판단이 어렵다
+### Difficulty deciding whether a Domain Service should use a Repository
 
-**판단 기준:** Usecase가 교차 데이터를 로드할 수 있는 규모인지 확인하세요.
+**Decision criteria:** Verify whether the Usecase can load cross data at the required scale.
 
-- **소규모 (1~수건):** Usecase가 Repository로 데이터를 로드한 후 순수 Domain Service에 전달합니다 (순수 패턴).
+- **Small scale (1 to a few records):** The Usecase loads data via Repository then passes it to the pure Domain Service (Pure pattern).
   ```csharp
-  from customer in _customerRepository.GetById(customerId)        // Usecase가 I/O 처리
-  from _2 in _creditCheckService.ValidateCreditLimit(customer, amount)  // Domain Service는 순수 검증만
+  from customer in _customerRepository.GetById(customerId)        // Usecase handles I/O
+  from _2 in _creditCheckService.ValidateCreditLimit(customer, amount)  // Domain Service does pure validation only
   ```
-- **대규모 (전체 테이블 스캔 등):** Domain Service가 Repository 인터페이스를 통해 직접 조회합니다 (Repository 패턴, Evans Ch.9).
+- **Large scale (full table scan, etc.):** The Domain Service directly queries through the Repository interface (Repository pattern, Evans Ch.9).
   ```csharp
-  from _ in _emailCheckService.ValidateEmailUnique(email, excludeId)  // Domain Service가 내부에서 Repository 사용
+  from _ in _emailCheckService.ValidateEmailUnique(email, excludeId)  // Domain Service uses Repository internally
   ```
 
-기본적으로 **순수 패턴을 먼저 시도하고,** Usecase가 데이터를 로드하기 어려운 경우에만 Repository 패턴을 검토하세요.
+By default, **try the Pure pattern first,** and only consider the Repository pattern when the Usecase cannot easily load the data.
 
-### Domain Service 간 상호 호출이 너무 복잡해졌다
+### Inter-Domain Service Calls이 너무 복잡해졌다
 
-**Cause:** Domain Service 간 호출 체인이 3개 이상으로 늘어나면 복잡도가 증가합니다.
+**Cause:** Complexity increases when the call chain between Domain Services grows to 3 or more.
 
-**Resolution:** 상위 조율 Domain Service를 도입하거나, Usecase에서 각 Domain Service를 개별적으로 호출하여 조율하는 방식으로 전환하세요.
+**Resolution:** Introduce a higher-level orchestrating Domain Service, or switch to a pattern where the Usecase individually calls and orchestrates each Domain Service.
 
-### 아키텍처 테스트에서 Domain Service가 Port를 의존한다고 경고한다
+### Architecture test warns that Domain Service depends on Port
 
-**Cause:** Domain Service가 `IObservablePort`를 상속하거나 Port 인터페이스를 생성자 파라미터로 받고 있을 수 있습니다.
+**Cause:** The Domain Service may be inheriting `IObservablePort` or receiving a Port interface as a constructor parameter.
 
-**Resolution:** Domain Service는 `IDomainService` 마커만 구현해야 합니다. `IObservablePort`는 Adapter 전용이며, Domain Service에서는 `IObservablePort` 의존성을 제거하세요. Repository 패턴의 경우 Repository 인터페이스는 `IObservablePort`가 아닌 Domain Layer에 정의된 인터페이스를 사용합니다.
+**Resolution:** Domain Services should only implement the `IDomainService` marker. `IObservablePort` is Adapter-only; remove `IObservablePort` dependencies from Domain Services. For the Repository pattern, Repository interfaces use interfaces defined in the Domain Layer, not `IObservablePort`.
 
-### 아키텍처 테스트가 Repository 패턴의 인스턴스 필드를 차단한다
+### Architecture test blocks Repository pattern instance fields
 
-**Cause:** SingleHost의 `DomainServiceArchitectureRuleTests`는 `RequireNoInstanceFields()`로 순수 패턴을 강제합니다.
+**Cause:** SingleHost's `DomainServiceArchitectureRuleTests` enforces the Pure pattern with `RequireNoInstanceFields()`.
 
-**Resolution:** 이 아키텍처 테스트는 SingleHost의 참조 구현(순수 패턴)에 적용되는 규칙입니다. Repository 패턴을 사용하는 프로젝트에서는 해당 규칙을 Repository 인터페이스 참조를 허용하도록 조정하거나, 별도 테스트로 분리하세요.
+**Resolution:** This architecture test is a rule applied to SingleHost's reference implementation (Pure pattern). In projects using the Repository pattern, adjust the rule to allow Repository interface references, or separate it into a different test.
 
 ---
 
 ## FAQ
 
-### Q1. Domain Service와 Usecase(Application Service)의 구분 기준은?
+### Q1. What is the criterion for distinguishing Domain Service from Usecase (Application Service)?
 
-Domain Service는 비즈니스 규칙을 수행하며 Domain Layer에 위치합니다. Usecase는 I/O 조율을 담당하며 Application Layer에 위치합니다. 순수 패턴에서는 "이 로직에 I/O가 필요한가?"가 핵심 판단 기준이고, Repository 패턴에서는 "이 로직이 도메인 규칙인가, 조율인가?"가 핵심 판단 기준입니다.
+Domain Services perform business rules and are located in the Domain Layer. Usecases handle I/O orchestration and are located in the Application Layer. In the Pure pattern, the key criterion is "Does this logic need I/O?", and in the Repository pattern, the key criterion is "Is this logic a domain rule or orchestration?"
 
-### Q2. Evans DDD에서 Domain Service가 Repository를 사용하는 것이 맞나요?
+### Q2. Is it correct for Domain Services to use Repositories in Evans DDD?
 
-맞습니다. Evans Blue Book Ch.9에서 Domain Service는 **Stateless**만 요구하고 **Pure**를 요구하지 않습니다. Repository 인터페이스는 도메인 레이어에 정의되므로 Domain Service가 이를 사용하는 것은 Evans DDD에서 정당합니다. Functorium의 순수 패턴은 Evans보다 엄격한 기본값이며, 유일한 정답은 아닙니다.
+Yes. In Evans Blue Book Ch.9, Domain Services only require **Stateless** and not **Pure**. Since Repository interfaces are defined in the domain layer, it is legitimate in Evans DDD for Domain Services to use them. Functorium's Pure pattern is a stricter default than Evans, and it is not the only correct answer.
 
-### Q3. 순수 패턴과 Repository 패턴 중 어떤 것을 선택해야 하나요?
+### Q3. Which should I choose between the Pure pattern and Repository pattern?
 
-**기본값은 순수 패턴입니다.** Usecase가 교차 데이터를 로드할 수 있는 소규모 시나리오에서는 순수 패턴이 단순하고 테스트하기 쉽습니다. Repository 패턴은 다음 조건을 모두 충족할 때만 사용합니다:
+**The default is the Pure pattern.** In small-scale scenarios where the Usecase can load cross data, the Pure pattern is simpler and easier to test. Use the Repository pattern only when all of the following conditions are met:
 
-- Usecase가 교차 데이터를 로드하기 어려운 규모 (전체 테이블 스캔 등)
-- Service가 쿼리 규칙(Specification)을 소유해야 함
-- 도메인 로직이 조회와 검증을 하나의 응집된 연산으로 캡슐화해야 함
+- The data scale is difficult for the Usecase to load (full table scan, etc.)
+- The Service needs to own query rules (Specification)
+- Domain logic needs to encapsulate query and validation as a single cohesive operation
 
-### Q4. 아키텍처 테스트가 Repository 패턴을 차단하지 않나요?
+### Q4. Doesn't the architecture test block the Repository pattern?
 
-SingleHost의 `DomainServiceArchitectureRuleTests`는 `RequireNoInstanceFields()`로 순수 패턴을 강제합니다. 이는 SingleHost의 참조 구현에 적용되는 규칙이며, Repository 패턴을 사용하는 프로젝트에서는 해당 규칙을 조정해야 합니다.
+SingleHost's `DomainServiceArchitectureRuleTests` enforces the Pure pattern with `RequireNoInstanceFields()`. This is a rule applied to SingleHost's reference implementation, and projects using the Repository pattern must adjust this rule.
 
-### Q5. Domain Service를 DI 컨테이너에 등록하지 않는 이유는?
+### Q5. Why is the Domain Service not registered in the DI container?
 
-순수 패턴에만 해당됩니다. 순수 패턴은 상태가 없고 생성자 파라미터도 없으므로 DI가 불필요합니다. Repository 패턴은 생성자에서 Repository를 주입받으므로 `AddScoped<>()`으로 DI 등록이 필요합니다.
+This applies only to the Pure pattern. The Pure pattern has no state and no constructor parameters, so DI is unnecessary. The Repository pattern receives Repository injection in the constructor, so DI registration with `AddScoped<>()` is required.
 
 ### Q6. Domain Service에서 에러를 어떻게 반환하나요?
 
-`DomainError.For<{ServiceName}>(new {ErrorType}(), currentValue, message)` 패턴을 사용합니다. 에러 코드는 `DomainErrors.{ServiceName}.{ErrorType}` 형태로 자동 생성됩니다. 두 패턴 모두 동일합니다.
+Use the `DomainError.For<{ServiceName}>(new {ErrorType}(), currentValue, message)` pattern. Error codes are auto-generated in the format `DomainErrors.{ServiceName}.{ErrorType}`. Both patterns are identical.
 
-### Q7. 단일 Aggregate 내부 로직인데 메서드가 너무 복잡하면 Domain Service로 분리해도 되나요?
+### Q7. If logic is within a single Aggregate but the method is too complex, can it be separated into a Domain Service?
 
-아닙니다. 단일 Aggregate 내부 로직은 Entity 메서드에 배치하는 것이 원칙입니다. 메서드가 복잡하면 Entity 내부에서 private 메서드로 분리하세요. Domain Service는 **여러 Aggregate에 걸친** 로직에만 사용합니다.
+No. Logic within a single Aggregate should be placed in Entity methods as a principle. If a method is complex, separate it into private methods within the Entity. Domain Services are only used for logic that **spans multiple Aggregates**.
 
-### Q8. Domain Service의 테스트에서 Mock이 필요한가요?
+### Q8. Are Mocks needed in Domain Service tests?
 
-순수 패턴은 Mock 없이 직접 입력/출력만 검증합니다. Repository 패턴은 Repository 스텁(NSubstitute 등)이 필요합니다. 두 경우 모두 Domain Service의 비즈니스 규칙 자체를 검증하는 것이 핵심입니다.
+The Pure pattern verifies only input/output directly without Mocks. The Repository pattern requires Repository stubs (NSubstitute, etc.). In both cases, the key is verifying the Domain Service's business rules themselves.
 
 ---
 
 ## References
 
-- [04-ddd-tactical-overview.md](./04-ddd-tactical-overview) - DDD 전술적 설계 개요, 타입 매핑 테이블
-- [06a-aggregate-design.md](./06a-aggregate-design) - Aggregate 설계 원칙, [06b-entity-aggregate-core.md](./06b-entity-aggregate-core) - Entity/Aggregate 핵심 패턴, [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced) - 고급 패턴
-- [08a-error-system.md](./08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙
-- [08b-error-system-domain-app.md](./08b-error-system-domain-app) - DomainError 정의 및 테스트 패턴
-- [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) - Usecase 구현 (Application Service)
-- [12-ports.md](../adapter/12-ports) - Port/Adapter 패턴 (IPort와의 차이)
-- [15a-unit-testing.md](../testing/15a-unit-testing) - 단위 테스트 규칙 (T1_T2_T3, AAA 패턴)
+- [04-ddd-tactical-overview.md](./04-ddd-tactical-overview) - DDD tactical design overview, type mapping table
+- [06a-aggregate-design.md](./06a-aggregate-design) - Aggregate design principles, [06b-entity-aggregate-core.md](./06b-entity-aggregate-core) - Entity/Aggregate core patterns, [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced) - Advanced patterns
+- [08a-error-system.md](./08a-error-system) - Error handling basic principles and naming conventions
+- [08b-error-system-domain-app.md](./08b-error-system-domain-app) - DomainError definition and test patterns
+- [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) - Usecase implementation (Application Service)
+- [12-ports.md](../adapter/12-ports) - Port/Adapter pattern (difference from IPort)
+- [15a-unit-testing.md](../testing/15a-unit-testing) - Unit test rules (T1_T2_T3, AAA pattern)
 
 ### Practical Examples 파일
 
 | File | Description |
 |------|------|
-| `Src/Functorium/Domains/Services/IDomainService.cs` | 마커 인터페이스 |
-| `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/Services/OrderCreditCheckService.cs` | 순수 패턴 구현 |
-| `Tests.Hosts/01-SingleHost/Src/LayeredArch.Application/Usecases/Orders/CreateOrderWithCreditCheckCommand.cs` | 순수 패턴 Usecase 사용 |
-| `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Domain/Services/OrderCreditCheckServiceTests.cs` | 순수 패턴 테스트 |
-| `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Application/Orders/CreateOrderWithCreditCheckCommandTests.cs` | Usecase 테스트 |
+| `Src/Functorium/Domains/Services/IDomainService.cs` | Marker interface |
+| `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/Services/OrderCreditCheckService.cs` | Pure pattern implementation |
+| `Tests.Hosts/01-SingleHost/Src/LayeredArch.Application/Usecases/Orders/CreateOrderWithCreditCheckCommand.cs` | Pure pattern Usecase usage |
+| `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Domain/Services/OrderCreditCheckServiceTests.cs` | Pure pattern tests |
+| `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Application/Orders/CreateOrderWithCreditCheckCommandTests.cs` | Usecase tests |
 
-### designing-with-types 예제 (Repository 패턴)
+### designing-with-types Example (Repository Pattern)
 
 | File | Description |
 |------|------|
-| `Docs.Site/src/content/docs/samples/designing-with-types/Src/DesigningWithTypes/AggregateRoots/Contacts/Services/ContactEmailCheckService.cs` | Repository 패턴 구현 |
+| `Docs.Site/src/content/docs/samples/designing-with-types/Src/DesigningWithTypes/AggregateRoots/Contacts/Services/ContactEmailCheckService.cs` | Repository pattern implementation |
