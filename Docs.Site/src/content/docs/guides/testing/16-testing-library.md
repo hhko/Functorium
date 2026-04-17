@@ -2,123 +2,123 @@
 title: "Functorium.Testing Library Guide"
 ---
 
-테스트 코드는 프로덕션 코드와 동일한 수준의 일관성이 필요합니다. 프로젝트가 성장하면 로그 캡처, 아키텍처 규칙 검증, 소스 생성기 테스트 등 반복적인 테스트 인프라 코드가 각 프로젝트에 중복됩니다.
-`Functorium.Testing`은 이러한 반복을 제거하고, 프레임워크에 특화된 테스트 유틸리티를 단일 라이브러리로 제공하여 테스트 코드의 일관성과 유지보수성을 확보합니다.
+Test code requires the same level of consistency as production code. As a project grows, repetitive test infrastructure code such as log capture, architecture rule validation, and source generator testing gets duplicated across projects.
+`Functorium.Testing` eliminates this repetition by providing framework-specific test utilities in a single library, ensuring consistency and maintainability of test code.
 
 ## Introduction
 
-"Pipeline이 출력하는 구조화된 로그 필드가 정확한지 어떻게 검증하는가?"
-"ValueObject의 불변성 규칙을 모든 클래스에 일괄 적용하려면 어떻게 해야 하는가?"
-"소스 생성기가 올바른 코드를 생성하는지 어떻게 테스트하는가?"
+"How do you verify that the structured log fields output by a Pipeline are accurate?"
+"How do you apply immutability rules for ValueObjects across all classes at once?"
+"How do you test whether a source generator produces correct code?"
 
-이러한 테스트 인프라를 프로젝트마다 직접 구현하면 중복 코드가 쌓이고, 프레임워크 업데이트 시 동기화가 어려워집니다. `Functorium.Testing`은 이러한 반복 패턴을 단일 라이브러리로 통합하여 일관된 테스트 기반을 제공합니다.
+Implementing this test infrastructure directly in each project leads to accumulated duplicate code, and synchronization becomes difficult during framework updates. `Functorium.Testing` consolidates these repetitive patterns into a single library, providing a consistent test foundation.
 
 ### What You Will Learn
 
 This document covers the following topics:
 
-1. **`LogTestContext` 기반 구조화된 로그 테스트** - Serilog 인메모리 캡처와 Verify 스냅샷 연동
-2. **`FinTFactory`를 활용한 Mock 반환값 설정** - Port/Adapter의 `FinT<IO, T>` 반환값 생성
-3. **아키텍처 규칙 검증 Fluent API** - ArchUnitNET 기반 클래스/메서드 수준 규칙 적용
-4. **`SourceGeneratorTestRunner`로 소스 생성기 테스트** - 입력 코드 → 생성 코드 검증
-5. **`QuartzTestFixture`로 스케줄 Job 통합 테스트** - DI 통합 환경에서 Job 1회 실행 검증
+1. **Structured log testing with `LogTestContext`** - Serilog in-memory capture with Verify snapshot integration
+2. **Mock return value configuration using `FinTFactory`** - Generating `FinT<IO, T>` return values for Port/Adapter
+3. **Architecture rule validation Fluent API** - ArchUnitNET-based class/method level rule enforcement
+4. **Source generator testing with `SourceGeneratorTestRunner`** - Input code to generated code verification
+5. **Scheduled Job integration testing with `QuartzTestFixture`** - Single Job execution verification in DI-integrated environment
 
 ### Prerequisites
 
 A basic understanding of the following concepts is needed to understand this document:
 
-- [unit 테스트 가이드](./15a-unit-testing) - AAA 패턴, MTP 설정, Verify 스냅샷 테스트
-- LanguageExt의 `Fin<T>`, `FinT<IO, T>` 타입 기본 개념
-- Serilog 구조화된 로깅의 기본 원리
+- [Unit Testing Guide](./15a-unit-testing) - AAA pattern, MTP configuration, Verify snapshot testing
+- Basic concepts of LanguageExt's `Fin<T>` and `FinT<IO, T>` types
+- Basic principles of Serilog structured logging
 
-> **Core principle:** `Functorium.Testing`은 구조화된 로그 캡처, 아키텍처 규칙 검증, 소스 생성기 테스트, Mock 반환값 생성 등 반복적인 테스트 인프라를 단일 라이브러리로 통합하여 프로젝트 간 일관성을 보장합니다.
+> **Core principle:** `Functorium.Testing` consolidates repetitive test infrastructure -- structured log capture, architecture rule validation, source generator testing, mock return value generation -- into a single library to ensure consistency across projects.
 
 ## Summary
 
 ### Key Commands
 
 ```csharp
-// 구조화된 로그 테스트
+// Structured log testing
 using var context = new LogTestContext();
 var logger = context.CreateLogger<MyPipeline>();
-// ... 테스트 실행 후
+// ... after test execution
 await Verify(context.ExtractFirstLogData()).UseDirectory("Snapshots");
 
-// 아키텍처 규칙 검증
+// Architecture rule validation
 ArchRuleDefinition.Classes().That()
     .ImplementInterface(typeof(IValueObject))
     .ValidateAllClasses(Architecture, @class => { ... })
     .ThrowIfAnyFailures("Rule Name");
 
-// 소스 생성기 테스트
+// Source generator testing
 string? actual = _sut.Generate(input);
 return Verify(actual).UseDirectory("Snapshots/EntityIdGenerator");
 
-// Mock 반환값 설정
+// Mock return value configuration
 _repository.GetById(Arg.Any<ProductId>())
     .Returns(FinTFactory.Succ(product));
 ```
 
 ### Key Procedures
 
-**1. 로그 테스트:**
-1. `LogTestContext` 생성
-2. `CreateLogger<T>()`로 ILogger 생성
-3. 테스트 대상에 로거 주입 후 실행
-4. `ExtractFirstLogData()` 등으로 데이터 추출
-5. `Verify()`로 스냅샷 비교 또는 직접 Assertion
+**1. Log testing:**
+1. Create `LogTestContext`
+2. Create ILogger with `CreateLogger<T>()`
+3. Inject logger into test target and execute
+4. Extract data with `ExtractFirstLogData()`, etc.
+5. Compare with `Verify()` snapshot or use direct Assertion
 
-**2. 아키텍처 규칙 검증:**
-1. `ArchRuleDefinition.Classes()`로 대상 클래스 필터링
-2. `ValidateAllClasses()`에 검증 규칙 콜백 전달
-3. `ThrowIfAnyFailures()`로 failure 시 예외 발생
+**2. Architecture rule validation:**
+1. Filter target classes with `ArchRuleDefinition.Classes()`
+2. Pass validation rule callback to `ValidateAllClasses()`
+3. Throw exception on failure with `ThrowIfAnyFailures()`
 
 ### Key Concepts
 
 | Concept | Description |
 |------|------|
-| `LogTestContext` | Serilog 기반 인메모리 로그 캡처 컨텍스트 |
-| `FinTFactory` | `FinT<IO, T>` Mock 반환값 생성 헬퍼 |
-| `ClassValidator` | 클래스 수준 아키텍처 규칙 Fluent API |
-| `SourceGeneratorTestRunner` | `IIncrementalGenerator` 테스트 실행기 |
-| `QuartzTestFixture` | Quartz.NET Job 통합 테스트 Fixture |
+| `LogTestContext` | Serilog-based in-memory log capture context |
+| `FinTFactory` | `FinT<IO, T>` mock return value generation helper |
+| `ClassValidator` | Class-level architecture rule Fluent API |
+| `SourceGeneratorTestRunner` | `IIncrementalGenerator` test runner |
+| `QuartzTestFixture` | Quartz.NET Job integration test Fixture |
 
 ---
 
 ## Overview
 
-`Functorium.Testing`은 Functorium 프레임워크의 테스트 유틸리티 라이브러리입니다.
+`Functorium.Testing` is the test utility library for the Functorium framework.
 
 ### Namespace Structure
 
-다음 테이블은 라이브러리의 전체 네임스페이스 구조와 각 모듈의 역할을 정리한 것입니다.
+The following table summarizes the library's complete namespace structure and the role of each module.
 
-| 네임스페이스 | 역할 |
+| Namespace | Role |
 |---|---|
-| `Functorium.Testing.Arrangements.Logging` | 구조화된 로그 캡처 (LogTestContext, StructuredTestLogger) |
-| `Functorium.Testing.Arrangements.Loggers` | 인메모리 Serilog Sink (TestSink) |
-| `Functorium.Testing.Arrangements.Effects` | `FinT<IO, T>` 반환값 생성 헬퍼 (FinTFactory) |
-| `Functorium.Testing.Arrangements.Hosting` | HTTP 통합 테스트 Fixture (HostTestFixture) |
-| `Functorium.Testing.Arrangements.ScheduledJobs` | 스케줄 Job 테스트 Fixture (QuartzTestFixture) |
-| `Functorium.Testing.Actions.SourceGenerators` | 소스 생성기 테스트 Runner |
-| `Functorium.Testing.Assertions.ArchitectureRules` | 아키텍처 규칙 검증 (ClassValidator, MethodValidator, InterfaceValidator) |
-| `Functorium.Testing.Assertions.ArchitectureRules.Rules` | 재사용 가능 규칙 (ImmutabilityRule 등) |
-| `Functorium.Testing.Assertions.ArchitectureRules.Suites` | 도메인/Application 아키텍처 테스트 스위트 (DomainArchitectureTestSuite, ApplicationArchitectureTestSuite) |
-| `Functorium.Testing.Assertions.Logging` | 로그 데이터 추출/변환 유틸리티 (SerilogTestPropertyValueFactory 포함) |
-| `Functorium.Testing.Assertions.Errors` | 에러 타입 Assertion (Domain/Application/Adapter별 + 범용 ErrorCode/Exceptional) |
+| `Functorium.Testing.Arrangements.Logging` | Structured log capture (LogTestContext, StructuredTestLogger) |
+| `Functorium.Testing.Arrangements.Loggers` | In-memory Serilog Sink (TestSink) |
+| `Functorium.Testing.Arrangements.Effects` | `FinT<IO, T>` return value generation helper (FinTFactory) |
+| `Functorium.Testing.Arrangements.Hosting` | HTTP integration test Fixture (HostTestFixture) |
+| `Functorium.Testing.Arrangements.ScheduledJobs` | Scheduled Job test Fixture (QuartzTestFixture) |
+| `Functorium.Testing.Actions.SourceGenerators` | Source generator test Runner |
+| `Functorium.Testing.Assertions.ArchitectureRules` | Architecture rule validation (ClassValidator, MethodValidator, InterfaceValidator) |
+| `Functorium.Testing.Assertions.ArchitectureRules.Rules` | Reusable rules (ImmutabilityRule, etc.) |
+| `Functorium.Testing.Assertions.ArchitectureRules.Suites` | Domain/Application architecture test suites (DomainArchitectureTestSuite, ApplicationArchitectureTestSuite) |
+| `Functorium.Testing.Assertions.Logging` | Log data extraction/conversion utilities (including SerilogTestPropertyValueFactory) |
+| `Functorium.Testing.Assertions.Errors` | Error type Assertions (per Domain/Application/Adapter + generic ErrorCode/Exceptional) |
 
 ### Features Documented in Other Guides
 
-| Feature | 참조 가이드 |
+| Feature | Reference Guide |
 |---|---|
-| `HostTestFixture<TProgram>` — HTTP 엔드포인트 통합 테스트 | [15b-integration-testing.md](./15b-integration-testing), [01-project-structure.md](../architecture/01-project-structure) |
-| `ShouldBeDomainError`, `ShouldBeApplicationError` 등 에러 Assertion | [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app), [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) |
+| `HostTestFixture<TProgram>` -- HTTP endpoint integration testing | [15b-integration-testing.md](./15b-integration-testing), [01-project-structure.md](../architecture/01-project-structure) |
+| `ShouldBeDomainError`, `ShouldBeApplicationError`, etc. error Assertions | [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app), [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) |
 
 ---
 
 ## Project Reference Setup
 
-### unit 테스트 csproj 패키지 구성
+### Unit Test csproj Package Configuration
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -129,7 +129,7 @@ _repository.GetById(Arg.Any<ProductId>())
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- 테스트 프레임워크 -->
+    <!-- Test framework -->
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
@@ -141,10 +141,10 @@ _repository.GetById(Arg.Any<ProductId>())
     <PackageReference Include="NSubstitute" />
     <PackageReference Include="Verify.XunitV3" />
 
-    <!-- 로그 테스트 -->
+    <!-- Log testing -->
     <PackageReference Include="Serilog" />
 
-    <!-- 소스 생성기 테스트 -->
+    <!-- Source generator testing -->
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
 
@@ -162,15 +162,15 @@ _repository.GetById(Arg.Any<ProductId>())
 
 ### Source Generator Dual Reference Pattern
 
-소스 생성기 프로젝트를 테스트할 때는 **두 가지 참조**가 모두 필요합니다.
+When testing source generator projects, **both types of references** are required.
 
 ```xml
-<!-- 1. 일반 참조: 생성기 타입(클래스)을 코드에서 사용하기 위한 참조 -->
+<!-- 1. Regular reference: for using generator types (classes) in code -->
 <ItemGroup>
   <ProjectReference Include="..\..\Src\MyProject.SourceGenerator\MyProject.SourceGenerator.csproj" />
 </ItemGroup>
 
-<!-- 2. Analyzer 참조: 소스 생성기가 실제 코드 생성을 수행하도록 활성화 -->
+<!-- 2. Analyzer reference: enables the source generator to perform actual code generation -->
 <ItemGroup>
   <ProjectReference Include="..\..\Src\MyProject.SourceGenerator\MyProject.SourceGenerator.csproj"
                     OutputItemType="Analyzer"
@@ -178,12 +178,12 @@ _repository.GetById(Arg.Any<ProductId>())
 </ItemGroup>
 ```
 
-| 참조 방식 | Purpose |
+| Reference Type | Purpose |
 |---|---|
-| 일반 `ProjectReference` | 생성기 타입을 `new EntityIdGenerator()`처럼 인스턴스화 |
-| `OutputItemType="Analyzer"` | 빌드 시 `[GenerateEntityId]` 등의 어트리뷰트로 코드 생성 활성화 |
+| Regular `ProjectReference` | Instantiate generator types like `new EntityIdGenerator()` |
+| `OutputItemType="Analyzer"` | Enable code generation via attributes like `[GenerateEntityId]` at build time |
 
-> **Note**: 통합 테스트에서 Host 프로젝트를 참조할 때 Mediator SourceGenerator 중복을 방지하려면 `ExcludeAssets="analyzers"`를 추가합니다. 자세한 내용은 [01-project-structure.md](../architecture/01-project-structure)의 FAQ를 참조하세요.
+> **Note**: When referencing a Host project in integration tests, add `ExcludeAssets="analyzers"` to prevent Mediator SourceGenerator duplication. For details, see the FAQ in [01-project-structure.md](../architecture/01-project-structure).
 
 ### Recommended Using.cs Pattern
 
@@ -198,77 +198,77 @@ global using Shouldly;
 
 ---
 
-프로젝트 참조가 구성되었으면, 이제 라이브러리가 제공하는 핵심 기능을 하나씩 살펴봅니다.
+Once project references are configured, let's examine the core features the library provides one by one.
 
-## FinTFactory (Mock 반환값 헬퍼)
+## FinTFactory (Mock Return Value Helper)
 
-`FinTFactory`는 `FinT<IO, T>` 반환값을 간편하게 생성하는 정적 헬퍼입니다. Port/Adapter의 Mock 반환값을 설정할 때 사용합니다.
+`FinTFactory` is a static helper that conveniently generates `FinT<IO, T>` return values. It is used when setting up mock return values for Port/Adapter.
 
 ```csharp
-// 네임스페이스
+// Namespace
 using Functorium.Testing.Arrangements.Effects;
 ```
 
 ### API
 
-| 메서드 | 반환 타입 | Description |
+| Method | Return Type | Description |
 |--------|----------|------|
-| `FinTFactory.Succ<T>(T value)` | `FinT<IO, T>` | success 값을 래핑한 `FinT` 생성 |
-| `FinTFactory.Fail<T>(Error error)` | `FinT<IO, T>` | failure 에러를 래핑한 `FinT` 생성 |
+| `FinTFactory.Succ<T>(T value)` | `FinT<IO, T>` | Creates a `FinT` wrapping a success value |
+| `FinTFactory.Fail<T>(Error error)` | `FinT<IO, T>` | Creates a `FinT` wrapping a failure error |
 
 ### NSubstitute Usage Example
 
 ```csharp
-// Port Mock 설정 — success 반환
+// Port Mock setup — success return
 _productRepository
     .GetById(Arg.Any<ProductId>())
     .Returns(FinTFactory.Succ(product));
 
-// Port Mock 설정 — failure 반환
+// Port Mock setup — failure return
 _productRepository
     .GetById(Arg.Any<ProductId>())
     .Returns(FinTFactory.Fail<Product>(
         AdapterError.For<InMemoryProductRepository>(
-            new NotFound(), id.ToString(), "상품을 찾을 수 없습니다")));
+            new NotFound(), id.ToString(), "Product not found")));
 ```
 
 ---
 
 ## Structured Log Testing
 
-구조화된 로그 테스트는 `LoggerMessage` 어트리뷰트 기반의 로깅이 올바른 필드 구조를 출력하는지 검증합니다.
+Structured log testing verifies that `LoggerMessage` attribute-based logging outputs the correct field structure.
 
 ### Components
 
 ```
-LogTestContext (테스트 진입점)
-├── StructuredTestLogger<T>  ← ILogger<T> 구현 (Serilog 브릿지)
-├── TestSink                 ← 인메모리 Serilog Sink
-└── LogEventPropertyExtractor / LogEventPropertyValueConverter  ← 데이터 추출
+LogTestContext (test entry point)
+├── StructuredTestLogger<T>  ← ILogger<T> implementation (Serilog bridge)
+├── TestSink                 ← In-memory Serilog Sink
+└── LogEventPropertyExtractor / LogEventPropertyValueConverter  ← Data extraction
 ```
 
 ### LogTestContext
 
-로그 테스트의 핵심 컨텍스트입니다. 생성 시 내부적으로 Serilog Logger + TestSink을 구성하고, `CreateLogger<T>()`로 `ILogger<T>`를 생성합니다.
+The core context for log testing. Upon creation, it internally configures a Serilog Logger + TestSink, and creates `ILogger<T>` instances via `CreateLogger<T>()`.
 
 ```csharp
-// 네임스페이스
+// Namespace
 using Functorium.Testing.Arrangements.Logging;
 ```
 
 #### Construction
 
 ```csharp
-// 기본 (최소 레벨: Debug)
+// Default (minimum level: Debug)
 using var context = new LogTestContext();
 
-// 최소 레벨 지정
+// Specify minimum level
 using var context = new LogTestContext(LogEventLevel.Information);
 ```
 
 #### CreateLogger\<T\>()
 
-`ILogger<T>` 인스턴스를 생성합니다. 이 로거로 기록된 로그는 모두 컨텍스트에 캡처됩니다.
+Creates an `ILogger<T>` instance. All logs recorded with this logger are captured in the context.
 
 ```csharp
 var logger = context.CreateLogger<MyPipeline>();
@@ -278,62 +278,62 @@ var logger = context.CreateLogger<MyPipeline>();
 
 | Method | Description |
 |---|---|
-| `LogEvents` | 캡처된 전체 LogEvent 목록 (IReadOnlyList) |
-| `LogCount` | 캡처된 로그 수 |
-| `GetFirstLog()` | 첫 번째 로그 (일반적으로 Request 로그) |
-| `GetSecondLog()` | 두 번째 로그 (일반적으로 Response 로그) |
-| `GetLogAt(int index)` | 인덱스로 로그 조회 |
-| `GetLogsByLevel(LogEventLevel level)` | 특정 레벨의 로그 목록 |
-| `Clear()` | 캡처된 로그 전체 삭제 |
+| `LogEvents` | Full list of captured LogEvents (IReadOnlyList) |
+| `LogCount` | Number of captured logs |
+| `GetFirstLog()` | First log (typically the Request log) |
+| `GetSecondLog()` | Second log (typically the Response log) |
+| `GetLogAt(int index)` | Query log by index |
+| `GetLogsByLevel(LogEventLevel level)` | List of logs at a specific level |
+| `Clear()` | Delete all captured logs |
 
 #### Data Extraction API
 
-Verify 스냅샷 테스트용으로 LogEvent를 익명 객체로 변환합니다.
+Converts LogEvents to anonymous objects for Verify snapshot testing.
 
 | Method | Description |
 |---|---|
-| `ExtractFirstLogData()` | 첫 번째 로그 데이터를 익명 객체로 추출 |
-| `ExtractSecondLogData()` | 두 번째 로그 데이터를 익명 객체로 추출 |
-| `ExtractLogDataAt(int index)` | 인덱스 지정 로그 데이터 추출 |
-| `ExtractAllLogData()` | 전체 로그 데이터를 익명 객체 목록으로 추출 |
+| `ExtractFirstLogData()` | Extract first log data as anonymous object |
+| `ExtractSecondLogData()` | Extract second log data as anonymous object |
+| `ExtractLogDataAt(int index)` | Extract log data at specified index |
+| `ExtractAllLogData()` | Extract all log data as a list of anonymous objects |
 
 ### StructuredTestLogger\<T\>
 
-`ILogger<T>` → Serilog 브릿지 역할을 합니다. `LoggerMessage` 어트리뷰트로 생성된 구조화된 로깅을 올바르게 처리합니다.
+Serves as an `ILogger<T>` → Serilog bridge. Correctly handles structured logging generated by `LoggerMessage` attributes.
 
-- `IReadOnlyList<KeyValuePair<string, object?>>` 형태의 state에서 `{OriginalFormat}`과 attribute들을 분리
-- `{@Error:Error}` 형태의 명시적 attribute명을 처리
-- `LogEvent`를 직접 생성하여 attribute명을 정확하게 유지
+- Separates `{OriginalFormat}` and attributes from state in `IReadOnlyList<KeyValuePair<string, object?>>` form
+- Processes explicit attribute names in `{@Error:Error}` format
+- Directly creates `LogEvent` to maintain accurate attribute names
 
-> **Caution**: `LogTestContext.CreateLogger<T>()`를 통해 생성하세요. 직접 인스턴스화할 필요는 없습니다.
+> **Caution**: Create via `LogTestContext.CreateLogger<T>()`. Direct instantiation is not necessary.
 
 ### TestSink
 
-인메모리 Serilog `ILogEventSink` 구현입니다. `LogTestContext`가 내부적으로 사용하며, 직접 사용할 일은 거의 없습니다.
+An in-memory Serilog `ILogEventSink` implementation. Used internally by `LogTestContext`, and rarely needs to be used directly.
 
 ```csharp
-// 네임스페이스
+// Namespace
 using Functorium.Testing.Arrangements.Loggers;
 ```
 
 ### LogEventPropertyExtractor
 
-`LogEvent`에서 attribute 값을 재귀적으로 추출하는 유틸리티입니다.
+A utility that recursively extracts attribute values from `LogEvent`.
 
 ```csharp
-// 네임스페이스
+// Namespace
 using Functorium.Testing.Assertions.Logging;
 ```
 
 | Method | Description |
 |---|---|
-| `ExtractValue(LogEventPropertyValue)` | ScalarValue, SequenceValue, StructureValue, DictionaryValue를 재귀적으로 추출 |
-| `ExtractLogData(LogEvent)` | 단일 LogEvent → `{ Information, Properties }` 익명 객체 |
-| `ExtractLogData(IEnumerable<LogEvent>)` | 여러 LogEvent → 익명 객체 목록 |
+| `ExtractValue(LogEventPropertyValue)` | Recursively extracts ScalarValue, SequenceValue, StructureValue, DictionaryValue |
+| `ExtractLogData(LogEvent)` | Single LogEvent → `{ Information, Properties }` anonymous object |
+| `ExtractLogData(IEnumerable<LogEvent>)` | Multiple LogEvents → list of anonymous objects |
 
 ### SerilogTestPropertyValueFactory
 
-테스트 환경에서 `LogEvent`를 수동 생성할 때 프로퍼티 값을 Serilog `LogEventPropertyValue`로 변환하는 팩토리입니다. `ILogEventPropertyValueFactory` 구현체로, string, int, long, double, bool, Exception, ValueTuple 등 주요 타입을 지원합니다.
+A factory that converts property values to Serilog `LogEventPropertyValue` when manually creating `LogEvent` in test environments. An `ILogEventPropertyValueFactory` implementation that supports major types including string, int, long, double, bool, Exception, and ValueTuple.
 
 ```csharp
 using Functorium.Testing.Assertions.Logging;
@@ -344,27 +344,27 @@ var value = factory.CreatePropertyValue("test-value");
 
 ### LogEventPropertyValueConverter
 
-`LogEventPropertyValue`를 Verify 스냅샷용 익명 객체로 변환합니다.
+Converts `LogEventPropertyValue` to anonymous objects for Verify snapshots.
 
 | Method | Description |
 |---|---|
-| `ToAnonymousObject(LogEventPropertyValue)` | StructureValue → Dictionary, SequenceValue → Array, ScalarValue → 원시값 |
+| `ToAnonymousObject(LogEventPropertyValue)` | StructureValue → Dictionary, SequenceValue → Array, ScalarValue → primitive value |
 
 ### LogEventPropertyExtractor Type-Specific Processing Details
 
-`LogEventPropertyExtractor`는 `static class`이며, `ExtractValue(LogEventPropertyValue)` 메서드에서 switch 식으로 Serilog의 모든 주요 `LogEventPropertyValue` 하위 타입을 처리합니다.
+`LogEventPropertyExtractor` is a `static class` that handles all major Serilog `LogEventPropertyValue` subtypes via a switch expression in the `ExtractValue(LogEventPropertyValue)` method.
 
-**타입별 처리 로직:**
+**Processing logic by type:**
 
-| Type | 처리 방식 | 결과 |
+| Type | Processing Method | Result |
 |------|----------|------|
-| `ScalarValue` | `.Value` (null이면 `"null"` 문자열) | 원시 값 (`string`, `int`, `bool` 등) |
+| `ScalarValue` | `.Value` (`"null"` string if null) | Primitive value (`string`, `int`, `bool`, etc.) |
 | `SequenceValue` | `.Elements.Select(ExtractValue).ToList()` | `List<object>` |
 | `StructureValue` | `.Properties.ToDictionary(p => p.Name, p => ExtractValue(p.Value))` | `Dictionary<string, object>` |
 | `DictionaryValue` | `.Elements.ToDictionary(kvp => kvp.Key.Value?.ToString() ?? "null", kvp => ExtractValue(kvp.Value))` | `Dictionary<string, object>` |
-| 기타 | `HandleUnhandledType()` — Debug.WriteLine 후 `.ToString()` 반환 | `string` |
+| Other | `HandleUnhandledType()` — Debug.WriteLine then return `.ToString()` | `string` |
 
-**`ExtractLogData(LogEvent)`** — 단일 LogEvent에서 익명 객체를 생성합니다:
+**`ExtractLogData(LogEvent)`** — Creates an anonymous object from a single LogEvent:
 
 ```csharp
 new
@@ -377,13 +377,13 @@ new
 }
 ```
 
-**`ExtractLogData(IEnumerable<LogEvent>)`** — 여러 LogEvent를 `.Select()`로 변환합니다.
+**`ExtractLogData(IEnumerable<LogEvent>)`** — Converts multiple LogEvents using `.Select()`.
 
-> **Note**: 정적 람다(`static p =>`)를 사용하여 불필요한 클로저 할당을 방지합니다.
+> **Note**: Uses static lambdas (`static p =>`) to prevent unnecessary closure allocations.
 
 ### LogEventPropertyExtractor Usage Example
 
-스냅샷 테스트가 아닌 직접 Assertion으로 로그 필드를 검증하는 패턴:
+Pattern for verifying log fields using direct Assertion instead of snapshot testing:
 
 ```csharp
 [Fact]
@@ -397,11 +397,11 @@ public async Task Pipeline_Should_Log_RequestLayer_And_Handler()
     // Act
     await pipeline.Handle(new TestRequest("Test"), next, CancellationToken.None);
 
-    // Assert - 첫 번째 로그의 attribute을 직접 검증
+    // Assert - Directly verify attributes of the first log
     var firstLog = context.GetFirstLog();
     var data = LogEventPropertyExtractor.ExtractLogData(firstLog);
 
-    // Properties에서 특정 필드 검증
+    // Verify specific fields in Properties
     var properties = (IDictionary<string, object?>)data.Properties;
     properties["request.layer"].ShouldBe("application");
     properties["request.category.name"].ShouldBe("usecase");
@@ -428,34 +428,34 @@ public async Task Command_Request_Should_Log_Expected_Fields()
     // Act
     await pipeline.Handle(request, next, CancellationToken.None);
 
-    // Assert - 첫 번째 로그(Request)의 필드 구조를 스냅샷으로 검증
+    // Assert - Verify the field structure of the first log (Request) via snapshot
     await Verify(context.ExtractFirstLogData()).UseDirectory("Snapshots");
 }
 ```
 
-**핵심 흐름:**
-1. `LogTestContext` 생성
-2. `CreateLogger<T>()`로 로거 생성
-3. 테스트 대상 코드에 로거 주입 후 실행
-4. `ExtractFirstLogData()` / `ExtractAllLogData()` 등으로 데이터 추출
-5. `Verify()`로 스냅샷 비교
+**Core flow:**
+1. Create `LogTestContext`
+2. Create logger with `CreateLogger<T>()`
+3. Inject logger into code under test and execute
+4. Extract data with `ExtractFirstLogData()` / `ExtractAllLogData()`, etc.
+5. Compare with `Verify()` snapshot
 
 ---
 
-Mock 반환값 설정 방법을 익혔으면, 다음으로 아키텍처 규칙을 자동으로 검증하는 방법을 알아봅니다.
+Now that we've learned how to set up mock return values, let's learn how to automatically validate architecture rules.
 
 ## Architecture Rule Validation
 
-ArchUnitNET 기반으로 클래스/메서드 수준의 아키텍처 규칙을 Fluent API로 검증합니다.
+Validates class/method level architecture rules with a Fluent API based on ArchUnitNET.
 
 ```csharp
-// 네임스페이스
+// Namespace
 using Functorium.Testing.Assertions.ArchitectureRules;
 ```
 
 ### ArchitectureValidationEntryPoint.ValidateAllClasses()
 
-ArchUnitNET의 `IObjectProvider<Class>`에 대한 확장 메서드입니다. 필터링된 클래스 집합에 대해 검증 규칙을 일괄 적용합니다.
+An extension method for ArchUnitNET's `IObjectProvider<Class>`. Applies validation rules in bulk to a filtered set of classes.
 
 ```csharp
 public static ValidationResultSummary ValidateAllClasses(
@@ -467,128 +467,128 @@ public static ValidationResultSummary ValidateAllClasses(
 
 ### ClassValidator Fluent API
 
-**가시성:**
+**Visibility:**
 
 | Method | Description |
 |---|---|
-| `RequirePublic()` | public 클래스여야 함 |
-| `RequireInternal()` | internal 클래스여야 함 |
+| `RequirePublic()` | Must be a public class |
+| `RequireInternal()` | Must be an internal class |
 
-**한정자:**
-
-| Method | Description |
-|---|---|
-| `RequireSealed()` / `RequireNotSealed()` | sealed 여부 |
-| `RequireStatic()` / `RequireNotStatic()` | static 여부 |
-| `RequireAbstract()` / `RequireNotAbstract()` | abstract 여부 |
-
-**네이밍 (TypeValidator에서 상속):**
+**Modifiers:**
 
 | Method | Description |
 |---|---|
-| `RequireNameStartsWith(string)` | 이름이 특정 접두사로 시작해야 함 |
-| `RequireNameEndsWith(string)` | 이름이 특정 접미사로 끝나야 함 |
-| `RequireNameMatching(string)` | 이름이 정규식 패턴과 일치해야 함 |
+| `RequireSealed()` / `RequireNotSealed()` | sealed requirement |
+| `RequireStatic()` / `RequireNotStatic()` | static requirement |
+| `RequireAbstract()` / `RequireNotAbstract()` | abstract requirement |
 
-**타입/상속:**
-
-| Method | Description |
-|---|---|
-| `RequireRecord()` / `RequireNotRecord()` | record 타입 여부 |
-| `RequireAttribute(string)` | 특정 어트리뷰트 적용 필수 |
-| `RequireInherits(Type)` | 특정 기본 클래스 상속 필수 |
-| `RequireImplements(Type)` | 특정 인터페이스 구현 필수 |
-| `RequireImplementsGenericInterface(string)` | 제네릭 인터페이스 구현 필수 |
-| `RequireNoDependencyOn(string)` | 특정 타입에 대한 의존 금지 |
-
-**생성자/프로퍼티/필드:**
+**Naming (inherited from TypeValidator):**
 
 | Method | Description |
 |---|---|
-| `RequireAllPrivateConstructors()` | 모든 생성자가 private이어야 함 |
-| `RequirePrivateAnyParameterlessConstructor()` | 매개변수 없는 private 생성자 필수 |
-| `RequireNoPublicSetters()` | public setter 금지 (get-only만 허용) |
-| `RequireOnlyPrimitiveProperties(params string[])` | 원시 타입 프로퍼티만 허용 (추가 허용 타입 지정 가능) |
-| `RequireNoInstanceFields(params string[])` | 인스턴스 필드 금지 (제외할 필드 타입 지정 가능) |
-| `RequireImmutable()` | 불변성 종합 검증 (6가지 차원) |
+| `RequireNameStartsWith(string)` | Name must start with a specific prefix |
+| `RequireNameEndsWith(string)` | Name must end with a specific suffix |
+| `RequireNameMatching(string)` | Name must match a regex pattern |
 
-**메서드/중첩 클래스:**
+**Type/Inheritance:**
 
 | Method | Description |
 |---|---|
-| `RequireMethod(string, Action<MethodValidator>)` | 특정 이름의 메서드 검증 |
-| `RequireMethodIfExists(string, Action<MethodValidator>)` | 메서드가 있으면 검증 |
-| `RequireAllMethods(Action<MethodValidator>)` | 모든 메서드에 대해 검증 |
-| `RequireProperty(string)` | 특정 이름의 프로퍼티 필수 |
-| `RequireNestedClass(string, Action<ClassValidator>?)` | 중첩 클래스 필수 + 검증 |
-| `RequireNestedClassIfExists(string, Action<ClassValidator>?)` | 중첩 클래스가 있으면 검증 |
-| `ValidateAndThrow()` | 단일 클래스 검증 후 즉시 예외 |
+| `RequireRecord()` / `RequireNotRecord()` | record type requirement |
+| `RequireAttribute(string)` | Requires a specific attribute |
+| `RequireInherits(Type)` | Requires inheriting a specific base class |
+| `RequireImplements(Type)` | Requires implementing a specific interface |
+| `RequireImplementsGenericInterface(string)` | Requires implementing a generic interface |
+| `RequireNoDependencyOn(string)` | Prohibits dependency on a specific type |
 
-#### RequireImmutable() 검증 항목
+**Constructor/Property/Field:**
 
-`RequireImmutable()`은 ValueObject의 불변성을 6가지 차원에서 종합 검증합니다:
+| Method | Description |
+|---|---|
+| `RequireAllPrivateConstructors()` | All constructors must be private |
+| `RequirePrivateAnyParameterlessConstructor()` | Requires a parameterless private constructor |
+| `RequireNoPublicSetters()` | Prohibits public setters (only get-only allowed) |
+| `RequireOnlyPrimitiveProperties(params string[])` | Only primitive type properties allowed (additional allowed types can be specified) |
+| `RequireNoInstanceFields(params string[])` | Prohibits instance fields (field types to exclude can be specified) |
+| `RequireImmutable()` | Comprehensive immutability validation (6 dimensions) |
 
-1. **Writability 검증** — 모든 non-static 멤버가 `IsImmutable()`을 만족
-2. **생성자 검증** — 모든 생성자가 private (public 생성자 금지)
-3. **프로퍼티 검증** — public setter 금지 (get-only만 허용)
-4. **필드 검증** — public 필드 금지 (모든 필드는 private)
-5. **가변 컬렉션 검증** — `List<T>`, `Dictionary<K,V>`, `HashSet<T>` 등 금지
-6. **상태 변경 메서드 검증** — `Set*`, `Update*`, `Add*`, `Remove*` 등 금지
+**Method/Nested Class:**
+
+| Method | Description |
+|---|---|
+| `RequireMethod(string, Action<MethodValidator>)` | Validate a method with a specific name |
+| `RequireMethodIfExists(string, Action<MethodValidator>)` | Validate if method exists |
+| `RequireAllMethods(Action<MethodValidator>)` | Validate all methods |
+| `RequireProperty(string)` | Requires a property with a specific name |
+| `RequireNestedClass(string, Action<ClassValidator>?)` | Requires nested class + validation |
+| `RequireNestedClassIfExists(string, Action<ClassValidator>?)` | Validate if nested class exists |
+| `ValidateAndThrow()` | Validate a single class and throw immediately |
+
+#### RequireImmutable() Validation Items
+
+`RequireImmutable()` comprehensively validates ValueObject immutability across 6 dimensions:
+
+1. **Writability validation** -- All non-static members satisfy `IsImmutable()`
+2. **Constructor validation** -- All constructors are private (public constructors prohibited)
+3. **Property validation** -- Public setters prohibited (get-only allowed)
+4. **Field validation** -- Public fields prohibited (all fields must be private)
+5. **Mutable collection validation** -- `List<T>`, `Dictionary<K,V>`, `HashSet<T>`, etc. prohibited
+6. **State-changing method validation** -- `Set*`, `Update*`, `Add*`, `Remove*`, etc. prohibited
 
 ### MethodValidator Fluent API
 
-**가시성/한정자:**
+**Visibility/Modifiers:**
 
 | Method | Description |
 |---|---|
-| `RequireVisibility(Visibility)` | 특정 가시성 필수 |
-| `RequireStatic()` / `RequireNotStatic()` | static 여부 |
-| `RequireVirtual()` / `RequireNotVirtual()` | virtual 여부 |
-| `RequireExtensionMethod()` | 확장 메서드여야 함 |
+| `RequireVisibility(Visibility)` | Requires specific visibility |
+| `RequireStatic()` / `RequireNotStatic()` | static requirement |
+| `RequireVirtual()` / `RequireNotVirtual()` | virtual requirement |
+| `RequireExtensionMethod()` | Must be an extension method |
 
-**반환 타입:**
-
-| Method | Description |
-|---|---|
-| `RequireReturnType(Type)` | 반환 타입 검증 (제네릭 타입 매칭 지원) |
-| `RequireReturnTypeOfDeclaringClass()` | 선언 클래스를 반환해야 함 |
-| `RequireReturnTypeOfDeclaringTopLevelClass()` | 최상위 선언 클래스를 반환해야 함 |
-| `RequireReturnTypeContaining(string)` | 반환 타입 이름에 특정 문자열 포함 |
-
-**매개변수:**
+**Return type:**
 
 | Method | Description |
 |---|---|
-| `RequireParameterCount(int)` | 정확한 매개변수 개수 |
-| `RequireParameterCountAtLeast(int)` | 최소 매개변수 개수 |
-| `RequireFirstParameterTypeContaining(string)` | 첫 번째 매개변수 타입에 특정 문자열 포함 |
-| `RequireAnyParameterTypeContaining(string)` | 임의 매개변수 타입에 특정 문자열 포함 |
+| `RequireReturnType(Type)` | Return type validation (supports generic type matching) |
+| `RequireReturnTypeOfDeclaringClass()` | Must return the declaring class |
+| `RequireReturnTypeOfDeclaringTopLevelClass()` | Must return the top-level declaring class |
+| `RequireReturnTypeContaining(string)` | Return type name must contain a specific string |
+
+**Parameters:**
+
+| Method | Description |
+|---|---|
+| `RequireParameterCount(int)` | Exact parameter count |
+| `RequireParameterCountAtLeast(int)` | Minimum parameter count |
+| `RequireFirstParameterTypeContaining(string)` | First parameter type must contain a specific string |
+| `RequireAnyParameterTypeContaining(string)` | Any parameter type must contain a specific string |
 
 ### InterfaceValidator
 
-`InterfaceValidator`는 `TypeValidator<Interface, InterfaceValidator>`를 상속하며, `ClassValidator`와 동일한 Fluent API 패턴을 인터페이스에 적용합니다.
+`InterfaceValidator` inherits from `TypeValidator<Interface, InterfaceValidator>` and applies the same Fluent API pattern as `ClassValidator` to interfaces.
 
-### IArchRule\<T\> 인터페이스
+### IArchRule\<T\> Interface
 
-재사용 가능한 아키텍처 규칙을 정의하는 인터페이스입니다.
+An interface that defines reusable architecture rules.
 
 | Type | Description |
 |---|---|
-| `IArchRule<TType>` | 규칙 인터페이스. `Description`과 `Validate()` 메서드 제공 |
-| `DelegateArchRule<TType>` | 람다 기반 규칙 구현 |
-| `CompositeArchRule<TType>` | 여러 규칙을 AND로 합성 |
-| `ImmutabilityRule` | 클래스 불변성 검증 규칙 (14개 가변 컬렉션 타입 감지) |
+| `IArchRule<TType>` | Rule interface. Provides `Description` and `Validate()` method |
+| `DelegateArchRule<TType>` | Lambda-based rule implementation |
+| `CompositeArchRule<TType>` | Composes multiple rules with AND |
+| `ImmutabilityRule` | Class immutability validation rule (detects 14 mutable collection types) |
 
 ### Architecture Test Suite
 
-`DomainArchitectureTestSuite`와 `ApplicationArchitectureTestSuite`는 도메인/Application 레이어의 아키텍처 규칙을 사전 정의된 테스트 집합으로 제공합니다. 상속하여 `Architecture`와 네임스페이스만 지정하면 21+4개의 아키텍처 테스트가 자동 적용됩니다.
+`DomainArchitectureTestSuite` and `ApplicationArchitectureTestSuite` provide pre-defined test sets for Domain/Application layer architecture rules. Simply inherit and specify `Architecture` and namespace to automatically apply 21+4 architecture tests.
 
 #### ArchitectureTestBase Setup
 
-`ArchLoader`로 검사 대상 어셈블리를 로드하고, 공유 상수로 네임스페이스를 정의합니다:
+Load target assemblies with `ArchLoader` and define namespaces as shared constants:
 
 ```csharp
-// 참조: samples/ecommerce-ddd/.../ArchitectureTestBase.cs
+// Reference: samples/ecommerce-ddd/.../ArchitectureTestBase.cs
 using ArchUnitNET.Loader;
 
 internal static class ArchitectureTestBase
@@ -611,7 +611,7 @@ internal static class ArchitectureTestBase
 #### DomainArchitectureRuleTests
 
 ```csharp
-// 참조: samples/ecommerce-ddd/.../DomainArchitectureRuleTests.cs
+// Reference: samples/ecommerce-ddd/.../DomainArchitectureRuleTests.cs
 using Functorium.Testing.Assertions.ArchitectureRules.Suites;
 
 public sealed class DomainArchitectureRuleTests : DomainArchitectureTestSuite
@@ -624,7 +624,7 @@ public sealed class DomainArchitectureRuleTests : DomainArchitectureTestSuite
 #### ApplicationArchitectureRuleTests
 
 ```csharp
-// 참조: samples/ecommerce-ddd/.../ApplicationArchitectureRuleTests.cs
+// Reference: samples/ecommerce-ddd/.../ApplicationArchitectureRuleTests.cs
 using Functorium.Testing.Assertions.ArchitectureRules.Suites;
 
 public sealed class ApplicationArchitectureRuleTests : ApplicationArchitectureTestSuite
@@ -636,10 +636,10 @@ public sealed class ApplicationArchitectureRuleTests : ApplicationArchitectureTe
 
 #### Customization: Overridable Properties
 
-특정 도메인 구조에 맞게 테스트 스위트를 조정할 수 있습니다:
+You can adjust the test suite to fit specific domain structures:
 
 ```csharp
-// 참조: samples/designing-with-types/.../DomainArchitectureRuleTests.cs
+// Reference: samples/designing-with-types/.../DomainArchitectureRuleTests.cs
 public sealed class DomainArchitectureRuleTests : DomainArchitectureTestSuite
 {
     private static readonly ArchUnitNET.Domain.Architecture s_architecture = new ArchLoader()
@@ -652,35 +652,35 @@ public sealed class DomainArchitectureRuleTests : DomainArchitectureTestSuite
     protected override string DomainNamespace =>
         typeof(DesigningWithTypes.AssemblyReference).Namespace!;
 
-    // Union VO는 Create/Validate 팩토리 패턴 불필요 → 검사에서 제외
+    // Union VO does not need Create/Validate factory pattern → exclude from checks
     protected override IReadOnlyList<Type> ValueObjectExcludeFromFactoryMethods =>
         [typeof(UnionValueObject)];
 
-    // DomainService가 Repository 필드를 가질 수 있도록 허용
+    // Allow DomainService to have Repository fields
     protected override string[] DomainServiceAllowedFieldTypes => ["Repository"];
 }
 ```
 
 | override attribute | Default | Purpose |
 |---|---|---|
-| `ValueObjectExcludeFromFactoryMethods` | `[]` | Create/Validate 팩토리 검사에서 제외할 VO 타입. Union VO처럼 팩토리 없이 직접 생성하는 타입에 사용 |
-| `DomainServiceAllowedFieldTypes` | `[]` | DomainService 필드 타입 허용 목록. Repository를 주입받는 DomainService에 사용 |
+| `ValueObjectExcludeFromFactoryMethods` | `[]` | VO types to exclude from Create/Validate factory checks. Used for types like Union VO that are created directly without factories |
+| `DomainServiceAllowedFieldTypes` | `[]` | Allowed field type list for DomainService. Used for DomainServices that inject Repositories |
 
-**DomainArchitectureTestSuite (21개 테스트):**
-AggregateRoot, Entity, ValueObject, DomainEvent, Specification, DomainService에 대한 아키텍처 규칙을 자동 검증합니다.
+**DomainArchitectureTestSuite (21 tests):**
+Automatically validates architecture rules for AggregateRoot, Entity, ValueObject, DomainEvent, Specification, and DomainService.
 
-**ApplicationArchitectureTestSuite (4개 테스트):**
-Command/Query의 Validator, Usecase 중첩 클래스 존재를 자동 검증합니다.
+**ApplicationArchitectureTestSuite (4 tests):**
+Automatically validates the existence of Command/Query Validator and Usecase nested classes.
 
 ### ValidationResultSummary.ThrowIfAnyFailures()
 
-여러 클래스의 검증 결과를 집계한 후 failure가 있으면 `XunitException`을 발생시킵니다.
+Aggregates validation results from multiple classes and throws `XunitException` if there are any failures.
 
 ```csharp
 summary.ThrowIfAnyFailures("ValueObject Immutability Rule");
 ```
 
-예외 메시지 형식:
+Exception message format:
 ```
 'ValueObject Immutability Rule' rule violation:
 
@@ -694,18 +694,18 @@ MyProject.ValueObjects.PhoneNumber:
 
 ### SingleHost Architecture Test Inventory
 
-다음 테이블은 SingleHost 레퍼런스 프로젝트에 구현된 아키텍처 테스트의 전체 목록입니다.
+The following table is the complete list of architecture tests implemented in the SingleHost reference project.
 
-| 테스트 클래스 | 테스트 수 | 검증 대상 |
+| Test Class | Test Count | Validation Target |
 |--------------|----------|----------|
-| `LayerDependencyArchitectureRuleTests` | 6 | 레이어 간 의존성 방향 (Domain !→ Application, Adapter 간 교차 참조 금지 등) |
-| `EntityArchitectureRuleTests` | 5 | AggregateRoot/Entity: public sealed, 상속, Create/CreateFromValidated 팩토리 |
-| `ValueObjectArchitectureRuleTests` | 4 | ValueObject: public sealed, 불변성, Create/Validate 팩토리 |
+| `LayerDependencyArchitectureRuleTests` | 6 | Dependency direction between layers (Domain !-> Application, no cross-references between Adapters, etc.) |
+| `EntityArchitectureRuleTests` | 5 | AggregateRoot/Entity: public sealed, inheritance, Create/CreateFromValidated factory |
+| `ValueObjectArchitectureRuleTests` | 4 | ValueObject: public sealed, immutability, Create/Validate factory |
 | `DtoArchitectureRuleTests` | 5 | DTO/Model/Mapper: Persistence Mapper internal static, Usecase nested Request/Response |
-| `CqrsArchitectureRuleTests` | 1 | CQRS 패턴 준수: Query Usecase가 IRepository에 의존하지 않도록 강제 |
-| `UsecaseArchitectureRuleTests` | 4 | Command/Query: 내부 Validator/Usecase nested class 존재 |
-| `SpecificationArchitectureRuleTests` | 3 | Specification: public sealed, 상속, Domain 레이어 거주 |
-| `PortAndAdapterArchitectureRuleTests` | 3 | Adapter: GenerateObservablePort 어트리뷰트, RequestCategory, DomainService sealed |
+| `CqrsArchitectureRuleTests` | 1 | CQRS pattern compliance: Enforces that Query Usecase does not depend on IRepository |
+| `UsecaseArchitectureRuleTests` | 4 | Command/Query: Internal Validator/Usecase nested class existence |
+| `SpecificationArchitectureRuleTests` | 3 | Specification: public sealed, inheritance, resides in Domain layer |
+| `PortAndAdapterArchitectureRuleTests` | 3 | Adapter: GenerateObservablePort attribute, RequestCategory, DomainService sealed |
 
 ### Usage Pattern: ValueObject Immutability Validation
 
@@ -721,7 +721,7 @@ public void ValueObject_ShouldSatisfy_ImmutabilityRules()
         .AreNotAbstract()
         .ValidateAllClasses(Architecture, @class =>
         {
-            // 클래스 수준 검증
+            // Class-level validation
             @class
                 .RequirePublic()
                 .RequireSealed()
@@ -729,19 +729,19 @@ public void ValueObject_ShouldSatisfy_ImmutabilityRules()
                 .RequireImmutable()
                 .RequireImplements(typeof(IEquatable<>));
 
-            // Create 메서드 검증
+            // Create method validation
             @class.RequireMethod("Create", method => method
                 .RequireVisibility(Visibility.Public)
                 .RequireStatic()
                 .RequireReturnType(typeof(Fin<>)));
 
-            // Validate 메서드 검증
+            // Validate method validation
             @class.RequireMethod("Validate", method => method
                 .RequireVisibility(Visibility.Public)
                 .RequireStatic()
                 .RequireReturnType(typeof(Validation<,>)));
 
-            // DomainErrors 중첩 클래스 검증 (존재하는 경우만)
+            // DomainErrors nested class validation (only if exists)
             @class.RequireNestedClassIfExists("DomainErrors", domainErrors =>
             {
                 domainErrors
@@ -759,36 +759,36 @@ public void ValueObject_ShouldSatisfy_ImmutabilityRules()
 
 ---
 
-아키텍처 규칙은 클래스 구조를 검증한다면, 소스 생성기 테스트는 코드 생성 결과를 검증합니다.
+While architecture rules validate class structure, source generator tests validate code generation results.
 
 ## Source Generator Testing
 
-`SourceGeneratorTestRunner`는 `IIncrementalGenerator`를 테스트 환경에서 실행하고 생성된 코드를 반환합니다. `EntityIdGenerator`, `ObservablePortGenerator`, `UnionTypeGenerator` 모두 동일한 패턴으로 테스트할 수 있습니다.
+`SourceGeneratorTestRunner` runs `IIncrementalGenerator` in a test environment and returns the generated code. `EntityIdGenerator`, `ObservablePortGenerator`, and `UnionTypeGenerator` can all be tested with the same pattern.
 
 ```csharp
-// 네임스페이스
+// Namespace
 using Functorium.Testing.Actions.SourceGenerators;
 ```
 
 ### SourceGeneratorTestRunner.Generate\<TGenerator\>()
 
-소스 코드를 입력받아 소스 생성기를 실행하고 생성된 코드 문자열을 반환합니다.
+Takes source code as input, runs the source generator, and returns the generated code string.
 
 ```csharp
 public static string? Generate<TGenerator>(this TGenerator generator, string sourceCode)
     where TGenerator : IIncrementalGenerator, new();
 ```
 
-내부적으로 다음을 수행합니다:
-1. 입력 소스 코드를 `CSharpSyntaxTree`로 파싱
-2. 필수 어셈블리 참조 자동 추가 (System.Runtime, LanguageExt.Core, Microsoft.Extensions.Logging)
-3. `CSharpGeneratorDriver`로 소스 생성기 실행
-4. 컴파일러 에러가 있으면 Shouldly assertion으로 failure
-5. 생성된 코드 반환 (생성되지 않은 경우 `null`)
+Internally performs the following:
+1. Parses input source code into `CSharpSyntaxTree`
+2. Automatically adds required assembly references (System.Runtime, LanguageExt.Core, Microsoft.Extensions.Logging)
+3. Runs the source generator with `CSharpGeneratorDriver`
+4. Fails with Shouldly assertion if there are compiler errors
+5. Returns the generated code (`null` if nothing was generated)
 
 ### GenerateWithDiagnostics\<TGenerator\>()
 
-진단 결과(Diagnostic)를 함께 반환합니다. `DiagnosticDescriptor` 테스트에 사용합니다.
+Returns diagnostic results along with the generated code. Used for `DiagnosticDescriptor` testing.
 
 ```csharp
 public static (string? GeneratedCode, ImmutableArray<Diagnostic> Diagnostics)
@@ -825,7 +825,7 @@ public Task EntityIdGenerator_ShouldGenerate_EntityId_ForSimpleEntity()
 
 ### Validating Attribute Generation with Empty Input
 
-소스 생성기가 마커 Attribute를 자동 생성하는 경우, 빈 문자열 입력으로 검증합니다:
+When a source generator auto-generates marker Attributes, verify with an empty string input:
 
 ```csharp
 [Fact]
@@ -844,49 +844,49 @@ public Task EntityIdGenerator_ShouldGenerate_GenerateEntityIdAttribute()
 
 ---
 
-소스 생성기가 정적 코드 생성을 검증한다면, 스케줄 Job 테스트는 런타임에서 실제 Job 실행을 검증합니다.
+While source generator tests verify static code generation, scheduled Job tests verify actual Job execution at runtime.
 
 ## Scheduled Job Integration Testing
 
-Quartz.NET Job을 통합 테스트하기 위한 Fixture입니다.
+A Fixture for integration testing of Quartz.NET Jobs.
 
 ```csharp
-// 네임스페이스
+// Namespace
 using Functorium.Testing.Arrangements.ScheduledJobs;
 ```
 
 ### QuartzTestFixture\<TProgram\>
 
-`WebApplicationFactory`를 사용하여 전체 DI 설정을 재사용하는 제네릭 Fixture입니다.
+A generic Fixture that reuses the full DI setup using `WebApplicationFactory`.
 
 #### Key Properties
 
 | attribute | Type | Description |
 |---|---|---|
-| `Services` | `IServiceProvider` | DI 컨테이너 |
-| `Scheduler` | `IScheduler` | Quartz 스케줄러 |
-| `JobListener` | `JobCompletionListener` | Job 완료 추적 리스너 |
+| `Services` | `IServiceProvider` | DI container |
+| `Scheduler` | `IScheduler` | Quartz scheduler |
+| `JobListener` | `JobCompletionListener` | Job completion tracking listener |
 
 #### Environment Configuration
 
-기본 환경은 `"Test"`입니다. 파생 클래스에서 오버라이드할 수 있습니다.
+The default environment is `"Test"`. It can be overridden in derived classes.
 
 ```csharp
-// appsettings.Test.json이 자동으로 로드됩니다
+// appsettings.Test.json is loaded automatically
 protected virtual string EnvironmentName => "Test";
 ```
 
-> **Note**: `appsettings.Test.json` 파일은 Host 프로젝트 루트에 위치해야 하며, `.csproj`에서 `CopyToOutputDirectory`를 설정해야 합니다:
+> **Note**: The `appsettings.Test.json` file must be located in the Host project root, and `CopyToOutputDirectory` must be set in the `.csproj`:
 > ```xml
 > <ItemGroup>
 >   <Content Include="appsettings.Test.json" CopyToOutputDirectory="PreserveNewest" />
 > </ItemGroup>
 > ```
-> `WebApplicationFactory`가 Host 프로젝트의 `ContentRootPath`를 기준으로 설정 파일을 로드하므로, 테스트 프로젝트가 아닌 **Host 프로젝트**에 파일이 있어야 합니다.
+> Since `WebApplicationFactory` loads configuration files based on the Host project's `ContentRootPath`, the file must be in the **Host project**, not the test project.
 
 #### DI Extension Point
 
-`ConfigureWebHost`를 오버라이드하여 추가 설정을 적용할 수 있습니다.
+Override `ConfigureWebHost` to apply additional settings.
 
 ```csharp
 public class MyJobTestFixture : QuartzTestFixture<Program>
@@ -903,47 +903,47 @@ public class MyJobTestFixture : QuartzTestFixture<Program>
 
 ### ExecuteJobOnceAsync\<TJob\>()
 
-지정된 Job을 즉시 1회 실행하고 완료를 대기합니다.
+Immediately executes the specified Job once and waits for completion.
 
 ```csharp
-// Job 타입에서 이름/그룹 자동 추출
+// Auto-extract name/group from Job type
 Task<JobExecutionResult> ExecuteJobOnceAsync<TJob>(TimeSpan timeout)
     where TJob : IJob;
 
-// 이름/그룹 명시적 지정
+// Explicit name/group specification
 Task<JobExecutionResult> ExecuteJobOnceAsync<TJob>(
     string jobName, string jobGroup, TimeSpan timeout)
     where TJob : IJob;
 ```
 
-내부 동작:
-1. `JobListener.Reset()` 호출
-2. 고유 이름의 테스트용 Job 생성 (`{JobName}-Test-{Guid}`)
-3. `SimpleTrigger`로 즉시 1회 실행 스케줄링
-4. `JobListener.WaitForJobCompletionAsync()`로 완료 대기
+Internal behavior:
+1. Call `JobListener.Reset()`
+2. Create a test Job with a unique name (`{JobName}-Test-{Guid}`)
+3. Schedule immediate one-time execution with `SimpleTrigger`
+4. Wait for completion with `JobListener.WaitForJobCompletionAsync()`
 
 ### JobCompletionListener
 
-`IJobListener` 구현체로, Job 완료를 비동기적으로 추적합니다.
+An `IJobListener` implementation that asynchronously tracks Job completion.
 
 | Method | Description |
 |---|---|
-| `WaitForJobCompletionAsync(jobName, timeout)` | Job 완료 대기 (타임아웃 시 `TimeoutException`) |
-| `Reset()` | 추적 상태 초기화 (각 테스트 전 호출) |
+| `WaitForJobCompletionAsync(jobName, timeout)` | Wait for Job completion (`TimeoutException` on timeout) |
+| `Reset()` | Initialize tracking state (called before each test) |
 
-내부적으로 `ConcurrentDictionary<string, TaskCompletionSource<JobExecutionResult>>`를 사용하여 스레드 안전하게 완료를 추적합니다.
+Internally uses `ConcurrentDictionary<string, TaskCompletionSource<JobExecutionResult>>` to track completion in a thread-safe manner.
 
 ### JobExecutionResult
 
-Job 실행 결과를 나타내는 record입니다.
+A record representing the Job execution result.
 
 | attribute | Type | Description |
 |---|---|---|
-| `JobName` | `string` | Job 이름 |
-| `Success` | `bool` | success 여부 |
-| `Result` | `object?` | Job 실행 결과 |
-| `Exception` | `JobExecutionException?` | 발생한 예외 |
-| `ExecutionTime` | `TimeSpan` | 실행 시간 |
+| `JobName` | `string` | Job name |
+| `Success` | `bool` | Whether it succeeded |
+| `Result` | `object?` | Job execution result |
+| `Exception` | `JobExecutionException?` | Exception that occurred |
+| `ExecutionTime` | `TimeSpan` | Execution time |
 
 ### Usage Example
 
@@ -997,46 +997,46 @@ public async Task Job_ShouldThrow_WhenTimeout()
 
 ## Troubleshooting
 
-### 소스 생성기 테스트에서 컴파일 에러 발생
+### Compilation Error in Source Generator Tests
 
-**Cause:** `SourceGeneratorTestRunner.Generate()`는 내부적으로 필수 어셈블리(System.Runtime, LanguageExt.Core, Microsoft.Extensions.Logging)만 자동 참조합니다. 테스트 입력 코드가 다른 어셈블리의 타입을 사용하면 컴파일 에러가 발생합니다.
+**Cause:** `SourceGeneratorTestRunner.Generate()` internally auto-references only required assemblies (System.Runtime, LanguageExt.Core, Microsoft.Extensions.Logging). A compilation error occurs if the test input code uses types from other assemblies.
 
-**Resolution:** 소스 생성기 테스트의 입력 코드는 자동 참조되는 어셈블리 범위 내에서 작성하세요. 소스 생성기가 처리하는 마커 Attribute와 대상 클래스만 포함하면 충분합니다.
+**Resolution:** Write the input code for source generator tests within the scope of auto-referenced assemblies. It is sufficient to include only the marker Attribute and target class that the source generator processes.
 
-### `LogTestContext`에서 로그가 캡처되지 않음
+### Logs Not Captured in `LogTestContext`
 
-**Cause:** `LogTestContext`의 기본 최소 레벨은 `Debug`입니다. 테스트 대상이 `Verbose` 레벨로 로깅하는 경우 캡처되지 않습니다. 또는 `CreateLogger<T>()`의 타입 파라미터가 실제 로깅 클래스와 다른 경우입니다.
+**Cause:** The default minimum level of `LogTestContext` is `Debug`. Logs will not be captured if the test target logs at `Verbose` level. Or the type parameter of `CreateLogger<T>()` differs from the actual logging class.
 
-**Resolution:** 최소 레벨을 명시적으로 지정하세요: `new LogTestContext(LogEventLevel.Verbose)`. 로거의 타입 파라미터가 테스트 대상 클래스의 `ILogger<T>`와 일치하는지 확인하세요.
+**Resolution:** Specify the minimum level explicitly: `new LogTestContext(LogEventLevel.Verbose)`. Verify that the logger's type parameter matches the `ILogger<T>` of the class under test.
 
-### 아키텍처 규칙 검증에서 예상치 못한 클래스가 포함됨
+### Unexpected Classes Included in Architecture Rule Validation
 
-**Cause:** `ArchRuleDefinition.Classes().That()` 필터 조건이 너무 넓어 의도하지 않은 클래스(추상 클래스, 테스트용 클래스 등)가 포함된 경우입니다.
+**Cause:** The `ArchRuleDefinition.Classes().That()` filter condition is too broad, including unintended classes (abstract classes, test classes, etc.).
 
-**Resolution:** `.And().AreNotAbstract()`, `.And().DoNotHaveNameContaining("Test")` 등 추가 필터 조건을 적용하여 대상 범위를 좁히세요. `verbose: true` 옵션으로 검증 대상 클래스 목록을 확인할 수 있습니다.
+**Resolution:** Apply additional filter conditions such as `.And().AreNotAbstract()`, `.And().DoNotHaveNameContaining("Test")` to narrow the target scope. Use the `verbose: true` option to view the list of classes being validated.
 
 ---
 
 ## FAQ
 
-**Q: `LogTestContext`와 `ITestOutputHelper` 차이는?**
+**Q: What is the difference between `LogTestContext` and `ITestOutputHelper`?**
 
-`LogTestContext`는 Serilog 기반으로 구조화된 로그 필드(attribute명, 값 타입, 중첩 구조)까지 캡처하여 스냅샷 테스트가 가능합니다. `ITestOutputHelper`는 단순 텍스트 출력만 지원하므로 필드 구조 검증에는 적합하지 않습니다.
+`LogTestContext` is Serilog-based and captures structured log fields (attribute names, value types, nested structures) enabling snapshot testing. `ITestOutputHelper` only supports simple text output, making it unsuitable for field structure verification.
 
-**Q: `ArchitectureRules`를 커스텀할 수 있는가?**
+**Q: Can `ArchitectureRules` be customized?**
 
-가능합니다. 기본 제공 규칙(`RequireImmutable`, `RequireSealed` 등) 외에 `ValidateAllClasses`의 `Action<ClassValidator>` 콜백에서 프로젝트별 규칙을 조합하여 추가할 수 있습니다.
+Yes. In addition to the built-in rules (`RequireImmutable`, `RequireSealed`, etc.), you can combine project-specific rules in the `Action<ClassValidator>` callback of `ValidateAllClasses`.
 
-**Q: `QuartzTestFixture`에서 실제 Job이 실행되는가?**
+**Q: Are actual Jobs executed in `QuartzTestFixture`?**
 
-인메모리 스케줄러에서 Job이 실제로 실행됩니다. DI 컨테이너의 모든 서비스가 주입되므로, 외부 의존성(DB, API 등)만 Mock으로 교체하면 통합 수준의 검증이 가능합니다.
+Jobs are actually executed in an in-memory scheduler. Since all services from the DI container are injected, integration-level verification is possible by replacing only external dependencies (DB, API, etc.) with mocks.
 
 ---
 
 ## References
 
-- [15a-unit-testing.md](./15a-unit-testing) — unit 테스트 규칙 (명명, AAA 패턴, MTP 설정)
-- [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) — Domain/Application 에러 Assertion 패턴
-- [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) — Adapter 에러 Assertion 및 범용 에러 Assertion
-- [01-project-structure.md](../architecture/01-project-structure) — 프로젝트 구성 (HostTestFixture, 통합 테스트)
-- [08-observability.md](../../spec/08-observability) — Observability 사양 (로그 필드 정의)
+- [15a-unit-testing.md](./15a-unit-testing) — Unit test rules (naming, AAA pattern, MTP configuration)
+- [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) — Domain/Application error Assertion patterns
+- [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) — Adapter error Assertion and generic error Assertion
+- [01-project-structure.md](../architecture/01-project-structure) — Project structure (HostTestFixture, integration testing)
+- [08-observability.md](../../spec/08-observability) — Observability specification (log field definitions)
