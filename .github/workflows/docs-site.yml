@@ -34,11 +34,16 @@ jobs:
       - name: Clean Astro cache
         working-directory: ./Docs.Site
         run: rm -rf node_modules/.astro dist
-      - name: Build
+      - name: Verify content files
         working-directory: ./Docs.Site
         run: |
+          echo "=== Total md/mdx files ==="
           find src/content/docs -name "*.md" -o -name "*.mdx" | wc -l
-          npx astro build
+          echo "=== Slug check: samples/designing-with-types/domain ==="
+          ls -la src/content/docs/samples/designing-with-types/domain/
+      - name: Build
+        working-directory: ./Docs.Site
+        run: npx astro build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
