@@ -180,4 +180,4 @@ description: "AI 모델 거버넌스 도메인의 불변식 분류와 Functorium
 | 도메인 이벤트 + 도메인 오류 | 중첩 `sealed record` | AIModel.RegisteredEvent, ModelDeployment.InvalidStatusTransition | Aggregate 내부에 이벤트/오류 응집 |
 | Soft Delete + 가드 | `ISoftDeletableWithUser` + `DeletedAt.IsSome` | AIModel.ClassifyRisk(), Update() | 아카이브된 Aggregate 변경 차단 |
 
-다음 단계에서는 이 설계 의사결정을 C# 코드로 매핑하여 [코드 설계](./02-code-design/)를 진행합니다.
+다음 단계에서는 이 설계 의사결정을 C# 코드로 매핑하여 [코드 설계](../02-code-design/)를 진행합니다.

@@ -4,7 +4,7 @@ title: "Code Design"
 
 ## From Design Decisions to C# Implementation
 
-The rules defined in natural language from the [Business Requirements](./00-business-requirements/) were identified as Aggregates and classified as invariants in the [Type Design Decisions](./01-type-design-decisions/). This document implements those designs using Functorium DDD building blocks and C# 14 language features.
+The rules defined in natural language from the [Business Requirements](../00-business-requirements/) were identified as Aggregates and classified as invariants in the [Type Design Decisions](../01-type-design-decisions/). This document implements those designs using Functorium DDD building blocks and C# 14 language features.
 
 | Design Decision | C# Implementation Pattern | Application |
 |---|---|---|
@@ -584,4 +584,4 @@ classDiagram
 | (none) | -- | -- | -- | IAuditable | `Contact.CreatedAt`, `Contact.UpdatedAt` |
 | (none) | -- | -- | -- | ISoftDeletable | `Contact.DeletedAt`, `Contact.DeletedBy` |
 
-Check how this type structure guarantees 10 business scenarios in the [Implementation Results](./03-implementation-results/).
+Check how this type structure guarantees 10 business scenarios in the [Implementation Results](../03-implementation-results/).

@@ -416,4 +416,4 @@ return new FinT<IO, A>(io.Map(Fin.Succ));
 
 This conversion maps `IO<A>` to `IO<Fin<A>>`, then wraps it as `FinT<IO, A>`. This enables natural composition into the Application Layer's `FinT<IO, T>` LINQ chain.
 
-See the complete Adapter project structure and endpoint list in [Implementation Results](./03-implementation-results/).
+See the complete Adapter project structure and endpoint list in [Implementation Results](../03-implementation-results/).

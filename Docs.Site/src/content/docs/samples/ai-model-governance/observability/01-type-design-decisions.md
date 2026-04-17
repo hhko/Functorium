@@ -5,7 +5,7 @@ description: "KPI-metric mapping, key metrics per layer, SLO baselines, and ctx.
 
 ## KPI -> Technical Metric Mapping
 
-Maps the SLOs and KPIs defined in [business requirements](./00-business-requirements/) to Functorium metrics.
+Maps the SLOs and KPIs defined in [business requirements](../00-business-requirements/) to Functorium metrics.
 
 | Business KPI | Functorium Metric | Field/Tag |
 |-------------|-------------------|----------|
@@ -113,4 +113,4 @@ Is the property for debugging? (Purpose, Description)
                 └── NO -> Keep Default (MetricsTag prohibited)
 ```
 
-In the next step, we materialize this metric design into dashboards, alerts, and code patterns in [Code Design](./02-code-design/).
+In the next step, we materialize this metric design into dashboards, alerts, and code patterns in [Code Design](../02-code-design/).

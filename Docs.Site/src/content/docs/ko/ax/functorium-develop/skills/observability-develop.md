@@ -153,5 +153,5 @@ Functorium Source Generator가 자동 수집하는 필드입니다.
 ## 참고 자료
 
 - [워크플로](../workflow/) -- 7단계 전체 흐름
-- [Adapter Develop 스킬](./adapter-develop/) -- 선행 단계: Observable Port 구현
-- [Test Develop 스킬](./test-develop/) -- 후속 단계: 관측성 검증 테스트
+- [Adapter Develop 스킬](../adapter-develop/) -- 선행 단계: Observable Port 구현
+- [Test Develop 스킬](../test-develop/) -- 후속 단계: 관측성 검증 테스트

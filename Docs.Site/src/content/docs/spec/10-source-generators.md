@@ -457,7 +457,7 @@ UnionTypeGenerator does not currently emit dedicated diagnostic codes. If there 
 ## Related Documents
 
 - [Source Generator Observability Tutorial](../tutorials/sourcegen-observability/) -- From Roslyn API basics to practical generator implementation
-- [Entity and Aggregate Specification](./01-entity-aggregate) -- `IEntityId<T>`, `GenerateEntityIdAttribute` definition
-- [Observability Specification](./08-observability) -- `IUsecaseCtxEnricher`, `IDomainEventCtxEnricher` interface definitions
+- [Entity and Aggregate Specification](../01-entity-aggregate) -- `IEntityId<T>`, `GenerateEntityIdAttribute` definition
+- [Observability Specification](../08-observability) -- `IUsecaseCtxEnricher`, `IDomainEventCtxEnricher` interface definitions
 - [Adapter Pipeline and DI Guide](../guides/adapter/14a-adapter-pipeline-di) -- Observable wrapper DI registration pattern
 - [Testing Library Guide](../guides/testing/16-testing-library) -- Writing unit tests for source generators

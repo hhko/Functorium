@@ -63,4 +63,4 @@ OpenTelemetry 3-Pillar(Trace, Metrics, Logs) 전반에서 오류의 심각도와
 ## 관련 정보
 
 - 커밋: 6ecd6ae6, a5027a78
-- 관련 ADR: [ADR-0016 관측성 필드 네이밍 snake_case + dot](./0016-observability-field-naming-snake-case-dot.md)
+- 관련 ADR: [ADR-0016 관측성 필드 네이밍 snake_case + dot](../0016-observability-field-naming-snake-case-dot.md)

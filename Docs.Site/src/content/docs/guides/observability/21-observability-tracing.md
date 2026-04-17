@@ -1229,9 +1229,9 @@ Console.WriteLine($"TraceId: {Activity.Current?.TraceId}");
 
 **Internal documents:**
 - [08-observability.md](../../spec/08-observability) — Observability Specification (Field/Tag, Meter, Message Template)
-- [18b-observability-naming.md](./18b-observability-naming) — Observability Naming Guide
-- [19-observability-logging.md](./19-observability-logging) — Observability Logging Details
-- [20-observability-metrics.md](./20-observability-metrics) — Observability Metrics Details
+- [18b-observability-naming.md](../18b-observability-naming) — Observability Naming Guide
+- [19-observability-logging.md](../19-observability-logging) — Observability Logging Details
+- [20-observability-metrics.md](../20-observability-metrics) — Observability Metrics Details
 
 ---
 

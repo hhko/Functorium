@@ -1132,7 +1132,7 @@ public class DatabaseTests(DatabaseFixture fixture)
 
 ### Functorium.Testing Library
 - Structured log testing (LogTestContext), architecture rule validation, source generator testing, scheduled Job testing:
-  [16-testing-library.md](./16-testing-library)
+  [16-testing-library.md](../16-testing-library)
 - Error type Assertions (ShouldBeDomainError, etc.):
   [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app), [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing)
 

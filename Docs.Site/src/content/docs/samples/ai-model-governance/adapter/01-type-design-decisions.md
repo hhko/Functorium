@@ -145,4 +145,4 @@ services.RegisterScopedObservablePort<IAIModelRepository, InMemoryAIModelReposit
 
 External services are registered directly; Repositories are registered through Observable wrappers.
 
-In the next step, we implement this design in C# code in [Code Design](./02-code-design/).
+In the next step, we implement this design in C# code in [Code Design](../02-code-design/).

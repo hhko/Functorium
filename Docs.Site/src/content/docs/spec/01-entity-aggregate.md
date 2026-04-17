@@ -430,5 +430,5 @@ public sealed class PricingService : IDomainService
 - [Entity and Aggregate Implementation -- Core Patterns](../guides/domain/06b-entity-aggregate-core) -- Creation patterns, command methods, child Entity management
 - [Aggregate Design Principles](../guides/domain/06a-aggregate-design) -- Aggregate boundaries and design principles
 - [Entity and Aggregate Implementation -- Advanced Patterns](../guides/domain/06c-entity-aggregate-advanced) -- Cross-Aggregate relationships, mixin practical examples
-- [Domain Events Specification](./09-domain-events) -- `IDomainEvent`, `DomainEvent`, Publisher/Collector
-- [Source Generators Specification](./10-source-generators) -- Detailed EntityId generator specification
+- [Domain Events Specification](../09-domain-events) -- `IDomainEvent`, `DomainEvent`, Publisher/Collector
+- [Source Generators Specification](../10-source-generators) -- Detailed EntityId generator specification

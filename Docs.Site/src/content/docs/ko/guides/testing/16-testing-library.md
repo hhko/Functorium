@@ -27,7 +27,7 @@ title: "Functorium.Testing 라이브러리 가이드"
 
 이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
 
-- [단위 테스트 가이드](./15a-unit-testing) - AAA 패턴, MTP 설정, Verify 스냅샷 테스트
+- [단위 테스트 가이드](../15a-unit-testing) - AAA 패턴, MTP 설정, Verify 스냅샷 테스트
 - LanguageExt의 `Fin<T>`, `FinT<IO, T>` 타입 기본 개념
 - Serilog 구조화된 로깅의 기본 원리
 
@@ -111,7 +111,7 @@ _repository.GetById(Arg.Any<ProductId>())
 
 | 기능 | 참조 가이드 |
 |---|---|
-| `HostTestFixture<TProgram>` — HTTP 엔드포인트 통합 테스트 | [15b-integration-testing.md](./15b-integration-testing), [01-project-structure.md](../architecture/01-project-structure) |
+| `HostTestFixture<TProgram>` — HTTP 엔드포인트 통합 테스트 | [15b-integration-testing.md](../15b-integration-testing), [01-project-structure.md](../architecture/01-project-structure) |
 | `ShouldBeDomainError`, `ShouldBeApplicationError` 등 에러 Assertion | [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app), [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) |
 
 ---
@@ -1035,7 +1035,7 @@ public async Task Job_ShouldThrow_WhenTimeout()
 
 ## 참고 문서
 
-- [15a-unit-testing.md](./15a-unit-testing) — 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정)
+- [15a-unit-testing.md](../15a-unit-testing) — 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정)
 - [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) — Domain/Application 에러 Assertion 패턴
 - [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) — Adapter 에러 Assertion 및 범용 에러 Assertion
 - [01-project-structure.md](../architecture/01-project-structure) — 프로젝트 구성 (HostTestFixture, 통합 테스트)

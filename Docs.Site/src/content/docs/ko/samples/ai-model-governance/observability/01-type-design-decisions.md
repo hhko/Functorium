@@ -5,7 +5,7 @@ description: "KPI-메트릭 매핑, 레이어별 핵심 지표, SLO 기준선, c
 
 ## KPI -> 기술 메트릭 매핑
 
-[비즈니스 요구사항](./00-business-requirements/)에서 정의한 SLO와 KPI를 Functorium 메트릭으로 매핑합니다.
+[비즈니스 요구사항](../00-business-requirements/)에서 정의한 SLO와 KPI를 Functorium 메트릭으로 매핑합니다.
 
 | 비즈니스 KPI | Functorium 메트릭 | 필드/태그 |
 |-------------|-------------------|----------|
@@ -113,4 +113,4 @@ description: "KPI-메트릭 매핑, 레이어별 핵심 지표, SLO 기준선, c
                 └── NO → Default 유지 (MetricsTag 금지)
 ```
 
-다음 단계에서는 이 메트릭 설계를 대시보드, 알림, 코드 패턴으로 구체화하여 [코드 설계](./02-code-design/)를 진행합니다.
+다음 단계에서는 이 메트릭 설계를 대시보드, 알림, 코드 패턴으로 구체화하여 [코드 설계](../02-code-design/)를 진행합니다.

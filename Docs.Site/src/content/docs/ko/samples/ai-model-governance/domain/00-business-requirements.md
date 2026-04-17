@@ -232,4 +232,4 @@ flowchart TB
 - 음수이거나 1.0을 초과하는 드리프트 임계값
 - SemVer 형식이 아닌 모델 버전
 
-다음 단계에서는 이 비즈니스 규칙을 DDD 관점에서 분석하여, 독립적인 일관성 경계(Aggregate)를 식별하고 [불변식을 분류](./01-type-design-decisions/)합니다.
+다음 단계에서는 이 비즈니스 규칙을 DDD 관점에서 분석하여, 독립적인 일관성 경계(Aggregate)를 식별하고 [불변식을 분류](../01-type-design-decisions/)합니다.

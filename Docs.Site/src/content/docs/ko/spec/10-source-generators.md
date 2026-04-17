@@ -457,7 +457,7 @@ UnionTypeGenerator는 현재 전용 진단 코드를 발행하지 않습니다. 
 ## 관련 문서
 
 - [Source Generator Observability 튜토리얼](../tutorials/sourcegen-observability/) -- Roslyn API 기초부터 실전 생성기 구현까지
-- [엔티티와 애그리거트 사양](./01-entity-aggregate) -- `IEntityId<T>`, `GenerateEntityIdAttribute` 정의
-- [관찰 가능성 사양](./08-observability) -- `IUsecaseCtxEnricher`, `IDomainEventCtxEnricher` 인터페이스 정의
+- [엔티티와 애그리거트 사양](../01-entity-aggregate) -- `IEntityId<T>`, `GenerateEntityIdAttribute` 정의
+- [관찰 가능성 사양](../08-observability) -- `IUsecaseCtxEnricher`, `IDomainEventCtxEnricher` 인터페이스 정의
 - [Adapter 파이프라인과 DI 가이드](../guides/adapter/14a-adapter-pipeline-di) -- Observable 래퍼 DI 등록 패턴
 - [테스트 라이브러리 가이드](../guides/testing/16-testing-library) -- 소스 생성기 단위 테스트 작성법

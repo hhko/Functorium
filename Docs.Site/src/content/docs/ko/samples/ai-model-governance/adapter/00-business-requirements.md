@@ -99,4 +99,4 @@ OpenTelemetry 3-Pillar 관측성을 제공합니다.
 8. **병렬 체크 부분 실패** -- 일부 기준 체크가 실패하면 ComplianceCheckFailed 오류를 반환한다.
 9. **세션 획득 실패** -- 레지스트리 세션 획득에 실패하면 RegistryLookupFailed 오류를 반환한다.
 
-다음 단계에서는 이 기술 요구사항을 분석하여 IO 패턴 선택 근거를 [타입 설계 의사결정](./01-type-design-decisions/)에서 도출합니다.
+다음 단계에서는 이 기술 요구사항을 분석하여 IO 패턴 선택 근거를 [타입 설계 의사결정](../01-type-design-decisions/)에서 도출합니다.

@@ -1118,7 +1118,7 @@ Unit tests are Mock-based and each test is independent, so parallel execution is
 
 ## Reference Documents
 
-- [02-solution-configuration.md](./02-solution-configuration) — Solution root configuration files and build scripts
+- [02-solution-configuration.md](../02-solution-configuration) — Solution root configuration files and build scripts
 - [06a-aggregate-design.md](../domain/06a-aggregate-design) — Aggregate design principles, [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) — Entity/Aggregate core patterns, [06c-entity-aggregate-advanced.md](../domain/06c-entity-aggregate-advanced) — Advanced patterns
 - [05a-value-objects.md](../domain/05a-value-objects) — Value Object implementation patterns, [05b-value-objects-validation.md](../domain/05b-value-objects-validation) — Enumerations, validation, and FAQ
 - [10-specifications.md](../domain/10-specifications) — Specification pattern implementation

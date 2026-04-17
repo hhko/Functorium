@@ -2,11 +2,11 @@
 title: "값 객체: 열거형·검증·실전 패턴"
 ---
 
-이 문서는 값 객체의 열거형 패턴, 실전 예제, Application Layer 검증 병합, FAQ를 다룹니다. 핵심 개념과 기반 클래스는 [05a-value-objects](./05a-value-objects), Union 타입(Discriminated Union)은 [05c-union-value-objects](./05c-union-value-objects)를 참고하세요.
+이 문서는 값 객체의 열거형 패턴, 실전 예제, Application Layer 검증 병합, FAQ를 다룹니다. 핵심 개념과 기반 클래스는 [05a-value-objects](../05a-value-objects), Union 타입(Discriminated Union)은 [05c-union-value-objects](../05c-union-value-objects)를 참고하세요.
 
 ## 들어가며
 
-[05a-value-objects.md](./05a-value-objects)에서 값 객체의 핵심 개념과 구현 패턴을 살펴봤습니다. 이 문서에서는 열거형 패턴(`SmartEnum`), 기반 클래스별 실전 예제, Application Layer에서 여러 검증을 병합하는 `Apply` 패턴을 다룹니다.
+[05a-value-objects.md](../05a-value-objects)에서 값 객체의 핵심 개념과 구현 패턴을 살펴봤습니다. 이 문서에서는 열거형 패턴(`SmartEnum`), 기반 클래스별 실전 예제, Application Layer에서 여러 검증을 병합하는 `Apply` 패턴을 다룹니다.
 
 > 값 객체 구현의 실전 포인트는 **기반 클래스별 Create 패턴의 차이를 이해하고, Usecase에서 Apply 병합으로 모든 검증 오류를 한 번에 수집하는 것입니다.**
 
@@ -751,9 +751,9 @@ Request(원시값) → [Presentation Validator: UX 피드백] → Handler
 
 ## 참고 문서
 
-- [값 객체: Union 타입](./05c-union-value-objects) - Discriminated Union 패턴과 상태 전이
-- [에러 시스템: 기초와 네이밍](./08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙
-- [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app) - Domain/Application 에러 정의 및 테스트 패턴
+- [값 객체: Union 타입](../05c-union-value-objects) - Discriminated Union 패턴과 상태 전이
+- [에러 시스템: 기초와 네이밍](../08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙
+- [에러 시스템: Domain/Application 에러](../08b-error-system-domain-app) - Domain/Application 에러 정의 및 테스트 패턴
 - [단위 테스트 가이드](../testing/15a-unit-testing)
 - [LanguageExt](https://github.com/louthy/language-ext)
 - [Ardalis.SmartEnum](https://github.com/ardalis/SmartEnum)

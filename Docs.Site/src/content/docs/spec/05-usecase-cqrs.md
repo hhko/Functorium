@@ -471,8 +471,8 @@ Request records, properties, or record constructor parameters with this attribut
 | Document | Description |
 |------|------|
 | [Use Case and CQRS Guide](../guides/application/11-usecases-and-cqrs) | CQRS pattern design intent and implementation guide |
-| [Validation System Specification](./03-validation) | `TypedValidation`, FluentValidation integration |
-| [Error System Specification](./04-error-system) | `DomainErrorType`, `ApplicationErrorType`, etc. |
-| [Port and Adapter Specification](./06-port-adapter) | `IRepository`, `IQueryPort`, etc. |
-| [Pipeline Specification](./07-pipeline) | Pipeline behavior, `UsecaseTransactionPipeline`, etc. |
-| [Observability Specification](./08-observability) | Field/Tag specification, Meter definitions |
+| [Validation System Specification](../03-validation) | `TypedValidation`, FluentValidation integration |
+| [Error System Specification](../04-error-system) | `DomainErrorType`, `ApplicationErrorType`, etc. |
+| [Port and Adapter Specification](../06-port-adapter) | `IRepository`, `IQueryPort`, etc. |
+| [Pipeline Specification](../07-pipeline) | Pipeline behavior, `UsecaseTransactionPipeline`, etc. |
+| [Observability Specification](../08-observability) | Field/Tag specification, Meter definitions |

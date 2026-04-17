@@ -1229,9 +1229,9 @@ Console.WriteLine($"TraceId: {Activity.Current?.TraceId}");
 
 **내부 문서:**
 - [08-observability.md](../../spec/08-observability) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
-- [18b-observability-naming.md](./18b-observability-naming) — Observability 네이밍 가이드
-- [19-observability-logging.md](./19-observability-logging) — Observability 로깅 상세
-- [20-observability-metrics.md](./20-observability-metrics) — Observability 메트릭 상세
+- [18b-observability-naming.md](../18b-observability-naming) — Observability 네이밍 가이드
+- [19-observability-logging.md](../19-observability-logging) — Observability 로깅 상세
+- [20-observability-metrics.md](../20-observability-metrics) — Observability 메트릭 상세
 
 ---
 

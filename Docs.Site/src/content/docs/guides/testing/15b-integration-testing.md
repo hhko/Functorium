@@ -26,7 +26,7 @@ This document covers the following topics:
 
 A basic understanding of the following concepts is needed to understand this document:
 
-- [Unit testing guide](./15a-unit-testing) - Test naming conventions, AAA pattern
+- [Unit testing guide](../15a-unit-testing) - Test naming conventions, AAA pattern
 - ASP.NET Core DI (Dependency Injection) concepts
 - `IClassFixture` and xUnit lifecycle
 
@@ -77,13 +77,13 @@ public class MyIntegrationTests : IClassFixture<MyTestFixture>
 
 ### Test Writing Rules
 
-When writing integration tests, basic test naming conventions, variable naming conventions, AAA pattern, etc. follow the [unit testing guide](./15a-unit-testing).
+When writing integration tests, basic test naming conventions, variable naming conventions, AAA pattern, etc. follow the [unit testing guide](../15a-unit-testing).
 
 | Rule | Reference |
 |------|------|
-| Test naming (T1_T2_T3) | [Test naming conventions](./15a-unit-testing#test-naming-conventions) |
-| Variable naming (`sut`, `actual`, etc.) | [Variable naming conventions](./15a-unit-testing#variable-naming-conventions) |
-| AAA pattern | [AAA pattern](./15a-unit-testing#aaa-pattern) |
+| Test naming (T1_T2_T3) | [Test naming conventions](../15a-unit-testing#test-naming-conventions) |
+| Variable naming (`sut`, `actual`, etc.) | [Variable naming conventions](../15a-unit-testing#variable-naming-conventions) |
+| AAA pattern | [AAA pattern](../15a-unit-testing#aaa-pattern) |
 
 ---
 
@@ -609,7 +609,7 @@ var response = await _fixture.Client.GetAsync("/api/health");
 
 ## References
 
-- [Unit testing guide](./15a-unit-testing) - Test naming conventions, AAA pattern, and other basic test writing rules
-- [Testing library](./16-testing-library) - Functorium.Testing library guide
+- [Unit testing guide](../15a-unit-testing) - Test naming conventions, AAA pattern, and other basic test writing rules
+- [Testing library](../16-testing-library) - Functorium.Testing library guide
 - [Microsoft.AspNetCore.Mvc.Testing](https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests)
 - [xUnit Class Fixtures](https://xunit.net/docs/shared-context#class-fixture)

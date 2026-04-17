@@ -37,7 +37,7 @@ Separately, the `domain-review` skill reviews existing code from a DDD perspecti
 
 | Item | Description |
 |------|-------------|
-| Skill | [project-spec](./skills/project-spec/) |
+| Skill | [project-spec](../skills/project-spec/) |
 | Input | User's vision, business problem, target users |
 | Output | `{context}/00-project-spec.md` |
 | Key Activities | Ubiquitous language extraction, Aggregate candidate identification, business rule classification, MVP scope definition |
@@ -48,7 +48,7 @@ Starting with business language, it draws the first outline of the domain model.
 
 | Item | Description |
 |------|-------------|
-| Skill | [architecture-design](./skills/architecture-design/) |
+| Skill | [architecture-design](../skills/architecture-design/) |
 | Input | `00-project-spec.md` (automatically referenced if available) |
 | Output | `{context}/01-architecture-design.md` |
 | Key Activities | Project structure, layer composition, naming conventions, persistence/observability/API infrastructure decisions |
@@ -59,7 +59,7 @@ Before writing code, the solution skeleton is determined. It documents the 3-dim
 
 | Item | Description |
 |------|-------------|
-| Skill | [domain-develop](./skills/domain-develop/) |
+| Skill | [domain-develop](../skills/domain-develop/) |
 | Input | `00-project-spec.md`, `01-architecture-design.md` (automatically referenced if available) |
 | Output | `domain/00~03` 4 documents + VO, Aggregate, Event, Spec, Service source code |
 | Key Activities | Invariant classification, Functorium type mapping, code generation, unit tests |
@@ -70,7 +70,7 @@ This step encodes invariants as types. Business rules are classified (single-val
 
 | Item | Description |
 |------|-------------|
-| Skill | [application-develop](./skills/application-develop/) |
+| Skill | [application-develop](../skills/application-develop/) |
 | Input | `domain/03-implementation-results.md` (domain model status) |
 | Output | `application/00~03` 4 documents + Command, Query, EventHandler, Validator source code |
 | Key Activities | CQRS classification, port identification, FinT LINQ composition, FluentValidation integration |
@@ -81,7 +81,7 @@ Business flows are built on top of the domain model. Workflows are decomposed in
 
 | Item | Description |
 |------|-------------|
-| Skill | [adapter-develop](./skills/adapter-develop/) |
+| Skill | [adapter-develop](../skills/adapter-develop/) |
 | Input | `application/03-implementation-results.md` (port list), `01-architecture-design.md` (infrastructure strategy) |
 | Output | `adapter/00~03` 4 documents + Repository, Query Adapter, Endpoint, DI registration source code |
 | Key Activities | InMemory/EfCore Repository, Dapper Query, FastEndpoints, Observable Port, DI registration |
@@ -92,7 +92,7 @@ Concrete infrastructure technologies are connected to port interfaces. `[Generat
 
 | Item | Description |
 |------|-------------|
-| Skill | [observability-develop](./skills/observability-develop/) |
+| Skill | [observability-develop](../skills/observability-develop/) |
 | Input | Implemented adapter code (Observable Port, CtxEnricher) |
 | Output | Observability strategy document (KPI mapping, dashboard layout, alert rules) |
 | Key Activities | KPI-to-metric mapping, baseline setting, dashboard design, alert patterns, ctx.* propagation strategy |
@@ -103,7 +103,7 @@ This step designs how to analyze collected observation data and take action. Bus
 
 | Item | Description |
 |------|-------------|
-| Skill | [test-develop](./skills/test-develop/) |
+| Skill | [test-develop](../skills/test-develop/) |
 | Input | Implemented source code, `03-implementation-results.md` documents, observability strategy document |
 | Output | Unit tests, integration tests, architecture rule tests, observability verification test code |
 | Key Activities | VO/Aggregate/Usecase unit tests, HostTestFixture integration tests, ArchUnitNET rules, ctx 3-Pillar snapshot tests |
@@ -260,6 +260,6 @@ This 4-step document system provides traceability of design decisions. The quest
 
 ## Next Steps
 
-- [Project Spec Skill](./skills/project-spec/) -- Start from the first step
-- [Expert Agents](./agents/) -- Leverage experts for design decisions
-- [Plugin Overview](./) -- Installation and structure guide
+- [Project Spec Skill](../skills/project-spec/) -- Start from the first step
+- [Expert Agents](../agents/) -- Leverage experts for design decisions
+- [Plugin Overview](../) -- Installation and structure guide

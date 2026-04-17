@@ -33,9 +33,9 @@ This document presents methods to reduce such repetition and errors through base
 
 ### Prerequisites
 
-- [Port Definition Guide](./12-ports) — Port interface design principles
-- [Adapter Implementation Guide](./13-adapters) — Basic Adapter implementation patterns
-- [Pipeline and DI](./14a-adapter-pipeline-di) — Pipeline generation and DI registration
+- [Port Definition Guide](../12-ports) — Port interface design principles
+- [Adapter Implementation Guide](../13-adapters) — Basic Adapter implementation patterns
+- [Pipeline and DI](../14a-adapter-pipeline-di) — Pipeline generation and DI registration
 
 > **Write by Aggregate unit, Read by DTO projection.** This CQRS separation principle drives all design decisions in Repository and Query Adapter implementation.
 
@@ -1513,6 +1513,6 @@ A: The Source Generator automatically creates an observable wrapper class (`XxxO
 
 ## 9. References
 
-- [13-adapters.md](./13-adapters) -- Adapter implementation guide
+- [13-adapters.md](../13-adapters) -- Adapter implementation guide
 - [15a-unit-testing.md](../testing/15a-unit-testing) -- Unit testing rules
 - [OPTIMIZATION-TECHNIQUES.md](../../Src.Benchmarks/BulkCrud.Benchmarks/OPTIMIZATION-TECHNIQUES.md) -- Bulk CRUD performance optimization techniques

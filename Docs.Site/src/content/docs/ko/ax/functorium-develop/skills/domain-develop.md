@@ -403,9 +403,9 @@ public sealed class InventoryTransferService : IDomainService
 ### 워크플로
 
 - [워크플로](../workflow/) -- 7단계 전체 흐름
-- [Project Spec 스킬](./project-spec/) -- 이전 단계: PRD 작성
-- [Architecture Design 스킬](./architecture-design/) -- 이전 단계: 프로젝트 구조 설계
-- [Application Develop 스킬](./application-develop/) -- 다음 단계: 유스케이스 구현
+- [Project Spec 스킬](../project-spec/) -- 이전 단계: PRD 작성
+- [Architecture Design 스킬](../architecture-design/) -- 이전 단계: 프로젝트 구조 설계
+- [Application Develop 스킬](../application-develop/) -- 다음 단계: 유스케이스 구현
 
 ### 프레임워크 가이드
 

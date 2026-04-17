@@ -27,7 +27,7 @@ This document covers the following topics:
 
 A basic understanding of the following concepts is needed to understand this document:
 
-- [Unit Testing Guide](./15a-unit-testing) - AAA pattern, MTP configuration, Verify snapshot testing
+- [Unit Testing Guide](../15a-unit-testing) - AAA pattern, MTP configuration, Verify snapshot testing
 - Basic concepts of LanguageExt's `Fin<T>` and `FinT<IO, T>` types
 - Basic principles of Serilog structured logging
 
@@ -111,7 +111,7 @@ The following table summarizes the library's complete namespace structure and th
 
 | Feature | Reference Guide |
 |---|---|
-| `HostTestFixture<TProgram>` -- HTTP endpoint integration testing | [15b-integration-testing.md](./15b-integration-testing), [01-project-structure.md](../architecture/01-project-structure) |
+| `HostTestFixture<TProgram>` -- HTTP endpoint integration testing | [15b-integration-testing.md](../15b-integration-testing), [01-project-structure.md](../architecture/01-project-structure) |
 | `ShouldBeDomainError`, `ShouldBeApplicationError`, etc. error Assertions | [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app), [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) |
 
 ---
@@ -1035,7 +1035,7 @@ Jobs are actually executed in an in-memory scheduler. Since all services from th
 
 ## References
 
-- [15a-unit-testing.md](./15a-unit-testing) — Unit test rules (naming, AAA pattern, MTP configuration)
+- [15a-unit-testing.md](../15a-unit-testing) — Unit test rules (naming, AAA pattern, MTP configuration)
 - [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) — Domain/Application error Assertion patterns
 - [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) — Adapter error Assertion and generic error Assertion
 - [01-project-structure.md](../architecture/01-project-structure) — Project structure (HostTestFixture, integration testing)

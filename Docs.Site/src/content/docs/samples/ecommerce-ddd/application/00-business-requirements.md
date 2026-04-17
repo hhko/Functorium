@@ -209,4 +209,4 @@ The following are states that must never occur in the Application layer.
 - Requests entering workflows without format validation
 - States where query requests reconstruct and return domain objects
 
-In the next step, we analyze these workflow rules to identify Use Cases and ports, and derive [type design decisions](./01-type-design-decisions/).
+In the next step, we analyze these workflow rules to identify Use Cases and ports, and derive [type design decisions](../01-type-design-decisions/).

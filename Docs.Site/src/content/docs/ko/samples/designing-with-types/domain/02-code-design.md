@@ -4,7 +4,7 @@ title: "코드 설계"
 
 ## 설계 의사결정에서 C# 구현으로
 
-[비즈니스 요구사항](./00-business-requirements/)에서 자연어로 정의한 규칙을, [타입 설계 의사결정](./01-type-design-decisions/)에서 Aggregate로 식별하고 불변식으로 분류했습니다. 이 문서에서는 그 설계를 Functorium DDD 빌딩 블록과 C# 14 언어 기능으로 구현합니다.
+[비즈니스 요구사항](../00-business-requirements/)에서 자연어로 정의한 규칙을, [타입 설계 의사결정](../01-type-design-decisions/)에서 Aggregate로 식별하고 불변식으로 분류했습니다. 이 문서에서는 그 설계를 Functorium DDD 빌딩 블록과 C# 14 언어 기능으로 구현합니다.
 
 | 설계 의사결정 | C# 구현 패턴 | 적용 |
 |---|---|---|
@@ -584,4 +584,4 @@ classDiagram
 | (없음) | — | — | — | IAuditable | `Contact.CreatedAt`, `Contact.UpdatedAt` |
 | (없음) | — | — | — | ISoftDeletable | `Contact.DeletedAt`, `Contact.DeletedBy` |
 
-[구현 결과](./03-implementation-results/)에서 이 타입 구조가 10개 비즈니스 시나리오를 어떻게 보장하는지 확인합니다.
+[구현 결과](../03-implementation-results/)에서 이 타입 구조가 10개 비즈니스 시나리오를 어떻게 보장하는지 확인합니다.

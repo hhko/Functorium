@@ -334,8 +334,8 @@ public sealed class OnOrderCreated : IDomainEventHandler<Order.CreatedEvent>
 ### Workflow
 
 - [Workflow](../workflow/) -- 7-step overall flow
-- [Domain Develop Skill](./domain-develop/) -- Previous step: Domain model implementation
-- [Adapter Develop Skill](./adapter-develop/) -- Next step: Repository, Endpoint, DI implementation
+- [Domain Develop Skill](../domain-develop/) -- Previous step: Domain model implementation
+- [Adapter Develop Skill](../adapter-develop/) -- Next step: Repository, Endpoint, DI implementation
 
 ### Framework Guides
 
@@ -349,6 +349,6 @@ public sealed class OnOrderCreated : IDomainEventHandler<Order.CreatedEvent>
 
 ### Related Skills
 
-- [Domain Develop Skill](./domain-develop/) -- Generate domain building blocks: Aggregate, Value Object, Event, etc.
-- [Adapter Layer Develop Skill](./adapter-develop/) -- Generate Repository, Query Adapter, Endpoint, DI registration
-- [Test Develop Skill](./test-develop/) -- Generate unit/integration/architecture tests
+- [Domain Develop Skill](../domain-develop/) -- Generate domain building blocks: Aggregate, Value Object, Event, etc.
+- [Adapter Layer Develop Skill](../adapter-develop/) -- Generate Repository, Query Adapter, Endpoint, DI registration
+- [Test Develop Skill](../test-develop/) -- Generate unit/integration/architecture tests

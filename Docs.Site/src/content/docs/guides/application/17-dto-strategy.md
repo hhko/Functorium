@@ -374,7 +374,7 @@ When 2 or more Usecases need the same DTO. If only a single Usecase uses it, kee
 
 ## References
 
-- [11-usecases-and-cqrs.md](./11-usecases-and-cqrs) -- Usecase Request/Response pattern
+- [11-usecases-and-cqrs.md](../11-usecases-and-cqrs) -- Usecase Request/Response pattern
 - [12-ports.md §1.4](../adapter/12-ports) -- Port Request/Response design
 - [13-adapters.md §2.6](../adapter/13-adapters) -- Data transformation (Mapper pattern)
 - [01-project-structure.md](../architecture/01-project-structure) -- Dtos/ folder location rules

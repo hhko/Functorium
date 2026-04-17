@@ -462,6 +462,6 @@ OrderStatus.Pending? asPending = status.AsPending(); // non-null
 | [Value Object Guide](../guides/domain/05a-value-objects) | Value Object design principles, base class selection criteria, Create/Validate separation pattern |
 | [Value Object Validation Guide](../guides/domain/05b-value-objects-validation) | Enumeration patterns, Application validation, FluentValidation integration |
 | [Union Value Object Guide](../guides/domain/05c-union-value-objects) | Discriminated Union design, state transitions, source generator usage |
-| [Validation System Specification](./03-validation) | `TypedValidation`, `ContextualValidation`, `ValidationRules<T>` API |
-| [Error System Specification](./04-error-system) | `DomainErrorType.InvalidTransition`, error factory API |
-| [Source Generators Specification](./10-source-generators) | `UnionTypeGenerator` detailed behavior, generated code format |
+| [Validation System Specification](../03-validation) | `TypedValidation`, `ContextualValidation`, `ValidationRules<T>` API |
+| [Error System Specification](../04-error-system) | `DomainErrorType.InvalidTransition`, error factory API |
+| [Source Generators Specification](../10-source-generators) | `UnionTypeGenerator` detailed behavior, generated code format |

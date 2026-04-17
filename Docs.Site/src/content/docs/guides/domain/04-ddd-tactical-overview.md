@@ -597,14 +597,14 @@ The following table is a central index that consolidates naming rules for all bu
 
 | Building Block | Naming Pattern | Example | Detail Reference |
 |----------|-----------|------|----------|
-| Value Object | `{Concept}` | `ProductName`, `Email` | [05a-value-objects.md](./05a-value-objects) |
-| Entity | `{EntityName}` | `Tag` | [06b-entity-aggregate-core.md](./06b-entity-aggregate-core) |
-| Aggregate Root | `{Aggregate}` | `Product`, `Order` | [06b-entity-aggregate-core.md](./06b-entity-aggregate-core) |
-| Entity ID | `{Aggregate}Id` + `[GenerateEntityId]` | `ProductId`, `OrderId` | [06b-entity-aggregate-core.md](./06b-entity-aggregate-core) |
-| Domain Event | `{Aggregate}.{PastTense}Event` (nested record) | `Product.CreatedEvent` | [07-domain-events.md](./07-domain-events) |
-| Domain Error | `DomainError.For<{Type}>()` | `DomainError.For<Email>()` | [08b-error-system-domain-app.md](./08b-error-system-domain-app) |
-| Domain Service | `{DomainConcept}Service` : `IDomainService` | `OrderCreditCheckService` | [09-domain-services.md](./09-domain-services) |
-| Specification | `{Aggregate}{Concept}Spec` | `ProductNameUniqueSpec` | [10-specifications.md](./10-specifications) |
+| Value Object | `{Concept}` | `ProductName`, `Email` | [05a-value-objects.md](../05a-value-objects) |
+| Entity | `{EntityName}` | `Tag` | [06b-entity-aggregate-core.md](../06b-entity-aggregate-core) |
+| Aggregate Root | `{Aggregate}` | `Product`, `Order` | [06b-entity-aggregate-core.md](../06b-entity-aggregate-core) |
+| Entity ID | `{Aggregate}Id` + `[GenerateEntityId]` | `ProductId`, `OrderId` | [06b-entity-aggregate-core.md](../06b-entity-aggregate-core) |
+| Domain Event | `{Aggregate}.{PastTense}Event` (nested record) | `Product.CreatedEvent` | [07-domain-events.md](../07-domain-events) |
+| Domain Error | `DomainError.For<{Type}>()` | `DomainError.For<Email>()` | [08b-error-system-domain-app.md](../08b-error-system-domain-app) |
+| Domain Service | `{DomainConcept}Service` : `IDomainService` | `OrderCreditCheckService` | [09-domain-services.md](../09-domain-services) |
+| Specification | `{Aggregate}{Concept}Spec` | `ProductNameUniqueSpec` | [10-specifications.md](../10-specifications) |
 | Command | `{Verb}{Aggregate}Command` (nested Request/Response/Usecase) | `CreateProductCommand` | [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) |
 | Query | `{Get/Search}{Description}Query` (nested Request/Response/Usecase) | `SearchProductsQuery` | [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) |
 | Event Handler | `On{DomainEvent}` | `OnProductCreated` | [01-project-structure.md](../architecture/01-project-structure) |
@@ -781,22 +781,22 @@ public void Create_ShouldSucceed_WhenEmailIsValid()
 
 | Document | Description | Key Content |
 |------|------|----------|
-| [05a-value-objects.md](./05a-value-objects) | Value Object implementation | Base classes, validation system, implementation patterns, practical examples |
-| [05b-value-objects-validation.md](./05b-value-objects-validation) | Value Object validation and enums | Enum implementation, Application validation, FAQ |
-| [06a-aggregate-design.md](./06a-aggregate-design) | Aggregate design | Design principles, boundary setting, anti-patterns |
-| [06b-entity-aggregate-core.md](./06b-entity-aggregate-core) | Entity/Aggregate core patterns | Class hierarchy, ID system, creation patterns, domain events |
-| [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced) | Entity/Aggregate advanced patterns | Cross-Aggregate relationships, auxiliary interfaces, practical examples |
-| [07-domain-events.md](./07-domain-events) | Domain events | Event definition, publishing, handler implementation |
-| [08a-error-system.md](./08a-error-system) | Error system: basics and naming | Error handling principles, Fin patterns, naming rules |
-| [08b-error-system-domain-app.md](./08b-error-system-domain-app) | Error system: Domain/Application errors | Domain/Application/Event error definition and testing |
-| [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing) | Error system: Adapter errors and testing | Adapter errors, Custom errors, testing best practices, checklists |
+| [05a-value-objects.md](../05a-value-objects) | Value Object implementation | Base classes, validation system, implementation patterns, practical examples |
+| [05b-value-objects-validation.md](../05b-value-objects-validation) | Value Object validation and enums | Enum implementation, Application validation, FAQ |
+| [06a-aggregate-design.md](../06a-aggregate-design) | Aggregate design | Design principles, boundary setting, anti-patterns |
+| [06b-entity-aggregate-core.md](../06b-entity-aggregate-core) | Entity/Aggregate core patterns | Class hierarchy, ID system, creation patterns, domain events |
+| [06c-entity-aggregate-advanced.md](../06c-entity-aggregate-advanced) | Entity/Aggregate advanced patterns | Cross-Aggregate relationships, auxiliary interfaces, practical examples |
+| [07-domain-events.md](../07-domain-events) | Domain events | Event definition, publishing, handler implementation |
+| [08a-error-system.md](../08a-error-system) | Error system: basics and naming | Error handling principles, Fin patterns, naming rules |
+| [08b-error-system-domain-app.md](../08b-error-system-domain-app) | Error system: Domain/Application errors | Domain/Application/Event error definition and testing |
+| [08c-error-system-adapter-testing.md](../08c-error-system-adapter-testing) | Error system: Adapter errors and testing | Adapter errors, Custom errors, testing best practices, checklists |
 | [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) | Usecase implementation | CQRS pattern, Apply merging |
 | [12-ports.md](../adapter/12-ports) | Port architecture | Port definition, IObservablePort hierarchy |
 | [13-adapters.md](../adapter/13-adapters) | Adapter implementation | Repository, External API, Messaging, Query |
 | [14a-adapter-pipeline-di.md](../adapter/14a-adapter-pipeline-di) | Adapter integration | Pipeline, DI, Options |
 | [14b-adapter-testing.md](../adapter/14b-adapter-testing) | Adapter testing | Unit tests, E2E Walkthrough |
-| [09-domain-services.md](./09-domain-services) | Domain services | IDomainService, cross-Aggregate logic, Usecase integration |
-| [10-specifications.md](./10-specifications) | Specification pattern | Business rule encapsulation, And/Or/Not composition, Repository integration |
+| [09-domain-services.md](../09-domain-services) | Domain services | IDomainService, cross-Aggregate logic, Usecase integration |
+| [10-specifications.md](../10-specifications) | Specification pattern | Business rule encapsulation, And/Or/Not composition, Repository integration |
 | [15a-unit-testing.md](../testing/15a-unit-testing) | Unit Testing | Test rules, naming, checklist |
 | [16-testing-library.md](../testing/16-testing-library) | Testing Library | Log/architecture/source generator/Job testing |
 
@@ -850,7 +850,7 @@ The key factor is whether an identifier (ID) is needed. If equality is determine
 
 ### Q2. How do you set Aggregate boundaries?
 
-The scope that must guarantee consistency within a single transaction is the Aggregate boundary. Keep Aggregates small, and use only IDs for cross-Aggregate references. See [06a-aggregate-design.md](./06a-aggregate-design) for detailed design principles.
+The scope that must guarantee consistency within a single transaction is the Aggregate boundary. Keep Aggregates small, and use only IDs for cross-Aggregate references. See [06a-aggregate-design.md](../06a-aggregate-design) for detailed design principles.
 
 ### Q3. What are the criteria for types that should be placed in SharedModels?
 

@@ -430,5 +430,5 @@ public sealed class PricingService : IDomainService
 - [Entity와 Aggregate 구현 — 핵심 패턴](../guides/domain/06b-entity-aggregate-core) — 생성 패턴, 커맨드 메서드, 자식 Entity 관리
 - [Aggregate 설계 원칙](../guides/domain/06a-aggregate-design) — Aggregate 경계와 설계 원칙
 - [Entity와 Aggregate 구현 — 고급 패턴](../guides/domain/06c-entity-aggregate-advanced) — Cross-Aggregate 관계, 믹스인 실전 예제
-- [도메인 이벤트 사양](./09-domain-events) — `IDomainEvent`, `DomainEvent`, Publisher/Collector
-- [소스 생성기 사양](./10-source-generators) — EntityId 생성기 상세 사양
+- [도메인 이벤트 사양](../09-domain-events) — `IDomainEvent`, `DomainEvent`, Publisher/Collector
+- [소스 생성기 사양](../10-source-generators) — EntityId 생성기 상세 사양

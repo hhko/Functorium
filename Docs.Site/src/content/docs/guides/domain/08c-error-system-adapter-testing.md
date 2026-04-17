@@ -2,11 +2,11 @@
 title: "Error System — Adapter Errors and Testing"
 ---
 
-This document covers Adapter errors, custom error definitions, testing best practices, and layer-specific checklists. For basic error handling principles and naming conventions, see [08a-error-system.md](./08a-error-system). For Domain/Application/Event errors, see [08b-error-system-domain-app.md](./08b-error-system-domain-app).
+This document covers Adapter errors, custom error definitions, testing best practices, and layer-specific checklists. For basic error handling principles and naming conventions, see [08a-error-system.md](../08a-error-system). For Domain/Application/Event errors, see [08b-error-system-domain-app.md](../08b-error-system-domain-app).
 
 ## Introduction
 
-Domain/Application errors were covered in [08b-error-system-domain-app.md](./08b-error-system-domain-app). This document covers Adapter errors, custom error definition patterns, testing best practices, and layer-specific checklists.
+Domain/Application errors were covered in [08b-error-system-domain-app.md](../08b-error-system-domain-app). This document covers Adapter errors, custom error definition patterns, testing best practices, and layer-specific checklists.
 
 > Adapter errors express failures in pipelines, external services, and data processing. Exceptions are wrapped with `AdapterError.FromException` to maintain error traceability, and assertions from `Functorium.Testing.Assertions.Errors` precisely verify error types and codes.
 
@@ -504,7 +504,7 @@ The following table shows commonly defined Custom errors in each layer.
 
 ### Criteria for Promoting to Standard Error
 
-Frequently used Custom errors should be considered for promotion to standard error types (see [08a promotion criteria](./08a-error-system#custom-to-standard-error-promotion-criteria)):
+Frequently used Custom errors should be considered for promotion to standard error types (see [08a promotion criteria](../08a-error-system#custom-to-standard-error-promotion-criteria)):
 
 > 1. Used in **3 or more different locations** with the same Custom error
 > 2. **Reuse meaning is clear** (established as a domain concept)
@@ -888,8 +888,8 @@ Include information that helps with debugging. Mainly validation-failed input va
 
 ## References
 
-- [08a-error-system.md](./08a-error-system) - Error handling basic principles and naming conventions
-- [08b-error-system-domain-app.md](./08b-error-system-domain-app) - Domain/Application/Event error definition and testing
+- [08a-error-system.md](../08a-error-system) - Error handling basic principles and naming conventions
+- [08b-error-system-domain-app.md](../08b-error-system-domain-app) - Domain/Application/Event error definition and testing
 - [13-adapters.md](../adapter/13-adapters) - Adapter implementation guide
 - [15a-unit-testing.md](../testing/15a-unit-testing) - Unit testing guide
 - [16-testing-library.md](../testing/16-testing-library) - Non-error test utilities (log/architecture/source generator/job testing)

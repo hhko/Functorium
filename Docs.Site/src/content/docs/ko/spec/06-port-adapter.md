@@ -848,7 +848,7 @@ public class ProductRepository : InMemoryRepositoryBase<Product, ProductId>, IPr
 | [Adapter 구현](../guides/adapter/13-adapters) | Repository, External API, Query Adapter 유형별 구현 가이드 |
 | [Adapter Pipeline과 DI 등록](../guides/adapter/14a-adapter-pipeline-di) | Observable Pipeline 생성과 DI 등록 가이드 |
 | [Adapter 테스트](../guides/adapter/14b-adapter-testing) | Adapter 단위/통합 테스트 가이드 |
-| [엔티티와 애그리거트 사양](./01-entity-aggregate) | `AggregateRoot<TId>`, `IEntityId<TId>` API 사양 |
-| [에러 시스템 사양](./04-error-system) | `AdapterErrorType` (NotFound, PartialNotFound 등) API 사양 |
-| [관측 가능성 사양](./08-observability) | 3-Pillar 필드/태그 사양, Meter 정의 규칙 |
-| [소스 생성기 사양](./10-source-generators) | `ObservablePortGenerator` 소스 생성기 상세 사양 |
+| [엔티티와 애그리거트 사양](../01-entity-aggregate) | `AggregateRoot<TId>`, `IEntityId<TId>` API 사양 |
+| [에러 시스템 사양](../04-error-system) | `AdapterErrorType` (NotFound, PartialNotFound 등) API 사양 |
+| [관측 가능성 사양](../08-observability) | 3-Pillar 필드/태그 사양, Meter 정의 규칙 |
+| [소스 생성기 사양](../10-source-generators) | `ObservablePortGenerator` 소스 생성기 상세 사양 |

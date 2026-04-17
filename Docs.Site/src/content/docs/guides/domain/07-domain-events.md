@@ -26,8 +26,8 @@ This document covers the following topics:
 
 A basic understanding of the following concepts is needed to understand this document:
 
-- [Entity/Aggregate Core Patterns](./06b-entity-aggregate-core) -- How to use `AddDomainEvent()` in AggregateRoot
-- [Error System: Basics and Naming](./08a-error-system) -- `Fin<T>` return pattern
+- [Entity/Aggregate Core Patterns](../06b-entity-aggregate-core) -- How to use `AddDomainEvent()` in AggregateRoot
+- [Error System: Basics and Naming](../08a-error-system) -- `Fin<T>` return pattern
 
 > Domain events are immutable objects representing "facts that have already occurred." They connect side effects across Aggregate boundaries (stock deduction, notification sending, etc.) without coupling, and `UsecaseTransactionPipeline` automatically handles publishing after SaveChanges.
 
@@ -805,7 +805,7 @@ Mediator's default behavior does not guarantee handler execution order. If order
 
 ## References
 
-- [06a-aggregate-design.md](./06a-aggregate-design) - Aggregate design, [06b-entity-aggregate-core.md](./06b-entity-aggregate-core) - Entity/Aggregate core patterns, [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced) - Advanced patterns
+- [06a-aggregate-design.md](../06a-aggregate-design) - Aggregate design, [06b-entity-aggregate-core.md](../06b-entity-aggregate-core) - Entity/Aggregate core patterns, [06c-entity-aggregate-advanced.md](../06c-entity-aggregate-advanced) - Advanced patterns
 - [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) - Use Case implementation
 - [11-usecases-and-cqrs.md - Transactions and Event Publishing](../application/11-usecases-and-cqrs#transactions-and-event-publishing-usecasetransactionpipeline) - Pipeline automatic processing pattern
 - [13-adapters.md](../adapter/13-adapters) - UoW Adapter implementation

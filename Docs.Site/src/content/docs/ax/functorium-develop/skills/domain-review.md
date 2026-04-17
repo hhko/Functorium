@@ -272,7 +272,7 @@ Reviews correct usage of CtxEnricher and Observable Port.
 ### Workflow
 
 - [Workflow](../workflow/) -- 7-step overall flow
-- [Test Develop Skill](./test-develop/) -- Automate review items with architecture rule tests
+- [Test Develop Skill](../test-develop/) -- Automate review items with architecture rule tests
 
 ### Framework Guides
 
@@ -287,6 +287,6 @@ Reviews correct usage of CtxEnricher and Observable Port.
 
 ### Related Skills
 
-- [Domain Develop Skill](./domain-develop/) -- Implement improvements found in review as code
-- [Application Layer Develop Skill](./application-develop/) -- Restructure Usecases after Domain Service extraction
-- [Test Develop Skill](./test-develop/) -- Automatically detect violations with architecture rule tests
+- [Domain Develop Skill](../domain-develop/) -- Implement improvements found in review as code
+- [Application Layer Develop Skill](../application-develop/) -- Restructure Usecases after Domain Service extraction
+- [Test Develop Skill](../test-develop/) -- Automatically detect violations with architecture rule tests

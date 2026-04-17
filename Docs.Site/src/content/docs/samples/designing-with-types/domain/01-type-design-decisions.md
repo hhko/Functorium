@@ -4,7 +4,7 @@ title: "Type Design Decisions"
 
 ## Overview
 
-Analyzes the rules defined in natural language from the [Business Requirements](./00-business-requirements/) from a DDD perspective. The first step is identifying independent consistency boundaries (Aggregates), the second step maps business terms to DDD tactical patterns, and the third step classifies the rules within each boundary as invariants.
+Analyzes the rules defined in natural language from the [Business Requirements](../00-business-requirements/) from a DDD perspective. The first step is identifying independent consistency boundaries (Aggregates), the second step maps business terms to DDD tactical patterns, and the third step classifies the rules within each boundary as invariants.
 
 ## Aggregate Identification
 
@@ -289,4 +289,4 @@ classDiagram
 | Ownership | Child entity | Private collection + Aggregate entry point | ContactNote |
 | Cross-Aggregate | Email uniqueness | Domain Service + Specification | ContactEmailCheckService, ContactEmailSpec |
 
-How these strategies are implemented with C# 14 and Functorium DDD building blocks is covered in the [Code Design](./02-code-design/).
+How these strategies are implemented with C# 14 and Functorium DDD building blocks is covered in the [Code Design](../02-code-design/).

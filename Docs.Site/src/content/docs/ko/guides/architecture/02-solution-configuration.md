@@ -71,7 +71,7 @@ dotnet test --solution Functorium.slnx
 ## 개요
 
 이 가이드는 새 솔루션을 만들 때 루트 레벨 구성 파일과 빌드 스크립트를 어떻게 생성하고 설정하는지를 다룹니다.
-프로젝트 수준 파일(`AssemblyReference.cs`, `Using.cs`)은 [01-project-structure.md](./01-project-structure)를 참조하세요.
+프로젝트 수준 파일(`AssemblyReference.cs`, `Using.cs`)은 [01-project-structure.md](../01-project-structure)를 참조하세요.
 
 ### 솔루션 루트에 필요한 파일
 
@@ -947,7 +947,7 @@ dotnet tool restore
 | `verify.tool` | `dotnet-verify` | Verify 스냅샷 관리 (accept/reject) |
 | `gman.siren` | `siren-gen` | EF Core DbContext → Mermaid ER 다이어그램 생성 |
 
-> 각 도구의 상세 사용법(파라미터, 실행 예시)은 [03-dotnet-tools.md](./03-dotnet-tools)를 참조하세요.
+> 각 도구의 상세 사용법(파라미터, 실행 예시)은 [03-dotnet-tools.md](../03-dotnet-tools)를 참조하세요.
 
 ### 새 도구 추가/업데이트
 
@@ -1332,6 +1332,6 @@ dotnet clean && dotnet build --no-incremental
 
 ## 참고 문서
 
-- [01-project-structure.md](./01-project-structure) — 프로젝트 수준 구성 (폴더, 네이밍, 의존성)
+- [01-project-structure.md](../01-project-structure) — 프로젝트 수준 구성 (폴더, 네이밍, 의존성)
 - [15a-unit-testing.md](../testing/15a-unit-testing) — 테스트 작성 방법론 (MTP 설정 포함)
 - [16-testing-library.md](../testing/16-testing-library) — Functorium.Testing 라이브러리

@@ -180,4 +180,4 @@ All Smart Enums in this domain are single-dimensional (a single string value). `
 | Domain events + domain errors | Nested `sealed record` | AIModel.RegisteredEvent, ModelDeployment.InvalidStatusTransition | Events/errors cohesive within Aggregate |
 | Soft Delete + guard | `ISoftDeletableWithUser` + `DeletedAt.IsSome` | AIModel.ClassifyRisk(), Update() | Blocking changes on archived Aggregates |
 
-In the next step, these design decisions are mapped to C# code to proceed with [Code Design](./02-code-design/).
+In the next step, these design decisions are mapped to C# code to proceed with [Code Design](../02-code-design/).

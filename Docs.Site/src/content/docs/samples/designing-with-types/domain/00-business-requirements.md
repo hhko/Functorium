@@ -88,4 +88,4 @@ Various contacts such as customers, partners, and suppliers need to be managed s
 - Actions performed on a deleted contact
 - Two or more contacts with the same email
 
-In the next step, these rules are classified as invariants and [type strategies](./01-type-design-decisions/) are derived for each category.
+In the next step, these rules are classified as invariants and [type strategies](../01-type-design-decisions/) are derived for each category.

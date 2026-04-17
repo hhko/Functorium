@@ -1324,9 +1324,9 @@ Using Grafana's Explore feature, you can easily navigate from metrics to related
 
 **Internal documents:**
 - [08-observability.md](../../spec/08-observability) — Observability specification (Field/Tag, Meter, message templates)
-- [18b-observability-naming.md](./18b-observability-naming) — Observability naming guide
-- [19-observability-logging.md](./19-observability-logging) — Observability logging details
-- [21-observability-tracing.md](./21-observability-tracing) — Observability tracing details
+- [18b-observability-naming.md](../18b-observability-naming) — Observability naming guide
+- [19-observability-logging.md](../19-observability-logging) — Observability logging details
+- [21-observability-tracing.md](../21-observability-tracing) — Observability tracing details
 
 ---
 

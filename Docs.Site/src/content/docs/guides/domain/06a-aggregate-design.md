@@ -2,7 +2,7 @@
 title: "Aggregate Design (WHY + WHAT)"
 ---
 
-This document covers Aggregate design principles for correctly setting consistency boundaries to prevent concurrency conflicts and data integrity issues. For Entity/Aggregate implementation, see [06b-entity-aggregate-core.md](./06b-entity-aggregate-core).
+This document covers Aggregate design principles for correctly setting consistency boundaries to prevent concurrency conflicts and data integrity issues. For Entity/Aggregate implementation, see [06b-entity-aggregate-core.md](../06b-entity-aggregate-core).
 
 ## Introduction
 
@@ -26,8 +26,8 @@ This document covers the following topics:
 
 A basic understanding of the following concepts is needed to understand this document:
 
-- The complete building block map from the [DDD Tactical Design Overview](./04-ddd-tactical-overview)
-- [Value Object](./05a-value-objects) concepts and immutability principles
+- The complete building block map from the [DDD Tactical Design Overview](../04-ddd-tactical-overview)
+- [Value Object](../05a-value-objects) concepts and immutability principles
 - Basic concepts of transactions and concurrency control
 
 > A single Aggregate boundary decision determines the system's concurrency, performance, and maintainability. The core principles are: keep boundaries small, reference between Aggregates only by ID, and handle changes outside the boundary through domain events.
@@ -653,7 +653,7 @@ The Product + Inventory diagram above shows the result after splitting.
 - After separation, `IConcurrencyAware` (RowVersion) applied only to Inventory -- detects only stock conflicts
 
 **Connection Method:**
-- Inventory references Product by `ProductId` via **ID reference** (not object reference, see [Cross-Aggregate Relationships](./06c-entity-aggregate-advanced#cross-aggregate-relationships))
+- Inventory references Product by `ProductId` via **ID reference** (not object reference, see [Cross-Aggregate Relationships](../06c-entity-aggregate-advanced#cross-aggregate-relationships))
 - When creating Product in Application Layer, Inventory is also created (same Usecase)
 - Stock deduction is requested directly to Inventory Aggregate
 
@@ -997,5 +997,5 @@ It is allowed within the same Bounded Context, only at new Aggregate creation ti
 
 ## References
 
-- [Entity/Aggregate Core Patterns (HOW)](./06b-entity-aggregate-core)
-- [Entity/Aggregate Advanced Patterns](./06c-entity-aggregate-advanced)
+- [Entity/Aggregate Core Patterns (HOW)](../06b-entity-aggregate-core)
+- [Entity/Aggregate Advanced Patterns](../06c-entity-aggregate-advanced)

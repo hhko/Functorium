@@ -848,7 +848,7 @@ public class ProductRepository : InMemoryRepositoryBase<Product, ProductId>, IPr
 | [Adapter Implementation](../guides/adapter/13-adapters) | Repository, External API, Query Adapter implementation guide by type |
 | [Adapter Pipeline and DI Registration](../guides/adapter/14a-adapter-pipeline-di) | Observable Pipeline creation and DI registration guide |
 | [Adapter Testing](../guides/adapter/14b-adapter-testing) | Adapter unit/integration testing guide |
-| [Entity and Aggregate Specification](./01-entity-aggregate) | `AggregateRoot<TId>`, `IEntityId<TId>` API specification |
-| [Error System Specification](./04-error-system) | `AdapterErrorType` (NotFound, PartialNotFound, etc.) API specification |
-| [Observability Specification](./08-observability) | 3-Pillar field/tag specification, Meter definition rules |
-| [Source Generator Specification](./10-source-generators) | `ObservablePortGenerator` source generator detailed specification |
+| [Entity and Aggregate Specification](../01-entity-aggregate) | `AggregateRoot<TId>`, `IEntityId<TId>` API specification |
+| [Error System Specification](../04-error-system) | `AdapterErrorType` (NotFound, PartialNotFound, etc.) API specification |
+| [Observability Specification](../08-observability) | 3-Pillar field/tag specification, Meter definition rules |
+| [Source Generator Specification](../10-source-generators) | `ObservablePortGenerator` source generator detailed specification |

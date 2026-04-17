@@ -288,5 +288,5 @@ Then:  A "ModelName is required" validation error is returned
 ## References
 
 - [Workflow](../workflow/) -- 7-step overall flow
-- [Architecture Design Skill](./architecture-design/) -- Next step: Project structure design
-- [Domain Develop Skill](./domain-develop/) -- Aggregate detailed design and implementation
+- [Architecture Design Skill](../architecture-design/) -- Next step: Project structure design
+- [Domain Develop Skill](../domain-develop/) -- Aggregate detailed design and implementation

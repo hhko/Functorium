@@ -214,4 +214,4 @@ histogram_quantile(0.95,
 4. **ctx.* 세그먼트** -- 특정 환경(Staging/Production), 심각도에 집중되는지 확인
 5. **로그 상세** -- `error.code`, `@error` 필드로 근본 원인 파악
 
-[구현 결과](./03-implementation-results/)에서 실제 Observable Port 현황과 파이프라인 구성을 확인합니다.
+[구현 결과](../03-implementation-results/)에서 실제 Observable Port 현황과 파이프라인 구성을 확인합니다.

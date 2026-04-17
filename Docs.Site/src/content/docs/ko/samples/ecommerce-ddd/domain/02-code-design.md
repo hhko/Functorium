@@ -597,4 +597,4 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditable
 
 원시 타입(`string`, `decimal`, `int`)이 모두 도메인 의미를 가진 Value Object로 변환되었습니다. 교차 Aggregate 참조는 ID 값 객체(`CustomerId`, `ProductId`, `TagId`)로 표현하여 Aggregate 경계를 유지합니다. 자동 계산 필드(`TotalAmount`, `LineTotal`)는 생성 시점에 VO 산술 연산으로 계산되어 일관성을 보장합니다.
 
-[구현 결과](./03-implementation-results/)에서 이 타입 구조가 비즈니스 시나리오를 어떻게 보장하는지 확인합니다.
+[구현 결과](../03-implementation-results/)에서 이 타입 구조가 비즈니스 시나리오를 어떻게 보장하는지 확인합니다.

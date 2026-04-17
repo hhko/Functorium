@@ -1118,7 +1118,7 @@ Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 
 
 ## 참고 문서
 
-- [02-solution-configuration.md](./02-solution-configuration) — 솔루션 루트 구성 파일 및 빌드 스크립트
+- [02-solution-configuration.md](../02-solution-configuration) — 솔루션 루트 구성 파일 및 빌드 스크립트
 - [06a-aggregate-design.md](../domain/06a-aggregate-design) — Aggregate 설계 원칙, [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) — Entity/Aggregate 핵심 패턴, [06c-entity-aggregate-advanced.md](../domain/06c-entity-aggregate-advanced) — 고급 패턴
 - [05a-value-objects.md](../domain/05a-value-objects) — 값 객체 구현 패턴, [05b-value-objects-validation.md](../domain/05b-value-objects-validation) — 열거형·검증·FAQ
 - [10-specifications.md](../domain/10-specifications) — Specification 패턴 구현

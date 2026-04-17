@@ -83,4 +83,4 @@ The problems with string-based error management do not stop there. If one develo
 
 - Related spec: `spec/04-error-system`
 - Related API: `DomainError.For<T>()` factory
-- Related ADR: [ADR-0002: Represent Failures with Fin Types Instead of Exceptions](./0002-use-fin-over-exceptions/)
+- Related ADR: [ADR-0002: Represent Failures with Fin Types Instead of Exceptions](../0002-use-fin-over-exceptions/)

@@ -2,7 +2,7 @@
 title: "에러 시스템: 기초와 네이밍"
 ---
 
-이 문서는 에러 처리의 기본 원칙, Fin 패턴, 에러 네이밍 규칙을 다룹니다. Domain/Application/Event 에러는 [08b-error-system-domain-app.md](./08b-error-system-domain-app), Adapter 에러와 테스트 패턴은 [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing)을 참고하세요.
+이 문서는 에러 처리의 기본 원칙, Fin 패턴, 에러 네이밍 규칙을 다룹니다. Domain/Application/Event 에러는 [08b-error-system-domain-app.md](../08b-error-system-domain-app), Adapter 에러와 테스트 패턴은 [08c-error-system-adapter-testing.md](../08c-error-system-adapter-testing)을 참고하세요.
 
 ## 들어가며
 
@@ -26,7 +26,7 @@ title: "에러 시스템: 기초와 네이밍"
 이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
 
 - LanguageExt의 `Fin<T>` 타입 기본 개념
-- [값 객체 구현 가이드](./05a-value-objects) — Value Object에서의 `Validation<Error, T>` 사용
+- [값 객체 구현 가이드](../05a-value-objects) — Value Object에서의 `Validation<Error, T>` 사용
 
 > Functorium은 예외 대신 `Fin<T>`와 `Validation<Error, T>`로 실패를 타입 시스템에 명시합니다. 레이어별 에러 팩토리(`DomainError`, `ApplicationError`, `AdapterError`)로 에러 출처를 구분하고, R1~R8 네이밍 규칙으로 에러 코드의 일관성을 보장합니다.
 
@@ -567,7 +567,7 @@ Error (LanguageExt.Common)
 | `ErrorCodeExpected<T1, T2, T3>` | `true` | `false` | internal |
 | `ErrorCodeExceptional` | `false` | `true` | internal |
 
-> **참고**: `DomainError.For<TDomain, T1, T2, T3>()` 3-값 오버로드도 지원됩니다. 상세 시그니처와 사용 예제는 [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app)를 참조하세요.
+> **참고**: `DomainError.For<TDomain, T1, T2, T3>()` 3-값 오버로드도 지원됩니다. 상세 시그니처와 사용 예제는 [에러 시스템: Domain/Application 에러](../08b-error-system-domain-app)를 참조하세요.
 
 ### 에러 생성 흐름
 
@@ -664,5 +664,5 @@ Log.Logger = new LoggerConfiguration()
 
 ## 참고 문서
 
-- [08b-error-system-domain-app.md](./08b-error-system-domain-app) - Domain/Application 에러 정의와 테스트
-- [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing) - Adapter 에러, Custom 에러, 테스트 모범 사례
+- [08b-error-system-domain-app.md](../08b-error-system-domain-app) - Domain/Application 에러 정의와 테스트
+- [08c-error-system-adapter-testing.md](../08c-error-system-adapter-testing) - Adapter 에러, Custom 에러, 테스트 모범 사례

@@ -689,5 +689,5 @@ public static partial class ObservabilityNaming
 - **Guide:** [Observability Logging](../guides/observability/19-observability-logging) -- Logging Pipeline details
 - **Guide:** [Observability Metrics](../guides/observability/20-observability-metrics) -- Metrics Pipeline details
 - **Guide:** [Observability Tracing](../guides/observability/21-observability-tracing) -- Tracing Pipeline details
-- **Spec:** [Observability Specification](./08-observability) -- Field/Tag specification, Meter definition, message templates
-- **Spec:** [Usecase CQRS](./05-usecase-cqrs) -- `FinResponse<T>`, `ICommandRequest`, `IQueryRequest`
+- **Spec:** [Observability Specification](../08-observability) -- Field/Tag specification, Meter definition, message templates
+- **Spec:** [Usecase CQRS](../05-usecase-cqrs) -- `FinResponse<T>`, `ICommandRequest`, `IQueryRequest`

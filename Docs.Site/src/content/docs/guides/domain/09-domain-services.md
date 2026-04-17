@@ -21,8 +21,8 @@ These questions arise repeatedly when business logic crosses the boundary of a s
 
 ### Prerequisites
 
-- [Aggregate Design Principles](./06a-aggregate-design) -- Aggregate boundaries and transaction principles
-- [Error System: Basics and Naming](./08a-error-system) -- `Fin<T>` return patterns
+- [Aggregate Design Principles](../06a-aggregate-design) -- Aggregate boundaries and transaction principles
+- [Error System: Basics and Naming](../08a-error-system) -- `Fin<T>` return patterns
 
 > Evans requires Domain Services to be **Stateless** (no mutable state between calls), but does not require them to be **Pure** (no I/O).
 > Functorium recommends the stricter pure function pattern by default and also presents the Repository usage pattern depending on cross-data scale.
@@ -911,10 +911,10 @@ The Pure pattern verifies only input/output directly without Mocks. The Reposito
 
 ## References
 
-- [04-ddd-tactical-overview.md](./04-ddd-tactical-overview) - DDD tactical design overview, type mapping table
-- [06a-aggregate-design.md](./06a-aggregate-design) - Aggregate design principles, [06b-entity-aggregate-core.md](./06b-entity-aggregate-core) - Entity/Aggregate core patterns, [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced) - Advanced patterns
-- [08a-error-system.md](./08a-error-system) - Error handling basic principles and naming conventions
-- [08b-error-system-domain-app.md](./08b-error-system-domain-app) - DomainError definition and test patterns
+- [04-ddd-tactical-overview.md](../04-ddd-tactical-overview) - DDD tactical design overview, type mapping table
+- [06a-aggregate-design.md](../06a-aggregate-design) - Aggregate design principles, [06b-entity-aggregate-core.md](../06b-entity-aggregate-core) - Entity/Aggregate core patterns, [06c-entity-aggregate-advanced.md](../06c-entity-aggregate-advanced) - Advanced patterns
+- [08a-error-system.md](../08a-error-system) - Error handling basic principles and naming conventions
+- [08b-error-system-domain-app.md](../08b-error-system-domain-app) - DomainError definition and test patterns
 - [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) - Usecase implementation (Application Service)
 - [12-ports.md](../adapter/12-ports) - Port/Adapter pattern (difference from IPort)
 - [15a-unit-testing.md](../testing/15a-unit-testing) - Unit test rules (T1_T2_T3, AAA pattern)

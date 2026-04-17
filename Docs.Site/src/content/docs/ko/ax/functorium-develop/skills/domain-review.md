@@ -272,7 +272,7 @@ CtxEnricher와 Observable Port의 올바른 사용을 검토합니다.
 ### 워크플로
 
 - [워크플로](../workflow/) -- 7단계 전체 흐름
-- [Test Develop 스킬](./test-develop/) -- 아키텍처 규칙 테스트로 리뷰 항목 자동화
+- [Test Develop 스킬](../test-develop/) -- 아키텍처 규칙 테스트로 리뷰 항목 자동화
 
 ### 프레임워크 가이드
 
@@ -287,6 +287,6 @@ CtxEnricher와 Observable Port의 올바른 사용을 검토합니다.
 
 ### 관련 스킬
 
-- [도메인 개발 스킬](./domain-develop/) -- 리뷰에서 발견된 개선 사항을 코드로 구현
-- [Application 레이어 개발 스킬](./application-develop/) -- Domain Service 추출 후 Usecase 재구성
-- [테스트 개발 스킬](./test-develop/) -- 아키텍처 규칙 테스트로 위반 자동 감지
+- [도메인 개발 스킬](../domain-develop/) -- 리뷰에서 발견된 개선 사항을 코드로 구현
+- [Application 레이어 개발 스킬](../application-develop/) -- Domain Service 추출 후 Usecase 재구성
+- [테스트 개발 스킬](../test-develop/) -- 아키텍처 규칙 테스트로 위반 자동 감지

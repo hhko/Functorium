@@ -233,6 +233,6 @@ IO 모나드의 고급 기능을 활용합니다:
 ## 참고 자료
 
 - [워크플로](../workflow/) -- 7단계 전체 흐름
-- [Project Spec 스킬](./project-spec/) -- 이전 단계: PRD 작성
-- [Domain Develop 스킬](./domain-develop/) -- 다음 단계: 도메인 모델 구현
-- [Adapter Develop 스킬](./adapter-develop/) -- 영속성/API 구현
+- [Project Spec 스킬](../project-spec/) -- 이전 단계: PRD 작성
+- [Domain Develop 스킬](../domain-develop/) -- 다음 단계: 도메인 모델 구현
+- [Adapter Develop 스킬](../adapter-develop/) -- 영속성/API 구현

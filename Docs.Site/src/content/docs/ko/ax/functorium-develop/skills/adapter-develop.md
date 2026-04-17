@@ -382,8 +382,8 @@ services.RegisterScopedObservablePort<IProductQuery, DapperProductQueryObservabl
 ### 워크플로
 
 - [워크플로](../workflow/) -- 7단계 전체 흐름
-- [Application Develop 스킬](./application-develop/) -- 이전 단계: 유스케이스 구현
-- [Test Develop 스킬](./test-develop/) -- 다음 단계: 테스트 작성
+- [Application Develop 스킬](../application-develop/) -- 이전 단계: 유스케이스 구현
+- [Test Develop 스킬](../test-develop/) -- 다음 단계: 테스트 작성
 
 ### 프레임워크 가이드
 
@@ -396,6 +396,6 @@ services.RegisterScopedObservablePort<IProductQuery, DapperProductQueryObservabl
 
 ### 관련 스킬
 
-- [도메인 개발 스킬](./domain-develop/) -- Aggregate, Value Object, Event 등 도메인 빌딩블록 생성
-- [Application 레이어 개발 스킬](./application-develop/) -- Command/Query/EventHandler 유스케이스 생성
-- [테스트 개발 스킬](./test-develop/) -- 단위/통합/아키텍처 테스트 생성
+- [도메인 개발 스킬](../domain-develop/) -- Aggregate, Value Object, Event 등 도메인 빌딩블록 생성
+- [Application 레이어 개발 스킬](../application-develop/) -- Command/Query/EventHandler 유스케이스 생성
+- [테스트 개발 스킬](../test-develop/) -- 단위/통합/아키텍처 테스트 생성

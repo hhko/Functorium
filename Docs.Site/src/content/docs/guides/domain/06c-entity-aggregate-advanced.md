@@ -2,7 +2,7 @@
 title: "Entity and Aggregate Implementation — Advanced Patterns"
 ---
 
-This document covers advanced implementation patterns for Entity/Aggregate. For core patterns (class hierarchy, ID system, creation patterns, command methods, domain events), see [06b-entity-aggregate-core.md](./06b-entity-aggregate-core).
+This document covers advanced implementation patterns for Entity/Aggregate. For core patterns (class hierarchy, ID system, creation patterns, command methods, domain events), see [06b-entity-aggregate-core.md](../06b-entity-aggregate-core).
 
 ## Introduction
 
@@ -20,8 +20,8 @@ Once you have the basic Aggregate structure in place, the following questions im
 
 ### Prerequisites
 
-- [Entity/Aggregate Core Patterns](./06b-entity-aggregate-core) — Class hierarchy, ID system, creation patterns, command methods, domain events
-- [Aggregate Design Principles](./06a-aggregate-design) — Invariant and boundary setting concepts
+- [Entity/Aggregate Core Patterns](../06b-entity-aggregate-core) — Class hierarchy, ID system, creation patterns, command methods, domain events
+- [Aggregate Design Principles](../06a-aggregate-design) — Invariant and boundary setting concepts
 
 > Cross-Aggregate references always use EntityId only, and common concerns like audit, soft delete, and concurrency control are declared as supplementary interfaces so the domain explicitly expresses the need. Infrastructure implementation follows the checklist for each interface.
 
@@ -603,7 +603,7 @@ catch (DbUpdateConcurrencyException ex)
 
 **How it Works:** EF Core automatically adds properties configured with `IsRowVersion()` to the `WHERE` clause of UPDATE/DELETE queries. If the RowVersion stored in the DB differs from the value at the time of reading, the update affects 0 rows, and EF Core raises `DbUpdateConcurrencyException`. The UoW converts this into a `ConcurrencyConflict` error and returns it.
 
-> For application timing, conflict handling strategy (Fail-Fast), and full UoW code, see [Section 4. Practical Examples of Aggregate Boundary Setting -- Concurrency Considerations](./06a-aggregate-design#concurrency-considerations).
+> For application timing, conflict handling strategy (Fail-Fast), and full UoW code, see [Section 4. Practical Examples of Aggregate Boundary Setting -- Concurrency Considerations](../06a-aggregate-design#concurrency-considerations).
 
 **Reference Files:**
 - `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/Models/InventoryModel.cs`
@@ -618,7 +618,7 @@ catch (DbUpdateConcurrencyException ex)
 - [ ] Persistence Model: `byte[] RowVersion` property
 - [ ] EF Core Configuration: `.IsRowVersion()` setting
 - [ ] Mapper: `RowVersion` bidirectional direct pass-through
-- [ ] Application decision: See [Section 4 Application Criteria Table](./06a-aggregate-design#concurrency-considerations)
+- [ ] Application decision: See [Section 4 Application Criteria Table](../06a-aggregate-design#concurrency-considerations)
 
 Now that we have learned the individual supplementary interface patterns, let us examine a complete Aggregate example combining all of them.
 
@@ -878,13 +878,13 @@ Always reference only by EntityId. See [Cross-Aggregate Relationships](#cross-ag
 
 ## References
 
-- [Entity/Aggregate Core Patterns](./06b-entity-aggregate-core) - Class hierarchy, ID system, creation patterns, command methods, domain events
-- [Aggregate Design Principles (WHY)](./06a-aggregate-design) - Aggregate design principles and concepts
-- [Value Object Implementation Guide](./05a-value-objects) - Value Object implementation patterns, [Validation and Enumeration Guide](./05b-value-objects-validation) - Enumeration, Application validation, FAQ
-- [Domain Events Guide](./07-domain-events) - Complete domain events design (IDomainEvent, Pub/Sub, handlers, transactions)
-- [Error System: Basics and Naming](./08a-error-system) - Error handling basic principles and naming conventions
-- [Error System: Domain/Application Errors](./08b-error-system-domain-app) - Domain/Application error definitions and test patterns
-- [Domain Modeling Overview](./04-ddd-tactical-overview) - Domain modeling overview
+- [Entity/Aggregate Core Patterns](../06b-entity-aggregate-core) - Class hierarchy, ID system, creation patterns, command methods, domain events
+- [Aggregate Design Principles (WHY)](../06a-aggregate-design) - Aggregate design principles and concepts
+- [Value Object Implementation Guide](../05a-value-objects) - Value Object implementation patterns, [Validation and Enumeration Guide](../05b-value-objects-validation) - Enumeration, Application validation, FAQ
+- [Domain Events Guide](../07-domain-events) - Complete domain events design (IDomainEvent, Pub/Sub, handlers, transactions)
+- [Error System: Basics and Naming](../08a-error-system) - Error handling basic principles and naming conventions
+- [Error System: Domain/Application Errors](../08b-error-system-domain-app) - Domain/Application error definitions and test patterns
+- [Domain Modeling Overview](../04-ddd-tactical-overview) - Domain modeling overview
 - [Usecase Implementation Guide](../application/11-usecases-and-cqrs) - Aggregate usage in the Application Layer (Apply pattern, Cross-Aggregate coordination)
 - [Adapter Implementation Guide](../adapter/13-adapters) - EF Core integration, Persistence Model mapping
 - [Unit Testing Guide](../testing/15a-unit-testing)

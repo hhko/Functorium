@@ -462,6 +462,6 @@ OrderStatus.Pending? asPending = status.AsPending(); // non-null
 | [값 객체 가이드](../guides/domain/05a-value-objects) | 값 객체 설계 원칙, 기반 클래스 선택 기준, Create/Validate 분리 패턴 |
 | [값 객체 검증 가이드](../guides/domain/05b-value-objects-validation) | 열거형 패턴, Application 검증, FluentValidation 통합 |
 | [Union 값 객체 가이드](../guides/domain/05c-union-value-objects) | Discriminated Union 설계, 상태 전이, 소스 생성기 사용법 |
-| [검증 시스템 사양](./03-validation) | `TypedValidation`, `ContextualValidation`, `ValidationRules<T>` API |
-| [에러 시스템 사양](./04-error-system) | `DomainErrorType.InvalidTransition`, 에러 팩토리 API |
-| [소스 생성기 사양](./10-source-generators) | `UnionTypeGenerator` 상세 동작, 생성 코드 형식 |
+| [검증 시스템 사양](../03-validation) | `TypedValidation`, `ContextualValidation`, `ValidationRules<T>` API |
+| [에러 시스템 사양](../04-error-system) | `DomainErrorType.InvalidTransition`, 에러 팩토리 API |
+| [소스 생성기 사양](../10-source-generators) | `UnionTypeGenerator` 상세 동작, 생성 코드 형식 |

@@ -2,7 +2,7 @@
 title: "Entity and Aggregate Implementation — Core Patterns"
 ---
 
-This document covers the core methods for implementing Entities and Aggregates with the Functorium framework. For design principles and concepts, see [06a-aggregate-design.md](./06a-aggregate-design). For advanced patterns (Cross-Aggregate relationships, supplementary interfaces, practical examples), see [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced).
+This document covers the core methods for implementing Entities and Aggregates with the Functorium framework. For design principles and concepts, see [06a-aggregate-design.md](../06a-aggregate-design). For advanced patterns (Cross-Aggregate relationships, supplementary interfaces, practical examples), see [06c-entity-aggregate-advanced.md](../06c-entity-aggregate-advanced).
 
 ## Introduction
 
@@ -26,9 +26,9 @@ Through this document, you will learn:
 
 A basic understanding of the following concepts is required to understand this document:
 
-- [Aggregate Design Principles](./06a-aggregate-design) — Aggregate boundaries and design principles (WHY)
-- [Value Object Implementation Guide](./05a-value-objects) — Value Object implementation patterns
-- [Error System: Basics and Naming](./08a-error-system) — `Fin<T>` and error return patterns
+- [Aggregate Design Principles](../06a-aggregate-design) — Aggregate boundaries and design principles (WHY)
+- [Value Object Implementation Guide](../05a-value-objects) — Value Object implementation patterns
+- [Error System: Basics and Naming](../08a-error-system) — `Fin<T>` and error return patterns
 
 > The core of Entity and Aggregate implementation is **separation of validation responsibilities.** Value Objects guarantee the validity of primitive values, and Entities receive already-validated Value Objects and compose them. Business rule violations are made explicit in the type system via `Fin<T>` returns, forcing callers to handle failures.
 
@@ -242,7 +242,7 @@ public class Order : AggregateRoot<OrderId>
 
 ### Supplementary Interface Summary
 
-These are supplementary interfaces mixed into Aggregates/Entities. For detailed implementation and usage examples, see [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced).
+These are supplementary interfaces mixed into Aggregates/Entities. For detailed implementation and usage examples, see [06c-entity-aggregate-advanced.md](../06c-entity-aggregate-advanced).
 
 | Interface | Properties | Purpose |
 |-----------|------|------|
@@ -382,7 +382,7 @@ The core of Entity implementation is **separation of validation responsibilities
 | **Create** | Receives primitive values | **Receives Value Objects directly** |
 | **Validation responsibility** | Validates own values | Validates relationships/rules between VOs |
 
-> **Note**: For Value Object validation patterns, see the [Value Object Implementation Guide - Implementation Patterns](./05a-value-objects#implementation-patterns).
+> **Note**: For Value Object validation patterns, see the [Value Object Implementation Guide - Implementation Patterns](../05a-value-objects#implementation-patterns).
 
 ### Create / CreateFromValidated Pattern
 
@@ -845,7 +845,7 @@ public Product AddTag(Tag tag)
 
 Domain events represent significant occurrences in the domain. They can only be published from AggregateRoot.
 
-> **Note**: For the complete design of domain events (`IDomainEvent`/`DomainEvent` definition, Pub/Sub, handler subscription/registration, transaction considerations), see the [Domain Events Guide](./07-domain-events).
+> **Note**: For the complete design of domain events (`IDomainEvent`/`DomainEvent` definition, Pub/Sub, handler subscription/registration, transaction considerations), see the [Domain Events Guide](../07-domain-events).
 
 ### Event Definition Location
 
@@ -1031,7 +1031,7 @@ AddDomainEvent(new OrderStatusChangedEvent(Id, OldStatus, NewStatus));  // Too g
 AddDomainEvent(new PropertyUpdatedEvent(Id, "Name", OldValue, NewValue));  // CRUD level
 ```
 
-> For details on event handler registration, transaction considerations, etc., see the [Domain Events Guide](./07-domain-events).
+> For details on event handler registration, transaction considerations, etc., see the [Domain Events Guide](../07-domain-events).
 
 ### Q5. When is a Validate method needed in an Entity?
 
@@ -1041,13 +1041,13 @@ It is defined only when there are Entity-level business rules (validation of rel
 
 ## Reference Documents
 
-- [Aggregate Design Principles (WHY)](./06a-aggregate-design) - Aggregate design principles and concepts
-- [Entity/Aggregate Advanced Patterns](./06c-entity-aggregate-advanced) - Cross-Aggregate relationships, supplementary interfaces, practical examples
-- [Value Object Implementation Guide](./05a-value-objects) - Value Object implementation patterns, [Validation and Enumeration Guide](./05b-value-objects-validation) - Enumerations, Application validation, FAQ
-- [Domain Events Guide](./07-domain-events) - Complete domain event design (IDomainEvent, Pub/Sub, handlers, transactions)
-- [Error System: Basics and Naming](./08a-error-system) - Error handling basic principles and naming conventions
-- [Error System: Domain/Application Errors](./08b-error-system-domain-app) - Domain/Application error definition and test patterns
-- [Domain Modeling Overview](./04-ddd-tactical-overview) - Domain modeling overview
+- [Aggregate Design Principles (WHY)](../06a-aggregate-design) - Aggregate design principles and concepts
+- [Entity/Aggregate Advanced Patterns](../06c-entity-aggregate-advanced) - Cross-Aggregate relationships, supplementary interfaces, practical examples
+- [Value Object Implementation Guide](../05a-value-objects) - Value Object implementation patterns, [Validation and Enumeration Guide](../05b-value-objects-validation) - Enumerations, Application validation, FAQ
+- [Domain Events Guide](../07-domain-events) - Complete domain event design (IDomainEvent, Pub/Sub, handlers, transactions)
+- [Error System: Basics and Naming](../08a-error-system) - Error handling basic principles and naming conventions
+- [Error System: Domain/Application Errors](../08b-error-system-domain-app) - Domain/Application error definition and test patterns
+- [Domain Modeling Overview](../04-ddd-tactical-overview) - Domain modeling overview
 - [Usecase Implementation Guide](../application/11-usecases-and-cqrs) - Using Aggregates in Application Layer (Apply pattern, Cross-Aggregate orchestration)
 - [Adapter Implementation Guide](../adapter/13-adapters) - EF Core integration, Persistence Model mapping
 - [Unit Testing Guide](../testing/15a-unit-testing)

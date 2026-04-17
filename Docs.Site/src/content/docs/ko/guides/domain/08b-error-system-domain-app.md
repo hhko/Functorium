@@ -2,11 +2,11 @@
 title: "에러 시스템 — Domain/Application 에러"
 ---
 
-이 문서는 Domain/Application/Event 레이어별 에러 정의와 테스트 패턴을 다룹니다. 에러 처리의 기본 원칙과 네이밍 규칙은 [08a-error-system.md](./08a-error-system)을 참고하세요. Adapter 에러, Custom 에러, 테스트 모범 사례, 레이어별 체크리스트는 [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing)을 참고하세요.
+이 문서는 Domain/Application/Event 레이어별 에러 정의와 테스트 패턴을 다룹니다. 에러 처리의 기본 원칙과 네이밍 규칙은 [08a-error-system.md](../08a-error-system)을 참고하세요. Adapter 에러, Custom 에러, 테스트 모범 사례, 레이어별 체크리스트는 [08c-error-system-adapter-testing.md](../08c-error-system-adapter-testing)을 참고하세요.
 
 ## 들어가며
 
-[08a-error-system.md](./08a-error-system)에서 에러 시스템의 기초와 네이밍 규칙을 다뤘습니다. 이 문서에서는 Domain과 Application 레이어의 에러 정의, 팩토리 메서드 사용법, 테스트 어설션 패턴을 구체적으로 살펴봅니다.
+[08a-error-system.md](../08a-error-system)에서 에러 시스템의 기초와 네이밍 규칙을 다뤘습니다. 이 문서에서는 Domain과 Application 레이어의 에러 정의, 팩토리 메서드 사용법, 테스트 어설션 패턴을 구체적으로 살펴봅니다.
 
 > 각 레이어의 에러 팩토리(`DomainError.For`, `ApplicationError.For`, `EventError.For`)는 에러 출처를 타입 시스템에 명시하여, 에러 코드만으로 어느 레이어에서 발생한 문제인지 즉시 파악할 수 있게 합니다.
 
@@ -819,8 +819,8 @@ Domain 에러는 도메인 모델 내부에서 발생하는 불변식 위반(VO 
 
 ## 참고 문서
 
-- [05a-value-objects.md](./05a-value-objects) - 값 객체 구현 패턴, [05b-value-objects-validation.md](./05b-value-objects-validation) - 열거형·검증·FAQ
-- [08a-error-system.md](./08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙
-- [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing) - Adapter 에러, Custom 에러, 테스트 모범 사례, 체크리스트
-- [09-domain-services.md](./09-domain-services) - 도메인 서비스
+- [05a-value-objects.md](../05a-value-objects) - 값 객체 구현 패턴, [05b-value-objects-validation.md](../05b-value-objects-validation) - 열거형·검증·FAQ
+- [08a-error-system.md](../08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙
+- [08c-error-system-adapter-testing.md](../08c-error-system-adapter-testing) - Adapter 에러, Custom 에러, 테스트 모범 사례, 체크리스트
+- [09-domain-services.md](../09-domain-services) - 도메인 서비스
 - [15a-unit-testing.md](../testing/15a-unit-testing) - 단위 테스트 가이드

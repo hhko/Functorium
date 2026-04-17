@@ -68,4 +68,4 @@ This project uses Functorium's Source Generator-based observability:
 3. **Pipeline middleware** -- Batch-enables CtxEnricher, Metrics, Tracing, and Logging with UseObservability(), and registers the rest via explicit opt-in with UseValidation(), UseException(), etc.
 4. **`RegisterScopedObservablePort`** -- Registers Observable wrappers to interfaces in DI, providing transparent observability
 
-In the next step, we map business KPIs to technical metrics and decide the ctx.* propagation strategy in [Type Design Decisions](./01-type-design-decisions/).
+In the next step, we map business KPIs to technical metrics and decide the ctx.* propagation strategy in [Type Design Decisions](../01-type-design-decisions/).

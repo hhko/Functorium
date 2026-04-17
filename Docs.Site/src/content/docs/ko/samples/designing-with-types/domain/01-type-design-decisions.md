@@ -4,7 +4,7 @@ title: "타입 설계 의사결정"
 
 ## 개요
 
-[비즈니스 요구사항](./00-business-requirements/)에서 자연어로 정의한 규칙을 DDD 관점에서 분석합니다. 첫 번째 단계는 독립적인 일관성 경계(Aggregate)를 식별하고, 두 번째 단계는 비즈니스 용어를 DDD 전술적 패턴으로 매핑하며, 세 번째 단계는 각 경계 내의 규칙을 불변식으로 분류하는 것입니다.
+[비즈니스 요구사항](../00-business-requirements/)에서 자연어로 정의한 규칙을 DDD 관점에서 분석합니다. 첫 번째 단계는 독립적인 일관성 경계(Aggregate)를 식별하고, 두 번째 단계는 비즈니스 용어를 DDD 전술적 패턴으로 매핑하며, 세 번째 단계는 각 경계 내의 규칙을 불변식으로 분류하는 것입니다.
 
 ## Aggregate 식별
 
@@ -289,4 +289,4 @@ classDiagram
 | 소유 | 자식 엔티티 | private 컬렉션 + Aggregate 진입점 | ContactNote |
 | 교차 Aggregate | 이메일 고유성 | Domain Service + Specification | ContactEmailCheckService, ContactEmailSpec |
 
-이 전략들을 C# 14와 Functorium DDD 빌딩 블록으로 어떻게 구현하는지 [코드 설계](./02-code-design/)에서 다룹니다.
+이 전략들을 C# 14와 Functorium DDD 빌딩 블록으로 어떻게 구현하는지 [코드 설계](../02-code-design/)에서 다룹니다.

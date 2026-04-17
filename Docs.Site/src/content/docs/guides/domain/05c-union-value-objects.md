@@ -2,7 +2,7 @@
 title: "Value Objects: Union Types"
 ---
 
-This document covers the design and implementation of Union value objects that safely represent domain states using the Discriminated Union pattern. For core value object concepts, see [05a-value-objects](./05a-value-objects). For enumeration and validation patterns, see [05b-value-objects-validation](./05b-value-objects-validation).
+This document covers the design and implementation of Union value objects that safely represent domain states using the Discriminated Union pattern. For core value object concepts, see [05a-value-objects](../05a-value-objects). For enumeration and validation patterns, see [05b-value-objects-validation](../05b-value-objects-validation).
 
 ## Introduction
 
@@ -27,7 +27,7 @@ This document covers the following topics:
 
 A basic understanding of the following concepts is needed to understand this document:
 
-- The Create/Validate separation pattern from [Value Objects](./05a-value-objects)
+- The Create/Validate separation pattern from [Value Objects](../05a-value-objects)
 - C# record types and pattern matching
 - Basic concepts of LanguageExt's `Fin<T>`
 
@@ -187,7 +187,7 @@ Example of the error JSON structure generated on transition failure:
 }
 ```
 
-> **Note**: The `InvalidTransition` error type is documented in the Transition category of [Error System: Domain/Application Errors](./08b-error-system-domain-app).
+> **Note**: The `InvalidTransition` error type is documented in the Transition category of [Error System: Domain/Application Errors](../08b-error-system-domain-app).
 
 ### Example: EmailVerificationState
 
@@ -508,8 +508,8 @@ public abstract partial record EmailVerificationState : UnionValueObject<EmailVe
 
 ## References
 
-- [Value Objects](./05a-value-objects) - Core value object concepts and base class selection
-- [Value Objects: Enumerations, Validation, and Practical Patterns](./05b-value-objects-validation) - SmartEnum, Application Layer validation merging
-- [Error System: Basics and Naming](./08a-error-system) - DomainError, DomainErrorType
-- [Error System: Domain/Application Errors](./08b-error-system-domain-app) - InvalidTransition error type
+- [Value Objects](../05a-value-objects) - Core value object concepts and base class selection
+- [Value Objects: Enumerations, Validation, and Practical Patterns](../05b-value-objects-validation) - SmartEnum, Application Layer validation merging
+- [Error System: Basics and Naming](../08a-error-system) - DomainError, DomainErrorType
+- [Error System: Domain/Application Errors](../08b-error-system-domain-app) - InvalidTransition error type
 - [Unit Testing Guide](../testing/15a-unit-testing)

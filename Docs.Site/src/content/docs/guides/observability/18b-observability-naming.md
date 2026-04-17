@@ -815,9 +815,9 @@ Folders express "what they contain". `Loggers/` contains Logger-related classes,
 ## References
 
 - [08-observability.md](../../spec/08-observability) — Observability specification (Field/Tag, Meter, message templates)
-- [19-observability-logging.md](./19-observability-logging) — Observability logging details
-- [20-observability-metrics.md](./20-observability-metrics) — Observability metrics details
-- [21-observability-tracing.md](./21-observability-tracing) — Observability tracing details
+- [19-observability-logging.md](../19-observability-logging) — Observability logging details
+- [20-observability-metrics.md](../20-observability-metrics) — Observability metrics details
+- [21-observability-tracing.md](../21-observability-tracing) — Observability tracing details
 - [OpenTelemetry Specification](https://opentelemetry.io/docs/specs/)
 - [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/)
 - [OpenTelemetry .NET](https://github.com/open-telemetry/opentelemetry-dotnet)

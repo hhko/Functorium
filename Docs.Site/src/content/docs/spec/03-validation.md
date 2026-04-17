@@ -580,5 +580,5 @@ this.MustBePairedRange(
 |------|------|
 | [Value Object: Enumeration/Validation/Practical Patterns](../guides/domain/05b-value-objects-validation) | Apply merging, chaining patterns, SmartEnum Create guide |
 | [Value Object Base Classes](../guides/domain/05a-value-objects) | `SimpleValueObject<T>`, `ValueObject`, Create patterns |
-| [Error System Specification](./04-error-system) | `DomainErrorType`, `DomainError.For<T>()`, `DomainError.ForContext()` |
-| [Value Object Specification](./02-value-object) | `ValueObject`, `SimpleValueObject<T>`, Union types |
+| [Error System Specification](../04-error-system) | `DomainErrorType`, `DomainError.For<T>()`, `DomainError.ForContext()` |
+| [Value Object Specification](../02-value-object) | `ValueObject`, `SimpleValueObject<T>`, Union types |

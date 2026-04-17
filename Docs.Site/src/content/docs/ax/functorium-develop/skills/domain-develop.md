@@ -403,9 +403,9 @@ This example is not simple CRUD. The rule "a contact without any contact method 
 ### Workflow
 
 - [Workflow](../workflow/) -- 7-step overall flow
-- [Project Spec Skill](./project-spec/) -- Previous step: PRD writing
-- [Architecture Design Skill](./architecture-design/) -- Previous step: Project structure design
-- [Application Develop Skill](./application-develop/) -- Next step: Use case implementation
+- [Project Spec Skill](../project-spec/) -- Previous step: PRD writing
+- [Architecture Design Skill](../architecture-design/) -- Previous step: Project structure design
+- [Application Develop Skill](../application-develop/) -- Next step: Use case implementation
 
 ### Framework Guides
 

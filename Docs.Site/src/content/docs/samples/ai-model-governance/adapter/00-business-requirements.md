@@ -99,4 +99,4 @@ Provides OpenTelemetry 3-Pillar observability.
 8. **Parallel check partial failure** -- Returns a ComplianceCheckFailed error if some criterion checks fail.
 9. **Session acquisition failure** -- Returns a RegistryLookupFailed error if registry session acquisition fails.
 
-In the next step, we analyze these technical requirements and derive the IO pattern selection rationale in [Type Design Decisions](./01-type-design-decisions/).
+In the next step, we analyze these technical requirements and derive the IO pattern selection rationale in [Type Design Decisions](../01-type-design-decisions/).

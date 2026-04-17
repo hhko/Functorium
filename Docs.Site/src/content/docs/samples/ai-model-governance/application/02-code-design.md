@@ -246,4 +246,4 @@ Key points:
 | Transaction | Entire chain as one transaction | Independent transaction |
 | Validation | FluentValidation + FinT | Conditional branching via domain properties |
 
-See the complete Use Case list and port mappings in [Implementation Results](./03-implementation-results/).
+See the complete Use Case list and port mappings in [Implementation Results](../03-implementation-results/).

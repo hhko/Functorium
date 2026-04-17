@@ -689,5 +689,5 @@ public static partial class ObservabilityNaming
 - **가이드:** [Observability 로깅](../guides/observability/19-observability-logging) -- 로깅 Pipeline 상세
 - **가이드:** [Observability 메트릭](../guides/observability/20-observability-metrics) -- 메트릭 Pipeline 상세
 - **가이드:** [Observability 트레이싱](../guides/observability/21-observability-tracing) -- 트레이싱 Pipeline 상세
-- **사양:** [관측 가능성 사양](./08-observability) -- Field/Tag 사양, Meter 정의, 메시지 템플릿
-- **사양:** [유스케이스 CQRS](./05-usecase-cqrs) -- `FinResponse<T>`, `ICommandRequest`, `IQueryRequest`
+- **사양:** [관측 가능성 사양](../08-observability) -- Field/Tag 사양, Meter 정의, 메시지 템플릿
+- **사양:** [유스케이스 CQRS](../05-usecase-cqrs) -- `FinResponse<T>`, `ICommandRequest`, `IQueryRequest`

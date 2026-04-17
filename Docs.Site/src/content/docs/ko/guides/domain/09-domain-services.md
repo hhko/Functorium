@@ -21,8 +21,8 @@ title: "도메인 서비스 (Domain Services)"
 
 ### 사전 지식
 
-- [Aggregate 설계 원칙](./06a-aggregate-design) — Aggregate 경계와 트랜잭션 원칙
-- [에러 시스템: 기초와 네이밍](./08a-error-system) — `Fin<T>` 반환 패턴
+- [Aggregate 설계 원칙](../06a-aggregate-design) — Aggregate 경계와 트랜잭션 원칙
+- [에러 시스템: 기초와 네이밍](../08a-error-system) — `Fin<T>` 반환 패턴
 
 > Evans는 Domain Service에 **Stateless**(호출 간 가변 상태 없음)를 요구하지만, **Pure**(I/O 없음)를 요구하지 않습니다.
 > Functorium은 기본적으로 더 엄격한 순수 함수 패턴을 권장하며, 교차 데이터 규모에 따라 Repository 사용 패턴도 제시합니다.
@@ -911,10 +911,10 @@ SingleHost의 `DomainServiceArchitectureRuleTests`는 `RequireNoInstanceFields()
 
 ## 참고 문서
 
-- [04-ddd-tactical-overview.md](./04-ddd-tactical-overview) - DDD 전술적 설계 개요, 타입 매핑 테이블
-- [06a-aggregate-design.md](./06a-aggregate-design) - Aggregate 설계 원칙, [06b-entity-aggregate-core.md](./06b-entity-aggregate-core) - Entity/Aggregate 핵심 패턴, [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced) - 고급 패턴
-- [08a-error-system.md](./08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙
-- [08b-error-system-domain-app.md](./08b-error-system-domain-app) - DomainError 정의 및 테스트 패턴
+- [04-ddd-tactical-overview.md](../04-ddd-tactical-overview) - DDD 전술적 설계 개요, 타입 매핑 테이블
+- [06a-aggregate-design.md](../06a-aggregate-design) - Aggregate 설계 원칙, [06b-entity-aggregate-core.md](../06b-entity-aggregate-core) - Entity/Aggregate 핵심 패턴, [06c-entity-aggregate-advanced.md](../06c-entity-aggregate-advanced) - 고급 패턴
+- [08a-error-system.md](../08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙
+- [08b-error-system-domain-app.md](../08b-error-system-domain-app) - DomainError 정의 및 테스트 패턴
 - [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) - Usecase 구현 (Application Service)
 - [12-ports.md](../adapter/12-ports) - Port/Adapter 패턴 (IPort와의 차이)
 - [15a-unit-testing.md](../testing/15a-unit-testing) - 단위 테스트 규칙 (T1_T2_T3, AAA 패턴)

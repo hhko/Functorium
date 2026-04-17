@@ -26,7 +26,7 @@ title: "CI/CD 워크플로우 및 버전 관리"
 
 이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
 
-- [솔루션 구성 가이드](./02-solution-configuration) - `Directory.Build.props`, `Directory.Packages.props` 구조
+- [솔루션 구성 가이드](../02-solution-configuration) - `Directory.Build.props`, `Directory.Packages.props` 구조
 - GitHub Actions 워크플로우의 기본 개념 (trigger, jobs, steps)
 - Semantic Versioning (SemVer 2.0) 규칙
 

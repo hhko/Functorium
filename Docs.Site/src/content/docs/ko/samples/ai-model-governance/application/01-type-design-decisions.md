@@ -161,4 +161,4 @@ Entity ID 검증은 `MustBeEntityId`를 사용합니다:
 RuleFor(x => x.ModelId).MustBeEntityId<Request, AIModelId>();
 ```
 
-다음 단계에서는 이 타입 설계를 C# 코드로 매핑하여 [코드 설계](./02-code-design/)를 진행합니다.
+다음 단계에서는 이 타입 설계를 C# 코드로 매핑하여 [코드 설계](../02-code-design/)를 진행합니다.

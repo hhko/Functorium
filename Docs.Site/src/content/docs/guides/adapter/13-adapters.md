@@ -2,7 +2,7 @@
 title: "Adapter Implementation"
 ---
 
-This document is a guide for implementing Adapters -- the implementations of Port interfaces -- by type. For Port definitions, see [12-ports.md](./12-ports); for Pipeline generation and DI registration, see [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di).
+This document is a guide for implementing Adapters -- the implementations of Port interfaces -- by type. For Port definitions, see [12-ports.md](../12-ports); for Pipeline generation and DI registration, see [14a-adapter-pipeline-di.md](../14a-adapter-pipeline-di).
 
 ## Introduction
 
@@ -26,7 +26,7 @@ This document covers the following topics:
 
 A basic understanding of the following concepts is needed to understand this document:
 
-- [Port Architecture and Definitions](./12-ports) — How to define Port interfaces
+- [Port Architecture and Definitions](../12-ports) — How to define Port interfaces
 - [Error System: Basics and Naming](../domain/08a-error-system) — `Fin<T>`, `FinT<IO, T>` return patterns
 - [Entity/Aggregate Core Patterns](../domain/06b-entity-aggregate-core) — `CreateFromValidated()` ORM restoration pattern
 
@@ -1438,9 +1438,9 @@ Since no Pipeline class is generated, logging, tracing, and metrics are not auto
 
 | Document | Description |
 |------|------|
-| [12-ports.md](./12-ports) | Port architecture, IObservablePort hierarchy, Port definition rules |
-| [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di) | Pipeline generation, DI registration, Options pattern |
-| [14b-adapter-testing.md](./14b-adapter-testing) | Adapter unit testing, E2E Walkthrough |
+| [12-ports.md](../12-ports) | Port architecture, IObservablePort hierarchy, Port definition rules |
+| [14a-adapter-pipeline-di.md](../14a-adapter-pipeline-di) | Pipeline generation, DI registration, Options pattern |
+| [14b-adapter-testing.md](../14b-adapter-testing) | Adapter unit testing, E2E Walkthrough |
 | [15a-unit-testing.md](../testing/15a-unit-testing) | Unit testing guide |
 | [08a-error-system.md](../domain/08a-error-system) | Error system: basics and naming |
 | [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) | Error system: Domain/Application errors |
@@ -1450,6 +1450,6 @@ Since no Pipeline class is generated, logging, tracing, and metrics are not auto
 
 ## Related Documents
 
-- Port interface definition rules: [Port Definition](./12-ports)
-- Pipeline generation and DI registration: [Adapter Integration -- Pipeline and DI](./14a-adapter-pipeline-di)
-- Adapter unit testing: [Adapter Testing](./14b-adapter-testing)
+- Port interface definition rules: [Port Definition](../12-ports)
+- Pipeline generation and DI registration: [Adapter Integration -- Pipeline and DI](../14a-adapter-pipeline-di)
+- Adapter unit testing: [Adapter Testing](../14b-adapter-testing)

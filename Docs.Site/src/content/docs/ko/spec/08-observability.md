@@ -2,7 +2,7 @@
 title: "관측 가능성 사양"
 ---
 
-Functorium 프레임워크의 관측 가능성(Observability) 필드/태그 사양, Meter 정의 규칙, 메시지 템플릿 패턴을 정의합니다. Pipeline 실행 순서, OpenTelemetryOptions 설정, 커스텀 확장 포인트는 [파이프라인 사양](./07-pipeline)을 참조하십시오.
+Functorium 프레임워크의 관측 가능성(Observability) 필드/태그 사양, Meter 정의 규칙, 메시지 템플릿 패턴을 정의합니다. Pipeline 실행 순서, OpenTelemetryOptions 설정, 커스텀 확장 포인트는 [파이프라인 사양](../07-pipeline)을 참조하십시오.
 
 ## 요약
 
@@ -928,5 +928,5 @@ ObservableSignal.Error(ex, "Database operation failed after exhausting retries",
 - [Logging 가이드](../guides/observability/19-observability-logging) — 구조화된 로깅 상세 가이드
 - [Metrics 가이드](../guides/observability/20-observability-metrics) — 메트릭 수집 및 분석 가이드
 - [Tracing 가이드](../guides/observability/21-observability-tracing) — 분산 추적 상세 가이드
-- [파이프라인 사양](./07-pipeline) — Pipeline 실행 순서, OpenTelemetryOptions, 커스텀 확장 포인트
+- [파이프라인 사양](../07-pipeline) — Pipeline 실행 순서, OpenTelemetryOptions, 커스텀 확장 포인트
 - [코드 명명 규칙](../guides/observability/18b-observability-naming) — Observability 코드 명명 규칙

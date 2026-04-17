@@ -382,8 +382,8 @@ services.RegisterScopedObservablePort<IProductQuery, DapperProductQueryObservabl
 ### Workflow
 
 - [Workflow](../workflow/) -- 7-step overall flow
-- [Application Develop Skill](./application-develop/) -- Previous step: Use case implementation
-- [Test Develop Skill](./test-develop/) -- Next step: Test writing
+- [Application Develop Skill](../application-develop/) -- Previous step: Use case implementation
+- [Test Develop Skill](../test-develop/) -- Next step: Test writing
 
 ### Framework Guides
 
@@ -396,6 +396,6 @@ services.RegisterScopedObservablePort<IProductQuery, DapperProductQueryObservabl
 
 ### Related Skills
 
-- [Domain Develop Skill](./domain-develop/) -- Generate domain building blocks: Aggregate, Value Object, Event, etc.
-- [Application Layer Develop Skill](./application-develop/) -- Generate Command/Query/EventHandler use cases
-- [Test Develop Skill](./test-develop/) -- Generate unit/integration/architecture tests
+- [Domain Develop Skill](../domain-develop/) -- Generate domain building blocks: Aggregate, Value Object, Event, etc.
+- [Application Layer Develop Skill](../application-develop/) -- Generate Command/Query/EventHandler use cases
+- [Test Develop Skill](../test-develop/) -- Generate unit/integration/architecture tests

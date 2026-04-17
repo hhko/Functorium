@@ -416,4 +416,4 @@ return new FinT<IO, A>(io.Map(Fin.Succ));
 
 이 변환은 `IO<A>`를 `IO<Fin<A>>`로 매핑한 뒤, `FinT<IO, A>`로 래핑합니다. 이로써 Application Layer의 `FinT<IO, T>` LINQ 체인에 자연스럽게 합성됩니다.
 
-[구현 결과](./03-implementation-results/)에서 전체 Adapter 프로젝트 구조와 엔드포인트 목록을 확인합니다.
+[구현 결과](../03-implementation-results/)에서 전체 Adapter 프로젝트 구조와 엔드포인트 목록을 확인합니다.

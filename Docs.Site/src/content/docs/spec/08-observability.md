@@ -2,7 +2,7 @@
 title: "Observability Specification"
 ---
 
-Defines the Functorium framework's Observability field/tag specification, Meter definition rules, and message template patterns. For Pipeline execution order, OpenTelemetryOptions settings, and custom extension points, see the [Pipeline Specification](./07-pipeline).
+Defines the Functorium framework's Observability field/tag specification, Meter definition rules, and message template patterns. For Pipeline execution order, OpenTelemetryOptions settings, and custom extension points, see the [Pipeline Specification](../07-pipeline).
 
 ## Summary
 
@@ -928,5 +928,5 @@ ObservableSignal.Error(ex, "Database operation failed after exhausting retries",
 - [Logging Guide](../guides/observability/19-observability-logging) — Structured logging detailed guide
 - [Metrics Guide](../guides/observability/20-observability-metrics) — Metrics collection and analysis guide
 - [Tracing Guide](../guides/observability/21-observability-tracing) — Distributed tracing detailed guide
-- [Pipeline Specification](./07-pipeline) — Pipeline execution order, OpenTelemetryOptions, custom extension points
+- [Pipeline Specification](../07-pipeline) — Pipeline execution order, OpenTelemetryOptions, custom extension points
 - [Code Naming Conventions](../guides/observability/18b-observability-naming) — Observability code naming conventions

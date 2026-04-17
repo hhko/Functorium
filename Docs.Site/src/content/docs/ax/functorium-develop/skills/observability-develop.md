@@ -153,5 +153,5 @@ Uses dot separation, lowercase, and plural forms.
 ## References
 
 - [Workflow](../workflow/) -- 7-step overall flow
-- [Adapter Develop Skill](./adapter-develop/) -- Preceding step: Observable Port implementation
-- [Test Develop Skill](./test-develop/) -- Following step: Observability verification tests
+- [Adapter Develop Skill](../adapter-develop/) -- Preceding step: Observable Port implementation
+- [Test Develop Skill](../test-develop/) -- Following step: Observability verification tests

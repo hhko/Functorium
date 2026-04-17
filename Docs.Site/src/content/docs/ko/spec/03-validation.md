@@ -580,5 +580,5 @@ this.MustBePairedRange(
 |------|------|
 | [값 객체: 열거형/검증/실전 패턴](../guides/domain/05b-value-objects-validation) | Apply 병합, 체이닝 패턴, SmartEnum Create 가이드 |
 | [값 객체 기반 클래스](../guides/domain/05a-value-objects) | `SimpleValueObject<T>`, `ValueObject`, Create 패턴 |
-| [에러 시스템 사양](./04-error-system) | `DomainErrorType`, `DomainError.For<T>()`, `DomainError.ForContext()` |
-| [값 객체 사양](./02-value-object) | `ValueObject`, `SimpleValueObject<T>`, Union 타입 |
+| [에러 시스템 사양](../04-error-system) | `DomainErrorType`, `DomainError.For<T>()`, `DomainError.ForContext()` |
+| [값 객체 사양](../02-value-object) | `ValueObject`, `SimpleValueObject<T>`, Union 타입 |

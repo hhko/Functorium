@@ -232,4 +232,4 @@ The following are states that must never occur in the system. If such a state ex
 - A drift threshold that is negative or exceeds 1.0
 - A model version not in SemVer format
 
-In the next step, these business rules are analyzed from a DDD perspective to identify independent consistency boundaries (Aggregates) and [classify invariants](./01-type-design-decisions/).
+In the next step, these business rules are analyzed from a DDD perspective to identify independent consistency boundaries (Aggregates) and [classify invariants](../01-type-design-decisions/).

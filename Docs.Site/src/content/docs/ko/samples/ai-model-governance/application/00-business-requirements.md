@@ -222,4 +222,4 @@ Then:  인시던트가 Reported 상태로 생성되고, QuarantineDeploymentOnCr
 - 상태 변경 요청에서 조회 전용 결과를 반환하는 경로 혼재
 - 외부 구현체에 대한 직접 의존이 워크플로우에 침투한 상태
 
-다음 단계에서는 이 워크플로우 규칙을 분석하여 Use Case와 포트를 식별하고, [타입 설계 의사결정](./01-type-design-decisions/)을 도출합니다.
+다음 단계에서는 이 워크플로우 규칙을 분석하여 Use Case와 포트를 식별하고, [타입 설계 의사결정](../01-type-design-decisions/)을 도출합니다.

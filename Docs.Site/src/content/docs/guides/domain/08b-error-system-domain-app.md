@@ -2,11 +2,11 @@
 title: "Error System — Domain/Application Errors"
 ---
 
-This document covers error definitions and test patterns for the Domain/Application/Event layers. For basic principles and naming rules of error handling, refer to [08a-error-system.md](./08a-error-system). For Adapter errors, Custom errors, testing best practices, and per-layer checklists, refer to [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing).
+This document covers error definitions and test patterns for the Domain/Application/Event layers. For basic principles and naming rules of error handling, refer to [08a-error-system.md](../08a-error-system). For Adapter errors, Custom errors, testing best practices, and per-layer checklists, refer to [08c-error-system-adapter-testing.md](../08c-error-system-adapter-testing).
 
 ## Introduction
 
-[08a-error-system.md](./08a-error-system) covered the fundamentals and naming rules of the error system. This document examines Domain and Application layer error definitions, factory method usage, and test assertion patterns in detail.
+[08a-error-system.md](../08a-error-system) covered the fundamentals and naming rules of the error system. This document examines Domain and Application layer error definitions, factory method usage, and test assertion patterns in detail.
 
 > Each layer's error factory (`DomainError.For`, `ApplicationError.For`, `EventError.For`) explicitly identifies the error source in the type system, making it immediately clear which layer the problem originated from based on the error code alone.
 
@@ -819,8 +819,8 @@ Include information that helps with debugging. Typically this includes the faile
 
 ## References
 
-- [05a-value-objects.md](./05a-value-objects) - Value Object implementation patterns, [05b-value-objects-validation.md](./05b-value-objects-validation) - Enumerations, validation, and FAQ
-- [08a-error-system.md](./08a-error-system) - Error handling basic principles and naming rules
-- [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing) - Adapter errors, Custom errors, testing best practices, and checklists
-- [09-domain-services.md](./09-domain-services) - Domain services
+- [05a-value-objects.md](../05a-value-objects) - Value Object implementation patterns, [05b-value-objects-validation.md](../05b-value-objects-validation) - Enumerations, validation, and FAQ
+- [08a-error-system.md](../08a-error-system) - Error handling basic principles and naming rules
+- [08c-error-system-adapter-testing.md](../08c-error-system-adapter-testing) - Adapter errors, Custom errors, testing best practices, and checklists
+- [09-domain-services.md](../09-domain-services) - Domain services
 - [15a-unit-testing.md](../testing/15a-unit-testing) - Unit testing guide

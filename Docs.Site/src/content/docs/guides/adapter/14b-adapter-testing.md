@@ -2,7 +2,7 @@
 title: "Adapter Integration -- Unit Testing"
 ---
 
-This document is a guide covering unit test authoring for Adapters, End-to-End Walkthroughs, and an architecture appendix. For Pipeline creation and DI registration, see [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di); for Port definitions, see [12-ports.md](./12-ports); for Adapter implementation, see [13-adapters.md](./13-adapters).
+This document is a guide covering unit test authoring for Adapters, End-to-End Walkthroughs, and an architecture appendix. For Pipeline creation and DI registration, see [14a-adapter-pipeline-di.md](../14a-adapter-pipeline-di); for Port definitions, see [12-ports.md](../12-ports); for Adapter implementation, see [13-adapters.md](../13-adapters).
 
 ## Introduction
 
@@ -24,8 +24,8 @@ This document covers the following topics:
 
 A basic understanding of the following concepts is needed to understand this document:
 
-- [Adapter implementation](./13-adapters) -- Type-specific Adapter implementation patterns
-- [Pipeline and DI](./14a-adapter-pipeline-di) -- Pipeline creation and DI registration
+- [Adapter implementation](../13-adapters) -- Type-specific Adapter implementation patterns
+- [Pipeline and DI](../14a-adapter-pipeline-di) -- Pipeline creation and DI registration
 - [Unit testing guide](../testing/15a-unit-testing) -- Test naming, AAA pattern, Shouldly
 
 > **The test target is the original Adapter, not the Pipeline.** Since Pipeline only adds observability, business logic verification is performed on the original class.
@@ -559,7 +559,7 @@ Yes, you can directly instantiate the original class for testing. Refer to the t
 - **Aggregate needed** (domain invariant validation, Create/Update/Delete) -> **Repository** (`IRepository<T, TId>`, Domain Layer, EF Core)
 - **Direct DTO return** (read-only, pagination/sorting) -> **Query Adapter** (`IQueryPort<TEntity, TDto>`, Application Layer, Dapper)
 
-> For detailed decision criteria, refer to the comparison table in [Query Adapter](./13-adapters#query-adapter-cqrs-read-side).
+> For detailed decision criteria, refer to the comparison table in [Query Adapter](../13-adapters#query-adapter-cqrs-read-side).
 
 ---
 
@@ -572,9 +572,9 @@ Yes, you can directly instantiate the original class for testing. Refer to the t
 | [08a-error-system.md](../domain/08a-error-system) | Error system: Fundamentals and naming |
 | [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) | Error system: Domain/Application errors |
 | [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) | Error system: Adapter errors and testing |
-| [12-ports.md](./12-ports) | Port definition guide |
-| [13-adapters.md](./13-adapters) | Adapter implementation guide |
-| [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di) | Pipeline creation, DI registration, Options pattern |
+| [12-ports.md](../12-ports) | Port definition guide |
+| [13-adapters.md](../13-adapters) | Adapter implementation guide |
+| [14a-adapter-pipeline-di.md](../14a-adapter-pipeline-di) | Pipeline creation, DI registration, Options pattern |
 | [15a-unit-testing.md](../testing/15a-unit-testing) | Unit testing guide |
 | [08-observability.md](../../spec/08-observability) | Observability specification (tracing, logging, metrics details) |
 | [01-project-structure.md](../architecture/01-project-structure) | Service project structure guide |

@@ -63,4 +63,4 @@ Errors are classified into 3 types and consistently propagated across all OpenTe
 ## Related Information
 
 - Commits: 6ecd6ae6, a5027a78
-- Related ADR: [ADR-0016 Observability field naming snake_case + dot](./0016-observability-field-naming-snake-case-dot.md)
+- Related ADR: [ADR-0016 Observability field naming snake_case + dot](../0016-observability-field-naming-snake-case-dot.md)

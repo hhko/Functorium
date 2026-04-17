@@ -145,4 +145,4 @@ services.RegisterScopedObservablePort<IAIModelRepository, InMemoryAIModelReposit
 
 외부 서비스는 직접 등록, Repository는 Observable 래퍼를 통해 등록합니다.
 
-다음 단계에서는 이 설계를 C# 코드로 구현하여 [코드 설계](./02-code-design/)를 진행합니다.
+다음 단계에서는 이 설계를 C# 코드로 구현하여 [코드 설계](../02-code-design/)를 진행합니다.

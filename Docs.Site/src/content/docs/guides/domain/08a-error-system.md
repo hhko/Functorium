@@ -2,7 +2,7 @@
 title: "Error System: Fundamentals and Naming"
 ---
 
-This document covers the fundamental principles of error handling, the Fin pattern, and error naming rules. For Domain/Application/Event errors, see [08b-error-system-domain-app.md](./08b-error-system-domain-app); for Adapter errors and test patterns, see [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing).
+This document covers the fundamental principles of error handling, the Fin pattern, and error naming rules. For Domain/Application/Event errors, see [08b-error-system-domain-app.md](../08b-error-system-domain-app); for Adapter errors and test patterns, see [08c-error-system-adapter-testing.md](../08c-error-system-adapter-testing).
 
 ## Introduction
 
@@ -26,7 +26,7 @@ Through this document, you will learn:
 A basic understanding of the following concepts is required to understand this document:
 
 - Basic understanding of LanguageExt's `Fin<T>` type
-- [Value Object implementation guide](./05a-value-objects) -- Usage of `Validation<Error, T>` in Value Objects
+- [Value Object implementation guide](../05a-value-objects) -- Usage of `Validation<Error, T>` in Value Objects
 
 > Functorium makes failures explicit in the type system using `Fin<T>` and `Validation<Error, T>` instead of exceptions. Per-layer error factories (`DomainError`, `ApplicationError`, `AdapterError`) distinguish error origins, and R1-R8 naming rules ensure consistency of error codes.
 
@@ -567,7 +567,7 @@ All `ErrorCodeExpected` variants and `ErrorCodeExceptional` are **internal recor
 | `ErrorCodeExpected<T1, T2, T3>` | `true` | `false` | internal |
 | `ErrorCodeExceptional` | `false` | `true` | internal |
 
-> **Note**: The 3-value overload `DomainError.For<TDomain, T1, T2, T3>()` is also supported. For detailed signatures and usage examples, see [Error System: Domain/Application Errors](./08b-error-system-domain-app).
+> **Note**: The 3-value overload `DomainError.For<TDomain, T1, T2, T3>()` is also supported. For detailed signatures and usage examples, see [Error System: Domain/Application Errors](../08b-error-system-domain-app).
 
 ### Error Creation Flow
 
@@ -664,5 +664,5 @@ Log.Logger = new LoggerConfiguration()
 
 ## Reference Documents
 
-- [08b-error-system-domain-app.md](./08b-error-system-domain-app) - Domain/Application error definitions and testing
-- [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing) - Adapter errors, Custom errors, testing best practices
+- [08b-error-system-domain-app.md](../08b-error-system-domain-app) - Domain/Application error definitions and testing
+- [08c-error-system-adapter-testing.md](../08c-error-system-adapter-testing) - Adapter errors, Custom errors, testing best practices

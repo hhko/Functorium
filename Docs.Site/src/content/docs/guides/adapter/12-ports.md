@@ -941,8 +941,8 @@ It is not required but recommended. External API calls have network latency, so 
 
 | Document | Description |
 |------|------|
-| [13-adapters.md](./13-adapters) | Adapter Implementation Guide (Repository, External API, Messaging, Query) |
-| [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di) | Pipeline Generation, DI Registration |
-| [14b-adapter-testing.md](./14b-adapter-testing) | Adapter Unit Testing |
+| [13-adapters.md](../13-adapters) | Adapter Implementation Guide (Repository, External API, Messaging, Query) |
+| [14a-adapter-pipeline-di.md](../14a-adapter-pipeline-di) | Pipeline Generation, DI Registration |
+| [14b-adapter-testing.md](../14b-adapter-testing) | Adapter Unit Testing |
 | [04-ddd-tactical-overview.md](../domain/04-ddd-tactical-overview) | Domain Modeling Full Overview |
 | [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) | Usecase Implementation (CQRS Command/Query) |

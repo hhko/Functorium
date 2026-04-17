@@ -526,5 +526,5 @@ public sealed record CreateOrderCommand(
 ## 관련 문서
 
 - [도메인 이벤트 가이드](../guides/domain/07-domain-events) — 설계 원칙, 구현 패턴, UsecaseTransactionPipeline 통합
-- [엔티티와 애그리거트 사양](./01-entity-aggregate) — `AggregateRoot<TId>`의 `AddDomainEvent()`, `IHasDomainEvents`
-- [Observability 사양](./08-observability) — 관찰성 필드/태그 표준, Meter 정의 규칙
+- [엔티티와 애그리거트 사양](../01-entity-aggregate) — `AggregateRoot<TId>`의 `AddDomainEvent()`, `IHasDomainEvents`
+- [Observability 사양](../08-observability) — 관찰성 필드/태그 표준, Meter 정의 규칙

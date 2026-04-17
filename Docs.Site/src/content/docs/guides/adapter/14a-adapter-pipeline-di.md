@@ -2,7 +2,7 @@
 title: "Adapter Integration -- Pipeline and DI"
 ---
 
-This document is a guide covering Pipeline generation, DI registration, and Options patterns for Adapters. For Port definitions, see [12-ports.md](./12-ports); for Adapter implementation, see [13-adapters.md](./13-adapters); for unit testing, see [14b-adapter-testing.md](./14b-adapter-testing).
+This document is a guide covering Pipeline generation, DI registration, and Options patterns for Adapters. For Port definitions, see [12-ports.md](../12-ports); for Adapter implementation, see [13-adapters.md](../13-adapters); for unit testing, see [14b-adapter-testing.md](../14b-adapter-testing).
 
 ## Introduction
 
@@ -24,8 +24,8 @@ This document covers the following topics:
 
 A basic understanding of the following concepts is needed to understand this document:
 
-- [Port Architecture and Definitions](./12-ports) — Port interface design principles
-- [Adapter Implementation](./13-adapters) — `[GenerateObservablePort]` attribute and `virtual` keyword
+- [Port Architecture and Definitions](../12-ports) — Port interface design principles
+- [Adapter Implementation](../13-adapters) — `[GenerateObservablePort]` attribute and `virtual` keyword
 - [Error System: Basics and Naming](../domain/08a-error-system) — `FinT<IO, T>` return patterns
 
 > **Do not write observability code directly in Adapters.** A single line of `[GenerateObservablePort]` + DI registration automatically applies logging, metrics, and tracing consistently.
@@ -817,9 +817,9 @@ public class MyAdapter : IMyPort
 | [08a-error-system.md](../domain/08a-error-system) | Error system: Basics and naming |
 | [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) | Error system: Domain/Application errors |
 | [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) | Error system: Adapter errors and testing |
-| [12-ports.md](./12-ports) | Port definition guide |
-| [13-adapters.md](./13-adapters) | Adapter implementation guide |
-| [14b-adapter-testing.md](./14b-adapter-testing) | Adapter unit testing guide |
+| [12-ports.md](../12-ports) | Port definition guide |
+| [13-adapters.md](../13-adapters) | Adapter implementation guide |
+| [14b-adapter-testing.md](../14b-adapter-testing) | Adapter unit testing guide |
 | [15a-unit-testing.md](../testing/15a-unit-testing) | Unit testing guide |
 | [08-observability.md](../../spec/08-observability) | Observability specification (tracing, logging, metrics details) |
 | [01-project-structure.md](../architecture/01-project-structure) | Service project structure guide |

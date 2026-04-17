@@ -2,11 +2,11 @@
 title: "Value Objects: Enumerations, Validation, and Practical Patterns"
 ---
 
-This document covers enumeration patterns, practical examples, Application Layer validation merging, and FAQ for value objects. For core concepts and base classes, see [05a-value-objects](./05a-value-objects). For Union types (Discriminated Union), see [05c-union-value-objects](./05c-union-value-objects).
+This document covers enumeration patterns, practical examples, Application Layer validation merging, and FAQ for value objects. For core concepts and base classes, see [05a-value-objects](../05a-value-objects). For Union types (Discriminated Union), see [05c-union-value-objects](../05c-union-value-objects).
 
 ## Introduction
 
-In [05a-value-objects.md](./05a-value-objects), we explored the core concepts and implementation patterns of value objects. This document covers enumeration patterns (`SmartEnum`), practical examples by base class, and the `Apply` pattern for merging multiple validations in the Application Layer.
+In [05a-value-objects.md](../05a-value-objects), we explored the core concepts and implementation patterns of value objects. This document covers enumeration patterns (`SmartEnum`), practical examples by base class, and the `Apply` pattern for merging multiple validations in the Application Layer.
 
 > The key practical points for value object implementation are **understanding the Create pattern differences by base class and using Apply merging in Usecases to collect all validation errors at once.**
 
@@ -751,9 +751,9 @@ Request(primitives) -> [Presentation Validator: UX feedback] -> Handler
 
 ## References
 
-- [Value Objects: Union Types](./05c-union-value-objects) - Discriminated Union patterns and state transitions
-- [Error System: Basics and Naming](./08a-error-system) - Error handling principles and naming conventions
-- [Error System: Domain/Application Errors](./08b-error-system-domain-app) - Domain/Application error definitions and test patterns
+- [Value Objects: Union Types](../05c-union-value-objects) - Discriminated Union patterns and state transitions
+- [Error System: Basics and Naming](../08a-error-system) - Error handling principles and naming conventions
+- [Error System: Domain/Application Errors](../08b-error-system-domain-app) - Domain/Application error definitions and test patterns
 - [Unit Testing Guide](../testing/15a-unit-testing)
 - [LanguageExt](https://github.com/louthy/language-ext)
 - [Ardalis.SmartEnum](https://github.com/ardalis/SmartEnum)

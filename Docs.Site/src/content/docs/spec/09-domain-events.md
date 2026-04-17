@@ -526,5 +526,5 @@ public sealed record CreateOrderCommand(
 ## Related Documents
 
 - [Domain Events Guide](../guides/domain/07-domain-events) -- Design principles, implementation patterns, UsecaseTransactionPipeline integration
-- [Entity and Aggregate Specification](./01-entity-aggregate) -- `AggregateRoot<TId>`'s `AddDomainEvent()`, `IHasDomainEvents`
-- [Observability Specification](./08-observability) -- Observability field/tag standards, Meter definition rules
+- [Entity and Aggregate Specification](../01-entity-aggregate) -- `AggregateRoot<TId>`'s `AddDomainEvent()`, `IHasDomainEvents`
+- [Observability Specification](../08-observability) -- Observability field/tag standards, Meter definition rules

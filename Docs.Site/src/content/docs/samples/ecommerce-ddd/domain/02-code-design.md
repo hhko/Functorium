@@ -597,4 +597,4 @@ This table tracks how primitive types were transformed into types with domain me
 
 All primitive types (`string`, `decimal`, `int`) have been transformed into Value Objects with domain meaning. Cross-Aggregate references are expressed as ID value objects (`CustomerId`, `ProductId`, `TagId`) to maintain Aggregate boundaries. Auto-calculated fields (`TotalAmount`, `LineTotal`) are computed using VO arithmetic operations at creation time to guarantee consistency.
 
-The [implementation results](./03-implementation-results/) verify how this type structure guarantees business scenarios.
+The [implementation results](../03-implementation-results/) verify how this type structure guarantees business scenarios.

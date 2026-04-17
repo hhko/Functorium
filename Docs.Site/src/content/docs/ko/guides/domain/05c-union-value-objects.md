@@ -2,7 +2,7 @@
 title: "값 객체: Union 타입"
 ---
 
-이 문서는 Discriminated Union 패턴으로 도메인 상태를 안전하게 표현하는 Union 값 객체의 설계와 구현을 다룹니다. 값 객체 핵심 개념은 [05a-value-objects](./05a-value-objects), 열거형·검증 패턴은 [05b-value-objects-validation](./05b-value-objects-validation)을 참고하세요.
+이 문서는 Discriminated Union 패턴으로 도메인 상태를 안전하게 표현하는 Union 값 객체의 설계와 구현을 다룹니다. 값 객체 핵심 개념은 [05a-value-objects](../05a-value-objects), 열거형·검증 패턴은 [05b-value-objects-validation](../05b-value-objects-validation)을 참고하세요.
 
 ## 들어가며
 
@@ -27,7 +27,7 @@ title: "값 객체: Union 타입"
 
 이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
 
-- [값 객체 (Value Object)](./05a-value-objects)의 Create/Validate 분리 패턴
+- [값 객체 (Value Object)](../05a-value-objects)의 Create/Validate 분리 패턴
 - C# record 타입과 패턴 매칭
 - LanguageExt의 `Fin<T>` 기본 개념
 
@@ -187,7 +187,7 @@ public sealed record InvalidTransition(string? FromState = null, string? ToState
 }
 ```
 
-> **참고**: `InvalidTransition` 에러 타입은 [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app)의 Transition 범주를 참조하세요.
+> **참고**: `InvalidTransition` 에러 타입은 [에러 시스템: Domain/Application 에러](../08b-error-system-domain-app)의 Transition 범주를 참조하세요.
 
 ### 예제: EmailVerificationState
 
@@ -508,8 +508,8 @@ public abstract partial record EmailVerificationState : UnionValueObject<EmailVe
 
 ## 참고 문서
 
-- [값 객체 (Value Object)](./05a-value-objects) - 값 객체 핵심 개념과 기반 클래스 선택
-- [값 객체: 열거형·검증·실전 패턴](./05b-value-objects-validation) - SmartEnum, Application Layer 검증 병합
-- [에러 시스템: 기초와 네이밍](./08a-error-system) - DomainError, DomainErrorType
-- [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app) - InvalidTransition 에러 타입
+- [값 객체 (Value Object)](../05a-value-objects) - 값 객체 핵심 개념과 기반 클래스 선택
+- [값 객체: 열거형·검증·실전 패턴](../05b-value-objects-validation) - SmartEnum, Application Layer 검증 병합
+- [에러 시스템: 기초와 네이밍](../08a-error-system) - DomainError, DomainErrorType
+- [에러 시스템: Domain/Application 에러](../08b-error-system-domain-app) - InvalidTransition 에러 타입
 - [단위 테스트 가이드](../testing/15a-unit-testing)

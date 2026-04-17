@@ -233,6 +233,6 @@ All collected decisions are organized into `{context}/01-architecture-design.md`
 ## References
 
 - [Workflow](../workflow/) -- 7-step overall flow
-- [Project Spec Skill](./project-spec/) -- Previous step: PRD writing
-- [Domain Develop Skill](./domain-develop/) -- Next step: Domain model implementation
-- [Adapter Develop Skill](./adapter-develop/) -- Persistence/API implementation
+- [Project Spec Skill](../project-spec/) -- Previous step: PRD writing
+- [Domain Develop Skill](../domain-develop/) -- Next step: Domain model implementation
+- [Adapter Develop Skill](../adapter-develop/) -- Persistence/API implementation

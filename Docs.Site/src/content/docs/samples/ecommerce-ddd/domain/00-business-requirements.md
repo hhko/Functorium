@@ -220,4 +220,4 @@ The following are states that must never occur in the system. If such a state ex
 - A state where more than one customer has the same email
 - A state where more than one product has the same name
 
-In the next step, we analyze these business rules from a DDD perspective to identify independent consistency boundaries (Aggregates) and [classify invariants](./01-type-design-decisions/).
+In the next step, we analyze these business rules from a DDD perspective to identify independent consistency boundaries (Aggregates) and [classify invariants](../01-type-design-decisions/).

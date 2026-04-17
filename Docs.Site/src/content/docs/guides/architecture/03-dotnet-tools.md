@@ -83,13 +83,13 @@ The following table summarizes the characteristics and representative tools for 
 | Source generators | Automatic code generation at compile time | EntityIdGenerator, ObservablePortGenerator |
 | .NET 10 scripts | Direct execution of `.cs` files | SummarizeSlowestTests, ApiGenerator |
 
-> **Relationship with 02-solution-configuration.md**: For `dotnet-tools.json` manifest creation/management methods and build script pipeline overview, see [02-solution-configuration.md](./02-solution-configuration). This document covers the purpose, commands, parameters, and execution examples for each tool.
+> **Relationship with 02-solution-configuration.md**: For `dotnet-tools.json` manifest creation/management methods and build script pipeline overview, see [02-solution-configuration.md](../02-solution-configuration). This document covers the purpose, commands, parameters, and execution examples for each tool.
 
 ## CLI Tools (.config/dotnet-tools.json)
 
 ### Tool Management Basics
 
-CLI tools are managed via the `.config/dotnet-tools.json` manifest. For manifest creation and tool installation/restoration methods, see [02-solution-configuration.md §.config/dotnet-tools.json](./02-solution-configuration#configdotnet-toolsjson).
+CLI tools are managed via the `.config/dotnet-tools.json` manifest. For manifest creation and tool installation/restoration methods, see [02-solution-configuration.md §.config/dotnet-tools.json](../02-solution-configuration#configdotnet-toolsjson).
 
 **rollForward setting:**
 
@@ -383,7 +383,7 @@ While source generators operate at compile time, .NET 10 file-based programs exe
 
 .NET 10 supports "file-based programs" that execute `.cs` files directly. NuGet dependencies are declared with the `#:package` directive.
 
-> Each script folder has its own `Directory.Build.props` that blocks the root `Directory.Build.props` Source Link dependency. For details, see [02-solution-configuration.md §Nested configuration files](./02-solution-configuration#nested-configuration-files).
+> Each script folder has its own `Directory.Build.props` that blocks the root `Directory.Build.props` Source Link dependency. For details, see [02-solution-configuration.md §Nested configuration files](../02-solution-configuration#nested-configuration-files).
 
 ### SummarizeSlowestTests.cs
 
@@ -495,7 +495,7 @@ The following table provides a complete map of CLI tools, source generators, and
 
 1. `dotnet tool install <package-name>` (automatically registered in manifest)
 2. Check `rollForward` setting in `.config/dotnet-tools.json` (set to `true` if tool target framework is lower than current SDK)
-3. Update the tool list table in [02-solution-configuration.md](./02-solution-configuration)
+3. Update the tool list table in [02-solution-configuration.md](../02-solution-configuration)
 4. Add a detailed usage section in this document
 
 ### Adding a Source Generator
@@ -615,7 +615,7 @@ Siren's assembly mode requires EF Core Migrations, and connection string mode is
 
 ## References
 
-- [02-solution-configuration.md](./02-solution-configuration) -- dotnet-tools.json management, build script pipeline
-- [01-project-structure.md](./01-project-structure) -- Project structure and dependencies
+- [02-solution-configuration.md](../02-solution-configuration) -- dotnet-tools.json management, build script pipeline
+- [01-project-structure.md](../01-project-structure) -- Project structure and dependencies
 - [15a-unit-testing.md](../testing/15a-unit-testing) -- Unit testing (including Verify.Xunit snapshots)
 - [16-testing-library.md](../testing/16-testing-library) -- Functorium.Testing library (including source generator testing)

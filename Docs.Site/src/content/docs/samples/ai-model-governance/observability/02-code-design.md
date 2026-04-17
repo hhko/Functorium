@@ -214,4 +214,4 @@ When an alert is triggered, analyze the root cause in the following order:
 4. **ctx.* Segments** -- Check if concentrated in a specific environment (Staging/Production) or severity
 5. **Detailed Logs** -- Identify root cause via `error.code` and `@error` fields
 
-Check the actual Observable Port status and pipeline configuration in the [Implementation Results](./03-implementation-results/).
+Check the actual Observable Port status and pipeline configuration in the [Implementation Results](../03-implementation-results/).

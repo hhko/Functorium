@@ -21,7 +21,7 @@ These problems manifest as business rules being scattered across Repository impl
 
 ### Prerequisites
 
-- [Entity/Aggregate Core Patterns](./06b-entity-aggregate-core) -- Basic structure of Entity and Aggregate
+- [Entity/Aggregate Core Patterns](../06b-entity-aggregate-core) -- Basic structure of Entity and Aggregate
 - [Adapter Implementation Guide](../adapter/13-adapters) -- Repository implementation patterns
 
 > The core value of the Specification pattern is **encapsulating business rules as domain objects for reuse, and expressing complex conditions as compositions of simple conditions using combination operators.**
@@ -721,8 +721,8 @@ The results are identical. Operator style is more concise, but method style may 
 
 ## References
 
-- [04-ddd-tactical-overview.md](./04-ddd-tactical-overview) -- DDD tactical design overview
-- [09-domain-services.md](./09-domain-services) -- Domain Services
+- [04-ddd-tactical-overview.md](../04-ddd-tactical-overview) -- DDD tactical design overview
+- [09-domain-services.md](../09-domain-services) -- Domain Services
 - [12-ports.md](../adapter/12-ports) -- Port architecture
 - [15a-unit-testing.md](../testing/15a-unit-testing) -- Unit test rules
 

@@ -770,4 +770,4 @@ sequenceDiagram
     Usecase-->>Client: FinResponse<Response>
 ```
 
-The [implementation results](./03-implementation-results/) verify how these patterns guarantee business scenarios.
+The [implementation results](../03-implementation-results/) verify how these patterns guarantee business scenarios.

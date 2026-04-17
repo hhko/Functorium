@@ -334,8 +334,8 @@ public sealed class OnOrderCreated : IDomainEventHandler<Order.CreatedEvent>
 ### 워크플로
 
 - [워크플로](../workflow/) -- 7단계 전체 흐름
-- [Domain Develop 스킬](./domain-develop/) -- 이전 단계: 도메인 모델 구현
-- [Adapter Develop 스킬](./adapter-develop/) -- 다음 단계: Repository, Endpoint, DI 구현
+- [Domain Develop 스킬](../domain-develop/) -- 이전 단계: 도메인 모델 구현
+- [Adapter Develop 스킬](../adapter-develop/) -- 다음 단계: Repository, Endpoint, DI 구현
 
 ### 프레임워크 가이드
 
@@ -349,6 +349,6 @@ public sealed class OnOrderCreated : IDomainEventHandler<Order.CreatedEvent>
 
 ### 관련 스킬
 
-- [도메인 개발 스킬](./domain-develop/) -- Aggregate, Value Object, Event 등 도메인 빌딩블록 생성
-- [Adapter 레이어 개발 스킬](./adapter-develop/) -- Repository, Query Adapter, Endpoint, DI 등록 생성
-- [테스트 개발 스킬](./test-develop/) -- 단위/통합/아키텍처 테스트 생성
+- [도메인 개발 스킬](../domain-develop/) -- Aggregate, Value Object, Event 등 도메인 빌딩블록 생성
+- [Adapter 레이어 개발 스킬](../adapter-develop/) -- Repository, Query Adapter, Endpoint, DI 등록 생성
+- [테스트 개발 스킬](../test-develop/) -- 단위/통합/아키텍처 테스트 생성

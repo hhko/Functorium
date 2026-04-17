@@ -223,4 +223,4 @@ Then:  The incident is created in Reported state, and QuarantineDeploymentOnCrit
 - Direct dependency on external implementations infiltrating the workflow
 
 
-In the next step, we analyze these workflow rules to identify Use Cases and ports, and derive [Type Design Decisions](./01-type-design-decisions/).
+In the next step, we analyze these workflow rules to identify Use Cases and ports, and derive [Type Design Decisions](../01-type-design-decisions/).

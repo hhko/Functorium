@@ -26,7 +26,7 @@ This document covers the following topics:
 
 A basic understanding of the following concepts is needed to understand this document:
 
-- [Solution Configuration Guide](./02-solution-configuration) - `Directory.Build.props`, `Directory.Packages.props` structure
+- [Solution Configuration Guide](../02-solution-configuration) - `Directory.Build.props`, `Directory.Packages.props` structure
 - Basic concepts of GitHub Actions workflows (trigger, jobs, steps)
 - Semantic Versioning (SemVer 2.0) rules
 

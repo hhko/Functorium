@@ -408,4 +408,4 @@ The three verifications are composed sequentially using LINQ `from...in`. If the
 | `ModelIncident.Resolve()` | `Fin<Unit>` | Failable | Invalid state transition |
 | `ModelIncident.Escalate()` | `Fin<Unit>` | Failable | Invalid state transition |
 
-See [Implementation Results](./03-implementation-results/) to confirm how this type structure guarantees business scenarios.
+See [Implementation Results](../03-implementation-results/) to confirm how this type structure guarantees business scenarios.

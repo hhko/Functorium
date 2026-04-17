@@ -161,4 +161,4 @@ Entity ID validation uses `MustBeEntityId`:
 RuleFor(x => x.ModelId).MustBeEntityId<Request, AIModelId>();
 ```
 
-In the next step, we map this type design to C# code in [Code Design](./02-code-design/).
+In the next step, we map this type design to C# code in [Code Design](../02-code-design/).

@@ -2,7 +2,7 @@
 title: "Entity와 Aggregate 구현 — 고급 패턴"
 ---
 
-이 문서는 Entity/Aggregate의 고급 구현 패턴을 다룹니다. 핵심 패턴(클래스 계층, ID 시스템, 생성 패턴, 커맨드 메서드, 도메인 이벤트)은 [06b-entity-aggregate-core.md](./06b-entity-aggregate-core)를 참조하세요.
+이 문서는 Entity/Aggregate의 고급 구현 패턴을 다룹니다. 핵심 패턴(클래스 계층, ID 시스템, 생성 패턴, 커맨드 메서드, 도메인 이벤트)은 [06b-entity-aggregate-core.md](../06b-entity-aggregate-core)를 참조하세요.
 
 ## 들어가며
 
@@ -20,8 +20,8 @@ Aggregate의 기본 구조를 잡았다면, 실무에서는 곧바로 다음과 
 
 ### 사전 지식
 
-- [Entity/Aggregate 핵심 패턴](./06b-entity-aggregate-core) — 클래스 계층, ID 시스템, 생성 패턴, 커맨드 메서드, 도메인 이벤트
-- [Aggregate 설계 원칙](./06a-aggregate-design) — 불변식과 경계 설정 개념
+- [Entity/Aggregate 핵심 패턴](../06b-entity-aggregate-core) — 클래스 계층, ID 시스템, 생성 패턴, 커맨드 메서드, 도메인 이벤트
+- [Aggregate 설계 원칙](../06a-aggregate-design) — 불변식과 경계 설정 개념
 
 > Aggregate 간 참조는 항상 EntityId만 사용하고, 감사(Audit), 소프트 삭제, 동시성 제어 같은 공통 관심사는 부가 인터페이스로 선언하여 도메인이 명시적으로 필요성을 표현합니다. 인프라 구현은 각 인터페이스의 체크리스트를 따릅니다.
 
@@ -603,7 +603,7 @@ catch (DbUpdateConcurrencyException ex)
 
 **동작 원리:** EF Core는 `IsRowVersion()`으로 설정된 속성을 UPDATE/DELETE 쿼리의 `WHERE` 조건에 자동 추가합니다. DB에 저장된 RowVersion이 읽어온 시점의 값과 다르면 갱신 행이 0건이 되고, EF Core가 `DbUpdateConcurrencyException`을 발생시킵니다. UoW는 이를 `ConcurrencyConflict` 에러로 변환하여 반환합니다.
 
-> 적용 시기, 충돌 처리 전략(Fail-Fast), 전체 UoW 코드는 [§4. Aggregate 경계 설정 실전 예제 — 동시성 고려사항](./06a-aggregate-design#동시성-고려사항)을 참고하세요.
+> 적용 시기, 충돌 처리 전략(Fail-Fast), 전체 UoW 코드는 [§4. Aggregate 경계 설정 실전 예제 — 동시성 고려사항](../06a-aggregate-design#동시성-고려사항)을 참고하세요.
 
 **참조 파일:**
 - `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/Models/InventoryModel.cs`
@@ -618,7 +618,7 @@ catch (DbUpdateConcurrencyException ex)
 - [ ] Persistence Model: `byte[] RowVersion` 속성
 - [ ] EF Core Configuration: `.IsRowVersion()` 설정
 - [ ] Mapper: `RowVersion` 양방향 직접 전달
-- [ ] 적용 판단: [§4 적용 기준표](./06a-aggregate-design#동시성-고려사항) 참고
+- [ ] 적용 판단: [§4 적용 기준표](../06a-aggregate-design#동시성-고려사항) 참고
 
 부가 인터페이스의 개별 패턴을 익혔다면, 이제 이들을 모두 조합한 완전한 Aggregate 예제를 살펴봅니다.
 
@@ -878,13 +878,13 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
 
 ## 참고 문서
 
-- [Entity/Aggregate 핵심 패턴](./06b-entity-aggregate-core) - 클래스 계층, ID 시스템, 생성 패턴, 커맨드 메서드, 도메인 이벤트
-- [Aggregate 설계 원칙 (WHY)](./06a-aggregate-design) - Aggregate 설계 원칙과 개념
-- [값 객체 구현 가이드](./05a-value-objects) - Value Object 구현 패턴, [검증·열거형 가이드](./05b-value-objects-validation) - 열거형·Application 검증·FAQ
-- [도메인 이벤트 가이드](./07-domain-events) - 도메인 이벤트 전체 설계 (IDomainEvent, Pub/Sub, 핸들러, 트랜잭션)
-- [에러 시스템: 기초와 네이밍](./08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙
-- [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app) - Domain/Application 에러 정의 및 테스트 패턴
-- [도메인 모델링 개요](./04-ddd-tactical-overview) - 도메인 모델링 개요
+- [Entity/Aggregate 핵심 패턴](../06b-entity-aggregate-core) - 클래스 계층, ID 시스템, 생성 패턴, 커맨드 메서드, 도메인 이벤트
+- [Aggregate 설계 원칙 (WHY)](../06a-aggregate-design) - Aggregate 설계 원칙과 개념
+- [값 객체 구현 가이드](../05a-value-objects) - Value Object 구현 패턴, [검증·열거형 가이드](../05b-value-objects-validation) - 열거형·Application 검증·FAQ
+- [도메인 이벤트 가이드](../07-domain-events) - 도메인 이벤트 전체 설계 (IDomainEvent, Pub/Sub, 핸들러, 트랜잭션)
+- [에러 시스템: 기초와 네이밍](../08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙
+- [에러 시스템: Domain/Application 에러](../08b-error-system-domain-app) - Domain/Application 에러 정의 및 테스트 패턴
+- [도메인 모델링 개요](../04-ddd-tactical-overview) - 도메인 모델링 개요
 - [유스케이스 구현 가이드](../application/11-usecases-and-cqrs) - Application Layer에서의 Aggregate 사용 (Apply 패턴, 교차 Aggregate 조율)
 - [Adapter 구현 가이드](../adapter/13-adapters) - EF Core 통합, Persistence Model 매핑
 - [단위 테스트 가이드](../testing/15a-unit-testing)

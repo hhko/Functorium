@@ -408,4 +408,4 @@ public sealed class DeploymentEligibilityService : IDomainService
 | `ModelIncident.Resolve()` | `Fin<Unit>` | 실패 가능 | 잘못된 상태 전이 |
 | `ModelIncident.Escalate()` | `Fin<Unit>` | 실패 가능 | 잘못된 상태 전이 |
 
-[구현 결과](./03-implementation-results/)에서 이 타입 구조가 비즈니스 시나리오를 어떻게 보장하는지 확인합니다.
+[구현 결과](../03-implementation-results/)에서 이 타입 구조가 비즈니스 시나리오를 어떻게 보장하는지 확인합니다.

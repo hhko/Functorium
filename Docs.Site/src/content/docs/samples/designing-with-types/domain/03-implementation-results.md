@@ -4,7 +4,7 @@ title: "Implementation Results"
 
 ## Business Scenario Verification
 
-This verifies that the 10 scenarios defined in the [Business Requirements](./00-business-requirements/) actually work with the type structures from the [Type Design Decisions](./01-type-design-decisions/) and [Code Design](./02-code-design/). Normal scenarios (1-6) confirm how types represent valid states, while rejection scenarios (7-10) confirm how invalid states are blocked.
+This verifies that the 10 scenarios defined in the [Business Requirements](../00-business-requirements/) actually work with the type structures from the [Type Design Decisions](../01-type-design-decisions/) and [Code Design](../02-code-design/). Normal scenarios (1-6) confirm how types represent valid states, while rejection scenarios (7-10) confirm how invalid states are blocked.
 
 ## Normal Scenarios
 

@@ -65,4 +65,4 @@ date: 2026-03-22
 ## 관련 정보
 
 - 커밋: a5027a78, 419659df
-- 관련 ADR: [ADR-0009 오류 분류 3-Type 체계](./0009-error-classification-three-types.md)
+- 관련 ADR: [ADR-0009 오류 분류 3-Type 체계](../0009-error-classification-three-types.md)

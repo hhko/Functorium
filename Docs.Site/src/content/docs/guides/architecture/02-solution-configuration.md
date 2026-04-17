@@ -71,7 +71,7 @@ dotnet test --solution Functorium.slnx
 ## Overview
 
 This guide covers how to create and configure root-level configuration files and build scripts when creating a new solution.
-For project-level files (`AssemblyReference.cs`, `Using.cs`), refer to [01-project-structure.md](./01-project-structure).
+For project-level files (`AssemblyReference.cs`, `Using.cs`), refer to [01-project-structure.md](../01-project-structure).
 
 ### Files Required at the Solution Root
 
@@ -947,7 +947,7 @@ dotnet tool restore
 | `verify.tool` | `dotnet-verify` | Verify snapshot management (accept/reject) |
 | `gman.siren` | `siren-gen` | EF Core DbContext -> Mermaid ER diagram generation |
 
-> For detailed usage of each tool (parameters, execution examples), see [03-dotnet-tools.md](./03-dotnet-tools).
+> For detailed usage of each tool (parameters, execution examples), see [03-dotnet-tools.md](../03-dotnet-tools).
 
 ### Adding/Updating New Tools
 
@@ -1332,6 +1332,6 @@ Separate by purpose when there are many projects. `{Name}.slnx` is for core libr
 
 ## References
 
-- [01-project-structure.md](./01-project-structure) -- Project-level configuration (folders, naming, dependencies)
+- [01-project-structure.md](../01-project-structure) -- Project-level configuration (folders, naming, dependencies)
 - [15a-unit-testing.md](../testing/15a-unit-testing) -- Test writing methodology (including MTP settings)
 - [16-testing-library.md](../testing/16-testing-library) -- Functorium.Testing library

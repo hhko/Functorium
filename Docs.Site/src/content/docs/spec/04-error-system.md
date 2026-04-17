@@ -785,4 +785,4 @@ AdapterError.For(GetType(), new ConnectionFailed("DB"), connectionString, "Conne
 | [Error System: Fundamentals and Naming](../guides/domain/08a-error-system) | Error handling principles, Fin patterns, naming rules R1~R8 |
 | [Error System: Domain/Application/Event](../guides/domain/08b-error-system-domain-app) | Domain, Application, Event error detailed guide |
 | [Error System: Adapter and Testing](../guides/domain/08c-error-system-adapter-testing) | Adapter error and test pattern guide |
-| [Validation System Specification](./03-validation) | TypedValidation, ContextualValidation specification |
+| [Validation System Specification](../03-validation) | TypedValidation, ContextualValidation specification |

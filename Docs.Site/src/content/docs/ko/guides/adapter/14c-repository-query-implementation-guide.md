@@ -33,9 +33,9 @@ title: "Repository & Query Adapter 구현 가이드"
 
 ### 사전 지식
 
-- [Port 정의 가이드](./12-ports) — Port 인터페이스 설계 원칙
-- [Adapter 구현 가이드](./13-adapters) — Adapter 구현 기본 패턴
-- [Pipeline과 DI](./14a-adapter-pipeline-di) — Pipeline 생성 및 DI 등록
+- [Port 정의 가이드](../12-ports) — Port 인터페이스 설계 원칙
+- [Adapter 구현 가이드](../13-adapters) — Adapter 구현 기본 패턴
+- [Pipeline과 DI](../14a-adapter-pipeline-di) — Pipeline 생성 및 DI 등록
 
 > **Write는 Aggregate 단위로, Read는 DTO 프로젝션으로.** 이 CQRS 분리 원칙이 Repository와 Query Adapter 구현의 모든 설계 결정을 이끕니다.
 
@@ -1513,6 +1513,6 @@ A: Source Generator가 관찰 가능한 래퍼 클래스(`XxxObservable`)를 자
 
 ## 9. 참고 문서
 
-- [13-adapters.md](./13-adapters) — Adapter 구현 가이드
+- [13-adapters.md](../13-adapters) — Adapter 구현 가이드
 - [15a-unit-testing.md](../testing/15a-unit-testing) — 단위 테스트 규칙
 - [OPTIMIZATION-TECHNIQUES.md](../../Src.Benchmarks/BulkCrud.Benchmarks/OPTIMIZATION-TECHNIQUES.md) — 대량 CRUD 성능 최적화 기법

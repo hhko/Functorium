@@ -1132,7 +1132,7 @@ public class DatabaseTests(DatabaseFixture fixture)
 
 ### Functorium.Testing 라이브러리
 - 구조화된 로그 테스트 (LogTestContext), 아키텍처 규칙 검증, 소스 생성기 테스트, 스케줄 Job 테스트:
-  [16-testing-library.md](./16-testing-library)
+  [16-testing-library.md](../16-testing-library)
 - 에러 타입 Assertion (ShouldBeDomainError 등):
   [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app), [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing)
 

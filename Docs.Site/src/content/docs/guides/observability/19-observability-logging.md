@@ -1549,7 +1549,7 @@ Check the field mapping settings for each system.
 
 **Internal documents:**
 - [08-observability.md](../../spec/08-observability) -- Observability specification (Field/Tag, Meter, message templates)
-- [18b-observability-naming.md](./18b-observability-naming) -- Observability naming guide
-- [20-observability-metrics.md](./20-observability-metrics) -- Observability metrics details
-- [21-observability-tracing.md](./21-observability-tracing) -- Observability tracing details
+- [18b-observability-naming.md](../18b-observability-naming) -- Observability naming guide
+- [20-observability-metrics.md](../20-observability-metrics) -- Observability metrics details
+- [21-observability-tracing.md](../21-observability-tracing) -- Observability tracing details
 - [07-domain-events.md](../domain/07-domain-events) -- Domain events and handler Observability

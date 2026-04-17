@@ -2,7 +2,7 @@
 title: "Value Objects"
 ---
 
-This document covers the design and implementation of Value Objects that express domain concepts as types, going beyond the limitations of primitive types. For enumeration patterns, Application validation, and FAQ, see [05b-value-objects-validation](./05b-value-objects-validation). For Union types (Discriminated Unions), see [05c-union-value-objects](./05c-union-value-objects).
+This document covers the design and implementation of Value Objects that express domain concepts as types, going beyond the limitations of primitive types. For enumeration patterns, Application validation, and FAQ, see [05b-value-objects-validation](../05b-value-objects-validation). For Union types (Discriminated Unions), see [05c-union-value-objects](../05c-union-value-objects).
 
 ## Introduction
 
@@ -26,7 +26,7 @@ Through this document, you will learn:
 
 A basic understanding of the following concepts is required to understand this document:
 
-- The complete building block map from the [DDD Tactical Design Overview](./04-ddd-tactical-overview)
+- The complete building block map from the [DDD Tactical Design Overview](../04-ddd-tactical-overview)
 - C# generics and the static factory method pattern
 - Basic concepts of LanguageExt's `Fin<T>` and `Validation<Error, T>`
 
@@ -1059,7 +1059,7 @@ Functorium uses **result types instead of exceptions** to handle errors. Validat
 - Error handling via **function chaining** without try-catch
 - Multiple errors can be **collected** and returned at once
 
-> **For details, see the [Error System Guide](./08a-error-system).**
+> **For details, see the [Error System Guide](../08a-error-system).**
 
 ### DomainErrorType Overview
 
@@ -1299,7 +1299,7 @@ The core of Value Object implementation is the **Create/Validate separation patt
 
 This separation allows **the Validate method to be reused elsewhere (such as FluentValidation pipelines).**
 
-> **Note**: Entities follow the same Create/Validate separation pattern. For details, see the [Entity Implementation Guide - Creation Patterns](./06b-entity-aggregate-core#creation-patterns).
+> **Note**: Entities follow the same Create/Validate separation pattern. For details, see the [Entity Implementation Guide - Creation Patterns](../06b-entity-aggregate-core#creation-patterns).
 
 ### CreateFromValidated: Factory for ORM/Repository Restoration
 
@@ -1441,5 +1441,5 @@ For one-off validation or prototyping, use `ValidationRules.For("Name")` (Named 
 
 ## Reference Documents
 
-- [Value Objects: Enumerations, Validation, and Practical Patterns](./05b-value-objects-validation)
-- [Value Objects: Union Types](./05c-union-value-objects) - Discriminated Union patterns and state transitions
+- [Value Objects: Enumerations, Validation, and Practical Patterns](../05b-value-objects-validation)
+- [Value Objects: Union Types](../05c-union-value-objects) - Discriminated Union patterns and state transitions

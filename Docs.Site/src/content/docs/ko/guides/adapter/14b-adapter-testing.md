@@ -2,7 +2,7 @@
 title: "Adapter 연결 -- 단위 테스트"
 ---
 
-이 문서는 Adapter의 단위 테스트 작성, End-to-End Walkthrough, 아키텍처 부록을 다루는 가이드입니다. Pipeline 생성과 DI 등록은 [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di), Port 정의는 [12-ports.md](./12-ports), Adapter 구현은 [13-adapters.md](./13-adapters)을 참조하세요.
+이 문서는 Adapter의 단위 테스트 작성, End-to-End Walkthrough, 아키텍처 부록을 다루는 가이드입니다. Pipeline 생성과 DI 등록은 [14a-adapter-pipeline-di.md](../14a-adapter-pipeline-di), Port 정의는 [12-ports.md](../12-ports), Adapter 구현은 [13-adapters.md](../13-adapters)을 참조하세요.
 
 ## 들어가며
 
@@ -24,8 +24,8 @@ Adapter 단위 테스트는 비즈니스 로직의 정확성을 검증하는 마
 
 이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
 
-- [Adapter 구현](./13-adapters) — Adapter 유형별 구현 패턴
-- [Pipeline과 DI](./14a-adapter-pipeline-di) — Pipeline 생성과 DI 등록
+- [Adapter 구현](../13-adapters) — Adapter 유형별 구현 패턴
+- [Pipeline과 DI](../14a-adapter-pipeline-di) — Pipeline 생성과 DI 등록
 - [단위 테스트 작성 가이드](../testing/15a-unit-testing) — 테스트 네이밍, AAA 패턴, Shouldly
 
 > **테스트 대상은 Pipeline이 아닌 원본 Adapter입니다.** Pipeline은 관측성만 추가하므로, 비즈니스 로직 검증은 원본 클래스에서 수행합니다.
@@ -559,7 +559,7 @@ var result = await Task.Run(() => ioResult.Run());  // Fin<T> 실행
 - **Aggregate 필요** (도메인 불변식 검증, Create/Update/Delete) -> **Repository** (`IRepository<T, TId>`, Domain Layer, EF Core)
 - **DTO 직접 반환** (읽기 전용, 페이지네이션/정렬) -> **Query Adapter** (`IQueryPort<TEntity, TDto>`, Application Layer, Dapper)
 
-> 상세 판단 기준은 [Query Adapter](./13-adapters#query-adapter-cqrs-read-측)의 비교 테이블을 참조하세요.
+> 상세 판단 기준은 [Query Adapter](../13-adapters#query-adapter-cqrs-read-측)의 비교 테이블을 참조하세요.
 
 ---
 
@@ -572,9 +572,9 @@ var result = await Task.Run(() => ioResult.Run());  // Fin<T> 실행
 | [08a-error-system.md](../domain/08a-error-system) | 에러 시스템: 기초와 네이밍 |
 | [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) | 에러 시스템: Domain/Application 에러 |
 | [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) | 에러 시스템: Adapter 에러와 테스트 |
-| [12-ports.md](./12-ports) | Port 정의 가이드 |
-| [13-adapters.md](./13-adapters) | Adapter 구현 가이드 |
-| [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di) | Pipeline 생성, DI 등록, Options 패턴 |
+| [12-ports.md](../12-ports) | Port 정의 가이드 |
+| [13-adapters.md](../13-adapters) | Adapter 구현 가이드 |
+| [14a-adapter-pipeline-di.md](../14a-adapter-pipeline-di) | Pipeline 생성, DI 등록, Options 패턴 |
 | [15a-unit-testing.md](../testing/15a-unit-testing) | 단위 테스트 작성 가이드 |
 | [08-observability.md](../../spec/08-observability) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
 | [01-project-structure.md](../architecture/01-project-structure) | 서비스 프로젝트 구조 가이드 |

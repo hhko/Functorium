@@ -246,4 +246,4 @@ public sealed class InitiateAssessmentOnRiskUpgradeHandler(
 | 트랜잭션 | 전체 체인이 하나의 트랜잭션 | 독립 트랜잭션 |
 | 검증 | FluentValidation + FinT | 도메인 속성으로 조건 분기 |
 
-[구현 결과](./03-implementation-results/)에서 전체 Use Case 목록과 포트 매핑을 확인합니다.
+[구현 결과](../03-implementation-results/)에서 전체 Use Case 목록과 포트 매핑을 확인합니다.

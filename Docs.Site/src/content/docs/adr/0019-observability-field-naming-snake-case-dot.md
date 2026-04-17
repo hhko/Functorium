@@ -65,4 +65,4 @@ The following naming rules apply to all observability fields:
 ## Related Information
 
 - Commits: a5027a78, 419659df
-- Related ADR: [ADR-0009 3-Type Error Classification](./0009-error-classification-three-types.md)
+- Related ADR: [ADR-0009 3-Type Error Classification](../0009-error-classification-three-types.md)
