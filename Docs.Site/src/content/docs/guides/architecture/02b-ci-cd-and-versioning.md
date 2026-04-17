@@ -1329,9 +1329,9 @@ dotnet restore
 dotnet build
 ```
 
-### Korean Path Issue
+### Non-ASCII Path Issue
 
-If the Git repository is in a path containing Korean characters, MinVer may fail to recognize the path. Move the project to an English-character path.
+If the Git repository is in a path containing non-ASCII characters (e.g., Korean), MinVer may fail to recognize the path. Move the project to an ASCII-only path.
 
 ---
 
@@ -1385,7 +1385,7 @@ prerelease: ${{ contains(github.ref, '-') }}
 
 ### Q5. How to test across multiple .NET versions?
 
-**A:** Matrix 빌드를 uses합니다:
+**A:** Use matrix builds:
 
 ```yaml
 strategy:
@@ -1393,7 +1393,7 @@ strategy:
     dotnet-version: ['8.0.x', '9.0.x', '10.0.x']
 ```
 
-### Q6. 배포된 패키지를 어떻게 uses하나요?
+### Q6. How to use deployed packages?
 
 **A:**
 
@@ -1407,7 +1407,7 @@ dotnet add package Functorium --prerelease
 
 ### Q7. How to determine PackageId?
 
-**A:** 네임스페이스와 일치시키고, 소문자와 점(.)을 uses합니다:
+**A:** Match it with the namespace, using lowercase and dots (.):
 
 ```xml
 <!-- Recommended -->
@@ -1475,7 +1475,7 @@ git merge hotfix/1.0.1
 
 ### Q13. How are NuGet package versions set?
 
-**A:** MinVer가 Automatic으로 `<Version>` 속성을 설정합니다:
+**A:** MinVer automatically sets the `<Version>` property:
 
 ```bash
 dotnet pack
@@ -1484,12 +1484,12 @@ dotnet pack
 
 ### Q14. How to distinguish local build and CI build versions?
 
-**A:** Build metadata를 uses합니다:
+**A:** Use build metadata:
 
 ```yaml
 # CI (GitHub Actions)
 - run: dotnet build -p:MinVerBuildMetadata=ci.${{ github.run_number }}
-  # 결과: 1.0.0+ci.123
+  # Result: 1.0.0+ci.123
 ```
 
 ### Q15. How to detect Breaking Changes?

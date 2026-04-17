@@ -187,7 +187,7 @@ The following matrix summarizes which project can reference which project.
 
 > **Verification:** This matrix is automatically verified by `LayerDependencyArchitectureRuleTests` architecture tests.
 
-### Test Projects 의존성
+### Test Project Dependencies
 
 ```mermaid
 flowchart LR
@@ -223,7 +223,7 @@ public static class AssemblyReference
 
 **Namespace examples:**
 
-| Project | 네임스페이스 |
+| Project | Namespace |
 |---------|------------|
 | Domain | `{ServiceName}.Domain` |
 | Application | `{ServiceName}.Application` |
@@ -231,7 +231,7 @@ public static class AssemblyReference
 | Adapters.Persistence | `{ServiceName}.Adapters.Persistence` |
 | Adapters.Infrastructure | `{ServiceName}.Adapters.Infrastructure` |
 
-**Purpose:** FluentValidation 자동 등록, Mediator 핸들러 스캔 등 `Assembly` 참조가 필요한 곳에서 사용합니다.
+**Purpose:** Used wherever an `Assembly` reference is needed, such as FluentValidation auto-registration and Mediator handler scanning.
 
 ```csharp
 // Usage example — in Infrastructure Registration
@@ -243,13 +243,13 @@ services.AddValidatorsFromAssembly(LayeredArch.Application.AssemblyReference.Ass
 
 A global using declaration file for each layer. The file name is unified as `Using.cs` across all projects.
 
-| Project | global using 내용 |
+| Project | global using Contents |
 |---------|------------------|
-| Domain | LanguageExt, Functorium.Domains.*, 자체 SharedModels |
-| Application | LanguageExt, Functorium.Applications.Usecases, FluentValidation, 자체 SharedModels |
+| Domain | LanguageExt, Functorium.Domains.*, own SharedModels |
+| Application | LanguageExt, Functorium.Applications.Usecases, FluentValidation, own SharedModels |
 | Adapters.Presentation | FastEndpoints, Mediator, LanguageExt.Common |
-| Adapters.Persistence | LanguageExt, Domain Aggregate, 자체 SharedModels |
-| Adapters.Infrastructure | FluentValidation, 자체 SharedModels |
+| Adapters.Persistence | LanguageExt, Domain Aggregate, own SharedModels |
+| Adapters.Infrastructure | FluentValidation, own SharedModels |
 
 <details>
 <summary>Complete Using.cs Code by Layer</summary>
@@ -308,10 +308,10 @@ Each project (layer) has **primary and** **secondary objectives.**
 - **Primary Objective** — The reason the layer exists. Business logic or core technology implementation code is located here.
 - **Secondary Objective** — Supporting infrastructure for the layer. DI registration, extension methods, etc. are located here.
 
-| Project | 주 목표 폴더 | 부수 목표 폴더 |
+| Project | Primary Objective Folder | Secondary Objective Folder |
 |---------|------------|------------|
-| Domain | `AggregateRoots/`, `SharedModels/`, `Ports/` | *(없음)* |
-| Application | `Usecases/`, `Ports/` | *(없음)* |
+| Domain | `AggregateRoots/`, `SharedModels/`, `Ports/` | *(none)* |
+| Application | `Usecases/`, `Ports/` | *(none)* |
 | Adapters.Presentation | `Endpoints/` | `Abstractions/` (Registrations/, Extensions/) |
 | Adapters.Persistence | `Repositories/` (InMemory/, EfCore/) | `Abstractions/` (Options/, Registrations/) |
 | Adapters.Infrastructure | `ExternalApis/`, ... | `Abstractions/` (Registrations/) |
@@ -322,21 +322,21 @@ Secondary objectives of Adapter projects are placed under the `Abstractions/` fo
 
 ```
 Abstractions/
-├── Options/              ← Adapter 구성 옵션 (appsettings.json 바인딩, 필요 시)
+├── Options/              ← Adapter configuration options (appsettings.json binding, when needed)
 │   └── {Category}Options.cs
-├── Registrations/        ← DI 서비스 등록 확장 메서드
+├── Registrations/        ← DI service registration extension methods
 │   └── Adapter{Category}Registration.cs
-└── Extensions/           ← 공유 확장 메서드 (필요 시)
+└── Extensions/           ← Shared extension methods (when needed)
     └── {Name}Extensions.cs
 ```
 
 | Folder | Purpose | Example |
 |------|------|------|
-| `Options/` | appsettings.json 바인딩 Options 클래스 | `PersistenceOptions`, `FtpOptions` |
-| `Registrations/` | DI 서비스 등록 확장 메서드 | `AdapterPersistenceRegistration` |
-| `Extensions/` | 공유 확장 메서드 | `FinResponseExtensions` |
+| `Options/` | appsettings.json binding Options class | `PersistenceOptions`, `FtpOptions` |
+| `Registrations/` | DI service registration extension methods | `AdapterPersistenceRegistration` |
+| `Extensions/` | Shared extension methods | `FinResponseExtensions` |
 
-> **Caution:** Domain과 Application에는 `Abstractions/` 폴더가 없습니다. [FAQ 참조](#faq)
+> **Caution:** Domain and Application do not have an `Abstractions/` folder. [See FAQ](#faq)
 
 If common files form the foundation of a project, the code placement guide determines where new code should be located.
 
@@ -347,10 +347,10 @@ When writing new code, decide "where to place this code?" in 3 steps.
 ### Step 1. Layer Decision
 
 ```
-새 코드 작성
-├─ 비즈니스 규칙인가? → Domain Layer
-├─ 유스케이스 조율인가? → Application Layer
-└─ 기술적 구현인가? → Adapter Layer
+Writing new code
+├─ Is it a business rule? → Domain Layer
+├─ Is it use case orchestration? → Application Layer
+└─ Is it a technical implementation? → Adapter Layer
 ```
 
 ### Step 2. Project and Folder Decision
@@ -358,36 +358,36 @@ When writing new code, decide "where to place this code?" in 3 steps.
 | Code Type | Project | Folder |
 |-----------|---------|------|
 | Entity, Aggregate Root | Domain | `AggregateRoots/{Aggregate}/` |
-| Value Object (단일 Aggregate) | Domain | `AggregateRoots/{Aggregate}/ValueObjects/` |
-| Value Object (공유) | Domain | `SharedModels/ValueObjects/` |
+| Value Object (single Aggregate) | Domain | `AggregateRoots/{Aggregate}/ValueObjects/` |
+| Value Object (shared) | Domain | `SharedModels/ValueObjects/` |
 | Domain Event | Domain | `AggregateRoots/{Aggregate}/Events/` |
 | Domain Service | Domain | `SharedModels/Services/` |
-| Repository Port (영속성) | Domain | `AggregateRoots/{Aggregate}/Ports/` |
-| 교차 Aggregate 읽기 전용 Port | Domain | `Ports/` |
+| Repository Port (persistence) | Domain | `AggregateRoots/{Aggregate}/Ports/` |
+| Cross-Aggregate read-only Port | Domain | `Ports/` |
 | Command / Query | Application | `Usecases/{Feature}/` |
 | Event Handler | Application | `Usecases/{Feature}/` |
-| Application Port (외부 시스템) | Application | `Ports/` |
+| Application Port (external systems) | Application | `Ports/` |
 | HTTP Endpoint | Presentation | `Endpoints/{Feature}/` |
-| Repository implementation체 | Persistence | `Repositories/` |
-| Query Adapter 구현체 | Persistence | `Repositories/Dapper/` |
-| 외부 API 서비스 | Infrastructure | `ExternalApis/` |
-| 횡단 관심사 (Mediator 등) | Infrastructure | `Abstractions/Registrations/` |
+| Repository implementation | Persistence | `Repositories/` |
+| Query Adapter implementation | Persistence | `Repositories/Dapper/` |
+| External API service | Infrastructure | `ExternalApis/` |
+| Cross-cutting concerns (Mediator, etc.) | Infrastructure | `Abstractions/Registrations/` |
 
-> 각 프로젝트의 상세 폴더 구조는 [Domain 레이어](#domain-레이어), [Application 레이어](#application-레이어), [Adapter 레이어](#adapter-레이어) 섹션.
+> For the detailed folder structure of each project, see the [Domain Layer](#domain-layer), [Application Layer](#application-layer), and [Adapter Layer](#adapter-layer) sections.
 
 ### Step 3. Port Placement Decision
 
 Port interfaces are a frequent decision point, so they are organized separately.
 
 ```
-Port 인터페이스
-├─ 메서드 시그니처가 도메인 타입만 사용? → Domain
-│  ├─ 특정 Aggregate 전용 CRUD? → AggregateRoots/{Agg}/Ports/
-│  └─ 교차 Aggregate 읽기 전용? → Ports/ (프로젝트 루트)
-└─ 외부 DTO나 기술적 관심사 포함? → Application/Ports/
+Port interface
+├─ Does the method signature use only domain types? → Domain
+│  ├─ CRUD specific to a single Aggregate? → AggregateRoots/{Agg}/Ports/
+│  └─ Cross-Aggregate read-only? → Ports/ (project root)
+└─ Includes external DTOs or technical concerns? → Application/Ports/
 ```
 
-> Port 배치의 상세 기준은 [FAQ §Port를 Domain에 둘지 Application에 둘지](#port를-domain에-둘지-application에-둘지-판단-기준)와 [12-ports.md](../adapter/12-ports)를 참조하세요.
+> For detailed criteria on Port placement, see [FAQ: Criteria for Placing Ports in Domain or Application](#criteria-for-placing-ports-in-domain-or-application) and [12-ports.md](../adapter/12-ports).
 
 ## Domain Layer
 
@@ -395,9 +395,9 @@ Port 인터페이스
 
 ```
 {ServiceName}.Domain/
-├── AggregateRoots/       ← Aggregate Root별 하위 폴더
-├── SharedModels/         ← 교차 Aggregate 공유 타입
-├── Ports/                ← 교차 Aggregate Port 인터페이스
+├── AggregateRoots/       ← Subfolders per Aggregate Root
+├── SharedModels/         ← Cross-Aggregate shared types
+├── Ports/                ← Cross-Aggregate Port interfaces
 ├── AssemblyReference.cs
 └── Using.cs
 ```
@@ -410,16 +410,16 @@ Each Aggregate Root has its own folder, and the internal structure is as follows
 AggregateRoots/
 ├── Products/
 │   ├── Product.cs                 ← Aggregate Root Entity
-│   ├── Entities/                  ← 이 Aggregate의 자식 Entity (필요 시)
+│   ├── Entities/                  ← Child Entities of this Aggregate (when needed)
 │   │   └── ProductVariant.cs
 │   ├── Ports/
-│   │   └── IProductRepository.cs  ← 이 Aggregate 전용 Port
+│   │   └── IProductRepository.cs  ← Port specific to this Aggregate
 │   ├── Specifications/
-│   │   ├── ProductNameUniqueSpec.cs    ← 이 Aggregate 전용 Specification
+│   │   ├── ProductNameUniqueSpec.cs    ← Specification specific to this Aggregate
 │   │   ├── ProductPriceRangeSpec.cs
 │   │   └── ProductLowStockSpec.cs
 │   └── ValueObjects/
-│       ├── ProductName.cs         ← 이 Aggregate 전용 Value Object
+│       ├── ProductName.cs         ← Value Object specific to this Aggregate
 │       └── ProductDescription.cs
 ├── Customers/
 │   ├── Customer.cs
@@ -433,7 +433,7 @@ AggregateRoots/
 └── Orders/
     ├── Order.cs
     ├── Entities/
-    │   └── OrderLine.cs           ← 자식 Entity
+    │   └── OrderLine.cs           ← Child Entity
     ├── Ports/
     │   └── IOrderRepository.cs
     └── ValueObjects/
@@ -441,11 +441,11 @@ AggregateRoots/
 ```
 
 **Rules:**
-- Aggregate Root 파일(`{Aggregate}.cs`)은 해당 폴더의 루트에 배치
-- Aggregate의 자식 Entity는 `{Aggregate}/Entities/` 에 배치
-- Aggregate 전용 Port는 `{Aggregate}/Ports/` 에 배치
-- Aggregate 전용 Value Object는 `{Aggregate}/ValueObjects/` 에 배치
-- Aggregate 전용 Specification은 `{Aggregate}/Specifications/` 에 배치
+- The Aggregate Root file (`{Aggregate}.cs`) is placed at the root of its folder
+- Child Entities of an Aggregate are placed in `{Aggregate}/Entities/`
+- Ports specific to an Aggregate are placed in `{Aggregate}/Ports/`
+- Value Objects specific to an Aggregate are placed in `{Aggregate}/ValueObjects/`
+- Specifications specific to an Aggregate are placed in `{Aggregate}/Specifications/`
 
 ### SharedModels Internal Structure
 
@@ -454,11 +454,11 @@ Types shared across multiple Aggregates are placed here.
 ```
 SharedModels/
 ├── Entities/
-│   └── Tag.cs                ← 공유 Entity
+│   └── Tag.cs                ← Shared Entity
 ├── Events/
-│   └── TagEvents.cs          ← 공유 Domain Event
+│   └── TagEvents.cs          ← Shared Domain Event
 └── ValueObjects/
-    ├── Money.cs              ← 공유 Value Object
+    ├── Money.cs              ← Shared Value Object
     ├── Quantity.cs
     └── TagName.cs
 ```
@@ -469,15 +469,15 @@ Ports that do not belong to a single Aggregate and are referenced by other Aggre
 
 ```
 Ports/
-└── IProductCatalog.cs    ← Order에서 Product 검증용으로 사용
+└── IProductCatalog.cs    ← Used by Order for Product verification
 ```
 
-**Port 위치 결정 기준:**
+**Port location decision criteria:**
 
 | Criteria | Location | Example |
 |------|------|------|
-| 특정 Aggregate 전용 CRUD | `AggregateRoots/{Aggregate}/Ports/` | `IProductRepository` |
-| 교차 Aggregate 읽기 전용 | `Ports/` (프로젝트 루트) | `IProductCatalog` |
+| CRUD specific to a single Aggregate | `AggregateRoots/{Aggregate}/Ports/` | `IProductRepository` |
+| Cross-Aggregate read-only | `Ports/` (project root) | `IProductCatalog` |
 
 ## Application Layer
 
@@ -485,8 +485,8 @@ Ports/
 
 ```
 {ServiceName}.Application/
-├── Usecases/             ← Aggregate별 유스케이스
-├── Ports/                ← 외부 시스템 Port 인터페이스
+├── Usecases/             ← Use cases per Aggregate
+├── Ports/                ← External system Port interfaces
 ├── AssemblyReference.cs
 └── Using.cs
 ```
@@ -520,15 +520,15 @@ Usecases/
 
 | Type | Pattern | Example |
 |------|------|------|
-| Command | `{동사}{Aggregate}Command.cs` | `CreateProductCommand.cs` |
-| Query | `{Get 등}{설명}Query.cs` | `GetAllProductsQuery.cs` |
-| Event Handler | `On{Event명}.cs` | `OnProductCreated.cs` |
+| Command | `{Verb}{Aggregate}Command.cs` | `CreateProductCommand.cs` |
+| Query | `{Get, etc.}{Description}Query.cs` | `GetAllProductsQuery.cs` |
+| Event Handler | `On{EventName}.cs` | `OnProductCreated.cs` |
 
 ### Ports — Difference from Domain Ports
 
 | Criteria | Domain Port | Application Port |
 |------|------------|-----------------|
-| Location | `Domain/AggregateRoots/{Aggregate}/Ports/` 또는 `Domain/Ports/` | `Application/Ports/` |
+| Location | `Domain/AggregateRoots/{Aggregate}/Ports/` or `Domain/Ports/` | `Application/Ports/` |
 | Implemented by | Primarily Persistence Adapter | Primarily Infrastructure Adapter |
 | Role | Domain object persistence/retrieval | External system calls (API, messaging, etc.) |
 | Example | `IProductRepository`, `IProductCatalog` | `IExternalPricingService` |
@@ -539,25 +539,25 @@ Usecases/
 
 Adapters are always split into 3 projects.
 
-| Project | Concern | 헥사고날 Role | 대표 폴더 |
+| Project | Concern | Hexagonal Role | Representative Folder |
 |---------|--------|---------------|----------|
-| `Adapters.Presentation` | HTTP 입출력 | **Driving** (Outside → Inside) | `Endpoints/` |
-| `Adapters.Persistence` | 데이터 저장/조회 | **Driven** (Inside → Outside) | `Repositories/` |
-| `Adapters.Infrastructure` | 외부 API, 횡단 관심사(Observability, Mediator 등) | **Driven** (Inside → Outside) | `ExternalApis/`, ... |
+| `Adapters.Presentation` | HTTP I/O | **Driving** (Outside → Inside) | `Endpoints/` |
+| `Adapters.Persistence` | Data storage/retrieval | **Driven** (Inside → Outside) | `Repositories/` |
+| `Adapters.Infrastructure` | External APIs, cross-cutting concerns (Observability, Mediator, etc.) | **Driven** (Inside → Outside) | `ExternalApis/`, ... |
 
-> Driving/Driven 구분과 Presentation에 Port가 없는 설계 결정의 근거는 [12-ports.md](../adapter/12-ports)의 "Driving vs Driven Adapter 구분" 참조.
+> For the rationale behind the Driving/Driven distinction and the design decision of not having Ports in Presentation, see "Driving vs Driven Adapter Distinction" in [12-ports.md](../adapter/12-ports).
 
-### Primary Objective Folders가 고정되지 않는 이유
+### Why Primary Objective Folders Are Not Fixed
 
 The primary objective folder name of an Adapter varies depending on the implementation technology. Presentation becomes `Endpoints/`, but could be `Services/` for gRPC. Persistence also varies by ORM, such as `Repositories/`, `DbContexts/`, etc. **Folder names reflect the implementation technology.**
 
-### Adapters.Presentation 구조
+### Adapters.Presentation Structure
 
 ```
 {ServiceName}.Adapters.Presentation/
 ├── Endpoints/
 │   ├── Products/
-│   │   ├── Dtos/                        ← Endpoint 간 공유 DTO
+│   │   ├── Dtos/                        ← DTOs shared across Endpoints
 │   │   │   └── ProductSummaryDto.cs
 │   │   ├── CreateProductEndpoint.cs
 │   │   ├── UpdateProductEndpoint.cs
@@ -581,15 +581,15 @@ The primary objective folder name of an Adapter varies depending on the implemen
 
 **Endpoints Folder Rules:** Subfolders per Aggregate, endpoint file names follow the `{Verb}{Aggregate}Endpoint.cs` pattern. DTOs shared across multiple Endpoints are placed in a `Dtos/` subfolder. Each Endpoint's Request/Response DTOs are defined as nested records inside the Endpoint class.
 
-### Adapters.Persistence 구조
+### Adapters.Persistence Structure
 
 ```
 {ServiceName}.Adapters.Persistence/
-├── Repositories/                    ← 구현 기술별 하위 폴더
-│   ├── InMemory/                    ← InMemory(ConcurrentDictionary) 구현
+├── Repositories/                    ← Subfolders per implementation technology
+│   ├── InMemory/                    ← InMemory (ConcurrentDictionary) implementation
 │   │   ├── Products/
 │   │   │   ├── InMemoryProductRepository.cs
-│   │   │   ├── InMemoryProductCatalog.cs    ← 교차 Aggregate Port 구현
+│   │   │   ├── InMemoryProductCatalog.cs    ← Cross-Aggregate Port implementation
 │   │   │   ├── InMemoryProductQuery.cs
 │   │   │   ├── InMemoryProductDetailQuery.cs
 │   │   │   ├── InMemoryProductWithStockQuery.cs
@@ -609,7 +609,7 @@ The primary objective folder name of an Adapter varies depending on the implemen
 │   │   ├── Tags/
 │   │   │   └── InMemoryTagRepository.cs
 │   │   └── InMemoryUnitOfWork.cs
-│   ├── Dapper/                      ← Dapper 기반 Query Adapter (CQRS Read 측)
+│   ├── Dapper/                      ← Dapper-based Query Adapter (CQRS Read side)
 │   │   ├── DapperProductQuery.cs
 │   │   ├── DapperProductWithStockQuery.cs
 │   │   ├── DapperProductWithOptionalStockQuery.cs
@@ -617,13 +617,13 @@ The primary objective folder name of an Adapter varies depending on the implemen
 │   │   ├── DapperCustomerOrderSummaryQuery.cs
 │   │   ├── DapperCustomerOrdersQuery.cs
 │   │   └── DapperOrderWithProductsQuery.cs
-│   └── EfCore/                      ← EF Core 기반 구현 (선택)
-│       ├── Models/                  ← Persistence Model (POCO, primitive 타입만)
+│   └── EfCore/                      ← EF Core-based implementation (optional)
+│       ├── Models/                  ← Persistence Model (POCO, primitive types only)
 │       │   ├── ProductModel.cs
 │       │   ├── OrderModel.cs
 │       │   ├── CustomerModel.cs
 │       │   └── TagModel.cs
-│       ├── Mappers/                 ← 도메인 ↔ Model 변환 (확장 메서드)
+│       ├── Mappers/                 ← Domain ↔ Model conversion (extension methods)
 │       │   ├── ProductMapper.cs
 │       │   ├── OrderMapper.cs
 │       │   ├── CustomerMapper.cs
@@ -639,7 +639,7 @@ The primary objective folder name of an Adapter varies depending on the implemen
 │       ├── EfCoreCustomerRepository.cs
 │       └── EfCoreProductCatalog.cs
 ├── Abstractions/
-│   ├── Options/                     ← Adapter 구성 옵션 (선택)
+│   ├── Options/                     ← Adapter configuration options (optional)
 │   │   └── PersistenceOptions.cs
 │   └── Registrations/
 │       └── AdapterPersistenceRegistration.cs
@@ -647,14 +647,14 @@ The primary objective folder name of an Adapter varies depending on the implemen
 └── Using.cs
 ```
 
-> **Note**: `Repositories/EfCore/`와 `Abstractions/Options/`는 EF Core 기반 영속화를 사용할 때 추가합니다. InMemory만 사용하는 경우 `Repositories/InMemory/`와 `Abstractions/Registrations/`만 있으면 됩니다. EF Core 사용 시 `Models/`(Persistence Model)과 `Mappers/`(도메인 ↔ Model 변환)가 함께 추가됩니다.
+> **Note**: `Repositories/EfCore/` and `Abstractions/Options/` are added when using EF Core-based persistence. When using only InMemory, only `Repositories/InMemory/` and `Abstractions/Registrations/` are needed. When using EF Core, `Models/` (Persistence Model) and `Mappers/` (Domain ↔ Model conversion) are also added.
 
-### Adapters.Infrastructure 구조
+### Adapters.Infrastructure Structure
 
 ```
 {ServiceName}.Adapters.Infrastructure/
 ├── ExternalApis/
-│   └── ExternalPricingApiService.cs   ← Application Port 구현
+│   └── ExternalPricingApiService.cs   ← Application Port implementation
 ├── Abstractions/
 │   └── Registrations/
 │       └── AdapterInfrastructureRegistration.cs
@@ -670,15 +670,15 @@ DI registration extension methods are placed in the `Abstractions/Registrations/
 
 | Method | Pattern |
 |--------|------|
-| 서비스 등록 | `RegisterAdapter{Category}(this IServiceCollection)` |
-| 미들웨어 설정 | `UseAdapter{Category}(this IApplicationBuilder)` |
+| Service registration | `RegisterAdapter{Category}(this IServiceCollection)` |
+| Middleware configuration | `UseAdapter{Category}(this IApplicationBuilder)` |
 
 ```csharp
 // AdapterPresentationRegistration.cs
 public static IServiceCollection RegisterAdapterPresentation(this IServiceCollection services) { ... }
 public static IApplicationBuilder UseAdapterPresentation(this IApplicationBuilder app) { ... }
 
-// AdapterPersistenceRegistration.cs — Options 패턴 사용 시 IConfiguration 파라미터 추가
+// AdapterPersistenceRegistration.cs — IConfiguration parameter added when using Options pattern
 public static IServiceCollection RegisterAdapterPersistence(this IServiceCollection services, IConfiguration configuration) { ... }
 public static IApplicationBuilder UseAdapterPersistence(this IApplicationBuilder app) { ... }
 
@@ -687,7 +687,7 @@ public static IServiceCollection RegisterAdapterInfrastructure(this IServiceColl
 public static IApplicationBuilder UseAdapterInfrastructure(this IApplicationBuilder app) { ... }
 ```
 
-> **Note**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [14a-adapter-pipeline-di.md §4.6](../adapter/14a-adapter-pipeline-di#options-패턴-optionsconfigurator).
+> **Note**: The `IConfiguration` parameter is required in Adapters that use the Options pattern (`RegisterConfigureOptions`). For Options pattern details, see [14a-adapter-pipeline-di.md §4.6](../adapter/14a-adapter-pipeline-di#options-패턴-optionsconfigurator).
 
 Now that we understand the folder structure of each layer, let us examine the Host project that assembles all layers.
 
@@ -695,20 +695,20 @@ Now that we understand the folder structure of each layer, let us examine the Ho
 
 ### Role (Composition Root)
 
-The Host project is the only project that assembles all layers. SDK는 `Microsoft.NET.Sdk.Web`을 사용합니다.
+The Host project is the only project that assembles all layers. It uses the `Microsoft.NET.Sdk.Web` SDK.
 
 ### Program.cs Layer Registration Order
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
-// 레이어별 서비스 등록
+// Service registration per layer
 builder.Services
     .RegisterAdapterPresentation()
     .RegisterAdapterPersistence(builder.Configuration)
     .RegisterAdapterInfrastructure(builder.Configuration);
 
-// App 빌드 및 미들웨어 설정
+// App build and middleware configuration
 var app = builder.Build();
 
 app.UseAdapterInfrastructure()
@@ -718,8 +718,8 @@ app.UseAdapterInfrastructure()
 app.Run();
 ```
 
-**Registration Order:** Presentation → Persistence → Infrastructure (서비스 등록)
-**Middleware Order:** Infrastructure → Persistence → Presentation (미들웨어 설정)
+**Registration Order:** Presentation → Persistence → Infrastructure (service registration)
+**Middleware Order:** Infrastructure → Persistence → Presentation (middleware configuration)
 
 ### Registration Order Rationale
 
@@ -727,52 +727,52 @@ app.Run();
 
 | Order | Adapter | Rationale |
 |------|---------|------|
-| 1 | Presentation | 외부 의존성 없음 (FastEndpoints만 등록) |
-| 2 | Persistence | Configuration 필요, DB Context/Repository 등록 |
-| 3 | Infrastructure | Mediator, Validation, OpenTelemetry, Pipeline 등록 — Pipeline이 앞서 등록된 Adapter를 래핑하므로 마지막 |
+| 1 | Presentation | No external dependencies (registers only FastEndpoints) |
+| 2 | Persistence | Requires Configuration, registers DB Context/Repository |
+| 3 | Infrastructure | Registers Mediator, Validation, OpenTelemetry, Pipeline — last because Pipeline wraps previously registered Adapters |
 
-- 핵심: Infrastructure가 마지막인 이유는 `ConfigurePipelines(p => p.UseObservability().UseValidation().UseException())`이 이전 단계에서 등록된 모든 Adapter Pipeline을 활성화하기 때문
+- Key point: Infrastructure is last because `ConfigurePipelines(p => p.UseObservability().UseValidation().UseException())` activates all Adapter Pipelines registered in previous steps
 
-**미들웨어 순서** (Infrastructure → Persistence → Presentation):
+**Middleware Order** (Infrastructure → Persistence → Presentation):
 
 | Order | Adapter | Rationale |
 |------|---------|------|
-| 1 | Infrastructure | 관찰성 미들웨어 — 가장 바깥쪽에서 모든 요청/응답 캡처 |
-| 2 | Persistence | DB 초기화 (`EnsureCreated`) |
-| 3 | Presentation | 엔드포인트 매핑 (`UseFastEndpoints`) — 가장 안쪽, 실제 요청 처리 |
+| 1 | Infrastructure | Observability middleware — captures all requests/responses from the outermost layer |
+| 2 | Persistence | DB initialization (`EnsureCreated`) |
+| 3 | Presentation | Endpoint mapping (`UseFastEndpoints`) — innermost layer, handles actual requests |
 
-- 원칙: 먼저 등록된 미들웨어가 요청 파이프라인의 바깥쪽에 위치
+- Principle: Middleware registered first is positioned on the outer side of the request pipeline
 
 ### Environment-Specific Configuration
 
-- File Structure: `appsettings.json` (기본) + `appsettings.{Environment}.json` (오버라이드)
+- File Structure: `appsettings.json` (default) + `appsettings.{Environment}.json` (override)
 
-| Category | 방법 | Example |
+| Category | Method | Example |
 |------|------|------|
-| 설정값 분기 | `appsettings.{Environment}.json` | Persistence.Provider, OpenTelemetry 설정 |
-| 코드 분기 | `app.Environment.IsDevelopment()` | 진단 엔드포인트, Swagger |
-| Options 패턴 | `RegisterConfigureOptions<T, TValidator>()` | 시작 시 검증 + 자동 로깅 |
+| Configuration branching | `appsettings.{Environment}.json` | Persistence.Provider, OpenTelemetry settings |
+| Code branching | `app.Environment.IsDevelopment()` | Diagnostic endpoints, Swagger |
+| Options pattern | `RegisterConfigureOptions<T, TValidator>()` | Validation at startup + automatic logging |
 
-- 원칙: 설정값으로 분기 가능하면 appsettings 사용, 코드 분기는 개발 전용 엔드포인트 등 코드 레벨 차이에만 사용
+- Principle: Use appsettings when branching by configuration values is possible; code branching is used only for code-level differences such as development-only endpoints
 
 ### Middleware Pipeline Extension Points
 
-운영 요구사항 추가 시 미들웨어 삽입 위치:
+Middleware insertion points when adding operational requirements:
 
 ```
-① 예외 처리 (가장 바깥쪽) — app.UseExceptionHandler()
-② 관찰성                  — app.UseAdapterInfrastructure()
-③ 보안 (HTTPS, CORS, 인증) — app.UseHttpsRedirection() / UseCors() / UseAuthentication() / UseAuthorization()
-④ 데이터                  — app.UseAdapterPersistence()
-⑤ Health Check            — app.MapHealthChecks("/health")
-⑥ 엔드포인트 (가장 안쪽)   — app.UseAdapterPresentation()
+1. Exception handling (outermost) — app.UseExceptionHandler()
+2. Observability                  — app.UseAdapterInfrastructure()
+3. Security (HTTPS, CORS, Auth)   — app.UseHttpsRedirection() / UseCors() / UseAuthentication() / UseAuthorization()
+4. Data                           — app.UseAdapterPersistence()
+5. Health Check                   — app.MapHealthChecks("/health")
+6. Endpoints (innermost)          — app.UseAdapterPresentation()
 ```
 
-- 참고: 현재 예외 처리는 Adapter Pipeline(`ExceptionHandlingPipeline`)에서 Usecase 레벨로 처리. ASP.NET 미들웨어 레벨 예외 처리는 인프라 오류(직렬화 실패 등)에만 필요
+- Note: Currently, exception handling is handled at the Usecase level in the Adapter Pipeline (`ExceptionHandlingPipeline`). ASP.NET middleware-level exception handling is only needed for infrastructure errors (serialization failures, etc.)
 
 ## Test Projects
 
-Test projects are placed under the `Tests/` folder. 테스트 작성 방법론(명명 규칙, AAA 패턴, MTP 설정 등)은 [15a-unit-testing.md](../testing/15a-unit-testing)를 참조하세요.
+Test projects are placed under the `Tests/` folder. For test writing methodology (naming conventions, AAA pattern, MTP settings, etc.), see [15a-unit-testing.md](../testing/15a-unit-testing).
 
 ### Tests.Unit Project
 
@@ -788,28 +788,28 @@ Responsible for unit testing the Domain/Application layers.
 </ItemGroup>
 ```
 
-- 추가 패키지: `NSubstitute` (Mocking)
-- 구성 파일: `Using.cs`, `xunit.runner.json`
+- Additional packages: `NSubstitute` (Mocking)
+- Configuration files: `Using.cs`, `xunit.runner.json`
 
 **Folder structure:**
 
 ```
 {ServiceName}.Tests.Unit/
-├── Domain/                    ← Domain 레이어 미러링
-│   ├── SharedModels/          ← ValueObject 테스트
-│   ├── {Aggregate}/           ← Aggregate/Entity/ValueObject/Specification 테스트
+├── Domain/                    ← Mirrors Domain layer
+│   ├── SharedModels/          ← ValueObject tests
+│   ├── {Aggregate}/           ← Aggregate/Entity/ValueObject/Specification tests
 │   └── ...
-├── Application/               ← Application 레이어 미러링
-│   ├── {Aggregate}/           ← Usecase 핸들러 테스트
+├── Application/               ← Mirrors Application layer
+│   ├── {Aggregate}/           ← Usecase handler tests
 │   └── ...
-├── TestIO.cs                  ← FinT<IO, T> Mock 헬퍼
+├── TestIO.cs                  ← FinT<IO, T> Mock helper
 ├── Using.cs
 └── xunit.runner.json
 ```
 
 **TestIO Helper:**
 
-Application Usecase 테스트에서 `FinT<IO, T>` 반환값 Mock에 필요한 정적 헬퍼 클래스입니다.
+A static helper class needed for mocking `FinT<IO, T>` return values in Application Usecase tests.
 
 ```csharp
 internal static class TestIO
@@ -832,7 +832,7 @@ internal static class TestIO
 }
 ```
 
-> 단위 테스트는 Mock 기반으로 각 테스트가 독립적이므로 `parallelizeTestCollections: true` (병렬 허용)
+> Unit tests are Mock-based and each test is independent, so `parallelizeTestCollections: true` (parallel execution allowed)
 
 **Using.cs:**
 
@@ -861,30 +861,30 @@ Responsible for integration testing of HTTP endpoints.
 </ItemGroup>
 ```
 
-- 추가 패키지: `Microsoft.AspNetCore.Mvc.Testing`
-- 구성 파일: `Using.cs`, `xunit.runner.json`, `appsettings.json`
+- Additional packages: `Microsoft.AspNetCore.Mvc.Testing`
+- Configuration files: `Using.cs`, `xunit.runner.json`, `appsettings.json`
 
-> **ExcludeAssets=analyzers:** Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 프로젝트에서도 SourceGenerator가 실행되어 중복 코드가 생성됩니다. `ExcludeAssets=analyzers`로 이를 방지합니다.
+> **ExcludeAssets=analyzers:** When the Host project uses Mediator SourceGenerator, the SourceGenerator also runs in the test project, generating duplicate code. `ExcludeAssets=analyzers` prevents this.
 
 **Folder structure:**
 
 ```
 {ServiceName}.Tests.Integration/
 ├── Fixtures/
-│   ├── {ServiceName}Fixture.cs       ← HostTestFixture<Program> 상속
-│   └── IntegrationTestBase.cs        ← IClassFixture + HttpClient 제공
-├── Endpoints/                         ← Presentation 레이어 미러링
+│   ├── {ServiceName}Fixture.cs       ← Inherits HostTestFixture<Program>
+│   └── IntegrationTestBase.cs        ← IClassFixture + HttpClient provider
+├── Endpoints/                         ← Mirrors Presentation layer
 │   ├── {Aggregate}/
 │   │   └── {Endpoint}Tests.cs
-│   └── ErrorScenarios/               ← 에러 처리 검증
+│   └── ErrorScenarios/               ← Error handling verification
 ├── Using.cs
 ├── xunit.runner.json
-└── appsettings.json                   ← OpenTelemetry 설정 필수
+└── appsettings.json                   ← OpenTelemetry settings required
 ```
 
 **Fixture Pattern:**
 
-`HostTestFixture<Program>`을 상속하여 `WebApplicationFactory` 기반 테스트 서버를 구성하고, `IntegrationTestBase`를 통해 `HttpClient`를 주입하는 2단계 패턴입니다.
+A two-step pattern that inherits `HostTestFixture<Program>` to configure a `WebApplicationFactory`-based test server, and injects `HttpClient` through `IntegrationTestBase`.
 
 ```csharp
 // {ServiceName}Fixture.cs
@@ -913,11 +913,11 @@ public abstract class IntegrationTestBase : IClassFixture<{ServiceName}Fixture>
 }
 ```
 
-> 통합 테스트는 In-memory 저장소를 공유하므로 `parallelizeTestCollections: false`, `maxParallelThreads: 1` (순차 실행 Required)
+> Integration tests share In-memory storage, so `parallelizeTestCollections: false`, `maxParallelThreads: 1` (sequential execution required)
 
 **appsettings.json:**
 
-`HostTestFixture`는 "Test" 환경으로 실행하며 ContentRoot를 테스트 프로젝트 경로로 설정합니다. Host 프로젝트의 `appsettings.json`이 아닌 테스트 프로젝트의 `appsettings.json`을 로드하므로, OpenTelemetry 등 Required 설정을 테스트 프로젝트에도 배치해야 합니다.
+`HostTestFixture` runs in the "Test" environment and sets ContentRoot to the test project path. It loads the test project's `appsettings.json` instead of the Host project's `appsettings.json`, so required settings such as OpenTelemetry must also be placed in the test project.
 
 ```json
 {
@@ -948,11 +948,11 @@ global using System.Net.Http.Json;
 
 Namespaces are determined by the project root namespace + folder path.
 
-| 폴더 경로 | 네임스페이스 |
+| Folder Path | Namespace |
 |----------|------------|
 | `Domain/` | `{ServiceName}.Domain` |
 | `Domain/AggregateRoots/Products/` | `{ServiceName}.Domain.AggregateRoots.Products` |
-| `Domain/AggregateRoots/Products/Ports/` | `{ServiceName}.Domain.AggregateRoots.Products` *(Port는 Aggregate 네임스페이스)* |
+| `Domain/AggregateRoots/Products/Ports/` | `{ServiceName}.Domain.AggregateRoots.Products` *(Port uses the Aggregate namespace)* |
 | `Domain/AggregateRoots/Products/Specifications/` | `{ServiceName}.Domain.AggregateRoots.Products.Specifications` |
 | `Domain/AggregateRoots/Products/ValueObjects/` | `{ServiceName}.Domain.AggregateRoots.Products.ValueObjects` |
 | `Domain/SharedModels/ValueObjects/` | `{ServiceName}.Domain.SharedModels.ValueObjects` |
@@ -977,91 +977,91 @@ Namespaces are determined by the project root namespace + folder path.
 
 ## New Service Project Creation Checklist
 
-1. **Domain 프로젝트**
-   - [ ] `{ServiceName}.Domain` 프로젝트 생성 (SDK: `Microsoft.NET.Sdk`)
-   - [ ] `AssemblyReference.cs` 추가
-   - [ ] `Using.cs` 추가
-   - [ ] `AggregateRoots/` 폴더 생성
-   - [ ] `SharedModels/` 폴더 생성 (필요 시)
-   - [ ] `Ports/` 폴더 생성 (교차 Aggregate Port가 있을 경우)
+1. **Domain project**
+   - [ ] Create `{ServiceName}.Domain` project (SDK: `Microsoft.NET.Sdk`)
+   - [ ] Add `AssemblyReference.cs`
+   - [ ] Add `Using.cs`
+   - [ ] Create `AggregateRoots/` folder
+   - [ ] Create `SharedModels/` folder (when needed)
+   - [ ] Create `Ports/` folder (when cross-Aggregate Ports exist)
 
-2. **Application 프로젝트**
-   - [ ] `{ServiceName}.Application` 프로젝트 생성
-   - [ ] `AssemblyReference.cs` 추가
-   - [ ] `Using.cs` 추가
-   - [ ] `Usecases/` 폴더 생성
-   - [ ] `Ports/` 폴더 생성 (외부 시스템 Port가 있을 경우)
-   - [ ] Domain 프로젝트 참조 추가
+2. **Application project**
+   - [ ] Create `{ServiceName}.Application` project
+   - [ ] Add `AssemblyReference.cs`
+   - [ ] Add `Using.cs`
+   - [ ] Create `Usecases/` folder
+   - [ ] Create `Ports/` folder (when external system Ports exist)
+   - [ ] Add Domain project reference
 
-3. **Adapters.Presentation 프로젝트**
-   - [ ] `{ServiceName}.Adapters.Presentation` 프로젝트 생성
-   - [ ] `AssemblyReference.cs` 추가
-   - [ ] `Using.cs` 추가
-   - [ ] `Endpoints/` 폴더 생성
-   - [ ] `Abstractions/Registrations/AdapterPresentationRegistration.cs` 추가
-   - [ ] Application 프로젝트 참조 추가
+3. **Adapters.Presentation project**
+   - [ ] Create `{ServiceName}.Adapters.Presentation` project
+   - [ ] Add `AssemblyReference.cs`
+   - [ ] Add `Using.cs`
+   - [ ] Create `Endpoints/` folder
+   - [ ] Add `Abstractions/Registrations/AdapterPresentationRegistration.cs`
+   - [ ] Add Application project reference
 
-4. **Adapters.Persistence 프로젝트**
-   - [ ] `{ServiceName}.Adapters.Persistence` 프로젝트 생성
-   - [ ] `AssemblyReference.cs` 추가
-   - [ ] `Using.cs` 추가
-   - [ ] `Repositories/` 폴더 생성
-   - [ ] `Abstractions/Registrations/AdapterPersistenceRegistration.cs` 추가
-   - [ ] Application 프로젝트 참조 추가
+4. **Adapters.Persistence project**
+   - [ ] Create `{ServiceName}.Adapters.Persistence` project
+   - [ ] Add `AssemblyReference.cs`
+   - [ ] Add `Using.cs`
+   - [ ] Create `Repositories/` folder
+   - [ ] Add `Abstractions/Registrations/AdapterPersistenceRegistration.cs`
+   - [ ] Add Application project reference
 
-5. **Adapters.Infrastructure 프로젝트**
-   - [ ] `{ServiceName}.Adapters.Infrastructure` 프로젝트 생성
-   - [ ] `AssemblyReference.cs` 추가
-   - [ ] `Using.cs` 추가
-   - [ ] `Abstractions/Registrations/AdapterInfrastructureRegistration.cs` 추가
-   - [ ] Application 프로젝트 참조 추가
+5. **Adapters.Infrastructure project**
+   - [ ] Create `{ServiceName}.Adapters.Infrastructure` project
+   - [ ] Add `AssemblyReference.cs`
+   - [ ] Add `Using.cs`
+   - [ ] Add `Abstractions/Registrations/AdapterInfrastructureRegistration.cs`
+   - [ ] Add Application project reference
 
-6. **Host 프로젝트**
-   - [ ] `{ServiceName}` 프로젝트 생성 (SDK: `Microsoft.NET.Sdk.Web`)
-   - [ ] 모든 Adapter + Application 프로젝트 참조 추가
-   - [ ] `Program.cs` — 레이어 등록 메서드 호출 추가
+6. **Host project**
+   - [ ] Create `{ServiceName}` project (SDK: `Microsoft.NET.Sdk.Web`)
+   - [ ] Add references to all Adapter + Application projects
+   - [ ] `Program.cs` — Add layer registration method calls
 
-7. **Tests.Unit 프로젝트**
-   - [ ] `{ServiceName}.Tests.Unit` 프로젝트 생성
-   - [ ] `Using.cs` 추가
-   - [ ] `xunit.runner.json` 추가 (parallelizeTestCollections: true)
-   - [ ] `TestIO.cs` 헬퍼 추가
-   - [ ] Domain + Application + Functorium.Testing 참조 추가
-   - [ ] `Domain/` 폴더 구조 생성 (소스 미러링)
-   - [ ] `Application/` 폴더 구조 생성 (소스 미러링)
+7. **Tests.Unit project**
+   - [ ] Create `{ServiceName}.Tests.Unit` project
+   - [ ] Add `Using.cs`
+   - [ ] Add `xunit.runner.json` (parallelizeTestCollections: true)
+   - [ ] Add `TestIO.cs` helper
+   - [ ] Add Domain + Application + Functorium.Testing references
+   - [ ] Create `Domain/` folder structure (source mirroring)
+   - [ ] Create `Application/` folder structure (source mirroring)
 
-8. **Tests.Integration 프로젝트**
-   - [ ] `{ServiceName}.Tests.Integration` 프로젝트 생성
-   - [ ] `Using.cs` 추가
-   - [ ] `xunit.runner.json` 추가 (parallelizeTestCollections: false, maxParallelThreads: 1)
-   - [ ] `appsettings.json` 추가 (OpenTelemetry 설정)
-   - [ ] Host(ExcludeAssets=analyzers) + Application + Functorium.Testing 참조 추가
-   - [ ] `Fixtures/` 폴더 생성 (Fixture + IntegrationTestBase)
-   - [ ] `Endpoints/` 폴더 구조 생성 (Presentation 미러링)
+8. **Tests.Integration project**
+   - [ ] Create `{ServiceName}.Tests.Integration` project
+   - [ ] Add `Using.cs`
+   - [ ] Add `xunit.runner.json` (parallelizeTestCollections: false, maxParallelThreads: 1)
+   - [ ] Add `appsettings.json` (OpenTelemetry settings)
+   - [ ] Add Host(ExcludeAssets=analyzers) + Application + Functorium.Testing references
+   - [ ] Create `Fixtures/` folder (Fixture + IntegrationTestBase)
+   - [ ] Create `Endpoints/` folder structure (Presentation mirroring)
 
 ## Troubleshooting
 
 ### When Circular References Occur Between Projects
 
-**Cause:** Adapter 프로젝트 간 상호 참조 또는 Domain/Application이 Adapter를 참조하는 경우 발생합니다.
+**Cause:** Occurs when there are cross-references between Adapter projects, or when Domain/Application references an Adapter.
 
 **Solution:**
-1. 의존성 방향 매트릭스를 확인합니다 — 의존성은 항상 바깥에서 안쪽으로만 향해야 합니다
-2. `LayerDependencyArchitectureRuleTests` 아키텍처 테스트를 실행하여 위반 지점을 확인합니다
-3. 공유가 필요한 타입은 더 안쪽 레이어(Domain 또는 Application)로 이동합니다
+1. Check the dependency direction matrix -- dependencies must always flow from outside to inside only
+2. Run `LayerDependencyArchitectureRuleTests` architecture tests to identify violation points
+3. Move types that need to be shared to an inner layer (Domain or Application)
 
 ### When Unsure Where to Place a Value Object
 
-**Cause:** Value Object가 여러 Aggregate에서 사용되는지 판단이 어려운 경우입니다.
+**Cause:** It is difficult to determine whether a Value Object will be used by multiple Aggregates.
 
 **Solution:**
-1. 처음에는 `AggregateRoots/{Aggregate}/ValueObjects/`에 배치합니다
-2. 다른 Aggregate에서 참조가 필요해지면 `SharedModels/ValueObjects/`로 이동합니다
-3. 이동 시 네임스페이스가 변경되므로 `Using.cs`의 global using을 업데이트합니다
+1. Initially place it in `AggregateRoots/{Aggregate}/ValueObjects/`
+2. When a reference from another Aggregate becomes necessary, move it to `SharedModels/ValueObjects/`
+3. Since the namespace changes when moving, update the global using in `Using.cs`
 
 ### When Mediator SourceGenerator Duplication Error Occurs in Integration Tests
 
-**Cause:** Tests.Integration 프로젝트가 Host 프로젝트를 참조하면서 SourceGenerator가 테스트 프로젝트에서도 실행됩니다.
+**Cause:** When the Tests.Integration project references the Host project, the SourceGenerator also runs in the test project.
 
 **Solution:**
 ```xml
@@ -1076,57 +1076,57 @@ Namespaces are determined by the project root namespace + folder path.
 
 ### Why Domain Has No Abstractions/ Folder
 
-Domain 레이어에는 부수 목표가 없습니다. Domain은 순수한 비즈니스 규칙만 포함하며, DI 등록이나 프레임워크 설정 같은 인프라 관심사가 존재하지 않기 때문입니다. Application도 동일한 이유로 Abstractions가 없습니다.
+The Domain layer has no secondary objectives. This is because Domain contains only pure business rules and has no infrastructure concerns such as DI registration or framework configuration. Application also has no Abstractions for the same reason.
 
 ### Why Adapter Primary Objective Folder Names Are Not Fixed
 
-The primary objective folder name of an Adapter varies depending on the implementation technology. 예를 들어 Presentation이 FastEndpoints를 사용하면 `Endpoints/`, gRPC를 사용하면 `Services/`가 됩니다. 반면 부수 목표 폴더(`Abstractions/`)는 기술과 무관하게 항상 같은 이름을 사용합니다.
+The primary objective folder name of an Adapter varies depending on the implementation technology. For example, if Presentation uses FastEndpoints it becomes `Endpoints/`, and if it uses gRPC it becomes `Services/`. In contrast, the secondary objective folder (`Abstractions/`) always uses the same name regardless of technology.
 
 ### Criteria for Placing Value Objects Between SharedModels and AggregateRoots
 
-- **하나의 Aggregate에서만 사용** → `AggregateRoots/{Aggregate}/ValueObjects/`
-  - 예: `ProductName`, `ProductDescription` → `Products/ValueObjects/`
-- **여러 Aggregate에서 공유** → `SharedModels/ValueObjects/`
-  - 예: `Money`, `Quantity` → `SharedModels/ValueObjects/`
+- **Used by only one Aggregate** → `AggregateRoots/{Aggregate}/ValueObjects/`
+  - Example: `ProductName`, `ProductDescription` → `Products/ValueObjects/`
+- **Shared across multiple Aggregates** → `SharedModels/ValueObjects/`
+  - Example: `Money`, `Quantity` → `SharedModels/ValueObjects/`
 
 Initially place as Aggregate-specific, and move to SharedModels when sharing becomes necessary.
 
 ### Criteria for Placing Ports in Domain or Application
 
-- **도메인 객체의 영속성/조회** → Domain의 `AggregateRoots/{Aggregate}/Ports/` 또는 `Ports/`
-  - 예: `IProductRepository`, `IProductCatalog`
-- **외부 시스템 통합** → Application의 `Ports/`
-  - 예: `IExternalPricingService`
+- **Domain object persistence/retrieval** → Domain's `AggregateRoots/{Aggregate}/Ports/` or `Ports/`
+  - Example: `IProductRepository`, `IProductCatalog`
+- **External system integration** → Application's `Ports/`
+  - Example: `IExternalPricingService`
 
-핵심 기준: 인터페이스의 메서드 시그니처가 도메인 타입만 사용하면 Domain, 외부 DTO나 기술적 관심사를 포함하면 Application에 배치합니다.
+Key criterion: If the interface's method signatures use only domain types, place it in Domain; if they include external DTOs or technical concerns, place it in Application.
 
-### Infrastructure에 Observability 설정이 들어가는 이유
+### Why Observability Settings Go in Infrastructure
 
-Observability(OpenTelemetry, Serilog 등)는 횡단 관심사로, 특정 Adapter 카테고리에 속하지 않습니다. Infrastructure Adapter가 Mediator, Validator, OpenTelemetry, Pipeline 등 횡단 관심사를 종합적으로 관리하는 Role을 담당하기 때문에 이곳에 배치합니다.
+Observability (OpenTelemetry, Serilog, etc.) is a cross-cutting concern that does not belong to a specific Adapter category. It is placed here because the Infrastructure Adapter is responsible for comprehensively managing cross-cutting concerns such as Mediator, Validator, OpenTelemetry, and Pipeline.
 
-### 통합 테스트에서 Host 참조 시 ExcludeAssets=analyzers가 필요한 이유
+### Why ExcludeAssets=analyzers Is Needed When Referencing Host in Integration Tests
 
-Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 프로젝트에서도 SourceGenerator가 실행되어 중복 코드가 생성됩니다. `ExcludeAssets=analyzers`로 이를 방지합니다.
+When the Host project uses Mediator SourceGenerator, the SourceGenerator also runs in the test project, generating duplicate code. `ExcludeAssets=analyzers` prevents this.
 
-### 통합 테스트에 appsettings.json이 필요한 이유
+### Why appsettings.json Is Needed in Integration Tests
 
-`HostTestFixture`는 ContentRoot를 테스트 프로젝트 경로로 설정합니다. Host 프로젝트의 `appsettings.json`이 아닌 테스트 프로젝트의 `appsettings.json`을 로드하므로, OpenTelemetry 등 Required 설정을 테스트 프로젝트에도 배치해야 합니다.
+`HostTestFixture` sets ContentRoot to the test project path. It loads the test project's `appsettings.json` instead of the Host project's `appsettings.json`, so required settings such as OpenTelemetry must also be placed in the test project.
 
-### 단위 테스트와 통합 테스트의 병렬 실행 설정이 다른 이유
+### Why Parallel Execution Settings Differ Between Unit and Integration Tests
 
-단위 테스트는 Mock 기반으로 각 테스트가 독립적이므로 병렬 실행이 가능합니다. 통합 테스트는 In-memory 저장소를 공유하므로 테스트 간 상태 간섭을 방지하기 위해 순차 실행합니다.
+Unit tests are Mock-based and each test is independent, so parallel execution is possible. Integration tests share In-memory storage, so they run sequentially to prevent state interference between tests.
 
 ## Reference Documents
 
-- [02-solution-configuration.md](./02-solution-configuration) — solution root 구성 파일 및 빌드 스크립트
-- [06a-aggregate-design.md](../domain/06a-aggregate-design) — Aggregate 설계 원칙, [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) — Entity/Aggregate 핵심 패턴, [06c-entity-aggregate-advanced.md](../domain/06c-entity-aggregate-advanced) — 고급 패턴
-- [05a-value-objects.md](../domain/05a-value-objects) — 값 객체 구현 패턴, [05b-value-objects-validation.md](../domain/05b-value-objects-validation) — 열거형·검증·FAQ
-- [10-specifications.md](../domain/10-specifications) — Specification 패턴 구현
-- [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) — 유스케이스 (Command/Query) 구현
-- [12-ports.md](../adapter/12-ports) — Port 아키텍처, [13-adapters.md](../adapter/13-adapters) — Adapter 구현, [14a-adapter-pipeline-di.md](../adapter/14a-adapter-pipeline-di) — Pipeline/DI, [14b-adapter-testing.md](../adapter/14b-adapter-testing) — 테스트
-- [08a-error-system.md](../domain/08a-error-system) — 에러 시스템: 기초와 네이밍
-- [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) — 에러 시스템: Domain/Application 에러
-- [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) — 에러 시스템: Adapter 에러와 테스트
-- [08-observability.md](../../spec/08-observability) — Observability 사양
-- [15a-unit-testing.md](../testing/15a-unit-testing) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
-- [16-testing-library.md](../testing/16-testing-library) — Functorium.Testing 라이브러리 (LogTestContext, ArchitectureRules, QuartzTestFixture 등)
+- [02-solution-configuration.md](./02-solution-configuration) — Solution root configuration files and build scripts
+- [06a-aggregate-design.md](../domain/06a-aggregate-design) — Aggregate design principles, [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) — Entity/Aggregate core patterns, [06c-entity-aggregate-advanced.md](../domain/06c-entity-aggregate-advanced) — Advanced patterns
+- [05a-value-objects.md](../domain/05a-value-objects) — Value Object implementation patterns, [05b-value-objects-validation.md](../domain/05b-value-objects-validation) — Enumerations, validation, and FAQ
+- [10-specifications.md](../domain/10-specifications) — Specification pattern implementation
+- [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) — Use case (Command/Query) implementation
+- [12-ports.md](../adapter/12-ports) — Port architecture, [13-adapters.md](../adapter/13-adapters) — Adapter implementation, [14a-adapter-pipeline-di.md](../adapter/14a-adapter-pipeline-di) — Pipeline/DI, [14b-adapter-testing.md](../adapter/14b-adapter-testing) — Testing
+- [08a-error-system.md](../domain/08a-error-system) — Error system: Basics and naming
+- [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) — Error system: Domain/Application errors
+- [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) — Error system: Adapter errors and testing
+- [08-observability.md](../../spec/08-observability) — Observability specification
+- [15a-unit-testing.md](../testing/15a-unit-testing) — Test writing methodology (naming conventions, AAA pattern, MTP settings)
+- [16-testing-library.md](../testing/16-testing-library) — Functorium.Testing library (LogTestContext, ArchitectureRules, QuartzTestFixture, etc.)
