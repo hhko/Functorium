@@ -1196,12 +1196,12 @@ Now that we understand the version calculation method, let us finally look at th
 
 `/suggest-next-version` command analyzes Conventional Commits history and suggests the next release version tag according to Semantic Versioning.
 
-### uses법
+### Usage
 
 ```bash
 /suggest-next-version          # Suggest stable version
-/suggest-next-version alpha    # Alpha version 제안
-/suggest-next-version beta     # Beta version 제안
+/suggest-next-version alpha    # Suggest Alpha version
+/suggest-next-version beta     # Suggest Beta version
 /suggest-next-version rc       # Suggest RC version
 ```
 
@@ -1244,11 +1244,11 @@ Tag creation commands:
 
 | Type | Description | Version Example |
 |------|------|----------|
-| `alpha` | Alpha version (초기 개발 단계) | v1.3.0-alpha.0 |
-| `beta` | Beta version (기능 완료, 테스트 단계) | v1.3.0-beta.0 |
+| `alpha` | Alpha version (early development stage) | v1.3.0-alpha.0 |
+| `beta` | Beta version (feature complete, testing stage) | v1.3.0-beta.0 |
 | `rc` | Release Candidate | v1.3.0-rc.0 |
 
-> **Note**: `/suggest-next-version` 명령은 제안만 합니다. 실제 태그 생성은 uses자가 명령어를 직접 실행해야 합니다.
+> **Note**: The `/suggest-next-version` command only makes suggestions. Actual tag creation requires the user to execute the commands directly.
 
 ---
 
@@ -1286,7 +1286,7 @@ When Git history is missing due to shallow clone:
 - name: Checkout
   uses: actions/checkout@v4
   with:
-    fetch-depth: 0  # full 히스토리 가져오기
+    fetch-depth: 0  # Fetch full history
 ```
 
 ### README.md Not Included in Package
@@ -1353,7 +1353,7 @@ git push origin v1.0.0
 
 ### Q2. Can Preview versions also be deployed?
 
-**A:** 네, prerelease 태그를 uses합니다. 워크플로우가 Automatic으로 prerelease 감지합니다:
+**A:** Yes, use prerelease tags. The workflow automatically detects prerelease:
 
 ```bash
 git tag -a v1.0.0-rc.1 -m "Release Candidate 1"
@@ -1377,11 +1377,11 @@ prerelease: ${{ contains(github.ref, '-') }}
 
 ### Q4. What if manual approval is needed before deployment?
 
-**A:** GitHub Environment protection rules를 uses합니다:
+**A:** Use GitHub Environment protection rules:
 
 1. Settings > Environments > **New environment** (`production`)
-2. **Required reviewers** 추가
-3. publish.yml에 `environment: production` 추가
+2. Add **Required reviewers**
+3. Add `environment: production` to publish.yml
 
 ### Q5. How to test across multiple .NET versions?
 
