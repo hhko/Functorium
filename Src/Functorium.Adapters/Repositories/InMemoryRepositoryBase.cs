@@ -4,6 +4,7 @@ using Functorium.Applications.Events;
 using Functorium.Domains.Entities;
 using Functorium.Abstractions.Observabilities;
 using Functorium.Domains.Repositories;
+using Functorium.Domains.Specifications;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 using static LanguageExt.Prelude;
 
@@ -80,17 +81,17 @@ public abstract class InMemoryRepositoryBase<TAggregate, TId>
         });
     }
 
-    public virtual FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates)
+    public virtual FinT<IO, int> CreateRange(IReadOnlyList<TAggregate> aggregates)
     {
         return IO.lift(() =>
         {
             if (aggregates.Count == 0)
-                return Fin.Succ(LanguageExt.Seq<TAggregate>.Empty);
+                return Fin.Succ(0);
 
             foreach (var aggregate in aggregates)
                 Store[aggregate.Id] = aggregate;
             EventCollector.TrackRange(aggregates);
-            return Fin.Succ(toSeq(aggregates));
+            return Fin.Succ(aggregates.Count);
         });
     }
 
@@ -116,17 +117,17 @@ public abstract class InMemoryRepositoryBase<TAggregate, TId>
         });
     }
 
-    public virtual FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates)
+    public virtual FinT<IO, int> UpdateRange(IReadOnlyList<TAggregate> aggregates)
     {
         return IO.lift(() =>
         {
             if (aggregates.Count == 0)
-                return Fin.Succ(LanguageExt.Seq<TAggregate>.Empty);
+                return Fin.Succ(0);
 
             foreach (var aggregate in aggregates)
                 Store[aggregate.Id] = aggregate;
             EventCollector.TrackRange(aggregates);
-            return Fin.Succ(toSeq(aggregates));
+            return Fin.Succ(aggregates.Count);
         });
     }
 
@@ -145,6 +146,27 @@ public abstract class InMemoryRepositoryBase<TAggregate, TId>
             }
 
             return Fin.Succ(affected);
+        });
+    }
+
+    public virtual FinT<IO, bool> Exists(Specification<TAggregate> spec)
+    {
+        return IO.lift(() => Fin.Succ(Store.Values.Any(spec.IsSatisfiedBy)));
+    }
+
+    public virtual FinT<IO, int> Count(Specification<TAggregate> spec)
+    {
+        return IO.lift(() => Fin.Succ(Store.Values.Count(spec.IsSatisfiedBy)));
+    }
+
+    public virtual FinT<IO, int> DeleteBy(Specification<TAggregate> spec)
+    {
+        return IO.lift(() =>
+        {
+            var toDelete = Store.Values.Where(spec.IsSatisfiedBy).ToList();
+            foreach (var item in toDelete)
+                Store.TryRemove(item.Id, out _);
+            return Fin.Succ(toDelete.Count);
         });
     }
 

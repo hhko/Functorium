@@ -1,5 +1,6 @@
 using Functorium.Abstractions.Observabilities;
 using Functorium.Domains.Entities;
+using Functorium.Domains.Specifications;
 
 namespace Functorium.Domains.Repositories;
 
@@ -13,18 +14,15 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     where TAggregate : AggregateRoot<TId>
     where TId : struct, IEntityId<TId>
 {
+    // ── Write: Single ──────────────────────────────────
+
     /// <summary>
     /// Aggregate를 생성합니다.
     /// </summary>
     FinT<IO, TAggregate> Create(TAggregate aggregate);
 
     /// <summary>
-    /// ID로 Aggregate를 조회합니다.
-    /// </summary>
-    FinT<IO, TAggregate> GetById(TId id);
-
-    /// <summary>
-    /// Aggregate를 업데이트합니다.
+    /// Aggregate를 업데이트합니다. ExecuteUpdate로 Change Tracker를 우회합니다.
     /// </summary>
     FinT<IO, TAggregate> Update(TAggregate aggregate);
 
@@ -33,23 +31,52 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     /// </summary>
     FinT<IO, int> Delete(TId id);
 
+    // ── Write: Batch ───────────────────────────────────
+
     /// <summary>
-    /// 여러 Aggregate를 일괄 생성합니다.
+    /// 여러 Aggregate를 일괄 생성합니다. 대량 데이터 시 청크 단위로 처리됩니다.
+    /// 생성된 건수를 반환합니다.
     /// </summary>
-    FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, int> CreateRange(IReadOnlyList<TAggregate> aggregates);
+
+    /// <summary>
+    /// 여러 Aggregate를 일괄 업데이트합니다. ExecuteUpdate로 SELECT를 생략합니다.
+    /// 업데이트된 건수를 반환합니다.
+    /// </summary>
+    FinT<IO, int> UpdateRange(IReadOnlyList<TAggregate> aggregates);
+
+    /// <summary>
+    /// 여러 ID로 Aggregate를 일괄 삭제합니다. 삭제된 건수를 반환합니다.
+    /// </summary>
+    FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
+
+    // ── Read ───────────────────────────────────────────
+
+    /// <summary>
+    /// ID로 Aggregate를 조회합니다.
+    /// </summary>
+    FinT<IO, TAggregate> GetById(TId id);
 
     /// <summary>
     /// 여러 ID로 Aggregate를 일괄 조회합니다.
     /// </summary>
     FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
 
-    /// <summary>
-    /// 여러 Aggregate를 일괄 업데이트합니다.
-    /// </summary>
-    FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
+    // ── Specification ──────────────────────────────────
 
     /// <summary>
-    /// 여러 ID로 Aggregate를 일괄 삭제합니다. 삭제된 건수를 반환합니다.
+    /// Specification 조건에 매칭되는 Aggregate가 존재하는지 확인합니다. (1 SQL)
     /// </summary>
-    FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
+    FinT<IO, bool> Exists(Specification<TAggregate> spec);
+
+    /// <summary>
+    /// Specification 조건에 매칭되는 Aggregate 건수를 반환합니다. (1 SQL)
+    /// </summary>
+    FinT<IO, int> Count(Specification<TAggregate> spec);
+
+    /// <summary>
+    /// Specification 조건에 매칭되는 Aggregate를 일괄 삭제합니다. (1 SQL)
+    /// Change Tracker를 우회하여 직접 SQL DELETE를 실행합니다.
+    /// </summary>
+    FinT<IO, int> DeleteBy(Specification<TAggregate> spec);
 }

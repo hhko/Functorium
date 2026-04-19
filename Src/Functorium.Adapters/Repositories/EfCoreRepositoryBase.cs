@@ -36,7 +36,7 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     /// </param>
     /// <param name="propertyMap">
     /// Specification → Model Expression 변환을 위한 프로퍼티 매핑.
-    /// BuildQuery/ExistsBySpec 사용 시 필수입니다.
+    /// BuildQuery/Exists/Count/DeleteBy 사용 시 필수입니다.
     /// </param>
     protected EfCoreRepositoryBase(
         IDomainEventCollector eventCollector,
@@ -59,7 +59,7 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 
     // ─── 서브클래스 필수 구현 ────────────────────────────
 
-    /// <summary>EF Core DbContext. Update의 TrackedMerge 전략에서 사용됩니다.</summary>
+    /// <summary>EF Core DbContext. CreateRange 청크 처리의 SaveChangesAsync/ChangeTracker.Clear에서 사용됩니다.</summary>
     protected abstract DbContext DbContext { get; }
 
     /// <summary>엔티티 모델의 DbSet</summary>
@@ -70,6 +70,19 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 
     /// <summary>Domain → Model 매핑</summary>
     protected abstract TModel ToModel(TAggregate aggregate);
+
+    /// <summary>
+    /// ExecuteUpdateAsync용 SetProperty 빌더.
+    /// [GenerateSetters] Source Generator가 TModel.ApplySetters()를 생성하므로
+    /// 서브클래스에서 단순 위임으로 구현합니다.
+    /// <example>
+    /// protected override void BuildSetters(UpdateSettersBuilder&lt;CustomerModel&gt; s, CustomerModel model)
+    ///     => CustomerModel.ApplySetters(s, model);
+    /// </example>
+    /// </summary>
+    protected abstract void BuildSetters(
+        Microsoft.EntityFrameworkCore.Query.UpdateSettersBuilder<TModel> setters,
+        TModel model);
 
     // ─── 정적 캐싱: Expression 공유 구성요소 ─────────
 
@@ -127,7 +140,7 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
         if (PropertyMap is null)
         {
             return NotConfiguredError(
-                $"PropertyMap is required for BuildQuery/ExistsBySpec. Provide it via the {GetType().Name} constructor.");
+                $"PropertyMap is required for Specification operations (Exists/Count/DeleteBy/BuildQuery). Provide it via the {GetType().Name} constructor.");
         }
 
         var expression = SpecificationExpressionResolver.TryResolve(spec);
@@ -143,13 +156,57 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     /// <summary>
     /// Specification 기반 존재 여부 확인. PropertyMap 필수.
     /// </summary>
-    protected FinT<IO, bool> ExistsBySpec(Specification<TAggregate> spec)
+    public virtual FinT<IO, bool> Exists(Specification<TAggregate> spec)
     {
         return IO.liftAsync(async () =>
         {
             return await BuildQuery(spec).Match<Task<Fin<bool>>>(
                 Succ: async query => Fin.Succ(await query.AnyAsync()),
                 Fail: error => Task.FromResult(Fin.Fail<bool>(error)));
+        });
+    }
+
+    /// <summary>
+    /// Specification 기반 건수 확인. PropertyMap 필수. (1 SQL COUNT)
+    /// </summary>
+    public virtual FinT<IO, int> Count(Specification<TAggregate> spec)
+    {
+        return IO.liftAsync(async () =>
+        {
+            return await BuildQuery(spec).Match<Task<Fin<int>>>(
+                Succ: async query => Fin.Succ(await query.CountAsync()),
+                Fail: error => Task.FromResult(Fin.Fail<int>(error)));
+        });
+    }
+
+    /// <summary>
+    /// Specification 기반 조건부 대량 삭제. PropertyMap 필수. (1 SQL DELETE)
+    /// Change Tracker를 우회하여 직접 SQL DELETE를 실행합니다.
+    /// </summary>
+    public virtual FinT<IO, int> DeleteBy(Specification<TAggregate> spec)
+    {
+        return IO.liftAsync(async () =>
+        {
+            return await BuildQuery(spec).Match<Task<Fin<int>>>(
+                Succ: async query => Fin.Succ(await query.ExecuteDeleteAsync()),
+                Fail: error => Task.FromResult(Fin.Fail<int>(error)));
+        });
+    }
+
+    /// <summary>
+    /// Specification 기반 조건부 대량 업데이트. PropertyMap 필수. (1 SQL UPDATE)
+    /// Change Tracker를 우회하여 직접 SQL UPDATE를 실행합니다.
+    /// 서브클래스에서 도메인 특화 메서드로 래핑하여 사용합니다.
+    /// </summary>
+    protected FinT<IO, int> UpdateBy(
+        Specification<TAggregate> spec,
+        Action<Microsoft.EntityFrameworkCore.Query.UpdateSettersBuilder<TModel>> setters)
+    {
+        return IO.liftAsync(async () =>
+        {
+            return await BuildQuery(spec).Match<Task<Fin<int>>>(
+                Succ: async query => Fin.Succ(await query.ExecuteUpdateAsync(setters)),
+                Fail: error => Task.FromResult(Fin.Fail<int>(error)));
         });
     }
 
@@ -185,13 +242,14 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     {
         return IO.liftAsync(async () =>
         {
-            var id = aggregate.Id.ToString();
-            var existing = await DbSet.FindAsync(id);
-            if (existing is null)
+            var model = ToModel(aggregate);
+            int affected = await DbSet
+                .Where(ByIdPredicate(aggregate.Id))
+                .ExecuteUpdateAsync(s => BuildSetters(s, model));
+
+            if (affected == 0)
                 return NotFoundError(aggregate.Id);
 
-            var updated = ToModel(aggregate);
-            DbContext.Entry(existing).CurrentValues.SetValues(updated);
             EventCollector.Track(aggregate);
             return Fin.Succ(aggregate);
         });
@@ -207,16 +265,37 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
         });
     }
 
-    public virtual FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates)
+    /// <remarks>
+    /// IdBatchSize를 초과하는 대량 데이터는 청크 단위로 SaveChangesAsync + ChangeTracker.Clear를 수행합니다.
+    /// 이 경로는 UsecaseTransactionPipeline의 트랜잭션 컨텍스트 내에서 사용해야 합니다.
+    /// 트랜잭션 없이 호출 시 부분 삽입 후 롤백이 불가능합니다.
+    /// </remarks>
+    public virtual FinT<IO, int> CreateRange(IReadOnlyList<TAggregate> aggregates)
     {
-        return IO.lift(() =>
+        if (aggregates.Count <= IdBatchSize)
         {
-            if (aggregates.Count == 0)
-                return Fin.Succ(LanguageExt.Seq<TAggregate>.Empty);
+            return IO.lift(() =>
+            {
+                if (aggregates.Count == 0)
+                    return Fin.Succ(0);
 
-            DbSet.AddRange(aggregates.Select(ToModel));
+                DbSet.AddRange(aggregates.Select(ToModel));
+                EventCollector.TrackRange(aggregates);
+                return Fin.Succ(aggregates.Count);
+            });
+        }
+
+        return IO.liftAsync(async () =>
+        {
+            foreach (var chunk in aggregates.Chunk(IdBatchSize))
+            {
+                DbSet.AddRange(chunk.Select(ToModel));
+                await DbContext.SaveChangesAsync();
+                DbContext.ChangeTracker.Clear();
+            }
+
             EventCollector.TrackRange(aggregates);
-            return Fin.Succ(toSeq(aggregates));
+            return Fin.Succ(aggregates.Count);
         });
     }
 
@@ -259,16 +338,24 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
         });
     }
 
-    public virtual FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates)
+    public virtual FinT<IO, int> UpdateRange(IReadOnlyList<TAggregate> aggregates)
     {
-        return IO.lift(() =>
+        return IO.liftAsync(async () =>
         {
             if (aggregates.Count == 0)
-                return Fin.Succ(LanguageExt.Seq<TAggregate>.Empty);
+                return Fin.Succ(0);
 
-            DbSet.UpdateRange(aggregates.Select(ToModel));
+            int totalAffected = 0;
+            foreach (var aggregate in aggregates)
+            {
+                var model = ToModel(aggregate);
+                totalAffected += await DbSet
+                    .Where(ByIdPredicate(aggregate.Id))
+                    .ExecuteUpdateAsync(s => BuildSetters(s, model));
+            }
+
             EventCollector.TrackRange(aggregates);
-            return Fin.Succ(toSeq(aggregates));
+            return Fin.Succ(totalAffected);
         });
     }
 
