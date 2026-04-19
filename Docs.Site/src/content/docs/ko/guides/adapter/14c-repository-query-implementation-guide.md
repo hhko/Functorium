@@ -207,9 +207,7 @@ public class ProductRepositoryEfCore
     protected override Product ToDomain(ProductModel model) => model.ToDomain();
     protected override ProductModel ToModel(Product p) => p.ToModel();
 
-    // Specification 기반 존재 확인 — 베이스의 ExistsBySpec 활용
-    public virtual FinT<IO, bool> Exists(Specification<Product> spec)
-        => ExistsBySpec(spec);
+    // Exists는 베이스 클래스에서 상속됨 — 서브클래스 오버라이드 불필요
 
     // Soft Delete 오버라이드 (섹션 5.1 참조)
     // ...
@@ -470,8 +468,8 @@ Configuration 규칙:
 | **CreateRange** | 벌크 | O | O (ToModel) | O (TrackRange) | - | `DbSet.AddRange` |
 | **GetById** | 단건 | X | O (ToDomain) | - | O | `AsNoTracking` → `FirstOrDefault` |
 | **GetByIds** | 벌크 | X | O (ToDomain) | - | O | `AsNoTracking` → `Where` → `ToList` |
-| **Update** | 단건 | O | O (ToModel) | O (Track) | - | `FindAsync + SetValues (TrackedMerge)` |
-| **UpdateRange** | 벌크 | O | O (ToModel) | O (TrackRange) | - | `FindAsync + SetValues (TrackedMerge)` |
+| **Update** | 단건 | **X** | O (ToModel) | **X** | - | `ExecuteUpdateAsync (Change Tracker bypass)` |
+| **UpdateRange** | 벌크 | **X** | O (ToModel) | **X** | - | `ExecuteUpdateAsync (Change Tracker bypass)` |
 | **Delete** | 단건 | **X** | **X** | **X** | - | `Where(pred).ExecuteDeleteAsync` |
 | **DeleteRange** | 벌크 | **X** | **X** | **X** | - | `Where(pred).ExecuteDeleteAsync` |
 
@@ -485,7 +483,7 @@ Configuration 규칙:
 |------|:---:|------|
 | Create | 대칭 | `DbSet.Add` vs `DbSet.AddRange` (API만 복수형) |
 | Read | 대칭 | `FirstOrDefault` vs `Where().ToList()` (조건만 단수/복수) |
-| Update | 대칭 | `FindAsync + SetValues` (TrackedMerge: 변경된 컬럼만 UPDATE) |
+| Update | 대칭 | `ExecuteUpdateAsync` (Change Tracker bypass: 변경된 컬럼만 UPDATE) |
 | Delete | 대칭 | `Where(pred).ExecuteDeleteAsync` (동일 경로, 조건만 단수/복수) |
 
 **비대칭은 Soft Delete 오버라이드에서만 발생합니다.**

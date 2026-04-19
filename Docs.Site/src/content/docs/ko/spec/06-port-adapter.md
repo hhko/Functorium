@@ -81,15 +81,24 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     where TAggregate : AggregateRoot<TId>
     where TId : struct, IEntityId<TId>
 {
+    // ── Write Single ──
     FinT<IO, TAggregate> Create(TAggregate aggregate);
-    FinT<IO, TAggregate> GetById(TId id);
     FinT<IO, TAggregate> Update(TAggregate aggregate);
     FinT<IO, int> Delete(TId id);
 
-    FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates);
-    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
-    FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
+    // ── Write Batch ──
+    FinT<IO, int> CreateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, int> UpdateRange(IReadOnlyList<TAggregate> aggregates);
     FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
+
+    // ── Read ──
+    FinT<IO, TAggregate> GetById(TId id);
+    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
+
+    // ── Specification ──
+    FinT<IO, bool> Exists(Specification<TAggregate> spec);
+    FinT<IO, int> Count(Specification<TAggregate> spec);
+    FinT<IO, int> DeleteBy(Specification<TAggregate> spec);
 }
 ```
 
@@ -105,13 +114,16 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 | 메서드 | 반환 타입 | 설명 |
 |--------|-----------|------|
 | `Create(aggregate)` | `FinT<IO, TAggregate>` | 단일 Aggregate 생성 |
-| `GetById(id)` | `FinT<IO, TAggregate>` | ID로 Aggregate 조회 (없으면 `NotFound` 에러) |
 | `Update(aggregate)` | `FinT<IO, TAggregate>` | 단일 Aggregate 업데이트 |
 | `Delete(id)` | `FinT<IO, int>` | ID로 Aggregate 삭제 (삭제된 건수 반환) |
-| `CreateRange(aggregates)` | `FinT<IO, Seq<TAggregate>>` | 일괄 생성 |
-| `GetByIds(ids)` | `FinT<IO, Seq<TAggregate>>` | 일괄 조회 (일부 누락 시 `PartialNotFound` 에러) |
-| `UpdateRange(aggregates)` | `FinT<IO, Seq<TAggregate>>` | 일괄 업데이트 |
+| `CreateRange(aggregates)` | `FinT<IO, int>` | 일괄 생성 (영향받은 건수 반환) |
+| `UpdateRange(aggregates)` | `FinT<IO, int>` | 일괄 업데이트 (영향받은 건수 반환) |
 | `DeleteRange(ids)` | `FinT<IO, int>` | 일괄 삭제 (삭제된 건수 반환) |
+| `GetById(id)` | `FinT<IO, TAggregate>` | ID로 Aggregate 조회 (없으면 `NotFound` 에러) |
+| `GetByIds(ids)` | `FinT<IO, Seq<TAggregate>>` | 일괄 조회 (일부 누락 시 `PartialNotFound` 에러) |
+| `Exists(spec)` | `FinT<IO, bool>` | Specification 기반 존재 여부 확인 |
+| `Count(spec)` | `FinT<IO, int>` | Specification 기반 건수 조회 |
+| `DeleteBy(spec)` | `FinT<IO, int>` | Specification 기반 삭제 (삭제된 건수 반환) |
 
 > 모든 메서드는 `FinT<IO, T>`를 반환합니다. 성공은 `Fin.Succ(value)`, 실패는 도메인/어댑터 에러로 표현됩니다.
 
@@ -496,7 +508,7 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 |----------|------|------|
 | `eventCollector` | `IDomainEventCollector` | 도메인 이벤트 수집기 |
 | `applyIncludes` | `Func<IQueryable<TModel>, IQueryable<TModel>>?` | Navigation Property Include 선언 (N+1 방지). `null`이면 Include 없음 |
-| `propertyMap` | `PropertyMap<TAggregate, TModel>?` | Specification → Model Expression 변환용 매핑. `BuildQuery`/`ExistsBySpec` 사용 시 필수 |
+| `propertyMap` | `PropertyMap<TAggregate, TModel>?` | Specification → Model Expression 변환용 매핑. `BuildQuery`/`Exists` 사용 시 필수 |
 
 #### 서브클래스 필수 구현
 
@@ -506,6 +518,7 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 | `DbSet` | `DbSet<TModel>` | 엔티티 모델의 DbSet (abstract property) |
 | `ToDomain(model)` | `TAggregate` | Model → Domain 매핑 (abstract method) |
 | `ToModel(aggregate)` | `TModel` | Domain → Model 매핑 (abstract method) |
+| `BuildSetters(builder, model)` | `void` | `UpdateSettersBuilder<TModel>`를 통해 업데이트할 컬럼을 등록 (abstract method). `Update`와 `UpdateRange`에서 `ExecuteUpdateAsync`에 사용 |
 
 #### 보호된(protected) 인프라 멤버
 
@@ -517,7 +530,8 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 | `ReadQuery()` | `IQueryable<TModel>` | Include가 자동 적용된 읽기 전용 쿼리 (`AsNoTracking`) |
 | `ReadQueryIgnoringFilters()` | `IQueryable<TModel>` | Include + 글로벌 필터 무시 읽기 쿼리 (Soft Delete 조회용) |
 | `BuildQuery(spec)` | `Fin<IQueryable<TModel>>` | Specification → Model Expression 쿼리 빌더 (PropertyMap 필수) |
-| `ExistsBySpec(spec)` | `FinT<IO, bool>` | Specification 기반 존재 여부 확인 (PropertyMap 필수) |
+| `Exists(spec)` | `FinT<IO, bool>` | Specification 기반 존재 여부 확인 (PropertyMap 필수, public) |
+| `UpdateBy(spec, setters)` | `FinT<IO, int>` | Specification 기반 일괄 업데이트, `ExecuteUpdateAsync` 사용 (protected) |
 | `ByIdPredicate(id)` | `Expression<Func<TModel, bool>>` | 단일 ID 매칭 Expression (virtual, `IHasStringId` 기반 기본 구현) |
 | `ByIdsPredicate(ids)` | `Expression<Func<TModel, bool>>` | 복수 ID 매칭 Expression (virtual, `IHasStringId` 기반 기본 구현) |
 
@@ -529,6 +543,28 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 | `PartialNotFoundError(requestedIds, foundAggregates)` | `AdapterErrorType.PartialNotFound` 에러 생성. 누락 ID 목록 포함 |
 | `NotConfiguredError(message)` | `AdapterErrorType.NotConfigured` 에러 생성 |
 | `NotSupportedError(currentValue, message)` | `AdapterErrorType.NotSupported` 에러 생성 |
+
+#### 업데이트 전략
+
+`Update`와 `UpdateRange`는 `FindAsync` + `SetValues` 대신 EF Core의 `ExecuteUpdateAsync`를 사용하여 서버 측 업데이트를 수행합니다. 서브클래스에서 구현하는 `BuildSetters` 메서드가 `UpdateSettersBuilder<TModel>`를 통해 설정할 컬럼을 선언하면, 베이스 클래스가 이를 단일 `ExecuteUpdateAsync` 호출로 변환합니다. 이를 통해 업데이트 시 엔티티를 메모리에 로드하지 않습니다.
+
+`UpdateBy(spec, setters)`는 Specification 기반 WHERE 절과 `Action<UpdateSettersBuilder<TModel>>` setter 콜백을 결합하여 조건부 일괄 업데이트를 수행하는 protected 메서드입니다.
+
+#### \[GenerateSetters\] 소스 생성기
+
+`[GenerateSetters]` 어트리뷰트를 EF Core 모델 클래스에 적용하면 `UpdateSettersBuilder<TModel>` fluent API가 자동 생성됩니다. 소스 생성기가 모델의 설정 가능한 각 프로퍼티에 대해 `Set{PropertyName}(value)` 메서드를 생성하여 `BuildSetters` 구현의 보일러플레이트를 제거합니다.
+
+```csharp
+// 사용 예시
+[GenerateSetters]
+public class ProductModel : IHasStringId
+{
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+}
+// → UpdateSettersBuilder<ProductModel>에 SetName(value), SetPrice(value) 등이 자동 생성됨
+```
 
 #### IHasStringId
 

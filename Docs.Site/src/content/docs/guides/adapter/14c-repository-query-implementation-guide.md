@@ -207,9 +207,7 @@ public class ProductRepositoryEfCore
     protected override Product ToDomain(ProductModel model) => model.ToDomain();
     protected override ProductModel ToModel(Product p) => p.ToModel();
 
-    // Specification-based existence check — leveraging base class ExistsBySpec
-    public virtual FinT<IO, bool> Exists(Specification<Product> spec)
-        => ExistsBySpec(spec);
+    // Exists is inherited from base class — no subclass override needed
 
     // Soft Delete override (see section 5.1)
     // ...
@@ -470,8 +468,8 @@ Compares the architecture paths between single/bulk CRUD operations of `EfCoreRe
 | **CreateRange** | Bulk | O | O (ToModel) | O (TrackRange) | - | `DbSet.AddRange` |
 | **GetById** | Single | X | O (ToDomain) | - | O | `AsNoTracking` → `FirstOrDefault` |
 | **GetByIds** | Bulk | X | O (ToDomain) | - | O | `AsNoTracking` → `Where` → `ToList` |
-| **Update** | Single | O | O (ToModel) | O (Track) | - | `FindAsync + SetValues (TrackedMerge)` |
-| **UpdateRange** | Bulk | O | O (ToModel) | O (TrackRange) | - | `FindAsync + SetValues (TrackedMerge)` |
+| **Update** | Single | **X** | O (ToModel) | **X** | - | `ExecuteUpdateAsync (Change Tracker bypass)` |
+| **UpdateRange** | Bulk | **X** | O (ToModel) | **X** | - | `ExecuteUpdateAsync (Change Tracker bypass)` |
 | **Delete** | Single | **X** | **X** | **X** | - | `Where(pred).ExecuteDeleteAsync` |
 | **DeleteRange** | Bulk | **X** | **X** | **X** | - | `Where(pred).ExecuteDeleteAsync` |
 
@@ -485,7 +483,7 @@ Compares the architecture paths between single/bulk CRUD operations of `EfCoreRe
 |------|:---:|------|
 | Create | Symmetric | `DbSet.Add` vs `DbSet.AddRange` (only API is plural) |
 | Read | Symmetric | `FirstOrDefault` vs `Where().ToList()` (only condition is singular/plural) |
-| Update | Symmetric | `FindAsync + SetValues` (TrackedMerge: UPDATE only changed columns) |
+| Update | Symmetric | `ExecuteUpdateAsync` (Change Tracker bypass: UPDATE only changed columns) |
 | Delete | Symmetric | `Where(pred).ExecuteDeleteAsync` (same path, only condition is singular/plural) |
 
 **Asymmetry occurs only in Soft Delete overrides.**

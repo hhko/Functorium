@@ -57,9 +57,9 @@ The following table shows the complete list of methods provided by `IRepository`
 | Single Read | `GetById(TId)` | `FinT<IO, TAggregate>` |
 | Single Update | `Update(TAggregate)` | `FinT<IO, TAggregate>` |
 | Single Delete | `Delete(TId)` | `FinT<IO, int>` |
-| Batch Create | `CreateRange(IReadOnlyList<TAggregate>)` | `FinT<IO, Seq<TAggregate>>` |
+| Batch Create | `CreateRange(IReadOnlyList<TAggregate>)` | `FinT<IO, int>` |
 | Batch Read | `GetByIds(IReadOnlyList<TId>)` | `FinT<IO, Seq<TAggregate>>` |
-| Batch Update | `UpdateRange(IReadOnlyList<TAggregate>)` | `FinT<IO, Seq<TAggregate>>` |
+| Batch Update | `UpdateRange(IReadOnlyList<TAggregate>)` | `FinT<IO, int>` |
 | Batch Delete | `DeleteRange(IReadOnlyList<TId>)` | `FinT<IO, int>` |
 
 ### FinT\<IO, T\> Return Type

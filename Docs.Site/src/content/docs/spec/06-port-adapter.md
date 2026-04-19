@@ -81,15 +81,24 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     where TAggregate : AggregateRoot<TId>
     where TId : struct, IEntityId<TId>
 {
+    // ── Write Single ──
     FinT<IO, TAggregate> Create(TAggregate aggregate);
-    FinT<IO, TAggregate> GetById(TId id);
     FinT<IO, TAggregate> Update(TAggregate aggregate);
     FinT<IO, int> Delete(TId id);
 
-    FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates);
-    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
-    FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
+    // ── Write Batch ──
+    FinT<IO, int> CreateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, int> UpdateRange(IReadOnlyList<TAggregate> aggregates);
     FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
+
+    // ── Read ──
+    FinT<IO, TAggregate> GetById(TId id);
+    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
+
+    // ── Specification ──
+    FinT<IO, bool> Exists(Specification<TAggregate> spec);
+    FinT<IO, int> Count(Specification<TAggregate> spec);
+    FinT<IO, int> DeleteBy(Specification<TAggregate> spec);
 }
 ```
 
@@ -105,13 +114,16 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 | Method | Return Type | Description |
 |--------|-----------|------|
 | `Create(aggregate)` | `FinT<IO, TAggregate>` | Creates a single Aggregate |
-| `GetById(id)` | `FinT<IO, TAggregate>` | Retrieves an Aggregate by ID (`NotFound` error if absent) |
 | `Update(aggregate)` | `FinT<IO, TAggregate>` | Updates a single Aggregate |
 | `Delete(id)` | `FinT<IO, int>` | Deletes an Aggregate by ID (returns deleted count) |
-| `CreateRange(aggregates)` | `FinT<IO, Seq<TAggregate>>` | Batch creation |
-| `GetByIds(ids)` | `FinT<IO, Seq<TAggregate>>` | Batch retrieval (`PartialNotFound` error if some are missing) |
-| `UpdateRange(aggregates)` | `FinT<IO, Seq<TAggregate>>` | Batch update |
+| `CreateRange(aggregates)` | `FinT<IO, int>` | Batch creation (returns affected count) |
+| `UpdateRange(aggregates)` | `FinT<IO, int>` | Batch update (returns affected count) |
 | `DeleteRange(ids)` | `FinT<IO, int>` | Batch deletion (returns deleted count) |
+| `GetById(id)` | `FinT<IO, TAggregate>` | Retrieves an Aggregate by ID (`NotFound` error if absent) |
+| `GetByIds(ids)` | `FinT<IO, Seq<TAggregate>>` | Batch retrieval (`PartialNotFound` error if some are missing) |
+| `Exists(spec)` | `FinT<IO, bool>` | Specification-based existence check |
+| `Count(spec)` | `FinT<IO, int>` | Specification-based count |
+| `DeleteBy(spec)` | `FinT<IO, int>` | Specification-based deletion (returns deleted count) |
 
 > All methods return `FinT<IO, T>`. Success is expressed as `Fin.Succ(value)`, and failure is expressed as domain/adapter errors.
 
@@ -496,7 +508,7 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 |----------|------|------|
 | `eventCollector` | `IDomainEventCollector` | Domain event collector |
 | `applyIncludes` | `Func<IQueryable<TModel>, IQueryable<TModel>>?` | Navigation Property Include declaration (N+1 prevention). No Includes if `null` |
-| `propertyMap` | `PropertyMap<TAggregate, TModel>?` | Mapping for Specification to Model Expression conversion. Required when using `BuildQuery`/`ExistsBySpec` |
+| `propertyMap` | `PropertyMap<TAggregate, TModel>?` | Mapping for Specification to Model Expression conversion. Required when using `BuildQuery`/`Exists` |
 
 #### Required Subclass Implementation
 
@@ -506,6 +518,7 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 | `DbSet` | `DbSet<TModel>` | Entity model's DbSet (abstract property) |
 | `ToDomain(model)` | `TAggregate` | Model to Domain mapping (abstract method) |
 | `ToModel(aggregate)` | `TModel` | Domain to Model mapping (abstract method) |
+| `BuildSetters(builder, model)` | `void` | Registers which columns to update via `UpdateSettersBuilder<TModel>` (abstract method). Used by `Update` and `UpdateRange` for `ExecuteUpdateAsync` |
 
 #### Protected Infrastructure Members
 
@@ -517,7 +530,8 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 | `ReadQuery()` | `IQueryable<TModel>` | Read-only query with Includes auto-applied (`AsNoTracking`) |
 | `ReadQueryIgnoringFilters()` | `IQueryable<TModel>` | Read query with Includes + global filter bypass (for Soft Delete queries) |
 | `BuildQuery(spec)` | `Fin<IQueryable<TModel>>` | Specification to Model Expression query builder (PropertyMap required) |
-| `ExistsBySpec(spec)` | `FinT<IO, bool>` | Specification-based existence check (PropertyMap required) |
+| `Exists(spec)` | `FinT<IO, bool>` | Specification-based existence check (PropertyMap required, public) |
+| `UpdateBy(spec, setters)` | `FinT<IO, int>` | Specification-based bulk update via `ExecuteUpdateAsync` (protected) |
 | `ByIdPredicate(id)` | `Expression<Func<TModel, bool>>` | Single ID matching Expression (virtual, default `IHasStringId`-based implementation) |
 | `ByIdsPredicate(ids)` | `Expression<Func<TModel, bool>>` | Multiple ID matching Expression (virtual, default `IHasStringId`-based implementation) |
 
@@ -529,6 +543,28 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 | `PartialNotFoundError(requestedIds, foundAggregates)` | Creates `AdapterErrorType.PartialNotFound` error. Includes list of missing IDs |
 | `NotConfiguredError(message)` | Creates `AdapterErrorType.NotConfigured` error |
 | `NotSupportedError(currentValue, message)` | Creates `AdapterErrorType.NotSupported` error |
+
+#### Update Strategy
+
+`Update` and `UpdateRange` use EF Core's `ExecuteUpdateAsync` for server-side updates instead of `FindAsync` + `SetValues`. The subclass-implemented `BuildSetters` method declares which columns to set via `UpdateSettersBuilder<TModel>`, and the base class translates this into a single `ExecuteUpdateAsync` call. This avoids loading entities into memory for updates.
+
+`UpdateBy(spec, setters)` is a protected method that combines a Specification-based WHERE clause with an `Action<UpdateSettersBuilder<TModel>>` setter callback for bulk conditional updates.
+
+#### \[GenerateSetters\] Source Generator
+
+The `[GenerateSetters]` attribute can be applied to EF Core model classes to auto-generate the `UpdateSettersBuilder<TModel>` fluent API. The source generator creates a `Set{PropertyName}(value)` method for each settable property on the model, eliminating boilerplate in `BuildSetters` implementations.
+
+```csharp
+// Usage example
+[GenerateSetters]
+public class ProductModel : IHasStringId
+{
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+}
+// -> UpdateSettersBuilder<ProductModel> with SetName(value), SetPrice(value), etc. is auto-generated
+```
 
 #### IHasStringId
 
