@@ -187,6 +187,7 @@ dotnet test --solution Docs.Site/src/content/docs/tutorials/<name>/<PascalName>.
 - `DomainError.For`에 다른 레이어 ErrorType 전달 금지 — 컴파일 타임 강제
 - `new` 키워드로 Entity/ValueObject 직접 생성 금지 — 팩토리 메서드 사용
 - Pipeline에서 `UseAll()` 사용 금지 — 제거됨, 명시적 opt-in만
+- `.api/` 폴더 파일 수동 수정 금지 — 빌드 시 자동 생성되는 Public API Surface 파일. `dotnet build`가 자동 갱신하므로 직접 편집하지 않는다
 
 ---
 
