@@ -1,10 +1,6 @@
----
-title: Functorium v1.0.0-alpha.3 Release Notes
-description: Functorium v1.0.0-alpha.3 introduces IRepository redesign with Specification-based operations and EF Core bulk processing performance improvements.
-date: 2026-04-11
----
-
 # Functorium Release v1.0.0-alpha.3
+
+**English** | **[한국어](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.3/.release-notes/v1/v1.0.0-alpha.3/RELEASE-v1.0.0-alpha.3-KR.md)**
 
 ## Overview
 

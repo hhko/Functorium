@@ -1,10 +1,8 @@
----
-title: Functorium v1.0.0-alpha.3 릴리스 노트
-description: Functorium v1.0.0-alpha.3은 IRepository 재설계와 Specification 기반 연산, EF Core 대량 처리 성능 개선을 포함합니다.
-date: 2026-04-11
----
+# Functorium Release v1.0.0-alpha.3
 
-# Functorium 릴리스 v1.0.0-alpha.3
+**[English](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.3/.release-notes/v1/v1.0.0-alpha.3/RELEASE-v1.0.0-alpha.3.md)** | **한국어**
+
+**발표 자료**: [PDF](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.3/.release-notes/v1/v1.0.0-alpha.3/RELEASE-v1.0.0-alpha.3-KR.pdf) | [PPTX](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.3/.release-notes/v1/v1.0.0-alpha.3/RELEASE-v1.0.0-alpha.3-KR.pptx) | [MP4](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.3/.release-notes/v1/v1.0.0-alpha.3/RELEASE-v1.0.0-alpha.3-KR.mp4) | [M4A](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.3/.release-notes/v1/v1.0.0-alpha.3/RELEASE-v1.0.0-alpha.3-KR.m4a)
 
 ## 개요
 
