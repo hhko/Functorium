@@ -5,6 +5,7 @@ using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
 using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Products;
+using Microsoft.EntityFrameworkCore.Query;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.Inventories.Repositories;
@@ -34,6 +35,9 @@ public class InventoryRepositoryEfCore
     protected override Inventory ToDomain(InventoryModel model) => model.ToDomain();
     protected override InventoryModel ToModel(Inventory inventory) => inventory.ToModel();
 
+    protected override void BuildSetters(UpdateSettersBuilder<InventoryModel> setters, InventoryModel model)
+        => InventoryModel.ApplySetters(setters, model);
+
     // ─── Inventory 고유 메서드 ───────────────────────
 
     public virtual FinT<IO, Inventory> GetByProductId(ProductId productId)
@@ -56,6 +60,4 @@ public class InventoryRepositoryEfCore
         });
     }
 
-    public virtual FinT<IO, bool> Exists(Specification<Inventory> spec)
-        => ExistsBySpec(spec);
 }

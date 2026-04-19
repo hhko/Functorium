@@ -44,12 +44,4 @@ public class InventoryRepositoryInMemory
         });
     }
 
-    public virtual FinT<IO, bool> Exists(Specification<Inventory> spec)
-    {
-        return IO.lift(() =>
-        {
-            bool exists = Inventories.Values.Any(i => spec.IsSatisfiedBy(i));
-            return Fin.Succ(exists);
-        });
-    }
 }

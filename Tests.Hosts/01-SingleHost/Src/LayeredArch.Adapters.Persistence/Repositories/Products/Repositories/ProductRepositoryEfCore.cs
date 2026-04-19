@@ -3,6 +3,7 @@ using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.Products.Repositories;
 
@@ -30,7 +31,10 @@ public class ProductRepositoryEfCore
     protected override DbSet<ProductModel> DbSet => _dbContext.Products;
 
     protected override Product ToDomain(ProductModel model) => model.ToDomain();
-    protected override ProductModel ToModel(Product p) => p.ToModel();
+    protected override ProductModel ToModel(Product product) => product.ToModel();
+
+    protected override void BuildSetters(UpdateSettersBuilder<ProductModel> setters, ProductModel model)
+        => ProductModel.ApplySetters(setters, model);
 
     // ─── Soft Delete 오버라이드 ──────────────────────
 
@@ -123,6 +127,4 @@ public class ProductRepositoryEfCore
         });
     }
 
-    public virtual FinT<IO, bool> Exists(Specification<Product> spec)
-        => ExistsBySpec(spec);
 }

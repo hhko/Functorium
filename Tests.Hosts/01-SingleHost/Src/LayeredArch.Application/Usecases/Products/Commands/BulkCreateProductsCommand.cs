@@ -56,11 +56,12 @@ public sealed class BulkCreateProductsCommand
             eventCollector.TrackEvent(bulkResult.Event);
 
             // 3. 벌크 저장
+            var createdList = bulkResult.Created.ToList();
             FinT<IO, Response> usecase =
-                from createdProducts in productRepository.CreateRange(bulkResult.Created.ToList())
+                from createdCount in productRepository.CreateRange(createdList)
                 select new Response(
-                    createdProducts.Count,
-                    createdProducts.Select(p => p.Id.ToString()).ToList());
+                    createdCount,
+                    createdList.Select(p => p.Id.ToString()).ToList());
 
             Fin<Response> response = await usecase.Run().RunAsync();
             return response.ToFinResponse();

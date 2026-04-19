@@ -1,8 +1,10 @@
 using Functorium.Adapters.Repositories;
+using Functorium.Adapters.SourceGenerators;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.Inventories;
 
-public class InventoryModel : IHasStringId
+[GenerateSetters]
+public partial class InventoryModel : IHasStringId
 {
     public string Id { get; set; } = default!;
     public string ProductId { get; set; } = default!;

@@ -151,7 +151,7 @@ public class ProductRepositoryInMemory
         });
     }
 
-    public virtual FinT<IO, bool> Exists(Specification<Product> spec)
+    public override FinT<IO, bool> Exists(Specification<Product> spec)
     {
         return IO.lift(() =>
         {

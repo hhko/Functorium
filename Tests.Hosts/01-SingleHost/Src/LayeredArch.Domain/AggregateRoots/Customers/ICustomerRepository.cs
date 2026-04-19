@@ -7,8 +7,4 @@ namespace LayeredArch.Domain.AggregateRoots.Customers;
 /// </summary>
 public interface ICustomerRepository : IRepository<Customer, CustomerId>
 {
-    /// <summary>
-    /// Specification 기반 존재 여부 확인.
-    /// </summary>
-    FinT<IO, bool> Exists(Specification<Customer> spec);
 }

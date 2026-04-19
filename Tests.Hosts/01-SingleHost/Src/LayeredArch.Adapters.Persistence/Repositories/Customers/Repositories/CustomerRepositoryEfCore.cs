@@ -4,6 +4,7 @@ using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.Customers.Repositories;
 
@@ -33,8 +34,6 @@ public class CustomerRepositoryEfCore
     protected override Customer ToDomain(CustomerModel model) => model.ToDomain();
     protected override CustomerModel ToModel(Customer customer) => customer.ToModel();
 
-    // ─── Customer 고유 메서드 ────────────────────────
-
-    public virtual FinT<IO, bool> Exists(Specification<Customer> spec)
-        => ExistsBySpec(spec);
+    protected override void BuildSetters(UpdateSettersBuilder<CustomerModel> setters, CustomerModel model)
+        => CustomerModel.ApplySetters(setters, model);
 }

@@ -1,8 +1,10 @@
 using Functorium.Adapters.Repositories;
+using Functorium.Adapters.SourceGenerators;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.Tags;
 
-public class TagModel : IHasStringId
+[GenerateSetters]
+public partial class TagModel : IHasStringId
 {
     public string Id { get; set; } = default!;
     public string Name { get; set; } = default!;

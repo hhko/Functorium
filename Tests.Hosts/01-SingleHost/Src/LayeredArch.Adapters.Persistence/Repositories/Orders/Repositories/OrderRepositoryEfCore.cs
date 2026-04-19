@@ -2,6 +2,7 @@ using LayeredArch.Domain.AggregateRoots.Orders;
 using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.Orders.Repositories;
 
@@ -25,4 +26,7 @@ public class OrderRepositoryEfCore
 
     protected override Order ToDomain(OrderModel model) => model.ToDomain();
     protected override OrderModel ToModel(Order order) => order.ToModel();
+
+    protected override void BuildSetters(UpdateSettersBuilder<OrderModel> setters, OrderModel model)
+        => OrderModel.ApplySetters(setters, model);
 }

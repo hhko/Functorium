@@ -1,8 +1,10 @@
 using Functorium.Adapters.Repositories;
+using Functorium.Adapters.SourceGenerators;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.Customers;
 
-public class CustomerModel : IHasStringId
+[GenerateSetters]
+public partial class CustomerModel : IHasStringId
 {
     public string Id { get; set; } = default!;
     public string Name { get; set; } = default!;

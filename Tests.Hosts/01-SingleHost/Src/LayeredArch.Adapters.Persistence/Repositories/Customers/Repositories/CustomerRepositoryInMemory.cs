@@ -20,14 +20,4 @@ public class CustomerRepositoryInMemory
     public CustomerRepositoryInMemory(IDomainEventCollector eventCollector)
         : base(eventCollector) { }
 
-    // ─── Customer 고유 메서드 ────────────────────────
-
-    public virtual FinT<IO, bool> Exists(Specification<Customer> spec)
-    {
-        return IO.lift(() =>
-        {
-            bool exists = Customers.Values.Any(c => spec.IsSatisfiedBy(c));
-            return Fin.Succ(exists);
-        });
-    }
 }

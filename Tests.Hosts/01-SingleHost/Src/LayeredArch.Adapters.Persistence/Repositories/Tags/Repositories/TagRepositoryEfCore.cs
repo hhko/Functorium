@@ -2,6 +2,7 @@ using LayeredArch.Domain.AggregateRoots.Tags;
 using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.Tags.Repositories;
 
@@ -25,4 +26,7 @@ public class TagRepositoryEfCore
 
     protected override Tag ToDomain(TagModel model) => model.ToDomain();
     protected override TagModel ToModel(Tag tag) => tag.ToModel();
+
+    protected override void BuildSetters(UpdateSettersBuilder<TagModel> setters, TagModel model)
+        => TagModel.ApplySetters(setters, model);
 }
