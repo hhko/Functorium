@@ -818,11 +818,9 @@ Domain Layer에 위치하는 Repository 인터페이스(Port)입니다.
 ### IProductRepository
 
 ```csharp
+// Exists/Count/DeleteBy는 IRepository에서 상속 — 서브 인터페이스에 선언 불필요
 public interface IProductRepository : IRepository<Product, ProductId>
 {
-    /// Specification 기반 존재 여부 확인
-    FinT<IO, bool> Exists(Specification<Product> spec);
-
     /// 삭제된 상품을 포함하여 ID로 조회
     FinT<IO, Product> GetByIdIncludingDeleted(ProductId id);
 }
@@ -835,14 +833,24 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     where TAggregate : AggregateRoot<TId>
     where TId : struct, IEntityId<TId>
 {
+    // ── Write: Single ──
     FinT<IO, TAggregate> Create(TAggregate aggregate);
-    FinT<IO, TAggregate> GetById(TId id);
     FinT<IO, TAggregate> Update(TAggregate aggregate);
     FinT<IO, int> Delete(TId id);
-    FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates);
-    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
-    FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
+
+    // ── Write: Batch ──
+    FinT<IO, int> CreateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, int> UpdateRange(IReadOnlyList<TAggregate> aggregates);
     FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
+
+    // ── Read ──
+    FinT<IO, TAggregate> GetById(TId id);
+    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
+
+    // ── Specification ──
+    FinT<IO, bool> Exists(Specification<TAggregate> spec);
+    FinT<IO, int> Count(Specification<TAggregate> spec);
+    FinT<IO, int> DeleteBy(Specification<TAggregate> spec);
 }
 ```
 
@@ -851,7 +859,9 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 - `AggregateRoot<TId>` 제약으로 Aggregate 단위 영속화를 컴파일 타임에 강제
 - `FinT<IO, T>` 반환으로 모나드 합성 지원 (LINQ 쿼리 표현식)
 - `IObservablePort` 상속으로 OpenTelemetry 관측 자동 지원
-- 확장 메서드는 도메인별 Repository 인터페이스에 추가
+- Batch 쓰기 메서드는 영향 받은 건수(`int`)를 반환 (호출자가 이미 aggregate 보유)
+- Specification 메서드는 `PropertyMap` 설정 시 사용 가능
+- 도메인별 확장 메서드는 `IProductRepository` 등 서브 인터페이스에 추가
 
 ---
 
@@ -891,17 +901,24 @@ public static class ProductBulkOperations
 ```csharp
 public interface IRepository<TAggregate, TId> : IObservablePort
 {
-    // 단건
+    // ── Write: Single ──
     FinT<IO, TAggregate> Create(TAggregate aggregate);
-    FinT<IO, TAggregate> GetById(TId id);
     FinT<IO, TAggregate> Update(TAggregate aggregate);
     FinT<IO, int> Delete(TId id);
 
-    // 벌크
-    FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates);
-    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
-    FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
+    // ── Write: Batch ──
+    FinT<IO, int> CreateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, int> UpdateRange(IReadOnlyList<TAggregate> aggregates);
     FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
+
+    // ── Read ──
+    FinT<IO, TAggregate> GetById(TId id);
+    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
+
+    // ── Specification ──
+    FinT<IO, bool> Exists(Specification<TAggregate> spec);
+    FinT<IO, int> Count(Specification<TAggregate> spec);
+    FinT<IO, int> DeleteBy(Specification<TAggregate> spec);
 }
 ```
 

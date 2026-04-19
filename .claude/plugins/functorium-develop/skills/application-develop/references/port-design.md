@@ -27,17 +27,24 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     where TAggregate : AggregateRoot<TId>
     where TId : struct, IEntityId<TId>
 {
-    // 단건 CRUD
+    // ── Write: Single ──
     FinT<IO, TAggregate> Create(TAggregate aggregate);
-    FinT<IO, TAggregate> GetById(TId id);
     FinT<IO, TAggregate> Update(TAggregate aggregate);
     FinT<IO, int> Delete(TId id);
 
-    // 벌크 CRUD
-    FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates);
-    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
-    FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
+    // ── Write: Batch ──
+    FinT<IO, int> CreateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, int> UpdateRange(IReadOnlyList<TAggregate> aggregates);
     FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
+
+    // ── Read ──
+    FinT<IO, TAggregate> GetById(TId id);
+    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
+
+    // ── Specification ──
+    FinT<IO, bool> Exists(Specification<TAggregate> spec);
+    FinT<IO, int> Count(Specification<TAggregate> spec);
+    FinT<IO, int> DeleteBy(Specification<TAggregate> spec);
 }
 ```
 
@@ -45,11 +52,9 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 
 ```csharp
 // Domain Layer에 정의
+// Exists/Count/DeleteBy는 IRepository에서 이미 제공 — 서브 인터페이스에 선언 불필요
 public interface IProductRepository : IRepository<Product, ProductId>
 {
-    /// Specification 기반 존재 여부 확인
-    FinT<IO, bool> Exists(Specification<Product> spec);
-
     /// 삭제된 상품 포함 조회 (Restore용)
     FinT<IO, Product> GetByIdIncludingDeleted(ProductId id);
 }

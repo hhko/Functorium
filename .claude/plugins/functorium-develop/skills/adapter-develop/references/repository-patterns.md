@@ -126,12 +126,10 @@ private static readonly Func<LayeredArchDbContext, string, Task<ProductModel?>> 
             .FirstOrDefault(m => m.Id == id));
 ```
 
-### Specification 기반 존재 여부 확인
+### Specification 메서드
 
-```csharp
-public virtual FinT<IO, bool> Exists(Specification<Product> spec)
-    => ExistsBySpec(spec);
-```
+`Exists`, `Count`, `DeleteBy`는 `IRepository` 베이스에서 제공하므로 서브클래스 override 불필요.
+`PropertyMap`이 생성자에 전달되어야 동작합니다.
 
 ## InMemoryRepositoryBase 상속 패턴
 
@@ -341,26 +339,35 @@ public class ExternalPricingApiService : IExternalPricingService
 
 ## IRepository 벌크 메서드
 
-IRepository는 단건 CRUD 외에 벌크 연산을 제공합니다:
+IRepository는 Write Single / Write Batch / Read / Specification 4그룹으로 구성됩니다:
 
 ```csharp
 public interface IRepository<TAggregate, TId> : IObservablePort
     where TAggregate : AggregateRoot<TId>
     where TId : struct, IEntityId<TId>
 {
-    // 단건
+    // ── Write: Single ──
     FinT<IO, TAggregate> Create(TAggregate aggregate);
-    FinT<IO, TAggregate> GetById(TId id);
     FinT<IO, TAggregate> Update(TAggregate aggregate);
     FinT<IO, int> Delete(TId id);
 
-    // 벌크
-    FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates);
-    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
-    FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
+    // ── Write: Batch ──
+    FinT<IO, int> CreateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, int> UpdateRange(IReadOnlyList<TAggregate> aggregates);
     FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
+
+    // ── Read ──
+    FinT<IO, TAggregate> GetById(TId id);
+    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
+
+    // ── Specification ──
+    FinT<IO, bool> Exists(Specification<TAggregate> spec);
+    FinT<IO, int> Count(Specification<TAggregate> spec);
+    FinT<IO, int> DeleteBy(Specification<TAggregate> spec);
 }
 ```
+
+> **성능 개선**: `Update`/`UpdateRange`는 `ExecuteUpdateAsync`를 사용하여 Change Tracker를 우회합니다 (SELECT 없이 직접 UPDATE). `CreateRange`는 대량 데이터 시 청크 단위로 `ChangeTracker.Clear()`를 수행합니다.
 
 ### 벌크 연산과 Domain Service
 
@@ -371,13 +378,16 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 from products in productRepository.GetByIds(ids)
 let bulkResult = ProductBulkOperations.BulkDelete(products.ToList(), "system")
 let _ = eventCollector.TrackEvent(bulkResult.Event)  // 벌크 이벤트 직접 추적
-from saved in productRepository.UpdateRange(bulkResult.Deleted.ToList())
-select new Response(bulkResult.Deleted.Count)
+from affectedCount in productRepository.UpdateRange(bulkResult.Deleted.ToList())
+select new Response(affectedCount)
 ```
 
-### EfCoreRepositoryBase 벌크 구현
+### EfCoreRepositoryBase 구현 전략
 
-- `CreateRange`: `DbSet.AddRange()` + `EventCollector.TrackRange()`
+- `Update`: `ExecuteUpdateAsync` + `BuildSetters` (Change Tracker 우회, 1 RT)
+- `UpdateRange`: 건별 `ExecuteUpdateAsync` (SELECT 제거)
+- `CreateRange`: `DbSet.AddRange()` (대량 시 청크 + `ChangeTracker.Clear()`)
+- `Exists/Count/DeleteBy`: `BuildQuery(spec)` → 단일 SQL
 - `GetByIds`: `WHERE ... IN` (IdBatchSize=500 단위 분할)
 - `UpdateRange`: `DbSet.UpdateRange()` + `EventCollector.TrackRange()`
 - `DeleteRange`: `ExecuteDeleteAsync()` (hard delete, 이벤트 없음)

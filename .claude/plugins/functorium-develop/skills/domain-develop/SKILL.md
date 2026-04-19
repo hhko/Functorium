@@ -101,10 +101,15 @@ Logging/Tracing/Metrics에 비즈니스 컨텍스트를 자동 전파합니다:
 - Use Case에서 `IDomainEventCollector.TrackEvent(bulkEvent)` 호출
 
 IRepository 벌크 메서드:
-- `CreateRange(IReadOnlyList<TAggregate>)` → `FinT<IO, Seq<TAggregate>>`
+- `CreateRange(IReadOnlyList<TAggregate>)` → `FinT<IO, int>`
 - `GetByIds(IReadOnlyList<TId>)` → `FinT<IO, Seq<TAggregate>>`
-- `UpdateRange(IReadOnlyList<TAggregate>)` → `FinT<IO, Seq<TAggregate>>`
+- `UpdateRange(IReadOnlyList<TAggregate>)` → `FinT<IO, int>`
 - `DeleteRange(IReadOnlyList<TId>)` → `FinT<IO, int>`
+
+IRepository Specification 메서드:
+- `Exists(Specification<TAggregate>)` → `FinT<IO, bool>`
+- `Count(Specification<TAggregate>)` → `FinT<IO, int>`
+- `DeleteBy(Specification<TAggregate>)` → `FinT<IO, int>`
 
 ## 핵심 원칙
 

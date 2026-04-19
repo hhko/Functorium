@@ -124,8 +124,8 @@ public sealed class Usecase(
         from products in productRepository.GetByIds(ids)
         let bulkResult = ProductBulkOperations.BulkDelete(products.ToList(), "system")
         let _ = eventCollector.TrackEvent(bulkResult.Event)
-        from saved in productRepository.UpdateRange(bulkResult.Deleted.ToList())
-        select new Response(bulkResult.Deleted.Count);
+        from affectedCount in productRepository.UpdateRange(bulkResult.Deleted.ToList())
+        select new Response(affectedCount);
 }
 ```
 

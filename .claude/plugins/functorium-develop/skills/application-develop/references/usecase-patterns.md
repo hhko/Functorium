@@ -500,8 +500,8 @@ public sealed class BulkDeleteProductsCommand
             FinT<IO, Response> usecase =
                 from products in productRepository.GetByIds(ids)
                 let bulkResult = BulkDeleteAndTrack(products)
-                from saved in productRepository.UpdateRange(bulkResult.Deleted.ToList())
-                select new Response(bulkResult.Deleted.Count);
+                from affectedCount in productRepository.UpdateRange(bulkResult.Deleted.ToList())
+                select new Response(affectedCount);
 
             return (await usecase.Run().RunAsync()).ToFinResponse();
         }
