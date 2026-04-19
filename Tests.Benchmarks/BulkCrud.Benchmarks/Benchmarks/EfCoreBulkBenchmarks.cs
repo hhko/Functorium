@@ -2,8 +2,9 @@ using BenchmarkDotNet.Attributes;
 using BulkCrud.Benchmarks.Helpers;
 using Functorium.Adapters.Events;
 using LanguageExt;
-using LayeredArch.Adapters.Persistence.Repositories.EfCore;
-using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
+using LayeredArch.Adapters.Persistence.Repositories;
+using LayeredArch.Adapters.Persistence.Repositories.Products;
+using LayeredArch.Adapters.Persistence.Repositories.Products.Repositories;
 using LayeredArch.Domain.AggregateRoots.Products;
 using Microsoft.EntityFrameworkCore;
 
@@ -57,7 +58,7 @@ public class EfCoreBulkBenchmarks
         await dbContext.Database.EnsureCreatedAsync();
 
         var collector = new DomainEventCollector();
-        var repo = new EfCoreProductRepository(dbContext, collector);
+        var repo = new ProductRepositoryEfCore(dbContext, collector);
         await repo.CreateRange(_products).Run().RunAsync();
         await dbContext.SaveChangesAsync();
     }

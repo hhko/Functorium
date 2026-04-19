@@ -1,8 +1,9 @@
 using System.Diagnostics;
 using Functorium.Adapters.Events;
 using LanguageExt;
-using LayeredArch.Adapters.Persistence.Repositories.EfCore;
-using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
+using LayeredArch.Adapters.Persistence.Repositories;
+using LayeredArch.Adapters.Persistence.Repositories.Products;
+using LayeredArch.Adapters.Persistence.Repositories.Products.Repositories;
 using LayeredArch.Domain.AggregateRoots.Products;
 using LayeredArch.Domain.SharedModels.ValueObjects;
 using Microsoft.EntityFrameworkCore;
@@ -98,7 +99,7 @@ public sealed class EfCoreBulkCrudPerfTests : IAsyncLifetime
         // Arrange
         var products = GenerateProducts(100);
         var collector = new DomainEventCollector();
-        var repo = new EfCoreProductRepository(_dbContext, collector);
+        var repo = new ProductRepositoryEfCore(_dbContext, collector);
 
         // Act
         var result = await repo.CreateRange(products).Run().RunAsync();

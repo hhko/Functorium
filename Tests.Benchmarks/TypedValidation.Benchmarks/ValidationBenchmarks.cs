@@ -1,5 +1,6 @@
 using BenchmarkDotNet.Attributes;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations.Typed;
 using LanguageExt;
 using LanguageExt.Common;
 using System.Text.RegularExpressions;
@@ -41,7 +42,7 @@ public partial class ValidationBenchmarks
     [BenchmarkCategory("Simple")]
     public Validation<Error, decimal> New_SimpleValidation_Success()
     {
-        return Validate<Price>.Positive(ValidPrice);
+        return ValidationRules<Price>.Positive(ValidPrice);
     }
 
     [Benchmark]
@@ -55,7 +56,7 @@ public partial class ValidationBenchmarks
     [BenchmarkCategory("Simple")]
     public Validation<Error, decimal> New_SimpleValidation_Failure()
     {
-        return Validate<Price>.Positive(-1m);
+        return ValidationRules<Price>.Positive(-1m);
     }
 
     #endregion
@@ -75,7 +76,7 @@ public partial class ValidationBenchmarks
     [BenchmarkCategory("Chaining3")]
     public Validation<Error, string> New_Chain3_Success()
     {
-        return Validate<Email>.NotEmpty(ValidEmail)
+        return ValidationRules<Email>.NotEmpty(ValidEmail)
             .ThenMatches(EmailPattern)
             .ThenMaxLength(254);
     }
@@ -93,7 +94,7 @@ public partial class ValidationBenchmarks
     [BenchmarkCategory("Chaining3")]
     public Validation<Error, string> New_Chain3_Failure_First()
     {
-        return Validate<Email>.NotEmpty(InvalidEmail)
+        return ValidationRules<Email>.NotEmpty(InvalidEmail)
             .ThenMatches(EmailPattern)
             .ThenMaxLength(254);
     }
@@ -111,7 +112,7 @@ public partial class ValidationBenchmarks
     [BenchmarkCategory("Chaining3")]
     public Validation<Error, string> New_Chain3_Failure_Last()
     {
-        return Validate<Email>.NotEmpty(TooLongEmail)
+        return ValidationRules<Email>.NotEmpty(TooLongEmail)
             .ThenMatches(EmailPattern)
             .ThenMaxLength(254);
     }
@@ -135,7 +136,7 @@ public partial class ValidationBenchmarks
     [BenchmarkCategory("Chaining5")]
     public Validation<Error, string> New_Chain5_Success()
     {
-        return Validate<Email>.NotEmpty(ValidEmail)
+        return ValidationRules<Email>.NotEmpty(ValidEmail)
             .ThenMatches(EmailPattern)
             .ThenMinLength(5)
             .ThenMaxLength(254)
@@ -157,7 +158,7 @@ public partial class ValidationBenchmarks
     [BenchmarkCategory("Chaining5")]
     public Validation<Error, string> New_Chain5_Failure_First()
     {
-        return Validate<Email>.NotEmpty(InvalidEmail)
+        return ValidationRules<Email>.NotEmpty(InvalidEmail)
             .ThenMatches(EmailPattern)
             .ThenMinLength(5)
             .ThenMaxLength(254)
@@ -180,7 +181,7 @@ public partial class ValidationBenchmarks
     [BenchmarkCategory("Numeric")]
     public Validation<Error, decimal> New_NumericChain_Success()
     {
-        return Validate<Price>.Positive(ValidPrice)
+        return ValidationRules<Price>.Positive(ValidPrice)
             .ThenAtMost(1_000_000m);
     }
 

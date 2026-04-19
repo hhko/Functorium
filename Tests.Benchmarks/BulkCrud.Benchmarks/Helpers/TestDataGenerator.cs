@@ -1,6 +1,6 @@
 using Functorium.Adapters.Events;
 using Functorium.Applications.Events;
-using LayeredArch.Adapters.Persistence.Repositories.InMemory.Products;
+using LayeredArch.Adapters.Persistence.Repositories.Products.Repositories;
 using LayeredArch.Domain.AggregateRoots.Products;
 using LayeredArch.Domain.SharedModels.ValueObjects;
 
@@ -23,14 +23,14 @@ internal static class TestDataGenerator
 
     public static IDomainEventCollector CreateCollector() => new DomainEventCollector();
 
-    public static InMemoryProductRepository CreateInMemoryRepo(IDomainEventCollector? collector = null)
+    public static ProductRepositoryInMemory CreateInMemoryRepo(IDomainEventCollector? collector = null)
     {
         collector ??= CreateCollector();
-        return new InMemoryProductRepository(collector);
+        return new ProductRepositoryInMemory(collector);
     }
 
     public static void ClearInMemoryProducts()
     {
-        InMemoryProductRepository.Products.Clear();
+        ProductRepositoryInMemory.Products.Clear();
     }
 }
