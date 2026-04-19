@@ -100,7 +100,7 @@ public class PlaceOrderCommandTests
         _orderRepository.Create(Arg.Any<Order>())
             .Returns(call => FinTFactory.Succ(call.Arg<Order>()));
         _inventoryRepository.UpdateRange(Arg.Any<IReadOnlyList<Inventory>>())
-            .Returns(call => FinTFactory.Succ(toSeq(call.Arg<IReadOnlyList<Inventory>>())));
+            .Returns(call => FinTFactory.Succ(call.Arg<IReadOnlyList<Inventory>>().Count));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

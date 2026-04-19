@@ -54,7 +54,7 @@ public class AIModelRepositoryInMemory
 
     // ─── AIModel 고유 메서드 ─────────────────────────
 
-    public virtual FinT<IO, bool> Exists(Specification<AIModel> spec)
+    public override FinT<IO, bool> Exists(Specification<AIModel> spec)
     {
         return IO.lift(() =>
         {

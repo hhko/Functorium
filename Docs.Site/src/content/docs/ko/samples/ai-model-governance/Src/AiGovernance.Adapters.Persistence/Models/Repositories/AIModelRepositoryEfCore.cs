@@ -6,6 +6,7 @@ using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace AiGovernance.Adapters.Persistence.Models.Repositories;
 
@@ -30,6 +31,8 @@ public class AIModelRepositoryEfCore
 
     protected override DbContext DbContext => _dbContext;
     protected override DbSet<AIModelModel> DbSet => _dbContext.AIModels;
+
+    protected override void BuildSetters(UpdateSettersBuilder<AIModelModel> setters, AIModelModel model) { }
 
     protected override AIModel ToDomain(AIModelModel model) =>
         AIModel.CreateFromValidated(
@@ -84,9 +87,6 @@ public class AIModelRepositoryEfCore
     }
 
     // ─── AIModel 고유 메서드 ─────────────────────────
-
-    public virtual FinT<IO, bool> Exists(Specification<AIModel> spec)
-        => ExistsBySpec(spec);
 
     public virtual FinT<IO, AIModel> GetByIdIncludingDeleted(AIModelId id)
     {

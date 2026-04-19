@@ -22,15 +22,6 @@ public class IncidentRepositoryInMemory
 
     // ─── Incident 고유 메서드 ────────────────────────
 
-    public virtual FinT<IO, bool> Exists(Specification<ModelIncident> spec)
-    {
-        return IO.lift(() =>
-        {
-            bool exists = Incidents.Values.Any(i => spec.IsSatisfiedBy(i));
-            return Fin.Succ(exists);
-        });
-    }
-
     public virtual FinT<IO, Seq<ModelIncident>> Find(Specification<ModelIncident> spec)
     {
         return IO.lift(() =>

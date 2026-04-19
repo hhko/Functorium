@@ -8,11 +8,6 @@ namespace AiGovernance.Domain.AggregateRoots.Assessments;
 public interface IAssessmentRepository : IRepository<ComplianceAssessment, ComplianceAssessmentId>
 {
     /// <summary>
-    /// Specification 기반 존재 여부 확인.
-    /// </summary>
-    FinT<IO, bool> Exists(Specification<ComplianceAssessment> spec);
-
-    /// <summary>
     /// Specification 기반 조회.
     /// </summary>
     FinT<IO, Seq<ComplianceAssessment>> Find(Specification<ComplianceAssessment> spec);

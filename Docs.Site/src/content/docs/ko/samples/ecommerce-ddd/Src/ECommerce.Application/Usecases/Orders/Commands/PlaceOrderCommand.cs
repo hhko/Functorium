@@ -119,14 +119,14 @@ public sealed class PlaceOrderCommand
             // 다중 Aggregate 저장 (Order + Inventory)
             FinT<IO, Response> usecase = validated.Bind(ctx =>
                 _orderRepository.Create(ctx.order).Bind(saved =>
-                _inventoryRepository.UpdateRange(ctx.deducted.Inventories.ToList()).Map(updatedInventories =>
+                _inventoryRepository.UpdateRange(ctx.deducted.Inventories.ToList()).Map(_ =>
                     new Response(
                         saved.Id.ToString(),
                         Seq(saved.OrderLines.Select(l => new OrderLineResponse(
                             l.ProductId.ToString(), l.Quantity, l.UnitPrice, l.LineTotal))),
                         saved.TotalAmount,
                         saved.ShippingAddress,
-                        updatedInventories.Select(inv => new DeductedStockInfo(
+                        ctx.deducted.Inventories.Select(inv => new DeductedStockInfo(
                             inv.ProductId.ToString(), inv.StockQuantity)),
                         saved.CreatedAt))));
 

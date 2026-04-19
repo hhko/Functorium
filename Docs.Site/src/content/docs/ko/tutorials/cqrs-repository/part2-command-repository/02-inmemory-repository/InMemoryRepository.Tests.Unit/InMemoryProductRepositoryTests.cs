@@ -127,7 +127,7 @@ public sealed class InMemoryProductRepositoryTests : IDisposable
 
         // Assert
         result.IsSucc.ShouldBeTrue();
-        result.ThrowIfFail().Count.ShouldBe(2);
+        result.ThrowIfFail().ShouldBe(2);
     }
 
     [Fact]

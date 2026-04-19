@@ -22,15 +22,6 @@ public class DeploymentRepositoryInMemory
 
     // ─── Deployment 고유 메서드 ──────────────────────
 
-    public virtual FinT<IO, bool> Exists(Specification<ModelDeployment> spec)
-    {
-        return IO.lift(() =>
-        {
-            bool exists = Deployments.Values.Any(d => spec.IsSatisfiedBy(d));
-            return Fin.Succ(exists);
-        });
-    }
-
     public virtual FinT<IO, Seq<ModelDeployment>> Find(Specification<ModelDeployment> spec)
     {
         return IO.lift(() =>

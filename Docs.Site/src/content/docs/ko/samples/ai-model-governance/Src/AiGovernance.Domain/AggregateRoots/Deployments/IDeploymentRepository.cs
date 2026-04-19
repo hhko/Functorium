@@ -8,11 +8,6 @@ namespace AiGovernance.Domain.AggregateRoots.Deployments;
 public interface IDeploymentRepository : IRepository<ModelDeployment, ModelDeploymentId>
 {
     /// <summary>
-    /// Specification 기반 존재 여부 확인.
-    /// </summary>
-    FinT<IO, bool> Exists(Specification<ModelDeployment> spec);
-
-    /// <summary>
     /// Specification 기반 조회.
     /// </summary>
     FinT<IO, Seq<ModelDeployment>> Find(Specification<ModelDeployment> spec);

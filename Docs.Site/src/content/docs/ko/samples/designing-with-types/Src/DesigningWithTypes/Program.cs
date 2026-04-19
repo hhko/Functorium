@@ -181,8 +181,10 @@ file sealed class DemoContactRepository(IReadOnlyList<Contact> contacts) : ICont
     public FinT<IO, Contact> GetById(ContactId id) => throw new NotImplementedException();
     public FinT<IO, Contact> Update(Contact aggregate) => throw new NotImplementedException();
     public FinT<IO, int> Delete(ContactId id) => throw new NotImplementedException();
-    public FinT<IO, Seq<Contact>> CreateRange(IReadOnlyList<Contact> aggregates) => throw new NotImplementedException();
+    public FinT<IO, int> CreateRange(IReadOnlyList<Contact> aggregates) => throw new NotImplementedException();
     public FinT<IO, Seq<Contact>> GetByIds(IReadOnlyList<ContactId> ids) => throw new NotImplementedException();
-    public FinT<IO, Seq<Contact>> UpdateRange(IReadOnlyList<Contact> aggregates) => throw new NotImplementedException();
+    public FinT<IO, int> UpdateRange(IReadOnlyList<Contact> aggregates) => throw new NotImplementedException();
     public FinT<IO, int> DeleteRange(IReadOnlyList<ContactId> ids) => throw new NotImplementedException();
+    public FinT<IO, int> Count(Specification<Contact> spec) => throw new NotImplementedException();
+    public FinT<IO, int> DeleteBy(Specification<Contact> spec) => throw new NotImplementedException();
 }

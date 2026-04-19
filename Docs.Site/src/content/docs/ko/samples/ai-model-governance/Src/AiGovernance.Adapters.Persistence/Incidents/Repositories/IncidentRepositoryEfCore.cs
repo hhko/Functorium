@@ -8,6 +8,7 @@ using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace AiGovernance.Adapters.Persistence.Incidents.Repositories;
 
@@ -34,6 +35,8 @@ public class IncidentRepositoryEfCore
 
     protected override DbContext DbContext => _dbContext;
     protected override DbSet<IncidentModel> DbSet => _dbContext.Incidents;
+
+    protected override void BuildSetters(UpdateSettersBuilder<IncidentModel> setters, IncidentModel model) { }
 
     protected override ModelIncident ToDomain(IncidentModel model) =>
         ModelIncident.CreateFromValidated(
@@ -67,9 +70,6 @@ public class IncidentRepositoryEfCore
     };
 
     // ─── Incident 고유 메서드 ────────────────────────
-
-    public virtual FinT<IO, bool> Exists(Specification<ModelIncident> spec)
-        => ExistsBySpec(spec);
 
     public virtual FinT<IO, Seq<ModelIncident>> Find(Specification<ModelIncident> spec)
     {

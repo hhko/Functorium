@@ -22,15 +22,6 @@ public class AssessmentRepositoryInMemory
 
     // ─── Assessment 고유 메서드 ──────────────────────
 
-    public virtual FinT<IO, bool> Exists(Specification<ComplianceAssessment> spec)
-    {
-        return IO.lift(() =>
-        {
-            bool exists = Assessments.Values.Any(a => spec.IsSatisfiedBy(a));
-            return Fin.Succ(exists);
-        });
-    }
-
     public virtual FinT<IO, Seq<ComplianceAssessment>> Find(Specification<ComplianceAssessment> spec)
     {
         return IO.lift(() =>

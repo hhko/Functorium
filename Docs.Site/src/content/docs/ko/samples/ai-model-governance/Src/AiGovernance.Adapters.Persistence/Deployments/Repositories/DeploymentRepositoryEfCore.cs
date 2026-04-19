@@ -7,6 +7,7 @@ using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace AiGovernance.Adapters.Persistence.Deployments.Repositories;
 
@@ -31,6 +32,8 @@ public class DeploymentRepositoryEfCore
 
     protected override DbContext DbContext => _dbContext;
     protected override DbSet<DeploymentModel> DbSet => _dbContext.Deployments;
+
+    protected override void BuildSetters(UpdateSettersBuilder<DeploymentModel> setters, DeploymentModel model) { }
 
     protected override ModelDeployment ToDomain(DeploymentModel model) =>
         ModelDeployment.CreateFromValidated(
@@ -60,9 +63,6 @@ public class DeploymentRepositoryEfCore
     };
 
     // ─── Deployment 고유 메서드 ──────────────────────
-
-    public virtual FinT<IO, bool> Exists(Specification<ModelDeployment> spec)
-        => ExistsBySpec(spec);
 
     public virtual FinT<IO, Seq<ModelDeployment>> Find(Specification<ModelDeployment> spec)
     {

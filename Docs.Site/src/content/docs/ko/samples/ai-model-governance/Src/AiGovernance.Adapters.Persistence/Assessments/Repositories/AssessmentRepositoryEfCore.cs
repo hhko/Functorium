@@ -8,6 +8,7 @@ using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace AiGovernance.Adapters.Persistence.Assessments.Repositories;
 
@@ -34,6 +35,8 @@ public class AssessmentRepositoryEfCore
 
     protected override DbContext DbContext => _dbContext;
     protected override DbSet<AssessmentModel> DbSet => _dbContext.Assessments;
+
+    protected override void BuildSetters(UpdateSettersBuilder<AssessmentModel> setters, AssessmentModel model) { }
 
     protected override ComplianceAssessment ToDomain(AssessmentModel model)
     {
@@ -118,9 +121,6 @@ public class AssessmentRepositoryEfCore
     }
 
     // ─── Assessment 고유 메서드 ──────────────────────
-
-    public virtual FinT<IO, bool> Exists(Specification<ComplianceAssessment> spec)
-        => ExistsBySpec(spec);
 
     public virtual FinT<IO, Seq<ComplianceAssessment>> Find(Specification<ComplianceAssessment> spec)
     {
