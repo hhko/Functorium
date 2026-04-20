@@ -70,41 +70,6 @@ public static partial class FinTLinqExtensions
     }
 
     // =========================================================================
-    // Validation → FinT<IO, A> SelectMany (IO 모나드 특화)
-    // =========================================================================
-
-    /// <summary>
-    /// Validation → FinT&lt;IO, B&gt; 변환: IO 모나드에 특화된 SelectMany
-    ///
-    /// LINQ 쿼리 표현식에서 Validation을 직접 사용 가능하게 함:
-    ///   from validated in LimitSampleIdentifier.Validate(...)  // Validation&lt;Error, A&gt; → FinT&lt;IO, A&gt;
-    ///   from result in DoSomething(validated)                  // FinT&lt;IO, B&gt;
-    ///   select result
-    ///
-    /// 사용 예:
-    ///   FinT&lt;IO, Unit&gt; usecase =
-    ///       from identifier in LimitSampleIdentifier.Validate(lineId, processId, partId, version)
-    ///       from saved in SaveToDatabase(identifier)
-    ///       select saved;
-    ///
-    /// 장점:
-    ///   - AsFinT() 호출 불필요
-    ///   - 타입 추론 자동
-    ///   - LINQ 쿼리 표현식에서 자연스럽게 사용
-    /// </summary>
-    public static FinT<IO, C> SelectMany<A, B, C>(
-        this Validation<Error, A> validation,
-        Func<A, FinT<IO, B>> finTSelector,
-        Func<A, B, C> projector)
-    {
-        Fin<A> fin = validation.Match(
-            Succ: value => Fin.Succ(value),
-            Fail: errors => Fin.Fail<A>(errors.Head));
-
-        return FinT.lift<IO, A>(fin).SelectMany(finTSelector, projector);
-    }
-
-    // =========================================================================
     // FinT → Validation SelectMany (제네릭 모나드)
     // =========================================================================
 
@@ -151,33 +116,4 @@ public static partial class FinTLinqExtensions
         });
     }
 
-    /// <summary>
-    /// FinT → Validation 체이닝 (IO 특화): IO 모나드에 특화된 SelectMany
-    ///
-    /// LINQ 쿼리 표현식에서 타입 추론이 더 정확하게 동작:
-    ///   from finTVal in finTValue                    // FinT&lt;IO, A&gt;
-    ///   from validated in validationSelector(val)   // Validation&lt;Error, B&gt;
-    ///   select result                               // C
-    ///
-    /// 사용 예:
-    ///   FinT&lt;IO, Response&gt; usecase =
-    ///       from request in GetRequest()                           // FinT&lt;IO, Request&gt;
-    ///       from identifier in Identifier.Validate(request.Id)     // Validation&lt;Error, Identifier&gt;
-    ///       from saved in repository.Save(identifier)              // FinT&lt;IO, Entity&gt;
-    ///       select new Response(saved.Id);
-    /// </summary>
-    public static FinT<IO, C> SelectMany<A, B, C>(
-        this FinT<IO, A> finT,
-        Func<A, Validation<Error, B>> validationSelector,
-        Func<A, B, C> projector)
-    {
-        return finT.Bind(a =>
-        {
-            Fin<B> fin = validationSelector(a).Match(
-                Succ: value => Fin.Succ(value),
-                Fail: errors => Fin.Fail<B>(errors.Head));
-
-            return FinT.lift<IO, B>(fin).Map(b => projector(a, b));
-        });
-    }
 }

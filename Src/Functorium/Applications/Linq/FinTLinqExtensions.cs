@@ -19,9 +19,7 @@ namespace Functorium.Applications.Linq;
 // | .IO.cs           | FinT<IO, A>           | IO<B>                  | FinT<IO, C>    | FinT 체인 중간에 IO 사용          |
 // | .Validation.cs   | Validation<Error, A>  | FinT<M, B>             | FinT<M, C>     | Validation → FinT (제네릭)        |
 // | .Validation.cs   | Validation<Error, A>  | B (Map)                | FinT<M, B>     | Validation → FinT 단순 변환       |
-// | .Validation.cs   | Validation<Error, A>  | FinT<IO, B>            | FinT<IO, C>    | Validation → FinT (IO 특화)       |
 // | .Validation.cs   | FinT<M, A>            | Validation<Error, B>   | FinT<M, C>     | FinT 체인 중간에 Validation 사용  |
-// | .Validation.cs   | FinT<IO, A>           | Validation<Error, B>   | FinT<IO, C>    | FinT 체인 중간에 Validation (IO)  |
 //
 // -----------------------------------------------------------------------------
 // Filter 확장 메서드 (조건부 필터링)
@@ -45,13 +43,13 @@ namespace Functorium.Applications.Linq;
 // IO.cs와 Validation.cs의 메서드 수가 다른 이유
 // -----------------------------------------------------------------------------
 //
-// IO.cs (3개) vs Validation.cs (5개)
+// IO.cs (3개) vs Validation.cs (3개)
 //
-// | Direction              | IO.cs    | Validation.cs  |
-// |------------------------|----------|----------------|
-// | Source -> FinT (Map)   | IO only  | Generic M      |
-// | Source -> FinT<M, B>   | IO only  | Generic M + IO |
-// | FinT<M, A> -> Source   | IO only  | Generic M + IO |
+// | Direction              | IO.cs     | Validation.cs |
+// |------------------------|-----------|---------------|
+// | Source -> FinT (Map)   | IO only   | Generic M     |
+// | Source -> FinT<M, B>   | IO only   | Generic M     |
+// | FinT<M, A> -> Source   | IO only   | Generic M     |
 //
 // 이유:
 //   - IO는 그 자체가 특정 모나드이므로 제네릭 M 버전이 불필요합니다.
@@ -59,9 +57,8 @@ namespace Functorium.Applications.Linq;
 //     FinT<M, A> → IO<B>는 M이 IO일 때만 의미가 있습니다.
 //
 //   - Validation은 모나드가 아닌 데이터 타입이므로 어떤 모나드 M과도 조합 가능합니다.
-//     FinT<IO, A> → Validation 가능
-//     FinT<Task, A> → Validation 가능 (이론상)
-//     따라서 제네릭 M 버전과 IO 특화 버전 모두 제공합니다.
+//     IO 역시 Monad<IO>를 만족하므로, 제네릭 M 버전이 FinT<IO, _> 컨텍스트까지
+//     타입 추론으로 커버합니다. 별도의 IO 특화 오버로드는 중복이므로 제거되었습니다.
 //
 // -----------------------------------------------------------------------------
 // 파일 구조 (partial class by source type)
