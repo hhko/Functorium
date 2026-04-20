@@ -125,6 +125,43 @@ This is how AI generates exception-free, safe code structures automatically.
 >
 > The framework's **automatic error classification + structured context logs + dashboards** — built into every Command/Query — translate code state into human language.
 
+### When Requirements Change — Humans Update Text, AI Rebuilds the Plumbing
+
+> The CS team urgently requests **"Allow change-of-mind cancellation within 24h after delivery"** to match a competitor's policy. The current rule permits cancellation only in `Pending/Confirmed` states ([`Order.Cancel()` in the ecommerce-ddd sample](./Docs.Site/src/content/docs/samples/ecommerce-ddd/index.md)).
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| Allowed state transitions | `Pending/Confirmed → Cancelled` | The above + `Delivered → Cancelled` (only when `DeliveredAt + 24h > now` & `reason = ChangeOfMind`) |
+| `Cancel` method signature | `Cancel() : Fin<Unit>` | `Cancel(CancellationReason reason) : Fin<Unit>` |
+| Domain Event | `CancelledEvent(OrderId, OrderLines)` | The above + `CancellationReason Reason` field |
+| New Union type | — | `CancellationReason = ChangeOfMind \| CustomerIssue \| Fraud` |
+
+**The 3-step collaboration flow**:
+
+1. **Human (architect)** — adds one line to PRD `§Order.Cancellation`:
+   > "Also allow `Delivered` orders to be cancelled for change-of-mind within 24h of delivery"
+
+2. **AI (`domain-develop` skill)** — auto-generates/updates five artifacts:
+   - Add `("Delivered", Seq("Cancelled"))` to `OrderStatus.AllowedTransitions`
+   - Create a new `CancellationReason` Union (3-variant sealed records)
+   - Inject the time-window Specification into `Order.Cancel()`
+   - Extend `CancelledEvent` with a `CancellationReason` field
+   - Auto-add boundary-value unit tests (`23h59m` / `24h00m` / `24h01m`)
+
+3. **Framework (triple verification gates)** — blocks regressions at build time:
+   - Architecture rule tests: verify `sealed`, record immutability, `Fin<T>` return types on the Union
+   - Contract regression tests: confirm the `Pending/Confirmed → Cancelled` path still holds
+   - Type system: enforce the new `Cancel()` signature at every call site at compile time
+
+> **Developers never open the `Fin<Unit>` pipeline inside `Order.Cancel()`.**
+> Just edit the text requirement. AI rebuilds state-transition rules, Unions, events, and tests; architectural integrity is guaranteed by [21+ rule tests](#gate-1-architecture-rule-tests--structural-integrity).
+
+| Role | Responsibility | In this scenario |
+|------|---------------|------------------|
+| **Developer** | Architect — defines business rules and boundaries | Specify the "24h post-delivery cancellation" policy in text |
+| **AI Agent** | Plumber — regenerates state machines, Unions, events, tests | Extend `OrderStatus`, create `CancellationReason`, add tests automatically |
+| **Framework** | Safety net — blocks structural regression | Validates architecture, types, and existing contracts automatically |
+
 ## How AI Breaks Through the Problems
 
 ### From Problem to Code — Structure Connected by AI
@@ -442,6 +479,72 @@ Functorium provides unified observability (Logging, Metrics, Tracing) based on O
 | **DomainEvent** | Publisher + Handler | `ObservableDomainEventPublisher` | Event type/count + partial failure tracking |
 
 The Application layer (EventId 1001–1004) and Adapter layer (EventId 2001–2004) use **identical `request.*` / `response.*` / `error.*` naming**, enabling end-to-end request flow tracking with a single dashboard query.
+
+### At 2 AM, What Actually Appears on Your Screen
+
+Here we visualize how the "24h post-delivery cancellation" policy from the [requirements-change scenario](#when-requirements-change--humans-update-text-ai-rebuilds-the-plumbing) fails at its boundary in production.
+
+> `POST /orders/{id}/cancel` (reason=`ChangeOfMind`). The order was delivered **25 hours ago** — past the 24h window. No exception is thrown; instead, a structured failure response classified as `error.type = "expected"` is returned.
+
+**What actually lands in the log** (this is literally what Seq or Grafana Loki displays):
+
+```json
+{
+  "@t": "2026-04-20T02:14:33.0421Z",
+  "EventId": 1002,
+  "request.category": "OrderManagement",
+  "request.name": "CancelOrderCommand",
+  "request_id": "01HXK8Z6Q3N9V7B4M2C1D5E8F0",
+  "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "ctx.order_id": "01HXK5M2P8X7...",
+  "ctx.customer_id": "01HXK5M2P8Y1...",
+  "ctx.order_status_from": "Delivered",
+  "ctx.order_status_to": "Cancelled",
+  "ctx.cancellation_reason": "ChangeOfMind",
+  "ctx.hours_since_delivery": 25,
+  "error.type": "expected",
+  "error.codes": ["DomainErrors.Order.InvalidOrderStatusTransition"],
+  "error.message": "Cancel window (24h) exceeded for ChangeOfMind",
+  "elapsed_ms": 7,
+  "status": "Failed"
+}
+```
+
+**How the same `trace_id` / `request_id` propagate across the three pillars**:
+
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant EP as FastEndpoint
+  participant PL as UsecasePipeline
+  participant AG as Order Aggregate
+  participant OT as OpenTelemetry SDK
+
+  C->>EP: POST /orders/{id}/cancel
+  EP->>PL: trace_id=4bf9... + request_id=01HXK...
+  PL->>AG: Cancel(reason=ChangeOfMind)
+  AG-->>PL: Fin.Fail(InvalidOrderStatusTransition)
+  PL->>OT: Log (EventId=1002, error.type="expected")
+  PL->>OT: Metric (usecase_failed{error_type="expected"}+1)
+  PL->>OT: Trace span(status=ERROR, tags: ctx.order_id, ctx.hours_since_delivery=25)
+  PL-->>EP: FinResponse.Fail (HTTP 409)
+  EP-->>C: error_code="DomainErrors.Order.InvalidOrderStatusTransition"
+
+  Note over OT: All three pillars share the same trace_id/request_id<br/>→ one filter correlates Logs, Metrics, and Traces
+```
+
+**Traditional exception model vs. Functorium `Fin` model**:
+
+| Traditional exception model (OOP) | Functorium `Fin` model |
+|---|---|
+| `throw new InvalidOperationException(...)` | `Fin.Fail<Unit>(DomainError.For<Order>(...))` |
+| Stack trace (noise) | `error.codes[]` + `ctx.*` (signal) |
+| Risk of broken process flow | Type-safe failure value — flow is preserved |
+| Manual log re-assembly required | `request_id` / `trace_id` auto-propagated |
+| Business errors and system failures mixed | `error.type ∈ {expected, exceptional, aggregate}` — dashboard-filterable |
+
+> **"No stack trace = undebuggable" is false.**
+> Instead of a stack trace, the framework records **which domain rule was broken, in which state, and why** through the `error.codes` array and `ctx.*` business context. A single glance at `ctx.hours_since_delivery=25` reveals the root cause. The same `request_id` lets you cross-filter Logs, Metrics, and Traces for the same event.
 
 For detailed specifications and guides, see the documentation site:
 - [Observability Specification](./Docs.Site/src/content/docs/spec/08-observability.md) — Field/Tag structure, ctx.* 3-Pillar Enrichment, Meter/Instrument specification
