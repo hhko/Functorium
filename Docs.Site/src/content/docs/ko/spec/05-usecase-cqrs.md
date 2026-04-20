@@ -297,9 +297,7 @@ return result.ToFinResponse(() => new DeleteResponse(id));
 | `.IO.cs` | `FinT<IO, A>` | `IO<B>` | `FinT<IO, C>` | FinT 체인 중간에 IO 사용 |
 | `.Validation.cs` | `Validation<Error, A>` | `FinT<M, B>` | `FinT<M, C>` | Validation → FinT (제네릭) |
 | `.Validation.cs` | `Validation<Error, A>` | `B` (Map) | `FinT<M, B>` | Validation → FinT 단순 변환 |
-| `.Validation.cs` | `Validation<Error, A>` | `FinT<IO, B>` | `FinT<IO, C>` | Validation → FinT (IO 특화) |
 | `.Validation.cs` | `FinT<M, A>` | `Validation<Error, B>` | `FinT<M, C>` | FinT 체인 중간에 Validation 사용 |
-| `.Validation.cs` | `FinT<IO, A>` | `Validation<Error, B>` | `FinT<IO, C>` | FinT 체인 중간에 Validation (IO) |
 
 ### Filter 확장 메서드
 
@@ -347,10 +345,10 @@ FinT<IO, Response> response =
 | 방향 | IO.cs | Validation.cs |
 |------|-------|---------------|
 | Source → FinT (Map) | IO 전용 | 제네릭 M |
-| Source → FinT\<M, B\> | IO 전용 | 제네릭 M + IO |
-| FinT\<M, A\> → Source | IO 전용 | 제네릭 M + IO |
+| Source → FinT\<M, B\> | IO 전용 | 제네릭 M |
+| FinT\<M, A\> → Source | IO 전용 | 제네릭 M |
 
-`IO`는 그 자체가 특정 모나드이므로 제네릭 `M` 버전이 불필요합니다. `Validation`은 모나드가 아닌 데이터 타입이므로 어떤 모나드 `M`과도 조합 가능하여 제네릭 `M` 버전과 IO 특화 버전 모두 제공합니다.
+`IO`는 그 자체가 특정 모나드이므로 제네릭 `M` 버전이 불필요합니다. `Validation`은 모나드가 아닌 데이터 타입이므로 어떤 모나드 `M`과도 조합 가능합니다. `IO` 역시 `Monad<IO>`를 만족하므로, 제네릭 `M` 오버로드가 타입 추론으로 `FinT<IO, _>` 컨텍스트까지 커버하며 IO 특화 중복 오버로드가 필요하지 않습니다.
 
 ### 파일 구조
 

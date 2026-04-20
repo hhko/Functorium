@@ -297,9 +297,7 @@ return result.ToFinResponse(() => new DeleteResponse(id));
 | `.IO.cs` | `FinT<IO, A>` | `IO<B>` | `FinT<IO, C>` | Uses IO in the middle of FinT chain |
 | `.Validation.cs` | `Validation<Error, A>` | `FinT<M, B>` | `FinT<M, C>` | Validation to FinT (generic) |
 | `.Validation.cs` | `Validation<Error, A>` | `B` (Map) | `FinT<M, B>` | Simple Validation to FinT conversion |
-| `.Validation.cs` | `Validation<Error, A>` | `FinT<IO, B>` | `FinT<IO, C>` | Validation to FinT (IO specialized) |
 | `.Validation.cs` | `FinT<M, A>` | `Validation<Error, B>` | `FinT<M, C>` | Uses Validation in the middle of FinT chain |
-| `.Validation.cs` | `FinT<IO, A>` | `Validation<Error, B>` | `FinT<IO, C>` | Uses Validation in FinT chain (IO) |
 
 ### Filter Extension Methods
 
@@ -347,10 +345,10 @@ FinT<IO, Response> response =
 | Direction | IO.cs | Validation.cs |
 |------|-------|---------------|
 | Source → FinT (Map) | IO only | Generic M |
-| Source → FinT\<M, B\> | IO only | Generic M + IO |
-| FinT\<M, A\> → Source | IO only | Generic M + IO |
+| Source → FinT\<M, B\> | IO only | Generic M |
+| FinT\<M, A\> → Source | IO only | Generic M |
 
-`IO` is itself a specific monad, so a generic `M` version is unnecessary. `Validation` is a data type rather than a monad, so it can be combined with any monad `M`, providing both a generic `M` version and an IO-specialized version.
+`IO` is itself a specific monad, so a generic `M` version is unnecessary. `Validation` is a data type rather than a monad, so it can be combined with any monad `M` — including `IO`, which satisfies `Monad<IO>`. The generic `M` overload covers `FinT<IO, _>` contexts via type inference, so no IO-specialized duplicate is needed.
 
 ### File Structure
 
