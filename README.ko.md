@@ -125,6 +125,43 @@ public sealed partial class Email : SimpleValueObject<string>
 >
 > 프레임워크가 모든 Command/Query에 자동으로 내장하는 **에러 자동 분류 + 구조화된 컨텍스트 로그 + 대시보드가** 코드의 상태를 사람의 언어로 번역합니다.
 
+### 요구사항이 바뀌면? — 인간은 텍스트만, AI는 배관을 다시
+
+> CS팀이 경쟁사 정책 대응을 위해 **"배송 완료 후 24시간 내 단순변심 취소 허용"을** 요청합니다. 기존 규칙은 `Pending/Confirmed` 상태에서만 취소 가능했습니다 ([ecommerce-ddd 샘플의 `Order.Cancel()`](./Docs.Site/src/content/docs/ko/samples/ecommerce-ddd/index.md)).
+
+| 항목 | Before | After |
+|------|--------|-------|
+| 허용 상태 전이 | `Pending/Confirmed → Cancelled` | 위 규칙 + `Delivered → Cancelled` (단, `DeliveredAt + 24h > now` & `reason = ChangeOfMind`) |
+| `Cancel` 메서드 시그니처 | `Cancel() : Fin<Unit>` | `Cancel(CancellationReason reason) : Fin<Unit>` |
+| Domain Event | `CancelledEvent(OrderId, OrderLines)` | 위 + `CancellationReason Reason` 필드 |
+| 신규 Union 타입 | — | `CancellationReason = ChangeOfMind \| CustomerIssue \| Fraud` |
+
+**3단계 협업 흐름**:
+
+1. **사람 (아키텍트)** — PRD `§Order.Cancellation`에 한 줄 추가:
+   > "`Delivered` 상태도 배송 완료 후 24시간 내 단순변심 취소 허용"
+
+2. **AI (`domain-develop` 스킬)** — 아래 5개 산출물을 자동 생성·갱신:
+   - `OrderStatus.AllowedTransitions`에 `("Delivered", Seq("Cancelled"))` 추가
+   - `CancellationReason` Union 타입 신규 생성 (3-variant sealed record)
+   - `Order.Cancel()`에 시간 조건 Specification 주입
+   - `CancelledEvent`에 `CancellationReason` 필드 확장
+   - 경계값 단위 테스트 자동 추가 (`23h59m` / `24h00m` / `24h01m`)
+
+3. **프레임워크 (3중 검증 게이트)** — 빌드 타임에 회귀 자동 차단:
+   - 아키텍처 규칙 테스트: Union `sealed`·record 불변성·`Fin<T>` 반환 검증
+   - 기존 계약 회귀 테스트: `Pending/Confirmed → Cancelled` 경로가 깨지지 않는지 재확인
+   - 타입 시스템: `Cancel()` 호출부의 컴파일 타임 시그니처 강제
+
+> **개발자는 `Order.Cancel()` 내부의 `Fin<Unit>` 파이프라인을 열지 않습니다.**
+> 텍스트 요구사항만 수정하세요. 상태 전이 규칙·Union 추가·이벤트 확장·테스트 재생성은 AI가 담당하고, 아키텍처 무결성은 [21개 이상의 규칙 테스트가](#게이트-1-아키텍처-규칙-테스트--구조적-무결성) 보장합니다.
+
+| 역할 | 담당 | 이 시나리오에서 |
+|------|------|----------------|
+| **개발자** | 아키텍트 — 비즈니스 규칙·경계 결정 | "배송 완료 24시간 내 취소" 정책을 텍스트로 정의 |
+| **AI 에이전트** | 배관공 — 상태머신·Union·이벤트·테스트 재생성 | `OrderStatus` 확장, `CancellationReason` 생성, 테스트 자동 추가 |
+| **프레임워크** | 안전망 — 구조적 회귀 차단 | 아키텍처·타입·기존 계약 자동 검증 |
+
 ## AI가 문제를 돌파하는 방법
 
 ### 문제에서 코드까지 — AI가 연결하는 구조
@@ -442,6 +479,72 @@ Functorium은 OpenTelemetry 기반의 통합 관측성(Logging, Metrics, Tracing
 | **DomainEvent** | Publisher + Handler | `ObservableDomainEventPublisher` | 이벤트 타입/수량 + 부분 실패 추적 |
 
 Application 레이어(EventId 1001–1004)와 Adapter 레이어(EventId 2001–2004)가 **동일한 `request.*` / `response.*` / `error.*` 네이밍을** 사용하므로, 하나의 대시보드 쿼리로 전체 요청 흐름을 추적할 수 있습니다.
+
+### 새벽 2시, 실제로 화면에 무엇이 보이는가
+
+앞서 [요구사항 변경 시나리오](#요구사항이-바뀌면--인간은-텍스트만-ai는-배관을-다시)에서 적용한 "Delivered 24시간 내 취소 허용" 정책이 운영 중 경계값에서 어떻게 실패하는지 시각화합니다.
+
+> `POST /orders/{id}/cancel` (reason=`ChangeOfMind`). 주문은 **25시간 전**에 배송 완료됨 → 24시간 윈도우 초과. 예외는 던져지지 않고, `error.type = "expected"`로 분류된 구조화된 실패 응답이 반환됩니다.
+
+**로그에 남는 것** (Seq·Grafana Loki 등에서 실제로 이렇게 기록됩니다):
+
+```json
+{
+  "@t": "2026-04-20T02:14:33.0421Z",
+  "EventId": 1002,
+  "request.category": "OrderManagement",
+  "request.name": "CancelOrderCommand",
+  "request_id": "01HXK8Z6Q3N9V7B4M2C1D5E8F0",
+  "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "ctx.order_id": "01HXK5M2P8X7...",
+  "ctx.customer_id": "01HXK5M2P8Y1...",
+  "ctx.order_status_from": "Delivered",
+  "ctx.order_status_to": "Cancelled",
+  "ctx.cancellation_reason": "ChangeOfMind",
+  "ctx.hours_since_delivery": 25,
+  "error.type": "expected",
+  "error.codes": ["DomainErrors.Order.InvalidOrderStatusTransition"],
+  "error.message": "Cancel window (24h) exceeded for ChangeOfMind",
+  "elapsed_ms": 7,
+  "status": "Failed"
+}
+```
+
+**3-Pillar에 같은 `trace_id` / `request_id`로 전파되는 흐름**:
+
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant EP as FastEndpoint
+  participant PL as UsecasePipeline
+  participant AG as Order Aggregate
+  participant OT as OpenTelemetry SDK
+
+  C->>EP: POST /orders/{id}/cancel
+  EP->>PL: trace_id=4bf9... + request_id=01HXK...
+  PL->>AG: Cancel(reason=ChangeOfMind)
+  AG-->>PL: Fin.Fail(InvalidOrderStatusTransition)
+  PL->>OT: Log (EventId=1002, error.type="expected")
+  PL->>OT: Metric (usecase_failed{error_type="expected"}+1)
+  PL->>OT: Trace span(status=ERROR, tags: ctx.order_id, ctx.hours_since_delivery=25)
+  PL-->>EP: FinResponse.Fail (HTTP 409)
+  EP-->>C: error_code="DomainErrors.Order.InvalidOrderStatusTransition"
+
+  Note over OT: 세 Pillar 모두 동일 trace_id/request_id 공유<br/>→ 단일 필터로 Logs·Metrics·Traces 교차 추적
+```
+
+**전통적 예외 모델 vs Functorium `Fin` 모델**:
+
+| 전통 예외 모델 (OOP) | Functorium `Fin` 모델 |
+|---|---|
+| `throw new InvalidOperationException(...)` | `Fin.Fail<Unit>(DomainError.For<Order>(...))` |
+| 스택 트레이스(소음) | `error.codes[]` + `ctx.*` (시그널) |
+| 프로세스 흐름 단절 위험 | 타입 안전한 실패 값 — 흐름 유지 |
+| 로그 수동 재조립 필요 | `request_id`·`trace_id` 자동 전파 |
+| 비즈니스 에러·시스템 장애 혼재 | `error.type ∈ {expected, exceptional, aggregate}` 자동 분류로 대시보드 필터 가능 |
+
+> **"스택 트레이스가 없다 = 디버깅 불가능"은 거짓입니다.**
+> 프레임워크는 스택 트레이스 대신 `error.codes` 배열과 `ctx.*` 비즈니스 컨텍스트로 **어떤 도메인 규칙이 어떤 상태에서 왜 깨졌는지를** 기록합니다. `ctx.hours_since_delivery=25`를 보는 순간 근본 원인이 명확해집니다. 같은 `request_id`로 Logs·Metrics·Traces 세 화면을 동일 사건 기준으로 필터링할 수 있습니다.
 
 상세 사양과 가이드는 문서 사이트에서 확인할 수 있습니다:
 - [Observability Specification](./Docs.Site/src/content/docs/spec/08-observability.md) — Field/Tag 구조, ctx.* 3-Pillar Enrichment, Meter/Instrument 사양
