@@ -444,3 +444,77 @@ public class FinTToValidationSelectManyTests
 
     #endregion
 }
+
+/// <summary>
+/// Validation 다중 에러 보존 테스트.
+/// LanguageExt Validation은 applicative(Apply)로 여러 에러를 누적하도록 설계되어 있다.
+/// FinT LINQ 확장은 이 누적된 에러를 ManyErrors로 보존해야 한다 (errors.Head로 유실 금지).
+/// </summary>
+[Trait(nameof(UnitTest), UnitTest.Functorium_Applications)]
+public class ValidationErrorPreservationTests
+{
+    private static Validation<Error, int> FailWithTwo() =>
+        Fail<Error, int>(Seq(Error.New("error-1"), Error.New("error-2")));
+
+    private static Validation<Error, int> FailWithThree() =>
+        Fail<Error, int>(Seq(Error.New("error-1"), Error.New("error-2"), Error.New("error-3")));
+
+    [Fact]
+    public async Task ValidationToFinT_PreservesAllErrors_WhenMultipleErrorsPresent()
+    {
+        // Arrange — Validation은 3개 에러를 담고 있음
+        // Act — Validation → FinT SelectMany(체이닝)
+        FinT<IO, int> pipeline =
+            from a in FailWithThree()
+            from b in FinT.lift<IO, int>(Fin.Succ(a * 2))
+            select b;
+
+        Fin<int> actual = await pipeline.Run().RunAsync();
+
+        // Assert — 모든 에러가 ManyErrors로 보존되어야 함
+        actual.IsFail.ShouldBeTrue();
+        Error err = actual.Match(Succ: _ => throw new Xunit.Sdk.XunitException("expected fail"), Fail: e => e);
+        err.ShouldBeOfType<ManyErrors>();
+        ((ManyErrors)err).Errors.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task ValidationToFinT_PreservesAllErrors_WithTwoErrors()
+    {
+        // Arrange — 2개 에러 케이스
+        // Act — 동일 경로, 에러 수만 다름
+        FinT<IO, int> pipeline =
+            from a in FailWithTwo()
+            from b in FinT.lift<IO, int>(Fin.Succ(a + 1))
+            select b;
+
+        Fin<int> actual = await pipeline.Run().RunAsync();
+
+        // Assert
+        actual.IsFail.ShouldBeTrue();
+        Error err = actual.Match(Succ: _ => throw new Xunit.Sdk.XunitException("expected fail"), Fail: e => e);
+        err.ShouldBeOfType<ManyErrors>();
+        ((ManyErrors)err).Errors.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task FinTToValidation_PreservesAllErrors_WhenValidationHasMultipleErrors()
+    {
+        // Arrange — FinT 체인 중간에서 다중 에러를 가진 Validation이 실패
+        FinT<IO, int> seed = FinT.lift<IO, int>(Fin.Succ(10));
+
+        // Act
+        FinT<IO, int> pipeline =
+            from a in seed
+            from b in FailWithThree()
+            select b;
+
+        Fin<int> actual = await pipeline.Run().RunAsync();
+
+        // Assert
+        actual.IsFail.ShouldBeTrue();
+        Error err = actual.Match(Succ: _ => throw new Xunit.Sdk.XunitException("expected fail"), Fail: e => e);
+        err.ShouldBeOfType<ManyErrors>();
+        ((ManyErrors)err).Errors.Count.ShouldBe(3);
+    }
+}

@@ -29,8 +29,8 @@ public static partial class FinTLinqExtensions
     ///       select saved;
     ///
     /// 주의:
-    ///   - 검증 실패 시 첫 번째 에러만 사용 (errors.Head)
-    ///   - 모든 에러를 처리해야 하는 경우 별도 구현 필요
+    ///   - 다중 에러는 ManyErrors로 보존 (LanguageExt Validation의 applicative 누적 유지)
+    ///   - ErrorInfoExtractor 등 관측성 레이어가 ManyErrors를 분해 처리함
     /// </summary>
     public static FinT<M, C> SelectMany<M, A, B, C>(
         this Validation<Error, A> validation,
@@ -38,10 +38,7 @@ public static partial class FinTLinqExtensions
         Func<A, B, C> projector)
         where M : Monad<M>
     {
-        Fin<A> fin = validation.Match(
-            Succ: value => Fin.Succ(value),
-            Fail: errors => Fin.Fail<A>(errors.Head));
-
+        Fin<A> fin = validation.ToFin();
         return FinT.lift<M, A>(fin).SelectMany(finTSelector, projector);
     }
 
@@ -62,10 +59,7 @@ public static partial class FinTLinqExtensions
         Func<A, B> selector)
         where M : Monad<M>
     {
-        Fin<A> fin = validation.Match(
-            Succ: value => Fin.Succ(value),
-            Fail: errors => Fin.Fail<A>(errors.Head));
-
+        Fin<A> fin = validation.ToFin();
         return FinT.lift<M, A>(fin).Map(selector);
     }
 
@@ -97,8 +91,8 @@ public static partial class FinTLinqExtensions
     ///   - 복합 검증 로직을 단계별로 수행
     ///
     /// 주의:
-    ///   - 검증 실패 시 첫 번째 에러만 사용 (errors.Head)
-    ///   - 모든 에러를 처리해야 하는 경우 별도 구현 필요
+    ///   - 다중 에러는 ManyErrors로 보존 (LanguageExt Validation의 applicative 누적 유지)
+    ///   - ErrorInfoExtractor 등 관측성 레이어가 ManyErrors를 분해 처리함
     /// </summary>
     public static FinT<M, C> SelectMany<M, A, B, C>(
         this FinT<M, A> finT,
@@ -108,10 +102,7 @@ public static partial class FinTLinqExtensions
     {
         return finT.Bind(a =>
         {
-            Fin<B> fin = validationSelector(a).Match(
-                Succ: value => Fin.Succ(value),
-                Fail: errors => Fin.Fail<B>(errors.Head));
-
+            Fin<B> fin = validationSelector(a).ToFin();
             return FinT.lift<M, B>(fin).Map(b => projector(a, b));
         });
     }
