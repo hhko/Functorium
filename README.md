@@ -113,19 +113,19 @@ public sealed partial class Email : SimpleValueObject<string>
 
 This is how AI generates exception-free, safe code structures automatically.
 
-### Humans Define Rules, AI Builds Plumbing, Observability Translates Back
+### Humans Define Rules, AI Builds Implementation, Observability Translates Back
 
 | Role | Responsibility | Concrete Artifacts |
 |------|---------------|-------------------|
 | **Human** | Define business rules + ubiquitous language in text | PRD, invariant list, glossary |
-| **AI Agent** | Build complex control flow, monad plumbing, boilerplate | `Fin<T>` pipelines, CQRS usecases, Source Generator code |
+| **AI Agent** | Build complex control flow, monad composition code, boilerplate | `Fin<T>` pipelines, CQRS usecases, Source Generator code |
 | **Observability** | Translate AI-generated code into human-readable diagnostics | Structured logs, dashboards, automatic error classification |
 
 > **"Can I debug AI-written monad code at 2 AM?"**
 >
 > The framework's **automatic error classification + structured context logs + dashboards** — built into every Command/Query — translate code state into human language.
 
-### When Requirements Change — Humans Update Text, AI Rebuilds the Plumbing
+### When Requirements Change — Humans Update Text, AI Rebuilds the Implementation
 
 > The CS team urgently requests **"Allow change-of-mind cancellation within 24h after delivery"** to match a competitor's policy. The current rule permits cancellation only in `Pending/Confirmed` states ([`Order.Cancel()` in the ecommerce-ddd sample](./Docs.Site/src/content/docs/samples/ecommerce-ddd/index.md)).
 
@@ -159,7 +159,7 @@ This is how AI generates exception-free, safe code structures automatically.
 | Role | Responsibility | In this scenario |
 |------|---------------|------------------|
 | **Developer** | Architect — defines business rules and boundaries | Specify the "24h post-delivery cancellation" policy in text |
-| **AI Agent** | Plumber — regenerates state machines, Unions, events, tests | Extend `OrderStatus`, create `CancellationReason`, add tests automatically |
+| **AI Agent** | Implementer — regenerates state machines, Unions, events, tests | Extend `OrderStatus`, create `CancellationReason`, add tests automatically |
 | **Framework** | Safety net — blocks structural regression | Validates architecture, types, and existing contracts automatically |
 
 ## How AI Breaks Through the Problems
@@ -482,7 +482,7 @@ The Application layer (EventId 1001–1004) and Adapter layer (EventId 2001–20
 
 ### At 2 AM, What Actually Appears on Your Screen
 
-Here we visualize how the "24h post-delivery cancellation" policy from the [requirements-change scenario](#when-requirements-change--humans-update-text-ai-rebuilds-the-plumbing) fails at its boundary in production.
+Here we visualize how the "24h post-delivery cancellation" policy from the [requirements-change scenario](#when-requirements-change--humans-update-text-ai-rebuilds-the-implementation) fails at its boundary in production.
 
 > `POST /orders/{id}/cancel` (reason=`ChangeOfMind`). The order was delivered **25 hours ago** — past the 24h window. No exception is thrown; instead, a structured failure response classified as `error.type = "expected"` is returned.
 
