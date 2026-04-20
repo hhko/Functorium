@@ -299,6 +299,8 @@ return result.ToFinResponse(() => new DeleteResponse(id));
 | `.Validation.cs` | `Validation<Error, A>` | `B` (Map) | `FinT<M, B>` | Validation → FinT 단순 변환 |
 | `.Validation.cs` | `FinT<M, A>` | `Validation<Error, B>` | `FinT<M, C>` | FinT 체인 중간에 Validation 사용 |
 
+> **다중 에러 보존:** `.Validation.cs` SelectMany 메서드는 내부적으로 LanguageExt `.ToFin()`을 사용합니다. applicative(`Apply`) 검증에서 수집된 여러 에러는 유실 없이 `ManyErrors`로 보존되며, 첫 번째 에러로 축소되지 않습니다. 관측성 레이어(`ErrorInfoExtractor`)가 `ManyErrors`를 에러 코드 배열로 분해하여 대시보드에 노출합니다.
+
 ### Filter 확장 메서드
 
 | 파일 | 대상 타입 | 반환 타입 | 설명 |

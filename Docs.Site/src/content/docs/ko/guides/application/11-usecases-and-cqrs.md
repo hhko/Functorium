@@ -344,7 +344,7 @@ private static Fin<Product> CreateProduct(Request request)
 | 1 | `Validate()` | 모든 필드의 검증을 `Validation<Error, T>`로 수집 |
 | 2 | `Apply()` | 모든 검증이 성공해야 Entity 생성 진행 (병렬 검증) |
 | 3 | `Unwrap()` | 이미 검증된 값이므로 안전하게 VO 변환 |
-| 4 | `As().ToFin()` | `Validation` 타입을 `Fin` 타입으로 변환 |
+| 4 | `As().ToFin()` | `Validation` 타입을 `Fin` 타입으로 변환. `Apply`가 수집한 다중 에러는 `ManyErrors`로 보존되며 첫 번째 에러로 축소되지 않음 |
 
 ### VO가 없는 필드의 검증
 

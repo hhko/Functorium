@@ -105,6 +105,7 @@ internal sealed class UsecaseExceptionPipeline<TRequest, TResponse>
 |------|------|
 | 제약 조건 | `TResponse : IFinResponseFactory<TResponse>` |
 | 동작 | `try-catch`로 예외 포착 후 `TResponse.CreateFail(AdapterError.FromException(...))` 반환 |
+| 취소 처리 | `OperationCanceledException`(서브타입 `TaskCanceledException` 포함)은 **재발생(throw)되며 래핑되지 않음** — 호출자가 "취소"와 "비즈니스 실패"를 구분할 수 있음 |
 | 에러 타입 | `AdapterErrorType.PipelineException` |
 
 ### UsecaseValidationPipeline

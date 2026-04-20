@@ -344,7 +344,7 @@ private static Fin<Product> CreateProduct(Request request)
 | 1 | `Validate()` | Collect validation of all fields as `Validation<Error, T>` |
 | 2 | `Apply()` | All validations must succeed before Entity creation proceeds (parallel validation) |
 | 3 | `Unwrap()` | Since values are already validated, safely convert to VO |
-| 4 | `As().ToFin()` | Convert `Validation` type to `Fin` type |
+| 4 | `As().ToFin()` | Convert `Validation` to `Fin`. Multiple errors collected by `Apply` are preserved as `ManyErrors` — never reduced to the first error |
 
 ### Validation of Fields Without VOs
 

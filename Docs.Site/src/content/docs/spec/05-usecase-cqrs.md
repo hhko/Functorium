@@ -299,6 +299,8 @@ return result.ToFinResponse(() => new DeleteResponse(id));
 | `.Validation.cs` | `Validation<Error, A>` | `B` (Map) | `FinT<M, B>` | Simple Validation to FinT conversion |
 | `.Validation.cs` | `FinT<M, A>` | `Validation<Error, B>` | `FinT<M, C>` | Uses Validation in the middle of FinT chain |
 
+> **Multi-error preservation:** `.Validation.cs` SelectMany methods use LanguageExt's `.ToFin()` internally. Multiple errors produced by applicative (`Apply`) validation are preserved as `ManyErrors` — not reduced to the first error. The observability layer (`ErrorInfoExtractor`) decomposes `ManyErrors` into error-code arrays for dashboards.
+
 ### Filter Extension Methods
 
 | File | Target Type | Return Type | Description |

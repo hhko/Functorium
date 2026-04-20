@@ -105,6 +105,7 @@ internal sealed class UsecaseExceptionPipeline<TRequest, TResponse>
 |------|------|
 | Constraint | `TResponse : IFinResponseFactory<TResponse>` |
 | Behavior | Catches exceptions via `try-catch` and returns `TResponse.CreateFail(AdapterError.FromException(...))` |
+| Cancellation | `OperationCanceledException` (and its subtype `TaskCanceledException`) is **re-thrown**, not wrapped — so callers can distinguish cancellation from business failure |
 | Error Type | `AdapterErrorType.PipelineException` |
 
 ### UsecaseValidationPipeline
