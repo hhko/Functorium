@@ -26,6 +26,12 @@ internal sealed class UsecaseExceptionPipeline<TRequest, TResponse>
         {
             return await next(request, cancellationToken);
         }
+        catch (OperationCanceledException)
+        {
+            // 취소 예외는 .NET 관례에 따라 상위로 전파한다.
+            // (TaskCanceledException은 OperationCanceledException의 서브타입)
+            throw;
+        }
         catch (Exception exp)
         {
             return TResponse.CreateFail(

@@ -128,4 +128,43 @@ public sealed class UsecaseExceptionPipelineTests
         result.IsFail.ShouldBeTrue();
         result.Error!.IsExceptional.ShouldBeTrue();
     }
+
+    [Fact]
+    public async Task Handle_OperationCanceledException_Propagates()
+    {
+        // 취소 예외는 FinResponse.Fail로 변환되지 않고 상위로 전파되어야 한다.
+        // Arrange
+        var pipeline = new UsecaseExceptionPipeline<SimpleTestRequest, TestResponse>();
+        var request = new SimpleTestRequest("Test");
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        MessageHandlerDelegate<SimpleTestRequest, TestResponse> next =
+            (_, token) =>
+            {
+                token.ThrowIfCancellationRequested();
+                return ValueTask.FromResult(TestResponse.CreateSuccess(Guid.NewGuid()));
+            };
+
+        // Act & Assert
+        await Should.ThrowAsync<OperationCanceledException>(
+            async () => await pipeline.Handle(request, next, cts.Token));
+    }
+
+    [Fact]
+    public async Task Handle_TaskCanceledException_Propagates()
+    {
+        // TaskCanceledException은 OperationCanceledException의 서브타입이므로
+        // 동일 catch 분기로 전파되어야 한다.
+        // Arrange
+        var pipeline = new UsecaseExceptionPipeline<SimpleTestRequest, TestResponse>();
+        var request = new SimpleTestRequest("Test");
+
+        MessageHandlerDelegate<SimpleTestRequest, TestResponse> next =
+            (_, _) => throw new TaskCanceledException("downstream cancelled");
+
+        // Act & Assert
+        await Should.ThrowAsync<TaskCanceledException>(
+            async () => await pipeline.Handle(request, next, CancellationToken.None));
+    }
 }
