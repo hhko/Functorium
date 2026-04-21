@@ -10,10 +10,6 @@
 > Functorium is an **AI Native .NET framework** where AI agents directly guide domain design and generate code.
 > The result compiles into production code with functional architecture + DDD + Observability built in.
 
-- Learning is excitement.
-- Learning is humility.
-- Learning is altruism.
-
 **6 specialist AI agents** guide a 7-step workflow from requirements analysis to testing. At each step, design documents and compilable C# code are generated simultaneously. No need to manually make hundreds of architecture decisions.
 
 Functorium is designed for .NET teams practicing enterprise DDD, teams seeking to bridge the language gap between development and operations, and architects systematically adopting functional DDD architecture.
@@ -105,7 +101,9 @@ public class Email
 public sealed partial class Email : SimpleValueObject<string>
 {
     public static Fin<Email> Create(string? value) =>               // Fin<T>: success or structured error
-        CreateFromValidation(Validate(value), v => new Email(v));   // Composable pipeline without exceptions
+        CreateFromValidation(                                       // Composable pipeline without exceptions
+            Validate(value),                                        // Validation<Error, T>: validation rules
+            v => new Email(v));
 }
 ```
 
@@ -184,7 +182,7 @@ project-spec                    : PRD writing, Ubiquitous Language, Aggregate bo
   → adapter-develop             : Repository, Query Adapter, Endpoint, DI registration
   → observability-develop       : KPI→metric mapping, dashboards, alerts, ctx.* propagation
   → test-develop                : Unit/integration/architecture rule test writing
-
+---
 domain-review                   : DDD review of existing code and improvement guidance (standalone skill)
 ```
 
@@ -202,19 +200,19 @@ Each step follows a **4-stage document pattern**. Every design decision has trac
 Each agent takes the output of the previous stage, adds its own expertise, and passes the baton to the next:
 
 ```
-Human: Business requirements text
+Human                   : Business requirements text
   ↓
-product-analyst         → Ubiquitous Language + Aggregate boundaries
+product-analyst         : Ubiquitous Language + Aggregate boundaries
   ↓
-domain-architect        → Invariant classification + type mapping (VO, Entity, Aggregate)
+domain-architect        : Invariant classification + type mapping (VO, Entity, Aggregate)
   ↓
-application-architect   → CQRS usecases + Port interfaces
+application-architect   : CQRS usecases + Port interfaces
   ↓
-adapter-engineer        → Repository, Endpoint, DI, Observable Port
+adapter-engineer        : Repository, Endpoint, DI, Observable Port
   ↓
-observability-engineer  → KPI→metric mapping + dashboards + alerts
+observability-engineer  : KPI→metric mapping + dashboards + alerts
   ↓
-test-engineer           → Unit/integration/architecture rule tests
+test-engineer           : Unit/integration/architecture rule tests
 ```
 
 | Step | Input | Agent | Output |
@@ -411,6 +409,9 @@ public class OrderRepository : IRepository<Order, OrderId> { ... }
 ### Installation
 
 ```bash
+git clone https://github.com/hhko/Functorium.git
+cd Functorium
+
 # Load both plugins simultaneously
 claude --plugin-dir ./.claude/plugins/functorium-develop --plugin-dir ./.claude/plugins/release-note
 ```
@@ -440,19 +441,6 @@ dotnet add package Functorium.Testing
 **First Tutorial:** Dive deep into Value Objects at the [Functional ValueObject Tutorial](./Docs.Site/src/content/docs/tutorials/functional-valueobject/index.md).
 
 **Full Documentation:** [https://hhko.github.io/Functorium](https://hhko.github.io/Functorium)
-
-### release-note (v1.0.0) — Release Note Automation
-
-C# script-based data collection, Conventional Commits analysis, Breaking Changes detection, release note writing, and validation — a 5-step workflow automated by 1 skill + 1 agent.
-
-| Principle | Description |
-|-----------|-------------|
-| Accuracy First | APIs not in the Uber file (`all-api-changes.txt`) are never documented |
-| Value Delivery Required | All major features include a "Why this matters" section |
-| Automatic Breaking Changes Detection | Git Diff analysis takes precedence over commit message patterns |
-| Traceability | All features are tracked by commit SHA |
-
-Detailed documentation: [AX (AI Transformation)](https://hhko.github.io/Functorium/ax/)
 
 ## Architecture Overview
 
@@ -490,7 +478,7 @@ Here we visualize how the "24h post-delivery cancellation" policy from the [requ
 
 ```json
 {
-  "@t": "2026-04-20T02:14:33.0421Z",
+  "@timestamp": "2026-04-20T02:14:33.0421Z",
   "EventId": 1002,
   "request.category": "OrderManagement",
   "request.name": "CancelOrderCommand",
@@ -533,18 +521,26 @@ sequenceDiagram
   Note over OT: All three pillars share the same trace_id/request_id<br/>→ one filter correlates Logs, Metrics, and Traces
 ```
 
+The three pillars (Logs, Metrics, Traces) shown above are emitted **automatically** by Source Generators and the Usecase Pipeline — developers write no logging or metric code by hand.
+
 **Traditional exception model vs. Functorium `Fin` model**:
 
 | Traditional exception model (OOP) | Functorium `Fin` model |
 |---|---|
 | `throw new InvalidOperationException(...)` | `Fin.Fail<Unit>(DomainError.For<Order>(...))` |
-| Stack trace (noise) | `error.codes[]` + `ctx.*` (signal) |
+| Only a stack trace on failure | Expected: error-code array (signal) / Exceptional: stack trace preserved / Aggregate: list of compound failures |
 | Risk of broken process flow | Type-safe failure value — flow is preserved |
 | Manual log re-assembly required | `request_id` / `trace_id` auto-propagated |
 | Business errors and system failures mixed | `error.type ∈ {expected, exceptional, aggregate}` — dashboard-filterable |
 
-> **"No stack trace = undebuggable" is false.**
-> Instead of a stack trace, the framework records **which domain rule was broken, in which state, and why** through the `error.codes` array and `ctx.*` business context. A single glance at `ctx.hours_since_delivery=25` reveals the root cause. The same `request_id` lets you cross-filter Logs, Metrics, and Traces for the same event.
+> **"No stack trace = undebuggable" is a misconception.**
+>
+> 1. **Exceptional errors (system failures) retain their stack traces in full** — a `NullReferenceException` debugs exactly the way you already know.
+> 2. **Expected and Aggregate errors (business / validation failures) use `{Layer}.{Class}.{Reason}` error codes in place of stack traces** — e.g., `DomainErrors.Email.Empty` tells you instantly: *"Empty-value rule violated in the `Email` class of the Domain layer."* You can jump straight to that Value Object's `Validate` method.
+> 3. **Business concerns (Usecase) and technical concerns (Port/Adapter) are observed independently** — a single `request_id` correlates a failed `CancelOrderCommand` (Usecase) with its downstream `IOrderRepository` (Port) calls side-by-side on your dashboard (`EventId 1001–1004` ↔ `2001–2004`).
+> 4. **Every observability record is emitted in a consistent schema by Source Generators with zero gaps** — no context loss from a missed log line.
+>
+> The workflow shifts from "scanning stack traces" to **error code → exact class & rule → dual-panel Usecase·Port view** — systematic root-cause analysis by construction.
 
 For detailed specifications and guides, see the documentation site:
 - [Observability Specification](./Docs.Site/src/content/docs/spec/08-observability.md) — Field/Tag structure, ctx.* 3-Pillar Enrichment, Meter/Instrument specification

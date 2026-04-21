@@ -10,10 +10,6 @@
 > Functorium은 AI 에이전트가 도메인 설계를 직접 가이드하고 코드를 생성하는 **AI Native .NET 프레임워크**입니다.
 > 그 결과물은 함수형 아키텍처 + DDD + Observability가 내재된 프로덕션 코드로 컴파일됩니다.
 
-- 배움은 설렘이다.
-- 배움은 겸손이다.
-- 배움은 이타심이다.
-
 **6개 전문 AI 에이전트가** 요구사항 분석부터 테스트까지 7단계 워크플로를 안내합니다. 각 단계에서 설계 문서와 컴파일 가능한 C# 코드가 동시에 생성됩니다. 수작업으로 수백 가지 아키텍처 결정을 내릴 필요가 없습니다.
 
 Functorium은 엔터프라이즈 DDD를 실천하는 .NET 팀, 개발과 운영의 언어 격차를 해소하려는 팀, 함수형 DDD 아키텍처를 체계적으로 도입하려는 아키텍트를 위해 설계되었습니다.
@@ -105,7 +101,9 @@ public class Email
 public sealed partial class Email : SimpleValueObject<string>
 {
     public static Fin<Email> Create(string? value) =>               // Fin<T>: 성공 또는 구조화된 에러
-        CreateFromValidation(Validate(value), v => new Email(v));   // 예외 없이 합성 가능한 파이프라인
+        CreateFromValidation(                                       // 예외 없이 합성 가능한 파이프라인
+            Validate(value),                                        // Validation<Error, T>: 유효성 검사
+            v => new Email(v));
 }
 ```
 
@@ -184,7 +182,7 @@ project-spec                    : PRD 작성, 유비쿼터스 언어, Aggregate 
   → adapter-develop             : Repository, Query Adapter, Endpoint, DI 등록
   → observability-develop       : KPI→메트릭 매핑, 대시보드, 알림, ctx.* 전파
   → test-develop                : 단위/통합/아키텍처 규칙 테스트 작성
-
+---
 domain-review                   : 기존 코드 DDD 리뷰 및 개선 방향 제시 (독립 스킬)
 ```
 
@@ -202,19 +200,19 @@ domain-review                   : 기존 코드 DDD 리뷰 및 개선 방향 제
 각 에이전트는 이전 단계의 산출물을 입력으로 받아 자신의 전문성을 더한 뒤, 다음 에이전트에게 바통을 넘깁니다:
 
 ```
-사람: 비즈니스 요구사항 텍스트
+Human                   : 비즈니스 요구사항 텍스트
   ↓
-product-analyst         → 유비쿼터스 언어 + Aggregate 경계
+product-analyst         : 유비쿼터스 언어 + Aggregate 경계
   ↓
-domain-architect        → 불변식 분류 + 타입 매핑 (VO, Entity, Aggregate)
+domain-architect        : 불변식 분류 + 타입 매핑 (VO, Entity, Aggregate)
   ↓
-application-architect   → CQRS 유스케이스 + Port 인터페이스
+application-architect   : CQRS 유스케이스 + Port 인터페이스
   ↓
-adapter-engineer        → Repository, Endpoint, DI, Observable Port
+adapter-engineer        : Repository, Endpoint, DI, Observable Port
   ↓
-observability-engineer  → KPI→메트릭 매핑 + 대시보드 + 알림
+observability-engineer  : KPI→메트릭 매핑 + 대시보드 + 알림
   ↓
-test-engineer           → 단위/통합/아키텍처 규칙 테스트
+test-engineer           : 단위/통합/아키텍처 규칙 테스트
 ```
 
 | 단계 | 입력 | 에이전트 | 출력 |
@@ -408,9 +406,12 @@ public class OrderRepository : IRepository<Order, OrderId> { ... }
 
 ## 시작하기
 
-### 설치
+### Claude 플러그인 설치
 
 ```bash
+git clone https://github.com/hhko/Functorium.git
+cd Functorium
+
 # 두 플러그인 동시 로드
 claude --plugin-dir ./.claude/plugins/functorium-develop --plugin-dir ./.claude/plugins/release-note
 ```
@@ -440,19 +441,6 @@ dotnet add package Functorium.Testing
 **첫 번째 튜토리얼:** [Functional ValueObject 튜토리얼](./Docs.Site/src/content/docs/tutorials/functional-valueobject/index.md)에서 Value Object를 깊이 학습하세요.
 
 **전체 문서:** [https://hhko.github.io/Functorium](https://hhko.github.io/Functorium)
-
-### release-note (v1.0.0) — 릴리스 노트 자동화
-
-C# 스크립트 기반 데이터 수집, Conventional Commits 분석, Breaking Changes 감지, 릴리스 노트 작성, 검증까지 5단계를 1개 스킬 + 1개 에이전트가 자동화합니다.
-
-| 원칙 | 설명 |
-|------|------|
-| 정확성 우선 | Uber 파일(`all-api-changes.txt`)에 없는 API는 문서화하지 않음 |
-| 가치 전달 필수 | 모든 주요 기능에 "Why this matters" 섹션 포함 |
-| Breaking Changes 자동 감지 | Git Diff 분석이 커밋 메시지 패턴보다 우선 |
-| 추적성 | 모든 기능을 커밋 SHA로 추적 |
-
-상세 문서: [AX (AI Transformation)](https://hhko.github.io/Functorium/ax/)
 
 ## 아키텍처 개요
 
@@ -490,7 +478,7 @@ Application 레이어(EventId 1001–1004)와 Adapter 레이어(EventId 2001–2
 
 ```json
 {
-  "@t": "2026-04-20T02:14:33.0421Z",
+  "@timestamp": "2026-04-20T02:14:33.0421Z",
   "EventId": 1002,
   "request.category": "OrderManagement",
   "request.name": "CancelOrderCommand",
@@ -533,18 +521,26 @@ sequenceDiagram
   Note over OT: 세 Pillar 모두 동일 trace_id/request_id 공유<br/>→ 단일 필터로 Logs·Metrics·Traces 교차 추적
 ```
 
+다이어그램의 3-Pillar(Logs·Metrics·Traces)는 Source Generator와 Usecase Pipeline이 **자동으로 내보내는** 데이터입니다. 개발자가 로그·메트릭 코드를 한 줄도 쓰지 않습니다.
+
 **전통적 예외 모델 vs Functorium `Fin` 모델**:
 
 | 전통 예외 모델 (OOP) | Functorium `Fin` 모델 |
 |---|---|
 | `throw new InvalidOperationException(...)` | `Fin.Fail<Unit>(DomainError.For<Order>(...))` |
-| 스택 트레이스(소음) | `error.codes[]` + `ctx.*` (시그널) |
+| 실패 시 스택 트레이스만 남음 | Expected: 에러 코드 배열(시그널) / Exceptional: 스택 트레이스 보존 / Aggregate: 복합 실패 목록 |
 | 프로세스 흐름 단절 위험 | 타입 안전한 실패 값 — 흐름 유지 |
 | 로그 수동 재조립 필요 | `request_id`·`trace_id` 자동 전파 |
 | 비즈니스 에러·시스템 장애 혼재 | `error.type ∈ {expected, exceptional, aggregate}` 자동 분류로 대시보드 필터 가능 |
 
-> **"스택 트레이스가 없다 = 디버깅 불가능"은 거짓입니다.**
-> 프레임워크는 스택 트레이스 대신 `error.codes` 배열과 `ctx.*` 비즈니스 컨텍스트로 **어떤 도메인 규칙이 어떤 상태에서 왜 깨졌는지를** 기록합니다. `ctx.hours_since_delivery=25`를 보는 순간 근본 원인이 명확해집니다. 같은 `request_id`로 Logs·Metrics·Traces 세 화면을 동일 사건 기준으로 필터링할 수 있습니다.
+> **"스택 트레이스가 없다 = 디버깅 불가능"은 오해입니다.**
+>
+> 1. **Exceptional(시스템 장애) 에러는 스택 트레이스를 그대로 보존합니다** — `NullReferenceException` 같은 케이스는 기존 디버깅 습관 그대로.
+> 2. **Expected·Aggregate(비즈니스·검증 실패)는 `{Layer}.{Class}.{Reason}` 에러 코드가 스택 트레이스 역할을 대신합니다** — 예: `DomainErrors.Email.Empty` 한 줄로 *"Domain 레이어의 `Email` 클래스에서 빈 값 규칙 위반"*이 즉시 식별됩니다. 해당 Value Object의 `Validate` 메서드로 바로 점프할 수 있습니다.
+> 3. **비즈니스 관심사(Usecase)와 기술 관심사(Port/Adapter)가 각각 독립 기록됩니다** — 동일 `request_id`로 `CancelOrderCommand`(Usecase) 실패와 하류 `IOrderRepository`(Port) 호출이 대시보드에서 나란히 조회됩니다(`EventId 1001–1004` ↔ `2001–2004`).
+> 4. **모든 관측 데이터는 Source Generator가 형식에 맞춰 누락 없이 생성**합니다 — 로그 한 줄을 빠뜨려 맥락이 끊기는 일이 없습니다.
+>
+> 결과적으로 "스택 트레이스 뒤지기" 대신 **에러 코드 → 해당 클래스·규칙 → Usecase·Port 이중 관측 패널**의 체계적 원인 규명 흐름으로 전환됩니다.
 
 상세 사양과 가이드는 문서 사이트에서 확인할 수 있습니다:
 - [Observability Specification](./Docs.Site/src/content/docs/spec/08-observability.md) — Field/Tag 구조, ctx.* 3-Pillar Enrichment, Meter/Instrument 사양
