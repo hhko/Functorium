@@ -536,7 +536,7 @@ sequenceDiagram
 > **"스택 트레이스가 없다 = 디버깅 불가능"은 오해입니다.**
 >
 > 1. **Exceptional(시스템 장애) 에러는 스택 트레이스를 그대로 보존합니다** — `NullReferenceException` 같은 케이스는 기존 디버깅 습관 그대로.
-> 2. **Expected·Aggregate(비즈니스·검증 실패)는 `{Layer}.{Class}.{Reason}` 에러 코드가 스택 트레이스 역할을 대신합니다** — 예: `DomainErrors.Email.Empty` 한 줄로 *"Domain 레이어의 `Email` 클래스에서 빈 값 규칙 위반"*이 즉시 식별됩니다. 해당 Value Object의 `Validate` 메서드로 바로 점프할 수 있습니다.
+> 2. **Expected·Aggregate(비즈니스·검증 실패)는 `{Layer}.{Class}.{Reason}` 에러 코드가 스택 트레이스 역할을 대신합니다** — 예: `DomainErrors.Email.Empty` 한 줄로 *"Domain 레이어의 `Email` 클래스에서 빈 값 규칙 위반"이* 즉시 식별됩니다. 해당 Value Object의 `Validate` 메서드로 바로 점프할 수 있습니다.
 > 3. **비즈니스 관심사(Usecase)와 기술 관심사(Port/Adapter)가 각각 독립 기록됩니다** — 동일 `request_id`로 `CancelOrderCommand`(Usecase) 실패와 하류 `IOrderRepository`(Port) 호출이 대시보드에서 나란히 조회됩니다(`EventId 1001–1004` ↔ `2001–2004`).
 > 4. **모든 관측 데이터는 Source Generator가 형식에 맞춰 누락 없이 생성**합니다 — 로그 한 줄을 빠뜨려 맥락이 끊기는 일이 없습니다.
 >
