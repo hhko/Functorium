@@ -281,16 +281,32 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     {
         return IO.liftAsync(async () =>
         {
-            var model = ToModel(aggregate);
-            int affected = await DbSet
-                .Where(ByIdPredicate(aggregate.Id))
-                .ExecuteUpdateAsync(s => BuildSetters(s, model));
+            try
+            {
+                var model = ToModel(aggregate);
+                int affected = await DbSet
+                    .Where(ByIdPredicate(aggregate.Id))
+                    .ExecuteUpdateAsync(s => BuildSetters(s, model));
 
-            if (affected == 0)
-                return NotFoundError(aggregate.Id);
+                if (affected == 0)
+                {
+                    // NotFound vs ConcurrencyConflict 분기:
+                    // Id로는 존재하지만 ExecuteUpdate가 0건을 반환했다면,
+                    // BuildSetters 내의 RowVersion/Timestamp WHERE 조건으로 인한 낙관적 충돌.
+                    bool exists = await DbSet.AnyAsync(ByIdPredicate(aggregate.Id));
+                    return exists
+                        ? ConcurrencyConflictError(aggregate.Id)
+                        : NotFoundError(aggregate.Id);
+                }
 
-            EventCollector.Track(aggregate);
-            return Fin.Succ(aggregate);
+                EventCollector.Track(aggregate);
+                return Fin.Succ(aggregate);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // EF Core 추적 기반 Update 경로에서 RowVersion 불일치 시 던지는 예외
+                return ConcurrencyConflictError(aggregate.Id);
+            }
         });
     }
 
@@ -436,6 +452,14 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
         AdapterError.For(GetType(),
             new NotFound(), id.ToString()!,
             $"NotFound: No record found for ID '{id}'");
+
+    /// <summary>
+    /// ConcurrencyConflict 에러 생성. Update 시 로드 이후 DB가 변경되었을 때 반환됩니다.
+    /// </summary>
+    protected Error ConcurrencyConflictError(TId id) =>
+        AdapterError.For(GetType(),
+            new ConcurrencyConflict(), id.ToString()!,
+            $"ConcurrencyConflict: Aggregate '{id}' was modified by another operation.");
 
     /// <summary>
     /// PartialNotFound 에러 생성. 요청 건수와 결과 건수가 다를 때 사용합니다.
