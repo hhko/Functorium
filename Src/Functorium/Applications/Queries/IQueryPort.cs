@@ -34,4 +34,15 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
         Specification<TEntity> spec,
         SortExpression sort,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Read-side 존재 확인. 리포팅·대시보드·조기 shortcut 용도.
+    /// Write-side 불변식 체크(예: Create 직전 중복 체크)는 IRepository.Exists 사용.
+    /// </summary>
+    FinT<IO, bool> Exists(Specification<TEntity> spec);
+
+    /// <summary>
+    /// Read-side 건수. 리포팅·페이지네이션 메타데이터 용도.
+    /// </summary>
+    FinT<IO, int> Count(Specification<TEntity> spec);
 }

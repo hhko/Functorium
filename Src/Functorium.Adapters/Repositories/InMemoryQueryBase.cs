@@ -87,6 +87,22 @@ public abstract class InMemoryQueryBase<TEntity, TDto>
         await Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Read-side 존재 확인. GetProjectedItems를 통해 Specification 적용 후 Any().
+    /// </summary>
+    public virtual FinT<IO, bool> Exists(Specification<TEntity> spec)
+    {
+        return IO.lift(() => Fin.Succ(GetProjectedItems(spec).Any()));
+    }
+
+    /// <summary>
+    /// Read-side 건수. GetProjectedItems를 통해 Specification 적용 후 Count().
+    /// </summary>
+    public virtual FinT<IO, int> Count(Specification<TEntity> spec)
+    {
+        return IO.lift(() => Fin.Succ(GetProjectedItems(spec).Count()));
+    }
+
     private void ApplySortInPlace(List<TDto> items, SortExpression sort)
     {
         var sortField = sort.IsEmpty

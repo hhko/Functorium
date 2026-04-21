@@ -179,6 +179,35 @@ public abstract class DapperQueryBase<TEntity, TDto>
         }
     }
 
+    /// <summary>
+    /// Read-side 존재 확인. CountSql + WHERE로 구현하여 SQL 방언 독립성 유지.
+    /// Count > 0 비교이므로 true EXISTS 대비 미소한 비용이 있으나 실질적으로 동등합니다.
+    /// </summary>
+    public virtual FinT<IO, bool> Exists(Specification<TEntity> spec)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var (where, parameters) = BuildWhereClause(spec);
+            var sql = $"{CountSql} {where}";
+            var count = await _connection.ExecuteScalarAsync<int>(sql, parameters);
+            return Fin.Succ(count > 0);
+        });
+    }
+
+    /// <summary>
+    /// Read-side 건수. CountSql + WHERE로 1 SQL에 처리.
+    /// </summary>
+    public virtual FinT<IO, int> Count(Specification<TEntity> spec)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var (where, parameters) = BuildWhereClause(spec);
+            var sql = $"{CountSql} {where}";
+            var count = await _connection.ExecuteScalarAsync<int>(sql, parameters);
+            return Fin.Succ(count);
+        });
+    }
+
     protected static DynamicParameters Params(params (string Name, object Value)[] values)
     {
         var p = new DynamicParameters();
