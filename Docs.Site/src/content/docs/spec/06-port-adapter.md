@@ -98,6 +98,8 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     // ── Specification ──
     FinT<IO, bool> Exists(Specification<TAggregate> spec);
     FinT<IO, int> Count(Specification<TAggregate> spec);
+    FinT<IO, Seq<TAggregate>> FindAllSatisfying(Specification<TAggregate> spec);
+    FinT<IO, Option<TAggregate>> FindFirstSatisfying(Specification<TAggregate> spec);
     FinT<IO, int> DeleteBy(Specification<TAggregate> spec);
 }
 ```
@@ -121,11 +123,17 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 | `DeleteRange(ids)` | `FinT<IO, int>` | Batch deletion (returns deleted count) |
 | `GetById(id)` | `FinT<IO, TAggregate>` | Retrieves an Aggregate by ID (`NotFound` error if absent) |
 | `GetByIds(ids)` | `FinT<IO, Seq<TAggregate>>` | Batch retrieval (`PartialNotFound` error if some are missing) |
-| `Exists(spec)` | `FinT<IO, bool>` | Specification-based existence check |
+| `Exists(spec)` | `FinT<IO, bool>` | Specification-based existence check (write-side invariant use) |
 | `Count(spec)` | `FinT<IO, int>` | Specification-based count |
-| `DeleteBy(spec)` | `FinT<IO, int>` | Specification-based deletion (returns deleted count) |
+| `FindAllSatisfying(spec)` | `FinT<IO, Seq<TAggregate>>` | Evans' selectSatisfying pattern — returns all Aggregates matching the Specification (PropertyMap required) |
+| `FindFirstSatisfying(spec)` | `FinT<IO, Option<TAggregate>>` | Returns the first matching Aggregate, `Option.None` if not found |
+| `DeleteBy(spec)` | `FinT<IO, int>` | ⚠️ Hard delete by condition (1 SQL DELETE, no domain events) |
 
 > All methods return `FinT<IO, T>`. Success is expressed as `Fin.Succ(value)`, and failure is expressed as domain/adapter errors.
+>
+> **Soft Delete pattern**: For business deletion with domain events, use `Load → aggregate.Delete(...) → Update(aggregate)`. The `Delete(TId)`, `DeleteRange(ids)`, and `DeleteBy(spec)` methods are hard deletes for administrative and migration purposes — they do not emit domain events.
+>
+> **Concurrency**: `Update` returns `AdapterErrorType.ConcurrencyConflict` when the Aggregate was modified after load (distinguished from `NotFound`). See [Error System Specification](../04-error-system).
 
 ---
 
@@ -162,6 +170,9 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
         Specification<TEntity> spec,
         SortExpression sort,
         CancellationToken cancellationToken = default);
+
+    FinT<IO, bool> Exists(Specification<TEntity> spec);
+    FinT<IO, int> Count(Specification<TEntity> spec);
 }
 ```
 
@@ -170,6 +181,8 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
 | `Search(spec, page, sort)` | `FinT<IO, PagedResult<TDto>>` | Offset-based pagination search |
 | `SearchByCursor(spec, cursor, sort)` | `FinT<IO, CursorPagedResult<TDto>>` | Keyset(Cursor)-based pagination search. O(1) performance for deep pages |
 | `Stream(spec, sort, ct)` | `IAsyncEnumerable<TDto>` | Streaming query for large data. Yields without loading everything into memory |
+| `Exists(spec)` | `FinT<IO, bool>` | Read-side existence check (reporting · dashboard · early shortcut). For write-side invariant checks use `IRepository.Exists` |
+| `Count(spec)` | `FinT<IO, int>` | Read-side count (reporting · pagination metadata) |
 
 ### Generic Parameters
 

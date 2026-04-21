@@ -534,6 +534,19 @@ public sealed record Deserialization(string? Format = null) : AdapterErrorType;
 public sealed record DataCorruption : AdapterErrorType;
 ```
 
+### Concurrency
+
+| sealed record | Properties | Description |
+|---------------|------|------|
+| `ConcurrencyConflict` | (none) | Optimistic concurrency conflict detected during `Update`/`UpdateRange`. Returned when the Aggregate was modified by another operation after it was loaded. Distinguished from `NotFound`. Retry eligibility is the caller's responsibility. |
+
+```csharp
+public sealed record ConcurrencyConflict : AdapterErrorType;
+```
+
+> Relationship with `ApplicationErrorType.ConcurrencyConflict`:
+> The Application-layer variant represents a **business-level conflict** raised by use-case logic, while the Adapter-layer variant is **detected by the persistence layer** (EF Core `RowVersion` / `DbUpdateConcurrencyException`, or `affected == 0` with existing ID).
+
 ### Custom
 
 ```csharp

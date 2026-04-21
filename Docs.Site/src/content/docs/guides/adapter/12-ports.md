@@ -324,7 +324,8 @@ IObservablePort (interface)
 │
 ├── IRepository<TAggregate, TId> : IObservablePort   ← Per-Aggregate-Root Repository
 │   ├── Create / GetById / Update / Delete            ← Single-item CRUD
-│   └── CreateRange / GetByIds / UpdateRange / DeleteRange  ← Batch CRUD
+│   ├── CreateRange / GetByIds / UpdateRange / DeleteRange  ← Batch CRUD
+│   └── Exists / Count / FindAllSatisfying / FindFirstSatisfying / DeleteBy  ← Specification
 │       (See §Repository Interface Design Principles for full signatures)
 │   │
 │   ├── IProductRepository : IRepository<Product, ProductId>
@@ -350,7 +351,9 @@ IObservablePort (interface)
 └── IQueryPort<TEntity, TDto> : IQueryPort   ← Read-only queries (returns DTOs directly)
     ├── FinT<IO, PagedResult<TDto>> Search(Specification<TEntity>, PageRequest, SortExpression)
     ├── FinT<IO, CursorPagedResult<TDto>> SearchByCursor(Specification<TEntity>, CursorPageRequest, SortExpression)
-    └── IAsyncEnumerable<TDto> Stream(Specification<TEntity>, SortExpression, CancellationToken)
+    ├── IAsyncEnumerable<TDto> Stream(Specification<TEntity>, SortExpression, CancellationToken)
+    ├── FinT<IO, bool> Exists(Specification<TEntity>)   ← Read-side reporting
+    └── FinT<IO, int> Count(Specification<TEntity>)     ← Read-side reporting
     │
     ├── IProductQuery : IQueryPort<Product, ProductSummaryDto>
     ├── IProductWithStockQuery : IQueryPort<Product, ProductWithStockDto>  ← JOIN example

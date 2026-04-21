@@ -98,6 +98,8 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     // ── Specification ──
     FinT<IO, bool> Exists(Specification<TAggregate> spec);
     FinT<IO, int> Count(Specification<TAggregate> spec);
+    FinT<IO, Seq<TAggregate>> FindAllSatisfying(Specification<TAggregate> spec);
+    FinT<IO, Option<TAggregate>> FindFirstSatisfying(Specification<TAggregate> spec);
     FinT<IO, int> DeleteBy(Specification<TAggregate> spec);
 }
 ```
@@ -121,11 +123,17 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 | `DeleteRange(ids)` | `FinT<IO, int>` | 일괄 삭제 (삭제된 건수 반환) |
 | `GetById(id)` | `FinT<IO, TAggregate>` | ID로 Aggregate 조회 (없으면 `NotFound` 에러) |
 | `GetByIds(ids)` | `FinT<IO, Seq<TAggregate>>` | 일괄 조회 (일부 누락 시 `PartialNotFound` 에러) |
-| `Exists(spec)` | `FinT<IO, bool>` | Specification 기반 존재 여부 확인 |
+| `Exists(spec)` | `FinT<IO, bool>` | Specification 기반 존재 여부 확인 (write-side 불변식 체크 용도) |
 | `Count(spec)` | `FinT<IO, int>` | Specification 기반 건수 조회 |
-| `DeleteBy(spec)` | `FinT<IO, int>` | Specification 기반 삭제 (삭제된 건수 반환) |
+| `FindAllSatisfying(spec)` | `FinT<IO, Seq<TAggregate>>` | Evans의 selectSatisfying 패턴 — Specification에 매칭되는 모든 Aggregate 반환 (PropertyMap 필수) |
+| `FindFirstSatisfying(spec)` | `FinT<IO, Option<TAggregate>>` | 첫 매칭 Aggregate 반환, 없으면 `Option.None` |
+| `DeleteBy(spec)` | `FinT<IO, int>` | ⚠️ Hard delete by condition (1 SQL DELETE, 도메인 이벤트 미발행) |
 
 > 모든 메서드는 `FinT<IO, T>`를 반환합니다. 성공은 `Fin.Succ(value)`, 실패는 도메인/어댑터 에러로 표현됩니다.
+>
+> **Soft Delete 패턴**: 도메인 이벤트가 동반되는 비즈니스 삭제는 `Load → aggregate.Delete(...) → Update(aggregate)` 경로를 사용하십시오. `Delete(TId)`·`DeleteRange(ids)`·`DeleteBy(spec)`은 관리·마이그레이션 목적의 hard delete로, **도메인 이벤트를 발행하지 않습니다**.
+>
+> **동시성**: `Update`는 로드 이후 Aggregate가 변경된 경우 `AdapterErrorType.ConcurrencyConflict`를 반환합니다(NotFound와 구분). [에러 시스템 사양](../04-error-system)을 참고하십시오.
 
 ---
 
@@ -162,6 +170,9 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
         Specification<TEntity> spec,
         SortExpression sort,
         CancellationToken cancellationToken = default);
+
+    FinT<IO, bool> Exists(Specification<TEntity> spec);
+    FinT<IO, int> Count(Specification<TEntity> spec);
 }
 ```
 
@@ -170,6 +181,8 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
 | `Search(spec, page, sort)` | `FinT<IO, PagedResult<TDto>>` | Offset 기반 페이지네이션 검색 |
 | `SearchByCursor(spec, cursor, sort)` | `FinT<IO, CursorPagedResult<TDto>>` | Keyset(Cursor) 기반 페이지네이션 검색. deep page에서 O(1) 성능 |
 | `Stream(spec, sort, ct)` | `IAsyncEnumerable<TDto>` | 대량 데이터 스트리밍 조회. 메모리에 전체 적재하지 않고 yield |
+| `Exists(spec)` | `FinT<IO, bool>` | Read-side 존재 확인 (리포팅·대시보드·조기 shortcut). Write-side 불변식 체크는 `IRepository.Exists` 사용 |
+| `Count(spec)` | `FinT<IO, int>` | Read-side 건수 (리포팅·페이지네이션 메타데이터) |
 
 ### 제네릭 파라미터
 

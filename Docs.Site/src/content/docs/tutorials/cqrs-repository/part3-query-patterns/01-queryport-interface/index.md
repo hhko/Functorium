@@ -44,15 +44,23 @@ IQueryPort separates the filtering target and return type with two type paramete
 | `TEntity` | Specification filtering target (domain entity) | `Product` |
 | `TDto` | Read-only projection returned to clients | `ProductDto` |
 
-### Three Query Methods
+### IQueryPort Method Catalog
 
-Different query approaches are suitable depending on data volume and usage patterns. IQueryPort provides all three methods.
+IQueryPort provides three query methods (pagination variants + streaming) plus two read-side aggregate helpers (existence + count) — five in total.
 
 | Method | Return Type | Purpose |
 |--------|-------------|---------|
 | `Search` | `FinT<IO, PagedResult<TDto>>` | Offset-based pagination |
 | `SearchByCursor` | `FinT<IO, CursorPagedResult<TDto>>` | Keyset-based pagination |
 | `Stream` | `IAsyncEnumerable<TDto>` | Large data streaming |
+| `Exists` | `FinT<IO, bool>` | Read-side existence check (reporting · dashboard · early shortcut) |
+| `Count` | `FinT<IO, int>` | Read-side count (reporting · pagination metadata) |
+
+> **Exists / Count — why both on `IRepository` and `IQueryPort`?**
+> - `IRepository.Exists` / `Count` → **write-side invariant checks** (e.g., duplicate-email check before `Create`)
+> - `IQueryPort.Exists` / `Count` → **read-side reporting** (e.g., dashboard "any pending orders?")
+>
+> The same Specification can be reused on both sides; the distinction is the caller's intent and which side's performance characteristics matter.
 
 ### IObservablePort
 

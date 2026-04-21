@@ -324,7 +324,8 @@ IObservablePort (인터페이스)
 │
 ├── IRepository<TAggregate, TId> : IObservablePort   ← Aggregate Root 단위 Repository
 │   ├── Create / GetById / Update / Delete            ← 단건 CRUD
-│   └── CreateRange / GetByIds / UpdateRange / DeleteRange  ← 일괄 CRUD
+│   ├── CreateRange / GetByIds / UpdateRange / DeleteRange  ← 일괄 CRUD
+│   └── Exists / Count / FindAllSatisfying / FindFirstSatisfying / DeleteBy  ← Specification
 │       (전체 시그니처는 §Repository 인터페이스 설계 원칙 참조)
 │   │
 │   ├── IProductRepository : IRepository<Product, ProductId>
@@ -350,7 +351,9 @@ IObservablePort (인터페이스)
 └── IQueryPort<TEntity, TDto> : IQueryPort   ← 읽기 전용 조회 (DTO 직접 반환)
     ├── FinT<IO, PagedResult<TDto>> Search(Specification<TEntity>, PageRequest, SortExpression)
     ├── FinT<IO, CursorPagedResult<TDto>> SearchByCursor(Specification<TEntity>, CursorPageRequest, SortExpression)
-    └── IAsyncEnumerable<TDto> Stream(Specification<TEntity>, SortExpression, CancellationToken)
+    ├── IAsyncEnumerable<TDto> Stream(Specification<TEntity>, SortExpression, CancellationToken)
+    ├── FinT<IO, bool> Exists(Specification<TEntity>)   ← Read-side 리포팅
+    └── FinT<IO, int> Count(Specification<TEntity>)     ← Read-side 리포팅
     │
     ├── IProductQuery : IQueryPort<Product, ProductSummaryDto>
     ├── IProductWithStockQuery : IQueryPort<Product, ProductWithStockDto>  ← JOIN 예제

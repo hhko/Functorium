@@ -534,6 +534,19 @@ public sealed record Deserialization(string? Format = null) : AdapterErrorType;
 public sealed record DataCorruption : AdapterErrorType;
 ```
 
+### 동시성
+
+| sealed record | 속성 | 설명 |
+|---------------|------|------|
+| `ConcurrencyConflict` | (없음) | `Update`/`UpdateRange` 시 로드 이후 Aggregate가 다른 주체에 의해 변경됐을 때 반환되는 낙관적 동시성 충돌. `NotFound`와 구분됩니다. 재시도 가능성 판단은 호출자 책임입니다. |
+
+```csharp
+public sealed record ConcurrencyConflict : AdapterErrorType;
+```
+
+> `ApplicationErrorType.ConcurrencyConflict`와의 관계:
+> Application 계층 버전은 유스케이스 로직이 판단하는 **비즈니스 수준 충돌**을, Adapter 계층 버전은 영속성 계층이 **직접 감지한 충돌**(EF Core `RowVersion`·`DbUpdateConcurrencyException` 또는 `affected == 0` + ID 존재)을 의미합니다.
+
 ### 커스텀
 
 ```csharp

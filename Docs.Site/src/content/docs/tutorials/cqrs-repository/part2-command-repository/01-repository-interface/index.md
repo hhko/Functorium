@@ -47,20 +47,33 @@ FinT<IO, int>   Delete(OrderId id);
 The same signatures are copied every time an Aggregate is added. If the return type of a single method changes, all interfaces must be modified.
 `IRepository<TAggregate, TId>` extracts this common pattern as generics, defining it in one place for all domains to reuse.
 
-### 8 CRUD Methods
+### IRepository Method Catalog
 
-The following table shows the complete list of methods provided by `IRepository`. Single and batch versions are symmetrical, allowing you to handle both individual Aggregates and lists with the same pattern.
+`IRepository` provides CRUD, Specification-based queries, and Specification-based bulk operations. Single and batch versions are symmetrical, and Specification-based reads follow Evans' `selectSatisfying` pattern.
 
 | Category | Method | Return Type |
 |----------|--------|-------------|
 | Single Create | `Create(TAggregate)` | `FinT<IO, TAggregate>` |
 | Single Read | `GetById(TId)` | `FinT<IO, TAggregate>` |
 | Single Update | `Update(TAggregate)` | `FinT<IO, TAggregate>` |
-| Single Delete | `Delete(TId)` | `FinT<IO, int>` |
+| Single Delete ⚠️ | `Delete(TId)` | `FinT<IO, int>` |
 | Batch Create | `CreateRange(IReadOnlyList<TAggregate>)` | `FinT<IO, int>` |
 | Batch Read | `GetByIds(IReadOnlyList<TId>)` | `FinT<IO, Seq<TAggregate>>` |
 | Batch Update | `UpdateRange(IReadOnlyList<TAggregate>)` | `FinT<IO, int>` |
-| Batch Delete | `DeleteRange(IReadOnlyList<TId>)` | `FinT<IO, int>` |
+| Batch Delete ⚠️ | `DeleteRange(IReadOnlyList<TId>)` | `FinT<IO, int>` |
+| Spec Exists | `Exists(Specification<TAggregate>)` | `FinT<IO, bool>` |
+| Spec Count | `Count(Specification<TAggregate>)` | `FinT<IO, int>` |
+| Spec Find All | `FindAllSatisfying(Specification<TAggregate>)` | `FinT<IO, Seq<TAggregate>>` |
+| Spec Find First | `FindFirstSatisfying(Specification<TAggregate>)` | `FinT<IO, Option<TAggregate>>` |
+| Spec Delete ⚠️ | `DeleteBy(Specification<TAggregate>)` | `FinT<IO, int>` |
+
+> ⚠️ **Hard delete methods do not emit domain events.** For business deletion that requires a `DeletedEvent`, use the Soft Delete pattern:
+> ```csharp
+> Load (GetById/GetByIds) → aggregate.Delete(...) → Update(aggregate)/UpdateRange(aggregates)
+> ```
+> `Delete`, `DeleteRange`, and `DeleteBy` are intended for administrative, migration, or test-fixture cleanup.
+
+> **Optimistic concurrency**: `Update` returns `AdapterErrorType.ConcurrencyConflict` when the Aggregate was modified after load (distinguished from `NotFound`). RowVersion/Timestamp column configuration is the subclass Model's responsibility.
 
 ### FinT\<IO, T\> Return Type
 

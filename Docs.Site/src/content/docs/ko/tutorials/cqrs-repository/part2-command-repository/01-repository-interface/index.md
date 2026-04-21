@@ -47,20 +47,33 @@ FinT<IO, int>   Delete(OrderId id);
 Aggregate가 늘어날 때마다 동일한 시그니처를 복사합니다. 메서드 하나의 반환 타입이 바뀌면 모든 인터페이스를 수정해야 합니다.
 `IRepository<TAggregate, TId>`는 이 공통 패턴을 제네릭으로 추출하여, 한 곳에서 정의하고 모든 도메인이 재사용하게 합니다.
 
-### 8개 CRUD 메서드
+### IRepository 메서드 카탈로그
 
-다음 테이블은 `IRepository`가 제공하는 전체 메서드 목록입니다. 단건과 복수 버전이 대칭을 이루고 있어, 단일 Aggregate든 목록이든 동일한 패턴으로 다룰 수 있습니다.
+`IRepository`는 CRUD, Specification 기반 조회, Specification 기반 벌크 연산을 제공합니다. 단건과 복수 버전이 대칭을 이루고, Specification 기반 조회는 Evans의 `selectSatisfying` 패턴을 따릅니다.
 
 | 구분 | 메서드 | 반환 타입 |
 |------|--------|-----------|
 | 단건 생성 | `Create(TAggregate)` | `FinT<IO, TAggregate>` |
 | 단건 조회 | `GetById(TId)` | `FinT<IO, TAggregate>` |
 | 단건 수정 | `Update(TAggregate)` | `FinT<IO, TAggregate>` |
-| 단건 삭제 | `Delete(TId)` | `FinT<IO, int>` |
+| 단건 삭제 ⚠️ | `Delete(TId)` | `FinT<IO, int>` |
 | 복수 생성 | `CreateRange(IReadOnlyList<TAggregate>)` | `FinT<IO, int>` |
 | 복수 조회 | `GetByIds(IReadOnlyList<TId>)` | `FinT<IO, Seq<TAggregate>>` |
 | 복수 수정 | `UpdateRange(IReadOnlyList<TAggregate>)` | `FinT<IO, int>` |
-| 복수 삭제 | `DeleteRange(IReadOnlyList<TId>)` | `FinT<IO, int>` |
+| 복수 삭제 ⚠️ | `DeleteRange(IReadOnlyList<TId>)` | `FinT<IO, int>` |
+| Spec 존재 | `Exists(Specification<TAggregate>)` | `FinT<IO, bool>` |
+| Spec 건수 | `Count(Specification<TAggregate>)` | `FinT<IO, int>` |
+| Spec 전체 조회 | `FindAllSatisfying(Specification<TAggregate>)` | `FinT<IO, Seq<TAggregate>>` |
+| Spec 단건 조회 | `FindFirstSatisfying(Specification<TAggregate>)` | `FinT<IO, Option<TAggregate>>` |
+| Spec 삭제 ⚠️ | `DeleteBy(Specification<TAggregate>)` | `FinT<IO, int>` |
+
+> ⚠️ **Hard delete 메서드는 도메인 이벤트를 발행하지 않습니다.** `DeletedEvent`가 필요한 비즈니스 삭제에는 Soft Delete 패턴을 사용하십시오:
+> ```csharp
+> Load (GetById/GetByIds) → aggregate.Delete(...) → Update(aggregate)/UpdateRange(aggregates)
+> ```
+> `Delete`·`DeleteRange`·`DeleteBy`는 관리·마이그레이션·테스트 픽스처 정리 용도입니다.
+
+> **낙관적 동시성**: `Update`는 로드 이후 Aggregate가 변경된 경우 `AdapterErrorType.ConcurrencyConflict`를 반환합니다(`NotFound`와 구분). RowVersion/Timestamp 컬럼 설정은 서브클래스 Model의 책임입니다.
 
 ### FinT\<IO, T\> 반환 타입
 
