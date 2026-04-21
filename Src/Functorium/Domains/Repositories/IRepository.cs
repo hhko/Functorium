@@ -39,7 +39,11 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     FinT<IO, TAggregate> Update(TAggregate aggregate);
 
     /// <summary>
-    /// ID로 Aggregate를 삭제합니다. 삭제된 건수를 반환합니다.
+    /// ⚠️ Hard delete. ID로 Aggregate를 삭제하며, **도메인 이벤트를 발행하지 않습니다**.
+    /// 비즈니스 삭제에는 Soft Delete 패턴을 사용하십시오:
+    ///   Load → aggregate.Delete(...) → repository.Update(aggregate)
+    /// 본 메서드는 관리·마이그레이션·테스트 픽스처 정리 용도입니다.
+    /// 삭제된 건수를 반환합니다.
     /// </summary>
     FinT<IO, int> Delete(TId id);
 
@@ -58,7 +62,11 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     FinT<IO, int> UpdateRange(IReadOnlyList<TAggregate> aggregates);
 
     /// <summary>
-    /// 여러 ID로 Aggregate를 일괄 삭제합니다. 삭제된 건수를 반환합니다.
+    /// ⚠️ Hard delete. 여러 ID로 Aggregate를 일괄 삭제하며,
+    /// **도메인 이벤트를 발행하지 않습니다**.
+    /// Aggregate별 이벤트가 필요한 비즈니스 삭제는
+    /// GetByIds → 각 Aggregate.Delete(...) → UpdateRange 경로를 사용하십시오.
+    /// 삭제된 건수를 반환합니다.
     /// </summary>
     FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
 
