@@ -9,6 +9,7 @@ using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
 using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
+using static LanguageExt.Prelude;
 
 namespace Functorium.Adapters.Repositories;
 
@@ -190,6 +191,44 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
             return await BuildQuery(spec).Match<Task<Fin<int>>>(
                 Succ: async query => Fin.Succ(await query.ExecuteDeleteAsync()),
                 Fail: error => Task.FromResult(Fin.Fail<int>(error)));
+        });
+    }
+
+    /// <summary>
+    /// Specification 조건에 매칭되는 모든 Aggregate를 조회합니다. PropertyMap 필수.
+    /// BuildQuery가 반환하는 IQueryable을 materialize하여 Aggregate로 매핑합니다.
+    /// </summary>
+    public virtual FinT<IO, Seq<TAggregate>> FindAllSatisfying(Specification<TAggregate> spec)
+    {
+        return IO.liftAsync(async () =>
+        {
+            return await BuildQuery(spec).Match<Task<Fin<Seq<TAggregate>>>>(
+                Succ: async query =>
+                {
+                    var models = await query.ToListAsync();
+                    return Fin.Succ(toSeq(models.Select(ToDomain)));
+                },
+                Fail: error => Task.FromResult(Fin.Fail<Seq<TAggregate>>(error)));
+        });
+    }
+
+    /// <summary>
+    /// Specification 조건에 매칭되는 첫 Aggregate를 조회합니다. PropertyMap 필수.
+    /// 매칭이 없으면 Fin.Succ(Option.None)을 반환합니다.
+    /// </summary>
+    public virtual FinT<IO, Option<TAggregate>> FindFirstSatisfying(Specification<TAggregate> spec)
+    {
+        return IO.liftAsync(async () =>
+        {
+            return await BuildQuery(spec).Match<Task<Fin<Option<TAggregate>>>>(
+                Succ: async query =>
+                {
+                    var model = await query.FirstOrDefaultAsync();
+                    return Fin.Succ(model is null
+                        ? Option<TAggregate>.None
+                        : Some(ToDomain(model)));
+                },
+                Fail: error => Task.FromResult(Fin.Fail<Option<TAggregate>>(error)));
         });
     }
 

@@ -159,6 +159,23 @@ public abstract class InMemoryRepositoryBase<TAggregate, TId>
         return IO.lift(() => Fin.Succ(Store.Values.Count(spec.IsSatisfiedBy)));
     }
 
+    public virtual FinT<IO, Seq<TAggregate>> FindAllSatisfying(Specification<TAggregate> spec)
+    {
+        return IO.lift(() =>
+            Fin.Succ(toSeq(Store.Values.Where(spec.IsSatisfiedBy))));
+    }
+
+    public virtual FinT<IO, Option<TAggregate>> FindFirstSatisfying(Specification<TAggregate> spec)
+    {
+        return IO.lift(() =>
+        {
+            var found = Store.Values.FirstOrDefault(spec.IsSatisfiedBy);
+            return Fin.Succ(found is null
+                ? Option<TAggregate>.None
+                : Some(found));
+        });
+    }
+
     public virtual FinT<IO, int> DeleteBy(Specification<TAggregate> spec)
     {
         return IO.lift(() =>

@@ -78,6 +78,8 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 
     /// <summary>
     /// Specification 조건에 매칭되는 Aggregate가 존재하는지 확인합니다. (1 SQL)
+    /// Write-side 불변식 체크 용도(예: Create 직전 중복 확인).
+    /// 리포팅 용도라면 IQueryPort.Exists 사용을 고려하십시오.
     /// </summary>
     FinT<IO, bool> Exists(Specification<TAggregate> spec);
 
@@ -87,8 +89,27 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     FinT<IO, int> Count(Specification<TAggregate> spec);
 
     /// <summary>
-    /// Specification 조건에 매칭되는 Aggregate를 일괄 삭제합니다. (1 SQL)
-    /// Change Tracker를 우회하여 직접 SQL DELETE를 실행합니다.
+    /// Specification 조건에 매칭되는 모든 Aggregate를 조회합니다. PropertyMap 필수.
+    /// Evans의 selectSatisfying 패턴 — Specification이 정의하는 도메인 규칙을
+    /// Repository가 조회 조건으로 해석하여 Aggregate 컬렉션을 반환합니다.
+    /// </summary>
+    /// <remarks>
+    /// 결과가 대량(수천 건 이상)이 예상되면 IQueryPort.Stream 사용을 고려하십시오.
+    /// Aggregate 재구성 비용이 필요 없으면 IQueryPort.Search로 DTO 프로젝션을 권장합니다.
+    /// </remarks>
+    FinT<IO, Seq<TAggregate>> FindAllSatisfying(Specification<TAggregate> spec);
+
+    /// <summary>
+    /// Specification 조건에 매칭되는 첫 Aggregate를 조회합니다. PropertyMap 필수.
+    /// 매칭이 없으면 Fin.Succ(Option.None)을 반환합니다.
+    /// </summary>
+    FinT<IO, Option<TAggregate>> FindFirstSatisfying(Specification<TAggregate> spec);
+
+    /// <summary>
+    /// ⚠️ Hard delete by condition. 1 SQL DELETE. 도메인 이벤트를 발행하지 않습니다.
+    /// 비즈니스 삭제 시 각 Aggregate별 이벤트가 필요하면
+    /// FindAllSatisfying → aggregate.SoftDelete() → UpdateRange 경로를 사용하십시오.
+    /// 본 메서드는 관리·마이그레이션·테스트 픽스처 정리 용도입니다.
     /// </summary>
     FinT<IO, int> DeleteBy(Specification<TAggregate> spec);
 }
