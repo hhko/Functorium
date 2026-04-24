@@ -2,7 +2,7 @@
 title: "Error System: Fundamentals and Naming"
 ---
 
-This document covers the fundamental principles of error handling, the Fin pattern, and error naming rules. For Domain/Application/Event errors, see [08b-error-system-domain-app.md](../08b-error-system-domain-app); for Adapter errors and test patterns, see [08c-error-system-adapter-testing.md](../08c-error-system-adapter-testing).
+This document covers the fundamental principles of error handling, the Fin pattern, and error naming rules. For Domain/Application errors, see [08b-error-system-domain-app.md](../08b-error-system-domain-app); for Adapter errors and test patterns, see [08c-error-system-adapter-testing.md](../08c-error-system-adapter-testing).
 
 ## Introduction
 
@@ -524,8 +524,8 @@ Src/Functorium.Testing/Assertions/Errors/
 ├── AdapterErrorAssertions.cs         # Adapter error validation (thin wrapper)
 ├── ErrorAssertionCore.cs             # Per-layer Assertion common validation logic
 ├── ErrorAssertionHelpers.cs          # Shared utilities
-├── ErrorCodeAssertions.cs            # General-purpose error code validation
-└── ExceptionalErrorAssertions.cs # Exceptional error validation
+├── ExpectedErrorAssertions.cs           # General-purpose Expected error validation
+└── ExceptionalErrorAssertions.cs        # Exceptional error validation
 
 Src/Functorium.Adapters/Abstractions/Errors/
 └── DestructuringPolicies/            # Serilog destructuring policies
@@ -572,45 +572,42 @@ All `ExpectedError` variants and `ExceptionalError` are **internal records** imp
 
 ### Error Creation Flow
 
-Per-layer factories (`DomainError`, `ApplicationError`, `EventError`, `AdapterError`) create errors through a 2-stage internal delegation.
+Per-layer factories (`DomainError`, `ApplicationError`, `AdapterError`) create errors through a 2-stage internal delegation.
 
 ```
-DomainError.For<Email>(new Empty(), value, msg)     ← Public API (DomainErrorKind enforced)
-  → LayerErrorCore.Create<Email>(prefix, errorType, value, msg)
+DomainError.For<Email>(new Empty(), value, msg)        ← Public API (DomainErrorKind enforced)
+  → LayerErrorCore.Create<Email>(ErrorCodePrefixes.Domain, kind, value, msg)
       ← Received as ErrorKind(base) → Assemble error code: "Domain.Email.Empty"
     → ErrorFactory.CreateExpected(errorCode, value, msg)
-        ← Create ExpectedError instance
+        ← Create ExpectedError instance (internal)
 ```
 
-`LayerErrorCore` is the shared implementation for the 4 factories, assembling the error code string `{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}`. The public factories maintain per-layer type parameters (`DomainErrorKind`, `ApplicationErrorKind`, etc.) to **prevent incorrect layer error usage at compile time.** All methods have `[AggressiveInlining]` applied so the JIT inlines the delegation calls, achieving the same performance as direct calls.
+`LayerErrorCore` is the shared implementation for the 3 factories, assembling the error code string `{prefix}.{typeof(TContext).Name}.{kind.Name}`. The public factories maintain per-layer type parameters (`DomainErrorKind`, `ApplicationErrorKind`, `AdapterErrorKind`) to **prevent incorrect layer error usage at compile time.** All methods have `[AggressiveInlining]` applied so the JIT inlines the delegation calls, achieving the same performance as direct calls.
 
 ### ErrorFactory API
 
-`ErrorFactory` is a **static class** located in `Abstractions/Errors/ErrorFactory.cs` that directly creates `ExpectedError` and `ExceptionalError` instances.
+`ErrorFactory` is an **internal static class** located in `Abstractions/Errors/ErrorFactory.cs` that directly creates `ExpectedError` and `ExceptionalError` instances. External consumers never call it directly -- they invoke the public layer factories (`DomainError`, `ApplicationError`, `AdapterError`), which delegate through `LayerErrorCore`.
 
 ```csharp
-public static class ErrorFactory
+internal static class ErrorFactory
 {
     // Expected error (string value) → ExpectedError
-    public static Error Create(string errorCode, string errorCurrentValue, string errorMessage);
+    public static Error CreateExpected(string errorCode, string errorCurrentValue, string errorMessage);
 
     // Expected error (typed value) → ExpectedError<T>
-    public static Error Create<T>(string errorCode, T errorCurrentValue, string errorMessage)
+    public static Error CreateExpected<T>(string errorCode, T errorCurrentValue, string errorMessage)
         where T : notnull;
 
     // Expected error (2 typed values) → ExpectedError<T1, T2>
-    public static Error Create<T1, T2>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, string errorMessage)
+    public static Error CreateExpected<T1, T2>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, string errorMessage)
         where T1 : notnull where T2 : notnull;
 
     // Expected error (3 typed values) → ExpectedError<T1, T2, T3>
-    public static Error Create<T1, T2, T3>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, T3 errorCurrentValue3, string errorMessage)
+    public static Error CreateExpected<T1, T2, T3>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, T3 errorCurrentValue3, string errorMessage)
         where T1 : notnull where T2 : notnull where T3 : notnull;
 
     // Exceptional error → ExceptionalError
-    public static Error CreateFromException(string errorCode, Exception exception);
-
-    // Error code format → string.Join('.', parts)
-    public static string Format(params string[] parts);
+    public static Error CreateExceptional(string errorCode, Exception exception);
 }
 ```
 
@@ -648,7 +645,7 @@ Log.Logger = new LoggerConfiguration()
 
 | Field | Expected | Expected&lt;T&gt; | Exceptional | ManyErrors |
 |-------|:---:|:---:|:---:|:---:|
-| ErrorKind | O | O | O | O |
+| Kind | O | O | O | O |
 | ErrorCode | O | O | O | X |
 | NumericCode | O | O | O | O |
 | ErrorCurrentValue | O | O | X | X |

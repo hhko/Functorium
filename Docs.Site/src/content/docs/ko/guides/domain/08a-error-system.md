@@ -2,7 +2,7 @@
 title: "에러 시스템: 기초와 네이밍"
 ---
 
-이 문서는 에러 처리의 기본 원칙, Fin 패턴, 에러 네이밍 규칙을 다룹니다. Domain/Application/Event 에러는 [08b-error-system-domain-app.md](../08b-error-system-domain-app), Adapter 에러와 테스트 패턴은 [08c-error-system-adapter-testing.md](../08c-error-system-adapter-testing)을 참고하세요.
+이 문서는 에러 처리의 기본 원칙, Fin 패턴, 에러 네이밍 규칙을 다룹니다. Domain/Application 에러는 [08b-error-system-domain-app.md](../08b-error-system-domain-app), Adapter 에러와 테스트 패턴은 [08c-error-system-adapter-testing.md](../08c-error-system-adapter-testing)을 참고하세요.
 
 ## 들어가며
 
@@ -524,7 +524,7 @@ Src/Functorium.Testing/Assertions/Errors/
 ├── AdapterErrorAssertions.cs         # 어댑터 에러 검증 (thin wrapper)
 ├── ErrorAssertionCore.cs             # 레이어별 Assertion 공통 검증 로직
 ├── ErrorAssertionHelpers.cs          # 공유 유틸리티
-├── ErrorCodeAssertions.cs            # 범용 에러 코드 검증
+├── ExpectedErrorAssertions.cs           # 범용 Expected 에러 검증
 └── ExceptionalErrorAssertions.cs # Exceptional 에러 검증
 
 Src/Functorium.Adapters/Abstractions/Errors/
@@ -572,45 +572,42 @@ Error (LanguageExt.Common)
 
 ### 에러 생성 흐름
 
-레이어별 팩토리(`DomainError`, `ApplicationError`, `EventError`, `AdapterError`)는 2단계 내부 위임으로 에러를 생성합니다.
+레이어별 팩토리(`DomainError`, `ApplicationError`, `AdapterError`)는 2단계 내부 위임으로 에러를 생성합니다.
 
 ```
-DomainError.For<Email>(new Empty(), value, msg)     ← 공개 API (DomainErrorKind 강제)
-  → LayerErrorCore.Create<Email>(prefix, errorType, value, msg)
+DomainError.For<Email>(new Empty(), value, msg)        ← 공개 API (DomainErrorKind 강제)
+  → LayerErrorCore.Create<Email>(ErrorCodePrefixes.Domain, kind, value, msg)
       ← ErrorKind(base)로 수신 → 에러 코드 조립: "Domain.Email.Empty"
     → ErrorFactory.CreateExpected(errorCode, value, msg)
-        ← ExpectedError 인스턴스 생성
+        ← ExpectedError 인스턴스 생성 (internal)
 ```
 
-`LayerErrorCore`는 4개 팩토리의 공통 구현으로, 에러 코드 문자열 `{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}`을 조립합니다. 공개 팩토리는 레이어별 타입 파라미터(`DomainErrorKind`, `ApplicationErrorKind` 등)를 유지하여 **컴파일 타임에 잘못된 레이어 에러 사용을 차단합니다.** 모든 메서드에 `[AggressiveInlining]`이 적용되어 JIT이 위임 호출을 인라인 처리하므로, 직접 호출과 성능이 동일합니다.
+`LayerErrorCore`는 3개 팩토리의 공통 구현으로, 에러 코드 문자열 `{prefix}.{typeof(TContext).Name}.{kind.Name}`을 조립합니다. 공개 팩토리는 레이어별 타입 파라미터(`DomainErrorKind`, `ApplicationErrorKind`, `AdapterErrorKind`)를 유지하여 **컴파일 타임에 잘못된 레이어 에러 사용을 차단합니다.** 모든 메서드에 `[AggressiveInlining]`이 적용되어 JIT이 위임 호출을 인라인 처리하므로, 직접 호출과 성능이 동일합니다.
 
 ### ErrorFactory API
 
-`ErrorFactory`는 `Abstractions/Errors/ErrorFactory.cs`에 위치한 **정적 클래스로,** `ExpectedError`와 `ExceptionalError` 인스턴스를 직접 생성합니다.
+`ErrorFactory`는 `Abstractions/Errors/ErrorFactory.cs`에 위치한 **internal 정적 클래스로,** `ExpectedError`와 `ExceptionalError` 인스턴스를 직접 생성합니다. 외부 소비자는 직접 호출하지 않고, 공개 레이어 팩토리(`DomainError`·`ApplicationError`·`AdapterError`)가 `LayerErrorCore`를 거쳐 위임 호출합니다.
 
 ```csharp
-public static class ErrorFactory
+internal static class ErrorFactory
 {
     // Expected 에러 (문자열 값) → ExpectedError
-    public static Error Create(string errorCode, string errorCurrentValue, string errorMessage);
+    public static Error CreateExpected(string errorCode, string errorCurrentValue, string errorMessage);
 
     // Expected 에러 (타입 값) → ExpectedError<T>
-    public static Error Create<T>(string errorCode, T errorCurrentValue, string errorMessage)
+    public static Error CreateExpected<T>(string errorCode, T errorCurrentValue, string errorMessage)
         where T : notnull;
 
     // Expected 에러 (2개 타입 값) → ExpectedError<T1, T2>
-    public static Error Create<T1, T2>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, string errorMessage)
+    public static Error CreateExpected<T1, T2>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, string errorMessage)
         where T1 : notnull where T2 : notnull;
 
     // Expected 에러 (3개 타입 값) → ExpectedError<T1, T2, T3>
-    public static Error Create<T1, T2, T3>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, T3 errorCurrentValue3, string errorMessage)
+    public static Error CreateExpected<T1, T2, T3>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, T3 errorCurrentValue3, string errorMessage)
         where T1 : notnull where T2 : notnull where T3 : notnull;
 
     // Exceptional 에러 → ExceptionalError
-    public static Error CreateFromException(string errorCode, Exception exception);
-
-    // 에러 코드 포맷 → string.Join('.', parts)
-    public static string Format(params string[] parts);
+    public static Error CreateExceptional(string errorCode, Exception exception);
 }
 ```
 
@@ -648,7 +645,7 @@ Log.Logger = new LoggerConfiguration()
 
 | Field | Expected | Expected&lt;T&gt; | Exceptional | ManyErrors |
 |-------|:---:|:---:|:---:|:---:|
-| ErrorKind | O | O | O | O |
+| Kind | O | O | O | O |
 | ErrorCode | O | O | O | X |
 | NumericCode | O | O | O | O |
 | ErrorCurrentValue | O | O | X | X |
