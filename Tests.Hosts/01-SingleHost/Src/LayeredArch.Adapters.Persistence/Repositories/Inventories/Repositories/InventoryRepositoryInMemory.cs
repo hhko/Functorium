@@ -6,7 +6,7 @@ using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
 using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Products;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.Inventories.Repositories;
 

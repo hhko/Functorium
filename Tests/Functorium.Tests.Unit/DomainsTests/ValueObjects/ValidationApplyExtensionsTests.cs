@@ -249,13 +249,13 @@ public class ValidationApplyExtensionsTests
             amount >= 0
                 ? amount
                 : DomainError.For<ValidationApplyExtensionsTests, decimal>(
-                    new DomainErrorType.Negative(), amount, "Amount must be non-negative");
+                    new DomainErrorKind.Negative(), amount, "Amount must be non-negative");
 
         static Validation<Error, string> ValidateCurrency(string currency) =>
             !string.IsNullOrEmpty(currency) && currency.Length == 3
                 ? currency.ToUpperInvariant()
                 : DomainError.For<ValidationApplyExtensionsTests>(
-                    new DomainErrorType.WrongLength(3), currency, "Currency must be 3 characters");
+                    new DomainErrorKind.WrongLength(3), currency, "Currency must be 3 characters");
 
         // Act - No .As() needed
         var actual = (ValidateAmount(amount), ValidateCurrency(currency))

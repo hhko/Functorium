@@ -5,7 +5,7 @@ using Functorium.Adapters.SourceGenerators;
 using Functorium.Abstractions.Observabilities;
 using LayeredArch.Application.Ports;
 using LanguageExt;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 using static LanguageExt.Prelude;
 
 namespace LayeredArch.Adapters.Infrastructure.ExternalApis;
@@ -19,11 +19,11 @@ public class ExternalPricingApiService : IExternalPricingService
 {
     #region Error Types
 
-    public sealed record OperationCancelled : AdapterErrorType.Custom;
-    public sealed record UnexpectedException : AdapterErrorType.Custom;
-    public sealed record PriceConversionFailed : AdapterErrorType.Custom;
-    public sealed record RateLimited : AdapterErrorType.Custom;
-    public sealed record HttpError : AdapterErrorType.Custom;
+    public sealed record OperationCancelled : AdapterErrorKind.Custom;
+    public sealed record UnexpectedException : AdapterErrorKind.Custom;
+    public sealed record PriceConversionFailed : AdapterErrorKind.Custom;
+    public sealed record RateLimited : AdapterErrorKind.Custom;
+    public sealed record HttpError : AdapterErrorKind.Custom;
 
     #endregion
 
@@ -97,7 +97,7 @@ public class ExternalPricingApiService : IExternalPricingService
             {
                 // 타임아웃
                 return AdapterError.FromException<ExternalPricingApiService>(
-                    new AdapterErrorType.Timeout(TimeSpan.FromSeconds(30)),
+                    new AdapterErrorKind.Timeout(TimeSpan.FromSeconds(30)),
                     ex);
             }
             catch (Exception ex)
@@ -182,7 +182,7 @@ public class ExternalPricingApiService : IExternalPricingService
             catch (TaskCanceledException ex)
             {
                 return AdapterError.FromException<ExternalPricingApiService>(
-                    new AdapterErrorType.Timeout(TimeSpan.FromSeconds(30)),
+                    new AdapterErrorKind.Timeout(TimeSpan.FromSeconds(30)),
                     ex);
             }
             catch (Exception ex)

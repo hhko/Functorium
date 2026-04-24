@@ -4,7 +4,7 @@ using LayeredArch.Domain.AggregateRoots.Orders.ValueObjects;
 using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Applications.Linq;
 using Functorium.Applications.Errors;
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 using LayeredArch.Domain.SharedModels.Services;
 using LayeredArch.Application.Usecases.Orders.Ports;
 

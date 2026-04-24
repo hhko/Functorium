@@ -8,7 +8,7 @@ using Functorium.Domains.Repositories;
 using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
 using Microsoft.EntityFrameworkCore;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 using static LanguageExt.Prelude;
 
 namespace Functorium.Adapters.Repositories;

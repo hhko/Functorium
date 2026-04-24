@@ -3,7 +3,7 @@ using LayeredArch.Domain.AggregateRoots.Customers.Specifications;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 using Functorium.Applications.Errors;
 using Functorium.Applications.Linq;
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 namespace LayeredArch.Application.Usecases.Customers.Commands;
 

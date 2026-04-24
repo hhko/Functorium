@@ -15,9 +15,9 @@ public sealed class DummyValueObject : SimpleValueObject<string>
 [Trait(nameof(UnitTest), UnitTest.Functorium_Testing)]
 public class DomainErrorAssertionsTests
 {
-    private sealed record Unsupported : DomainErrorType.Custom;
-    private sealed record StartAfterEnd : DomainErrorType.Custom;
-    private sealed record DateRangeWithDuration : DomainErrorType.Custom;
+    private sealed record Unsupported : DomainErrorKind.Custom;
+    private sealed record StartAfterEnd : DomainErrorKind.Custom;
+    private sealed record DateRangeWithDuration : DomainErrorKind.Custom;
 
     #region Error - ShouldBeDomainError<TValueObject>
 
@@ -26,12 +26,12 @@ public class DomainErrorAssertionsTests
     {
         // Arrange
         var error = DomainError.For<DummyValueObject>(
-            new DomainErrorType.Empty(),
+            new DomainErrorKind.Empty(),
             currentValue: "",
             message: "Value cannot be empty");
 
         // Act & Assert (should not throw)
-        error.ShouldBeDomainError<DummyValueObject>(new DomainErrorType.Empty());
+        error.ShouldBeDomainError<DummyValueObject>(new DomainErrorKind.Empty());
     }
 
     [Fact]
@@ -39,13 +39,13 @@ public class DomainErrorAssertionsTests
     {
         // Arrange
         var error = DomainError.For<DummyValueObject>(
-            new DomainErrorType.Empty(),
+            new DomainErrorKind.Empty(),
             currentValue: "",
             message: "Value cannot be empty");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            error.ShouldBeDomainError<DummyValueObject>(new DomainErrorType.Null()));
+            error.ShouldBeDomainError<DummyValueObject>(new DomainErrorKind.Null()));
     }
 
     [Fact]
@@ -70,13 +70,13 @@ public class DomainErrorAssertionsTests
     {
         // Arrange
         var error = DomainError.For<DummyValueObject, int>(
-            new DomainErrorType.Negative(),
+            new DomainErrorKind.Negative(),
             currentValue: -5,
             message: "Value cannot be negative");
 
         // Act & Assert (should not throw)
         error.ShouldBeDomainError<DummyValueObject, int>(
-            new DomainErrorType.Negative(),
+            new DomainErrorKind.Negative(),
             expectedCurrentValue: -5);
     }
 
@@ -85,14 +85,14 @@ public class DomainErrorAssertionsTests
     {
         // Arrange
         var error = DomainError.For<DummyValueObject, int>(
-            new DomainErrorType.Negative(),
+            new DomainErrorKind.Negative(),
             currentValue: -5,
             message: "Value cannot be negative");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             error.ShouldBeDomainError<DummyValueObject, int>(
-                new DomainErrorType.Negative(),
+                new DomainErrorKind.Negative(),
                 expectedCurrentValue: -10));
     }
 
@@ -197,13 +197,13 @@ public class DomainErrorAssertionsTests
     {
         // Arrange
         var error = DomainError.For<DummyValueObject>(
-            new DomainErrorType.Empty(),
+            new DomainErrorKind.Empty(),
             currentValue: "",
             message: "Value cannot be empty");
         Fin<string> fin = error;
 
         // Act & Assert (should not throw)
-        fin.ShouldBeDomainError<DummyValueObject, string>(new DomainErrorType.Empty());
+        fin.ShouldBeDomainError<DummyValueObject, string>(new DomainErrorKind.Empty());
     }
 
     [Fact]
@@ -214,7 +214,7 @@ public class DomainErrorAssertionsTests
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            fin.ShouldBeDomainError<DummyValueObject, string>(new DomainErrorType.Empty()));
+            fin.ShouldBeDomainError<DummyValueObject, string>(new DomainErrorKind.Empty()));
     }
 
     [Fact]
@@ -222,14 +222,14 @@ public class DomainErrorAssertionsTests
     {
         // Arrange
         var error = DomainError.For<DummyValueObject>(
-            new DomainErrorType.Empty(),
+            new DomainErrorKind.Empty(),
             currentValue: "",
             message: "Value cannot be empty");
         Fin<string> fin = error;
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            fin.ShouldBeDomainError<DummyValueObject, string>(new DomainErrorType.Null()));
+            fin.ShouldBeDomainError<DummyValueObject, string>(new DomainErrorKind.Null()));
     }
 
     [Fact]
@@ -237,14 +237,14 @@ public class DomainErrorAssertionsTests
     {
         // Arrange
         var error = DomainError.For<DummyValueObject, int>(
-            new DomainErrorType.Negative(),
+            new DomainErrorKind.Negative(),
             currentValue: -5,
             message: "Value cannot be negative");
         Fin<int> fin = error;
 
         // Act & Assert (should not throw)
         fin.ShouldBeDomainError<DummyValueObject, int, int>(
-            new DomainErrorType.Negative(),
+            new DomainErrorKind.Negative(),
             expectedCurrentValue: -5);
     }
 
@@ -257,13 +257,13 @@ public class DomainErrorAssertionsTests
     {
         // Arrange
         var error = DomainError.For<DummyValueObject>(
-            new DomainErrorType.Empty(),
+            new DomainErrorKind.Empty(),
             currentValue: "",
             message: "Value cannot be empty");
         Validation<Error, string> validation = error;
 
         // Act & Assert (should not throw)
-        validation.ShouldHaveDomainError<DummyValueObject, string>(new DomainErrorType.Empty());
+        validation.ShouldHaveDomainError<DummyValueObject, string>(new DomainErrorKind.Empty());
     }
 
     [Fact]
@@ -274,7 +274,7 @@ public class DomainErrorAssertionsTests
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            validation.ShouldHaveDomainError<DummyValueObject, string>(new DomainErrorType.Empty()));
+            validation.ShouldHaveDomainError<DummyValueObject, string>(new DomainErrorKind.Empty()));
     }
 
     [Fact]
@@ -282,14 +282,14 @@ public class DomainErrorAssertionsTests
     {
         // Arrange
         var error = DomainError.For<DummyValueObject>(
-            new DomainErrorType.Empty(),
+            new DomainErrorKind.Empty(),
             currentValue: "",
             message: "Value cannot be empty");
         Validation<Error, string> validation = error;
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            validation.ShouldHaveDomainError<DummyValueObject, string>(new DomainErrorType.Null()));
+            validation.ShouldHaveDomainError<DummyValueObject, string>(new DomainErrorKind.Null()));
     }
 
     #endregion
@@ -301,13 +301,13 @@ public class DomainErrorAssertionsTests
     {
         // Arrange
         var error = DomainError.For<DummyValueObject>(
-            new DomainErrorType.TooShort(),
+            new DomainErrorKind.TooShort(),
             currentValue: "a",
             message: "Value is too short");
         Validation<Error, string> validation = error;
 
         // Act & Assert (should not throw)
-        validation.ShouldHaveOnlyDomainError<DummyValueObject, string>(new DomainErrorType.TooShort());
+        validation.ShouldHaveOnlyDomainError<DummyValueObject, string>(new DomainErrorKind.TooShort());
     }
 
     [Fact]
@@ -315,11 +315,11 @@ public class DomainErrorAssertionsTests
     {
         // Arrange - Use Apply pattern to combine errors
         var error1 = DomainError.For<DummyValueObject>(
-            new DomainErrorType.Empty(),
+            new DomainErrorKind.Empty(),
             currentValue: "",
             message: "Value cannot be empty");
         var error2 = DomainError.For<DummyValueObject>(
-            new DomainErrorType.InvalidFormat(),
+            new DomainErrorKind.InvalidFormat(),
             currentValue: "",
             message: "Invalid format");
 
@@ -331,7 +331,7 @@ public class DomainErrorAssertionsTests
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            combined.ShouldHaveOnlyDomainError<DummyValueObject, string>(new DomainErrorType.Empty()));
+            combined.ShouldHaveOnlyDomainError<DummyValueObject, string>(new DomainErrorKind.Empty()));
     }
 
     #endregion
@@ -343,11 +343,11 @@ public class DomainErrorAssertionsTests
     {
         // Arrange - Use Apply pattern to combine errors
         var error1 = DomainError.For<DummyValueObject>(
-            new DomainErrorType.Empty(),
+            new DomainErrorKind.Empty(),
             currentValue: "",
             message: "Value cannot be empty");
         var error2 = DomainError.For<DummyValueObject>(
-            new DomainErrorType.InvalidFormat(),
+            new DomainErrorKind.InvalidFormat(),
             currentValue: "",
             message: "Invalid format");
 
@@ -358,8 +358,8 @@ public class DomainErrorAssertionsTests
 
         // Act & Assert (should not throw)
         combined.ShouldHaveDomainErrors<DummyValueObject, string>(
-            new DomainErrorType.Empty(),
-            new DomainErrorType.InvalidFormat());
+            new DomainErrorKind.Empty(),
+            new DomainErrorKind.InvalidFormat());
     }
 
     [Fact]
@@ -367,7 +367,7 @@ public class DomainErrorAssertionsTests
     {
         // Arrange
         var error = DomainError.For<DummyValueObject>(
-            new DomainErrorType.Empty(),
+            new DomainErrorKind.Empty(),
             currentValue: "",
             message: "Value cannot be empty");
         Validation<Error, string> validation = error;
@@ -375,8 +375,8 @@ public class DomainErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             validation.ShouldHaveDomainErrors<DummyValueObject, string>(
-                new DomainErrorType.Empty(),
-                new DomainErrorType.InvalidFormat())); // InvalidFormat not present
+                new DomainErrorKind.Empty(),
+                new DomainErrorKind.InvalidFormat())); // InvalidFormat not present
     }
 
     #endregion
@@ -388,14 +388,14 @@ public class DomainErrorAssertionsTests
     {
         // Arrange
         var error = DomainError.For<DummyValueObject, int>(
-            new DomainErrorType.Negative(),
+            new DomainErrorKind.Negative(),
             currentValue: -5,
             message: "Value cannot be negative");
         Validation<Error, int> validation = error;
 
         // Act & Assert (should not throw)
         validation.ShouldHaveDomainError<DummyValueObject, int, int>(
-            new DomainErrorType.Negative(),
+            new DomainErrorKind.Negative(),
             expectedCurrentValue: -5);
     }
 
@@ -404,7 +404,7 @@ public class DomainErrorAssertionsTests
     {
         // Arrange
         var error = DomainError.For<DummyValueObject, int>(
-            new DomainErrorType.Negative(),
+            new DomainErrorKind.Negative(),
             currentValue: -5,
             message: "Value cannot be negative");
         Validation<Error, int> validation = error;
@@ -412,7 +412,7 @@ public class DomainErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             validation.ShouldHaveDomainError<DummyValueObject, int, int>(
-                new DomainErrorType.Negative(),
+                new DomainErrorKind.Negative(),
                 expectedCurrentValue: -10));
     }
 
@@ -531,13 +531,13 @@ public class DomainErrorAssertionsTests
     {
         // Arrange - Error is for EmailValueObject
         var error = DomainError.For<EmailValueObject>(
-            new DomainErrorType.Empty(),
+            new DomainErrorKind.Empty(),
             currentValue: "",
             message: "Email cannot be empty");
 
         // Act & Assert - Checking for PasswordValueObject should fail
         Should.Throw<ShouldAssertException>(() =>
-            error.ShouldBeDomainError<PasswordValueObject>(new DomainErrorType.Empty()));
+            error.ShouldBeDomainError<PasswordValueObject>(new DomainErrorKind.Empty()));
     }
 
     [Fact]
@@ -545,12 +545,12 @@ public class DomainErrorAssertionsTests
     {
         // Arrange
         var error = DomainError.For<EmailValueObject>(
-            new DomainErrorType.InvalidFormat(),
+            new DomainErrorKind.InvalidFormat(),
             currentValue: "invalid",
             message: "Invalid email format");
 
         // Act & Assert (should not throw)
-        error.ShouldBeDomainError<EmailValueObject>(new DomainErrorType.InvalidFormat());
+        error.ShouldBeDomainError<EmailValueObject>(new DomainErrorKind.InvalidFormat());
     }
 
     #endregion

@@ -40,7 +40,7 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
             {
                 return Fin.Fail<LanguageExt.Unit>(
                     AdapterError.For<DomainEventPublisher>(
-                        new AdapterErrorType.PublishCancelled(),
+                        new AdapterErrorKind.PublishCancelled(),
                         typeof(TEvent).Name,
                         "Event publishing was cancelled"));
             }
@@ -48,7 +48,7 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
             {
                 return Fin.Fail<LanguageExt.Unit>(
                     AdapterError.FromException<DomainEventPublisher>(
-                        new AdapterErrorType.PublishFailed(),
+                        new AdapterErrorKind.PublishFailed(),
                         ex));
             }
         });
@@ -102,7 +102,7 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
             catch (OperationCanceledException)
             {
                 var error = AdapterError.For<DomainEventPublisher>(
-                    new AdapterErrorType.PublishCancelled(),
+                    new AdapterErrorKind.PublishCancelled(),
                     evt.GetType().Name,
                     $"Event publishing was cancelled");
                 failed.Add((evt, error));
@@ -110,7 +110,7 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
             catch (Exception ex)
             {
                 var error = AdapterError.FromException<DomainEventPublisher>(
-                    new AdapterErrorType.PublishFailed(),
+                    new AdapterErrorKind.PublishFailed(),
                     ex);
                 failed.Add((evt, error));
             }

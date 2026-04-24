@@ -7,17 +7,17 @@ namespace Functorium.Domains.Errors;
 
 /// <summary>
 /// 값 객체의 도메인 오류 생성을 위한 정적 팩토리 클래스.
-/// 에러 코드를 자동으로 "Domain.{ValueObjectName}.{ErrorName}" 형식으로 생성합니다.
+/// 에러 코드를 자동으로 "Domain.{ValueObjectName}.{Name}" 형식으로 생성합니다.
 /// </summary>
 /// <remarks>
 /// 사용 예시:
 /// <code>
-/// using static Functorium.Domains.Errors.DomainErrorType;
+/// using static Functorium.Domains.Errors.DomainErrorKind;
 ///
 /// DomainError.For&lt;Email&gt;(new Empty(), value, "Email cannot be empty");
 /// DomainError.For&lt;Password&gt;(new TooShort(MinLength: 8), value, "Password too short");
 /// // 커스텀 에러: sealed record 파생 정의
-/// // public sealed record Unsupported : DomainErrorType.Custom;
+/// // public sealed record Unsupported : DomainErrorKind.Custom;
 /// DomainError.For&lt;Currency&gt;(new Unsupported(), value, "Currency not supported");
 /// </code>
 /// </remarks>
@@ -25,14 +25,14 @@ public static class DomainError
 {
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TDomain>(
-        DomainErrorType errorType,
+        DomainErrorKind errorType,
         string currentValue,
         string message) =>
         LayerErrorCore.Create<TDomain>(ErrorCodePrefixes.Domain, errorType, currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TDomain, TValue>(
-        DomainErrorType errorType,
+        DomainErrorKind errorType,
         TValue currentValue,
         string message)
         where TValue : notnull =>
@@ -40,7 +40,7 @@ public static class DomainError
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TDomain, T1, T2>(
-        DomainErrorType errorType,
+        DomainErrorKind errorType,
         T1 value1,
         T2 value2,
         string message)
@@ -50,7 +50,7 @@ public static class DomainError
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TDomain, T1, T2, T3>(
-        DomainErrorType errorType,
+        DomainErrorKind errorType,
         T1 value1,
         T2 value2,
         T3 value3,
@@ -63,7 +63,7 @@ public static class DomainError
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error ForContext(
         string contextName,
-        DomainErrorType errorType,
+        DomainErrorKind errorType,
         string currentValue,
         string message) =>
         LayerErrorCore.ForContext(ErrorCodePrefixes.Domain, contextName, errorType, currentValue, message);
@@ -71,7 +71,7 @@ public static class DomainError
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error ForContext<TValue>(
         string contextName,
-        DomainErrorType errorType,
+        DomainErrorKind errorType,
         TValue currentValue,
         string message)
         where TValue : notnull =>

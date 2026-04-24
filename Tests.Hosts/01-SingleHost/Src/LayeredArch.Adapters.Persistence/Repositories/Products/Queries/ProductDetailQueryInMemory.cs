@@ -2,7 +2,7 @@ using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using LayeredArch.Application.Usecases.Products.Ports;
 using LayeredArch.Domain.AggregateRoots.Products;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 using LayeredArch.Adapters.Persistence.Repositories.Products.Repositories;
 

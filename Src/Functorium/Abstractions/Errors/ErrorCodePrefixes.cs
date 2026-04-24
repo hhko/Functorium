@@ -1,7 +1,7 @@
 namespace Functorium.Abstractions.Errors;
 
 /// <summary>
-/// 레이어별 에러 코드 접두사 상수. 에러 코드는 "{Prefix}.{Context}.{ErrorName}"
+/// 레이어별 에러 코드 접두사 상수. 에러 코드는 "{Prefix}.{Context}.{Name}"
 /// 형식으로 조립되며, 이 상수들은 레이어 팩토리(<c>DomainError</c>·
 /// <c>ApplicationError</c>·<c>AdapterError</c>)와 대응 테스트 어설션에서만
 /// 사용됩니다.

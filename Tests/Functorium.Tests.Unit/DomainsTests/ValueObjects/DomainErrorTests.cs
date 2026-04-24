@@ -13,13 +13,13 @@ public sealed class TestValueObject : SimpleValueObject<string>
 [Trait(nameof(UnitTest), UnitTest.Functorium_Domains)]
 public class DomainErrorTests
 {
-    private sealed record StartAfterEnd : DomainErrorType.Custom;
-    private sealed record Unsupported : DomainErrorType.Custom;
-    private sealed record CustomError : DomainErrorType.Custom;
-    private sealed record MyError : DomainErrorType.Custom;
-    private sealed record MyCustomError : DomainErrorType.Custom;
+    private sealed record StartAfterEnd : DomainErrorKind.Custom;
+    private sealed record Unsupported : DomainErrorKind.Custom;
+    private sealed record CustomError : DomainErrorKind.Custom;
+    private sealed record MyError : DomainErrorKind.Custom;
+    private sealed record MyCustomError : DomainErrorKind.Custom;
 
-    #region DomainErrorType 기본 테스트
+    #region DomainErrorKind 기본 테스트
 
     [Fact]
     public void For_WithDomainErrorType_CreatesErrorWithCorrectErrorCode_WhenEmpty()
@@ -29,7 +29,7 @@ public class DomainErrorTests
         var message = "Value cannot be empty";
 
         // Act
-        var actual = DomainError.For<TestValueObject>(new DomainErrorType.Empty(), currentValue, message);
+        var actual = DomainError.For<TestValueObject>(new DomainErrorKind.Empty(), currentValue, message);
 
         // Assert
         actual.ShouldBeOfType<ExpectedError>();
@@ -48,7 +48,7 @@ public class DomainErrorTests
         var message = "Value cannot be negative";
 
         // Act
-        var actual = DomainError.For<TestValueObject, int>(new DomainErrorType.Negative(), currentValue, message);
+        var actual = DomainError.For<TestValueObject, int>(new DomainErrorKind.Negative(), currentValue, message);
 
         // Assert
         actual.ShouldBeOfType<ExpectedError<int>>();
@@ -85,7 +85,7 @@ public class DomainErrorTests
 
     #endregion
 
-    #region DomainErrorType 컨텍스트 정보 테스트
+    #region DomainErrorKind 컨텍스트 정보 테스트
 
     [Fact]
     public void For_WithDomainErrorType_CreatesErrorWithCorrectErrorCode_WhenTooShortWithContext()
@@ -95,7 +95,7 @@ public class DomainErrorTests
         var message = "Password too short";
 
         // Act
-        var actual = DomainError.For<TestValueObject>(new DomainErrorType.TooShort(MinLength: 8), currentValue, message);
+        var actual = DomainError.For<TestValueObject>(new DomainErrorKind.TooShort(MinLength: 8), currentValue, message);
 
         // Assert
         actual.ShouldBeOfType<ExpectedError>();
@@ -114,7 +114,7 @@ public class DomainErrorTests
 
         // Act
         var actual = DomainError.For<TestValueObject>(
-            new DomainErrorType.InvalidFormat(Pattern: @"^[^@]+@[^@]+\.[^@]+$"),
+            new DomainErrorKind.InvalidFormat(Pattern: @"^[^@]+@[^@]+\.[^@]+$"),
             currentValue,
             message);
 
@@ -132,7 +132,7 @@ public class DomainErrorTests
 
         // Act
         var actual = DomainError.For<TestValueObject, int>(
-            new DomainErrorType.OutOfRange(Min: "0", Max: "100"),
+            new DomainErrorKind.OutOfRange(Min: "0", Max: "100"),
             currentValue,
             message);
 
@@ -164,12 +164,12 @@ public class DomainErrorTests
 
     #endregion
 
-    #region 모든 DomainErrorType 에러 코드 생성 테스트
+    #region 모든 DomainErrorKind 에러 코드 생성 테스트
 
     [Theory]
     [MemberData(nameof(GetAllDomainErrorTypes))]
     public void For_WithDomainErrorType_GeneratesCorrectErrorCodeForAllRecordTypes(
-        DomainErrorType errorType,
+        DomainErrorKind errorType,
         string expectedName)
     {
         // Act
@@ -180,55 +180,55 @@ public class DomainErrorTests
         errorCode.ErrorCode.ShouldBe($"Domain.TestValueObject.{expectedName}");
     }
 
-    public static TheoryData<DomainErrorType, string> GetAllDomainErrorTypes() => new()
+    public static TheoryData<DomainErrorKind, string> GetAllDomainErrorTypes() => new()
     {
-        { new DomainErrorType.Empty(), "Empty" },
-        { new DomainErrorType.Null(), "Null" },
-        { new DomainErrorType.TooShort(), "TooShort" },
-        { new DomainErrorType.TooShort(MinLength: 5), "TooShort" },
-        { new DomainErrorType.TooLong(), "TooLong" },
-        { new DomainErrorType.TooLong(MaxLength: 100), "TooLong" },
-        { new DomainErrorType.WrongLength(), "WrongLength" },
-        { new DomainErrorType.WrongLength(Expected: 10), "WrongLength" },
-        { new DomainErrorType.InvalidFormat(), "InvalidFormat" },
-        { new DomainErrorType.InvalidFormat(Pattern: "^[a-z]+$"), "InvalidFormat" },
-        { new DomainErrorType.NotUpperCase(), "NotUpperCase" },
-        { new DomainErrorType.NotLowerCase(), "NotLowerCase" },
-        { new DomainErrorType.Negative(), "Negative" },
-        { new DomainErrorType.NotPositive(), "NotPositive" },
-        { new DomainErrorType.OutOfRange(), "OutOfRange" },
-        { new DomainErrorType.OutOfRange(Min: "0", Max: "100"), "OutOfRange" },
-        { new DomainErrorType.BelowMinimum(), "BelowMinimum" },
-        { new DomainErrorType.BelowMinimum(Minimum: "10"), "BelowMinimum" },
-        { new DomainErrorType.AboveMaximum(), "AboveMaximum" },
-        { new DomainErrorType.AboveMaximum(Maximum: "1000"), "AboveMaximum" },
-        { new DomainErrorType.NotFound(), "NotFound" },
-        { new DomainErrorType.AlreadyExists(), "AlreadyExists" },
-        { new DomainErrorType.Duplicate(), "Duplicate" },
-        { new DomainErrorType.Mismatch(), "Mismatch" },
+        { new DomainErrorKind.Empty(), "Empty" },
+        { new DomainErrorKind.Null(), "Null" },
+        { new DomainErrorKind.TooShort(), "TooShort" },
+        { new DomainErrorKind.TooShort(MinLength: 5), "TooShort" },
+        { new DomainErrorKind.TooLong(), "TooLong" },
+        { new DomainErrorKind.TooLong(MaxLength: 100), "TooLong" },
+        { new DomainErrorKind.WrongLength(), "WrongLength" },
+        { new DomainErrorKind.WrongLength(Expected: 10), "WrongLength" },
+        { new DomainErrorKind.InvalidFormat(), "InvalidFormat" },
+        { new DomainErrorKind.InvalidFormat(Pattern: "^[a-z]+$"), "InvalidFormat" },
+        { new DomainErrorKind.NotUpperCase(), "NotUpperCase" },
+        { new DomainErrorKind.NotLowerCase(), "NotLowerCase" },
+        { new DomainErrorKind.Negative(), "Negative" },
+        { new DomainErrorKind.NotPositive(), "NotPositive" },
+        { new DomainErrorKind.OutOfRange(), "OutOfRange" },
+        { new DomainErrorKind.OutOfRange(Min: "0", Max: "100"), "OutOfRange" },
+        { new DomainErrorKind.BelowMinimum(), "BelowMinimum" },
+        { new DomainErrorKind.BelowMinimum(Minimum: "10"), "BelowMinimum" },
+        { new DomainErrorKind.AboveMaximum(), "AboveMaximum" },
+        { new DomainErrorKind.AboveMaximum(Maximum: "1000"), "AboveMaximum" },
+        { new DomainErrorKind.NotFound(), "NotFound" },
+        { new DomainErrorKind.AlreadyExists(), "AlreadyExists" },
+        { new DomainErrorKind.Duplicate(), "Duplicate" },
+        { new DomainErrorKind.Mismatch(), "Mismatch" },
         { new CustomError(), "CustomError" },
-        { new DomainErrorType.InvalidTransition(), "InvalidTransition" },
-        { new DomainErrorType.InvalidTransition(FromState: "Paid", ToState: "Active"), "InvalidTransition" }
+        { new DomainErrorKind.InvalidTransition(), "InvalidTransition" },
+        { new DomainErrorKind.InvalidTransition(FromState: "Paid", ToState: "Active"), "InvalidTransition" }
     };
 
     #endregion
 
-    #region DomainErrorType record 속성 테스트
+    #region DomainErrorKind record 속성 테스트
 
     [Fact]
     public void DomainErrorType_ErrorName_ReturnsRecordTypeName()
     {
         // Assert
-        new DomainErrorType.Empty().ErrorName.ShouldBe("Empty");
-        new DomainErrorType.TooShort(MinLength: 8).ErrorName.ShouldBe("TooShort");
-        new MyError().ErrorName.ShouldBe("MyError");
+        new DomainErrorKind.Empty().Name.ShouldBe("Empty");
+        new DomainErrorKind.TooShort(MinLength: 8).Name.ShouldBe("TooShort");
+        new MyError().Name.ShouldBe("MyError");
     }
 
     [Fact]
     public void DomainErrorType_TooShort_ContainsMinLengthContext()
     {
         // Arrange
-        var errorType = new DomainErrorType.TooShort(MinLength: 8);
+        var errorType = new DomainErrorKind.TooShort(MinLength: 8);
 
         // Assert
         errorType.MinLength.ShouldBe(8);
@@ -238,7 +238,7 @@ public class DomainErrorTests
     public void DomainErrorType_TooLong_ContainsMaxLengthContext()
     {
         // Arrange
-        var errorType = new DomainErrorType.TooLong(MaxLength: 100);
+        var errorType = new DomainErrorKind.TooLong(MaxLength: 100);
 
         // Assert
         errorType.MaxLength.ShouldBe(100);
@@ -248,7 +248,7 @@ public class DomainErrorTests
     public void DomainErrorType_WrongLength_ContainsExpectedContext()
     {
         // Arrange
-        var errorType = new DomainErrorType.WrongLength(Expected: 10);
+        var errorType = new DomainErrorKind.WrongLength(Expected: 10);
 
         // Assert
         errorType.Expected.ShouldBe(10);
@@ -259,7 +259,7 @@ public class DomainErrorTests
     {
         // Arrange
         var pattern = @"^[^@]+@[^@]+$";
-        var errorType = new DomainErrorType.InvalidFormat(Pattern: pattern);
+        var errorType = new DomainErrorKind.InvalidFormat(Pattern: pattern);
 
         // Assert
         errorType.Pattern.ShouldBe(pattern);
@@ -269,7 +269,7 @@ public class DomainErrorTests
     public void DomainErrorType_OutOfRange_ContainsBoundsContext()
     {
         // Arrange
-        var errorType = new DomainErrorType.OutOfRange(Min: "0", Max: "100");
+        var errorType = new DomainErrorKind.OutOfRange(Min: "0", Max: "100");
 
         // Assert
         errorType.Min.ShouldBe("0");
@@ -280,7 +280,7 @@ public class DomainErrorTests
     public void DomainErrorType_BelowMinimum_ContainsMinimumContext()
     {
         // Arrange
-        var errorType = new DomainErrorType.BelowMinimum(Minimum: "10");
+        var errorType = new DomainErrorKind.BelowMinimum(Minimum: "10");
 
         // Assert
         errorType.Minimum.ShouldBe("10");
@@ -290,7 +290,7 @@ public class DomainErrorTests
     public void DomainErrorType_AboveMaximum_ContainsMaximumContext()
     {
         // Arrange
-        var errorType = new DomainErrorType.AboveMaximum(Maximum: "1000");
+        var errorType = new DomainErrorKind.AboveMaximum(Maximum: "1000");
 
         // Assert
         errorType.Maximum.ShouldBe("1000");
@@ -303,14 +303,14 @@ public class DomainErrorTests
         var errorType = new MyCustomError();
 
         // Assert
-        errorType.ErrorName.ShouldBe("MyCustomError");
+        errorType.Name.ShouldBe("MyCustomError");
     }
 
     [Fact]
     public void DomainErrorType_InvalidTransition_ContainsStateContext()
     {
         // Arrange
-        var errorType = new DomainErrorType.InvalidTransition(FromState: "Paid", ToState: "Active");
+        var errorType = new DomainErrorKind.InvalidTransition(FromState: "Paid", ToState: "Active");
 
         // Assert
         errorType.FromState.ShouldBe("Paid");
@@ -321,7 +321,7 @@ public class DomainErrorTests
     public void DomainErrorType_InvalidTransition_DefaultsToNull()
     {
         // Arrange
-        var errorType = new DomainErrorType.InvalidTransition();
+        var errorType = new DomainErrorKind.InvalidTransition();
 
         // Assert
         errorType.FromState.ShouldBeNull();
@@ -330,20 +330,20 @@ public class DomainErrorTests
 
     #endregion
 
-    #region DomainErrorType record equality 테스트
+    #region DomainErrorKind record equality 테스트
 
     [Fact]
     public void DomainErrorType_Records_SupportEquality()
     {
         // Assert - same type, same values
-        new DomainErrorType.Empty().ShouldBe(new DomainErrorType.Empty());
-        new DomainErrorType.TooShort(8).ShouldBe(new DomainErrorType.TooShort(8));
+        new DomainErrorKind.Empty().ShouldBe(new DomainErrorKind.Empty());
+        new DomainErrorKind.TooShort(8).ShouldBe(new DomainErrorKind.TooShort(8));
 
         // Assert - same type, different values
-        new DomainErrorType.TooShort(8).ShouldNotBe(new DomainErrorType.TooShort(10));
+        new DomainErrorKind.TooShort(8).ShouldNotBe(new DomainErrorKind.TooShort(10));
 
         // Assert - different types
-        ((DomainErrorType)new DomainErrorType.Empty()).ShouldNotBe(new DomainErrorType.Null());
+        ((DomainErrorKind)new DomainErrorKind.Empty()).ShouldNotBe(new DomainErrorKind.Null());
     }
 
     #endregion

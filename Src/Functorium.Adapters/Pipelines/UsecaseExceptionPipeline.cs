@@ -36,7 +36,7 @@ internal sealed class UsecaseExceptionPipeline<TRequest, TResponse>
         {
             return TResponse.CreateFail(
                 AdapterError.FromException<UsecaseExceptionPipeline<TRequest, TResponse>>(
-                    new AdapterErrorType.PipelineException(),
+                    new AdapterErrorKind.PipelineException(),
                     exp));
         }
     }

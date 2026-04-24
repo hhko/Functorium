@@ -11,56 +11,56 @@ internal static class LayerErrorCore
 {
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error Create<TContext>(
-        string prefix, ErrorType errorType, string currentValue, string message) =>
+        string prefix, ErrorKind errorType, string currentValue, string message) =>
         ErrorFactory.CreateExpected(
-            $"{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}", currentValue, message);
+            $"{prefix}.{typeof(TContext).Name}.{errorType.Name}", currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error Create<TContext, TValue>(
-        string prefix, ErrorType errorType, TValue currentValue, string message)
+        string prefix, ErrorKind errorType, TValue currentValue, string message)
         where TValue : notnull =>
         ErrorFactory.CreateExpected(
-            $"{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}", currentValue, message);
+            $"{prefix}.{typeof(TContext).Name}.{errorType.Name}", currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error Create<TContext, T1, T2>(
-        string prefix, ErrorType errorType, T1 value1, T2 value2, string message)
+        string prefix, ErrorKind errorType, T1 value1, T2 value2, string message)
         where T1 : notnull
         where T2 : notnull =>
         ErrorFactory.CreateExpected(
-            $"{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}", value1, value2, message);
+            $"{prefix}.{typeof(TContext).Name}.{errorType.Name}", value1, value2, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error Create<TContext, T1, T2, T3>(
-        string prefix, ErrorType errorType, T1 value1, T2 value2, T3 value3, string message)
+        string prefix, ErrorKind errorType, T1 value1, T2 value2, T3 value3, string message)
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
         ErrorFactory.CreateExpected(
-            $"{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}", value1, value2, value3, message);
+            $"{prefix}.{typeof(TContext).Name}.{errorType.Name}", value1, value2, value3, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error Create(
-        string prefix, Type contextType, ErrorType errorType, string currentValue, string message) =>
+        string prefix, Type contextType, ErrorKind errorType, string currentValue, string message) =>
         ErrorFactory.CreateExpected(
-            $"{prefix}.{contextType.Name}.{errorType.ErrorName}", currentValue, message);
+            $"{prefix}.{contextType.Name}.{errorType.Name}", currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error ForContext(
-        string prefix, string contextName, ErrorType errorType, string currentValue, string message) =>
+        string prefix, string contextName, ErrorKind errorType, string currentValue, string message) =>
         ErrorFactory.CreateExpected(
-            $"{prefix}.{contextName}.{errorType.ErrorName}", currentValue, message);
+            $"{prefix}.{contextName}.{errorType.Name}", currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error ForContext<TValue>(
-        string prefix, string contextName, ErrorType errorType, TValue currentValue, string message)
+        string prefix, string contextName, ErrorKind errorType, TValue currentValue, string message)
         where TValue : notnull =>
         ErrorFactory.CreateExpected(
-            $"{prefix}.{contextName}.{errorType.ErrorName}", currentValue, message);
+            $"{prefix}.{contextName}.{errorType.Name}", currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error FromException<TContext>(
-        string prefix, ErrorType errorType, Exception exception) =>
+        string prefix, ErrorKind errorType, Exception exception) =>
         ErrorFactory.CreateExceptional(
-            $"{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}", exception);
+            $"{prefix}.{typeof(TContext).Name}.{errorType.Name}", exception);
 }

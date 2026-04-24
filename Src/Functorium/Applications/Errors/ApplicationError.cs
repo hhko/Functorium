@@ -7,17 +7,17 @@ namespace Functorium.Applications.Errors;
 
 /// <summary>
 /// 유스케이스의 애플리케이션 오류 생성을 위한 정적 팩토리 클래스.
-/// 에러 코드를 자동으로 "Application.{UsecaseName}.{ErrorName}" 형식으로 생성합니다.
+/// 에러 코드를 자동으로 "Application.{UsecaseName}.{Name}" 형식으로 생성합니다.
 /// </summary>
 /// <remarks>
 /// 사용 예시:
 /// <code>
-/// using static Functorium.Applications.Errors.ApplicationErrorType;
+/// using static Functorium.Applications.Errors.ApplicationErrorKind;
 ///
 /// ApplicationError.For&lt;CreateProductCommand&gt;(new AlreadyExists(), productId, "Product already exists");
 /// ApplicationError.For&lt;UpdateOrderCommand&gt;(new ValidationFailed("Quantity"), value, "Quantity must be positive");
 /// // 커스텀 에러: sealed record 파생 정의
-/// // public sealed record CannotDeleteShipped : ApplicationErrorType.Custom;
+/// // public sealed record CannotDeleteShipped : ApplicationErrorKind.Custom;
 /// ApplicationError.For&lt;DeleteOrderCommand&gt;(new CannotDeleteShipped(), orderId, "Cannot delete shipped order");
 /// </code>
 /// </remarks>
@@ -25,14 +25,14 @@ public static class ApplicationError
 {
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TUsecase>(
-        ApplicationErrorType errorType,
+        ApplicationErrorKind errorType,
         string currentValue,
         string message) =>
         LayerErrorCore.Create<TUsecase>(ErrorCodePrefixes.Application, errorType, currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TUsecase, TValue>(
-        ApplicationErrorType errorType,
+        ApplicationErrorKind errorType,
         TValue currentValue,
         string message)
         where TValue : notnull =>
@@ -40,7 +40,7 @@ public static class ApplicationError
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TUsecase, T1, T2>(
-        ApplicationErrorType errorType,
+        ApplicationErrorKind errorType,
         T1 value1,
         T2 value2,
         string message)
@@ -50,7 +50,7 @@ public static class ApplicationError
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TUsecase, T1, T2, T3>(
-        ApplicationErrorType errorType,
+        ApplicationErrorKind errorType,
         T1 value1,
         T2 value2,
         T3 value3,

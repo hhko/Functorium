@@ -170,7 +170,7 @@ public class ValidationRulesExtensionsTests
         var actual = ValidationRules<SampleValueObject>.NotEmpty("UPPERCASE")
             .ThenMust(
                 v => v == v.ToUpperInvariant(),
-                new DomainErrorType.NotUpperCase(),
+                new DomainErrorKind.NotUpperCase(),
                 "Value must be uppercase");
 
         // Assert
@@ -184,7 +184,7 @@ public class ValidationRulesExtensionsTests
         var actual = ValidationRules<SampleValueObject>.NotEmpty("lowercase")
             .ThenMust(
                 v => v == v.ToUpperInvariant(),
-                new DomainErrorType.NotUpperCase(),
+                new DomainErrorKind.NotUpperCase(),
                 v => $"Value '{v}' must be uppercase");
 
         // Assert

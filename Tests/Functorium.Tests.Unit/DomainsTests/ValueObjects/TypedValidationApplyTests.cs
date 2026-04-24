@@ -89,7 +89,7 @@ public class TypedValidationApplyTests
         // Act
         Validation<Error, int> directValidation = value2 > 0
             ? value2
-            : DomainError.For<ApplyTestValueObject2, int>(new DomainErrorType.NotPositive(), value2, "Must be positive");
+            : DomainError.For<ApplyTestValueObject2, int>(new DomainErrorKind.NotPositive(), value2, "Must be positive");
 
         var actual =
             (ValidationRules<ApplyTestValueObject1>.NotEmpty(value1), directValidation)
@@ -109,7 +109,7 @@ public class TypedValidationApplyTests
         // Act
         Validation<Error, string> directValidation = !string.IsNullOrEmpty(value1)
             ? value1
-            : DomainError.For<ApplyTestValueObject1>(new DomainErrorType.Empty(), value1, "Cannot be empty");
+            : DomainError.For<ApplyTestValueObject1>(new DomainErrorKind.Empty(), value1, "Cannot be empty");
 
         var actual =
             (directValidation, ValidationRules<ApplyTestValueObject2>.Positive(value2))
@@ -187,11 +187,11 @@ public class TypedValidationApplyTests
         // Act - ExchangeRate.Validate pattern
         Validation<Error, string> validateCurrency1 = baseCurrency.Length == 3
             ? baseCurrency
-            : DomainError.For<ApplyTestValueObject1>(new DomainErrorType.WrongLength(3), baseCurrency, "Must be 3 chars");
+            : DomainError.For<ApplyTestValueObject1>(new DomainErrorKind.WrongLength(3), baseCurrency, "Must be 3 chars");
 
         Validation<Error, string> validateCurrency2 = quoteCurrency.Length == 3
             ? quoteCurrency
-            : DomainError.For<ApplyTestValueObject1>(new DomainErrorType.WrongLength(3), quoteCurrency, "Must be 3 chars");
+            : DomainError.For<ApplyTestValueObject1>(new DomainErrorKind.WrongLength(3), quoteCurrency, "Must be 3 chars");
 
         var actual =
             (validateCurrency1, validateCurrency2, ValidationRules<ApplyTestValueObject3>.Positive(rate))
@@ -425,7 +425,7 @@ public class TypedValidationApplyTests
         Validation<Error, string> ValidateCurrency(string value) =>
             !string.IsNullOrEmpty(value) && value.Length == 3
                 ? value.ToUpperInvariant()
-                : DomainError.For<ApplyTestValueObject1>(new DomainErrorType.InvalidFormat(), value, "Invalid currency");
+                : DomainError.For<ApplyTestValueObject1>(new DomainErrorKind.InvalidFormat(), value, "Invalid currency");
 
         // Act - No casting needed for TypedValidation, no .As() needed at the end
         var actual =

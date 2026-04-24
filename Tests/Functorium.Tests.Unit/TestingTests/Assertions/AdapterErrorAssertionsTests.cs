@@ -11,8 +11,8 @@ public sealed class DummyAdapter { }
 [Trait(nameof(UnitTest), UnitTest.Functorium_Testing)]
 public class AdapterErrorAssertionsTests
 {
-    private sealed record RateLimited : AdapterErrorType.Custom;
-    private sealed record ServiceError : AdapterErrorType.Custom;
+    private sealed record RateLimited : AdapterErrorKind.Custom;
+    private sealed record ServiceError : AdapterErrorKind.Custom;
 
     #region Error - ShouldBeAdapterError<TAdapter>
 
@@ -21,12 +21,12 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter>(
-            new AdapterErrorType.PipelineValidation("PropertyName"),
+            new AdapterErrorKind.PipelineValidation("PropertyName"),
             currentValue: "invalid-value",
             message: "Validation failed");
 
         // Act & Assert (should not throw)
-        error.ShouldBeAdapterError<DummyAdapter>(new AdapterErrorType.PipelineValidation("PropertyName"));
+        error.ShouldBeAdapterError<DummyAdapter>(new AdapterErrorKind.PipelineValidation("PropertyName"));
     }
 
     [Fact]
@@ -34,13 +34,13 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter>(
-            new AdapterErrorType.PipelineValidation(),
+            new AdapterErrorKind.PipelineValidation(),
             currentValue: "value",
             message: "Validation failed");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            error.ShouldBeAdapterError<DummyAdapter>(new AdapterErrorType.PipelineException()));
+            error.ShouldBeAdapterError<DummyAdapter>(new AdapterErrorKind.PipelineException()));
     }
 
     [Fact]
@@ -61,12 +61,12 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter>(
-            new AdapterErrorType.Timeout(TimeSpan.FromSeconds(30)),
+            new AdapterErrorKind.Timeout(TimeSpan.FromSeconds(30)),
             currentValue: "https://api.example.com",
             message: "Request timed out");
 
         // Act & Assert (should not throw)
-        error.ShouldBeAdapterError<DummyAdapter>(new AdapterErrorType.Timeout(TimeSpan.FromSeconds(30)));
+        error.ShouldBeAdapterError<DummyAdapter>(new AdapterErrorKind.Timeout(TimeSpan.FromSeconds(30)));
     }
 
     #endregion
@@ -79,13 +79,13 @@ public class AdapterErrorAssertionsTests
         // Arrange
         var url = "https://api.example.com/resource";
         var error = AdapterError.For<DummyAdapter, string>(
-            new AdapterErrorType.ConnectionFailed("API"),
+            new AdapterErrorKind.ConnectionFailed("API"),
             currentValue: url,
             message: "Connection failed");
 
         // Act & Assert (should not throw)
         error.ShouldBeAdapterError<DummyAdapter, string>(
-            new AdapterErrorType.ConnectionFailed("API"),
+            new AdapterErrorKind.ConnectionFailed("API"),
             expectedCurrentValue: url);
     }
 
@@ -94,14 +94,14 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter, string>(
-            new AdapterErrorType.ConnectionFailed(),
+            new AdapterErrorKind.ConnectionFailed(),
             currentValue: "actual-url",
             message: "Connection failed");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             error.ShouldBeAdapterError<DummyAdapter, string>(
-                new AdapterErrorType.ConnectionFailed(),
+                new AdapterErrorKind.ConnectionFailed(),
                 expectedCurrentValue: "expected-url"));
     }
 
@@ -116,14 +116,14 @@ public class AdapterErrorAssertionsTests
         var serviceName = "PaymentService";
         var endpoint = "/api/payments";
         var error = AdapterError.For<DummyAdapter, string, string>(
-            new AdapterErrorType.ExternalServiceUnavailable(serviceName),
+            new AdapterErrorKind.ExternalServiceUnavailable(serviceName),
             serviceName,
             endpoint,
             message: "External service unavailable");
 
         // Act & Assert (should not throw)
         error.ShouldBeAdapterError<DummyAdapter, string, string>(
-            new AdapterErrorType.ExternalServiceUnavailable(serviceName),
+            new AdapterErrorKind.ExternalServiceUnavailable(serviceName),
             expectedValue1: serviceName,
             expectedValue2: endpoint);
     }
@@ -133,7 +133,7 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter, string, string>(
-            new AdapterErrorType.ExternalServiceUnavailable(),
+            new AdapterErrorKind.ExternalServiceUnavailable(),
             "actual-service",
             "/endpoint",
             message: "External service unavailable");
@@ -141,7 +141,7 @@ public class AdapterErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             error.ShouldBeAdapterError<DummyAdapter, string, string>(
-                new AdapterErrorType.ExternalServiceUnavailable(),
+                new AdapterErrorKind.ExternalServiceUnavailable(),
                 expectedValue1: "expected-service",
                 expectedValue2: "/endpoint"));
     }
@@ -202,11 +202,11 @@ public class AdapterErrorAssertionsTests
         // Arrange
         var exception = new InvalidOperationException("Test exception");
         var error = AdapterError.FromException<DummyAdapter>(
-            new AdapterErrorType.PipelineException(),
+            new AdapterErrorKind.PipelineException(),
             exception);
 
         // Act & Assert (should not throw)
-        error.ShouldBeAdapterExceptionalError<DummyAdapter>(new AdapterErrorType.PipelineException());
+        error.ShouldBeAdapterExceptionalError<DummyAdapter>(new AdapterErrorKind.PipelineException());
     }
 
     [Fact]
@@ -215,12 +215,12 @@ public class AdapterErrorAssertionsTests
         // Arrange
         var exception = new InvalidOperationException("Test exception");
         var error = AdapterError.FromException<DummyAdapter>(
-            new AdapterErrorType.PipelineException(),
+            new AdapterErrorKind.PipelineException(),
             exception);
 
         // Act & Assert (should not throw)
         error.ShouldBeAdapterExceptionalError<DummyAdapter, InvalidOperationException>(
-            new AdapterErrorType.PipelineException());
+            new AdapterErrorKind.PipelineException());
     }
 
     [Fact]
@@ -229,13 +229,13 @@ public class AdapterErrorAssertionsTests
         // Arrange
         var exception = new InvalidOperationException("Test exception");
         var error = AdapterError.FromException<DummyAdapter>(
-            new AdapterErrorType.PipelineException(),
+            new AdapterErrorKind.PipelineException(),
             exception);
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             error.ShouldBeAdapterExceptionalError<DummyAdapter, ArgumentException>(
-                new AdapterErrorType.PipelineException()));
+                new AdapterErrorKind.PipelineException()));
     }
 
     #endregion
@@ -247,13 +247,13 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter>(
-            new AdapterErrorType.PipelineValidation(),
+            new AdapterErrorKind.PipelineValidation(),
             currentValue: "value",
             message: "Validation failed");
         Fin<string> fin = error;
 
         // Act & Assert (should not throw)
-        fin.ShouldBeAdapterError<DummyAdapter, string>(new AdapterErrorType.PipelineValidation());
+        fin.ShouldBeAdapterError<DummyAdapter, string>(new AdapterErrorKind.PipelineValidation());
     }
 
     [Fact]
@@ -264,7 +264,7 @@ public class AdapterErrorAssertionsTests
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            fin.ShouldBeAdapterError<DummyAdapter, string>(new AdapterErrorType.PipelineValidation()));
+            fin.ShouldBeAdapterError<DummyAdapter, string>(new AdapterErrorKind.PipelineValidation()));
     }
 
     [Fact]
@@ -272,14 +272,14 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter>(
-            new AdapterErrorType.PipelineValidation(),
+            new AdapterErrorKind.PipelineValidation(),
             currentValue: "value",
             message: "Validation failed");
         Fin<string> fin = error;
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            fin.ShouldBeAdapterError<DummyAdapter, string>(new AdapterErrorType.PipelineException()));
+            fin.ShouldBeAdapterError<DummyAdapter, string>(new AdapterErrorKind.PipelineException()));
     }
 
     [Fact]
@@ -288,14 +288,14 @@ public class AdapterErrorAssertionsTests
         // Arrange
         var url = "https://api.example.com";
         var error = AdapterError.For<DummyAdapter, string>(
-            new AdapterErrorType.Timeout(),
+            new AdapterErrorKind.Timeout(),
             currentValue: url,
             message: "Request timed out");
         Fin<string> fin = error;
 
         // Act & Assert (should not throw)
         fin.ShouldBeAdapterError<DummyAdapter, string, string>(
-            new AdapterErrorType.Timeout(),
+            new AdapterErrorKind.Timeout(),
             expectedCurrentValue: url);
     }
 
@@ -305,12 +305,12 @@ public class AdapterErrorAssertionsTests
         // Arrange
         var exception = new TimeoutException("Request timed out");
         var error = AdapterError.FromException<DummyAdapter>(
-            new AdapterErrorType.PipelineException(),
+            new AdapterErrorKind.PipelineException(),
             exception);
         Fin<string> fin = error;
 
         // Act & Assert (should not throw)
-        fin.ShouldBeAdapterExceptionalError<DummyAdapter, string>(new AdapterErrorType.PipelineException());
+        fin.ShouldBeAdapterExceptionalError<DummyAdapter, string>(new AdapterErrorKind.PipelineException());
     }
 
     #endregion
@@ -322,13 +322,13 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter>(
-            new AdapterErrorType.PipelineValidation(),
+            new AdapterErrorKind.PipelineValidation(),
             currentValue: "value",
             message: "Validation failed");
         Validation<Error, string> validation = error;
 
         // Act & Assert (should not throw)
-        validation.ShouldHaveAdapterError<DummyAdapter, string>(new AdapterErrorType.PipelineValidation());
+        validation.ShouldHaveAdapterError<DummyAdapter, string>(new AdapterErrorKind.PipelineValidation());
     }
 
     [Fact]
@@ -339,7 +339,7 @@ public class AdapterErrorAssertionsTests
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            validation.ShouldHaveAdapterError<DummyAdapter, string>(new AdapterErrorType.PipelineValidation()));
+            validation.ShouldHaveAdapterError<DummyAdapter, string>(new AdapterErrorKind.PipelineValidation()));
     }
 
     [Fact]
@@ -347,14 +347,14 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter>(
-            new AdapterErrorType.PipelineValidation(),
+            new AdapterErrorKind.PipelineValidation(),
             currentValue: "value",
             message: "Validation failed");
         Validation<Error, string> validation = error;
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            validation.ShouldHaveAdapterError<DummyAdapter, string>(new AdapterErrorType.PipelineException()));
+            validation.ShouldHaveAdapterError<DummyAdapter, string>(new AdapterErrorKind.PipelineException()));
     }
 
     #endregion
@@ -366,13 +366,13 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter>(
-            new AdapterErrorType.Serialization("JSON"),
+            new AdapterErrorKind.Serialization("JSON"),
             currentValue: "invalid-json",
             message: "Serialization failed");
         Validation<Error, string> validation = error;
 
         // Act & Assert (should not throw)
-        validation.ShouldHaveOnlyAdapterError<DummyAdapter, string>(new AdapterErrorType.Serialization("JSON"));
+        validation.ShouldHaveOnlyAdapterError<DummyAdapter, string>(new AdapterErrorKind.Serialization("JSON"));
     }
 
     [Fact]
@@ -380,11 +380,11 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange - Use Apply pattern to combine errors
         var error1 = AdapterError.For<DummyAdapter>(
-            new AdapterErrorType.PipelineValidation(),
+            new AdapterErrorKind.PipelineValidation(),
             currentValue: "value1",
             message: "Validation failed 1");
         var error2 = AdapterError.For<DummyAdapter>(
-            new AdapterErrorType.Timeout(),
+            new AdapterErrorKind.Timeout(),
             currentValue: "value2",
             message: "Timeout");
 
@@ -395,7 +395,7 @@ public class AdapterErrorAssertionsTests
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            combined.ShouldHaveOnlyAdapterError<DummyAdapter, string>(new AdapterErrorType.PipelineValidation()));
+            combined.ShouldHaveOnlyAdapterError<DummyAdapter, string>(new AdapterErrorKind.PipelineValidation()));
     }
 
     #endregion
@@ -407,11 +407,11 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange - Use Apply pattern to combine errors
         var error1 = AdapterError.For<DummyAdapter>(
-            new AdapterErrorType.PipelineValidation(),
+            new AdapterErrorKind.PipelineValidation(),
             currentValue: "value1",
             message: "Validation failed");
         var error2 = AdapterError.For<DummyAdapter>(
-            new AdapterErrorType.Timeout(),
+            new AdapterErrorKind.Timeout(),
             currentValue: "value2",
             message: "Timeout");
 
@@ -422,8 +422,8 @@ public class AdapterErrorAssertionsTests
 
         // Act & Assert (should not throw)
         combined.ShouldHaveAdapterErrors<DummyAdapter, string>(
-            new AdapterErrorType.PipelineValidation(),
-            new AdapterErrorType.Timeout());
+            new AdapterErrorKind.PipelineValidation(),
+            new AdapterErrorKind.Timeout());
     }
 
     [Fact]
@@ -431,7 +431,7 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter>(
-            new AdapterErrorType.PipelineValidation(),
+            new AdapterErrorKind.PipelineValidation(),
             currentValue: "value",
             message: "Validation failed");
         Validation<Error, string> validation = error;
@@ -439,8 +439,8 @@ public class AdapterErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             validation.ShouldHaveAdapterErrors<DummyAdapter, string>(
-                new AdapterErrorType.PipelineValidation(),
-                new AdapterErrorType.Timeout())); // Timeout not present
+                new AdapterErrorKind.PipelineValidation(),
+                new AdapterErrorKind.Timeout())); // Timeout not present
     }
 
     #endregion
@@ -453,14 +453,14 @@ public class AdapterErrorAssertionsTests
         // Arrange
         var url = "https://api.example.com";
         var error = AdapterError.For<DummyAdapter, string>(
-            new AdapterErrorType.ConnectionFailed(),
+            new AdapterErrorKind.ConnectionFailed(),
             currentValue: url,
             message: "Connection failed");
         Validation<Error, string> validation = error;
 
         // Act & Assert (should not throw)
         validation.ShouldHaveAdapterError<DummyAdapter, string, string>(
-            new AdapterErrorType.ConnectionFailed(),
+            new AdapterErrorKind.ConnectionFailed(),
             expectedCurrentValue: url);
     }
 
@@ -469,7 +469,7 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter, string>(
-            new AdapterErrorType.ConnectionFailed(),
+            new AdapterErrorKind.ConnectionFailed(),
             currentValue: "actual-url",
             message: "Connection failed");
         Validation<Error, string> validation = error;
@@ -477,7 +477,7 @@ public class AdapterErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             validation.ShouldHaveAdapterError<DummyAdapter, string, string>(
-                new AdapterErrorType.ConnectionFailed(),
+                new AdapterErrorKind.ConnectionFailed(),
                 expectedCurrentValue: "expected-url"));
     }
 
@@ -492,7 +492,7 @@ public class AdapterErrorAssertionsTests
         var serviceName = "PaymentService";
         var endpoint = "/api/payments";
         var error = AdapterError.For<DummyAdapter, string, string>(
-            new AdapterErrorType.ExternalServiceUnavailable(),
+            new AdapterErrorKind.ExternalServiceUnavailable(),
             serviceName,
             endpoint,
             message: "External service unavailable");
@@ -500,7 +500,7 @@ public class AdapterErrorAssertionsTests
 
         // Act & Assert (should not throw)
         validation.ShouldHaveAdapterError<DummyAdapter, string, string, string>(
-            new AdapterErrorType.ExternalServiceUnavailable(),
+            new AdapterErrorKind.ExternalServiceUnavailable(),
             expectedValue1: serviceName,
             expectedValue2: endpoint);
     }
@@ -510,7 +510,7 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter, string, string>(
-            new AdapterErrorType.ExternalServiceUnavailable(),
+            new AdapterErrorKind.ExternalServiceUnavailable(),
             "actual-service",
             "/endpoint",
             message: "External service unavailable");
@@ -519,7 +519,7 @@ public class AdapterErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             validation.ShouldHaveAdapterError<DummyAdapter, string, string, string>(
-                new AdapterErrorType.ExternalServiceUnavailable(),
+                new AdapterErrorKind.ExternalServiceUnavailable(),
                 expectedValue1: "expected-service",
                 expectedValue2: "/endpoint"));
     }
@@ -585,13 +585,13 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange - Error is for ValidationPipeline
         var error = AdapterError.For<ValidationPipeline>(
-            new AdapterErrorType.PipelineValidation(),
+            new AdapterErrorKind.PipelineValidation(),
             currentValue: "value",
             message: "Validation failed");
 
         // Act & Assert - Checking for ExceptionPipeline should fail
         Should.Throw<ShouldAssertException>(() =>
-            error.ShouldBeAdapterError<ExceptionPipeline>(new AdapterErrorType.PipelineValidation()));
+            error.ShouldBeAdapterError<ExceptionPipeline>(new AdapterErrorKind.PipelineValidation()));
     }
 
     [Fact]
@@ -599,12 +599,12 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<ValidationPipeline>(
-            new AdapterErrorType.PipelineValidation(),
+            new AdapterErrorKind.PipelineValidation(),
             currentValue: "value",
             message: "Validation failed");
 
         // Act & Assert (should not throw)
-        error.ShouldBeAdapterError<ValidationPipeline>(new AdapterErrorType.PipelineValidation());
+        error.ShouldBeAdapterError<ValidationPipeline>(new AdapterErrorKind.PipelineValidation());
     }
 
     #endregion

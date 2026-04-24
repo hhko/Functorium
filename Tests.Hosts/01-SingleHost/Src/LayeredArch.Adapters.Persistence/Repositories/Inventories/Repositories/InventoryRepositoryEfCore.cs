@@ -6,7 +6,7 @@ using Functorium.Domains.Specifications.Expressions;
 using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Products;
 using Microsoft.EntityFrameworkCore.Query;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.Inventories.Repositories;
 

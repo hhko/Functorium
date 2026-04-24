@@ -13,11 +13,11 @@ namespace Functorium.Abstractions.Errors;
 /// 레이어 접두사 상수는 <see cref="ErrorCodePrefixes"/>에 internal로
 /// 정의되어 있으며, 레이어 팩토리가 내부적으로 사용합니다.
 /// </remarks>
-public abstract record ErrorType
+public abstract record ErrorKind
 {
     /// <summary>
     /// 에러 코드에 사용될 에러 이름
     /// 기본적으로 record 타입 이름을 반환
     /// </summary>
-    public virtual string ErrorName => GetType().Name;
+    public virtual string Name => GetType().Name;
 }

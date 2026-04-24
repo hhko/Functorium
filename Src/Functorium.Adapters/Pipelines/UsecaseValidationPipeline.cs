@@ -54,7 +54,7 @@ internal sealed class UsecaseValidationPipeline<TRequest, TResponse>
                 //        - "MinLength": 3,
                 //        - "MaxLength": -1,
                 //        - "TotalLength": 0,
-                new AdapterErrorType.PipelineValidation(failure.PropertyName),
+                new AdapterErrorKind.PipelineValidation(failure.PropertyName),
                 failure.FormattedMessagePlaceholderValues,
                 $"{failure.PropertyName}: {failure.ErrorMessage}"))
             .Distinct()

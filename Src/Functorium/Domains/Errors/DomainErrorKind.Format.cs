@@ -1,20 +1,20 @@
 namespace Functorium.Domains.Errors;
 
-public abstract partial record DomainErrorType
+public abstract partial record DomainErrorKind
 {
     /// <summary>
     /// 값의 형식이 유효하지 않음
     /// </summary>
     /// <param name="Pattern">기대되는 형식 패턴 (선택적)</param>
-    public sealed record InvalidFormat(string? Pattern = null) : DomainErrorType;
+    public sealed record InvalidFormat(string? Pattern = null) : DomainErrorKind;
 
     /// <summary>
     /// 값이 대문자가 아님 (대문자여야 함)
     /// </summary>
-    public sealed record NotUpperCase : DomainErrorType;
+    public sealed record NotUpperCase : DomainErrorKind;
 
     /// <summary>
     /// 값이 소문자가 아님 (소문자여야 함)
     /// </summary>
-    public sealed record NotLowerCase : DomainErrorType;
+    public sealed record NotLowerCase : DomainErrorKind;
 }

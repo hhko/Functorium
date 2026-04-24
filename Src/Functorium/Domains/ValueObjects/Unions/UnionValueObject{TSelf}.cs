@@ -24,7 +24,7 @@ public abstract record UnionValueObject<TSelf> : UnionValueObject
 
         return Fin.Fail<TTarget>(
             DomainError.For<TSelf>(
-                new DomainErrorType.InvalidTransition(
+                new DomainErrorKind.InvalidTransition(
                     FromState: GetType().Name,
                     ToState: typeof(TTarget).Name),
                 ToString()!,

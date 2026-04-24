@@ -11,9 +11,9 @@ public sealed class DummyUsecase { }
 [Trait(nameof(UnitTest), UnitTest.Functorium_Testing)]
 public class ApplicationErrorAssertionsTests
 {
-    private sealed record CannotProcess : ApplicationErrorType.Custom;
-    private sealed record ProductNotInOrder : ApplicationErrorType.Custom;
-    private sealed record InsufficientStock : ApplicationErrorType.Custom;
+    private sealed record CannotProcess : ApplicationErrorKind.Custom;
+    private sealed record ProductNotInOrder : ApplicationErrorKind.Custom;
+    private sealed record InsufficientStock : ApplicationErrorKind.Custom;
 
     #region Error - ShouldBeApplicationError<TUsecase>
 
@@ -22,12 +22,12 @@ public class ApplicationErrorAssertionsTests
     {
         // Arrange
         var error = ApplicationError.For<DummyUsecase>(
-            new ApplicationErrorType.AlreadyExists(),
+            new ApplicationErrorKind.AlreadyExists(),
             currentValue: "test-id",
             message: "Already exists");
 
         // Act & Assert (should not throw)
-        error.ShouldBeApplicationError<DummyUsecase>(new ApplicationErrorType.AlreadyExists());
+        error.ShouldBeApplicationError<DummyUsecase>(new ApplicationErrorKind.AlreadyExists());
     }
 
     [Fact]
@@ -35,13 +35,13 @@ public class ApplicationErrorAssertionsTests
     {
         // Arrange
         var error = ApplicationError.For<DummyUsecase>(
-            new ApplicationErrorType.AlreadyExists(),
+            new ApplicationErrorKind.AlreadyExists(),
             currentValue: "test-id",
             message: "Already exists");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            error.ShouldBeApplicationError<DummyUsecase>(new ApplicationErrorType.NotFound()));
+            error.ShouldBeApplicationError<DummyUsecase>(new ApplicationErrorKind.NotFound()));
     }
 
     [Fact]
@@ -62,12 +62,12 @@ public class ApplicationErrorAssertionsTests
     {
         // Arrange
         var error = ApplicationError.For<DummyUsecase>(
-            new ApplicationErrorType.ValidationFailed("Name"),
+            new ApplicationErrorKind.ValidationFailed("Name"),
             currentValue: "",
             message: "Name is required");
 
         // Act & Assert (should not throw)
-        error.ShouldBeApplicationError<DummyUsecase>(new ApplicationErrorType.ValidationFailed("Name"));
+        error.ShouldBeApplicationError<DummyUsecase>(new ApplicationErrorKind.ValidationFailed("Name"));
     }
 
     #endregion
@@ -79,13 +79,13 @@ public class ApplicationErrorAssertionsTests
     {
         // Arrange
         var error = ApplicationError.For<DummyUsecase, Guid>(
-            new ApplicationErrorType.NotFound(),
+            new ApplicationErrorKind.NotFound(),
             currentValue: Guid.Empty,
             message: "Entity not found");
 
         // Act & Assert (should not throw)
         error.ShouldBeApplicationError<DummyUsecase, Guid>(
-            new ApplicationErrorType.NotFound(),
+            new ApplicationErrorKind.NotFound(),
             expectedCurrentValue: Guid.Empty);
     }
 
@@ -95,14 +95,14 @@ public class ApplicationErrorAssertionsTests
         // Arrange
         var actualId = Guid.NewGuid();
         var error = ApplicationError.For<DummyUsecase, Guid>(
-            new ApplicationErrorType.NotFound(),
+            new ApplicationErrorKind.NotFound(),
             currentValue: actualId,
             message: "Entity not found");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             error.ShouldBeApplicationError<DummyUsecase, Guid>(
-                new ApplicationErrorType.NotFound(),
+                new ApplicationErrorKind.NotFound(),
                 expectedCurrentValue: Guid.Empty));
     }
 
@@ -207,13 +207,13 @@ public class ApplicationErrorAssertionsTests
     {
         // Arrange
         var error = ApplicationError.For<DummyUsecase>(
-            new ApplicationErrorType.AlreadyExists(),
+            new ApplicationErrorKind.AlreadyExists(),
             currentValue: "test-id",
             message: "Already exists");
         Fin<string> fin = error;
 
         // Act & Assert (should not throw)
-        fin.ShouldBeApplicationError<DummyUsecase, string>(new ApplicationErrorType.AlreadyExists());
+        fin.ShouldBeApplicationError<DummyUsecase, string>(new ApplicationErrorKind.AlreadyExists());
     }
 
     [Fact]
@@ -224,7 +224,7 @@ public class ApplicationErrorAssertionsTests
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            fin.ShouldBeApplicationError<DummyUsecase, string>(new ApplicationErrorType.AlreadyExists()));
+            fin.ShouldBeApplicationError<DummyUsecase, string>(new ApplicationErrorKind.AlreadyExists()));
     }
 
     [Fact]
@@ -232,14 +232,14 @@ public class ApplicationErrorAssertionsTests
     {
         // Arrange
         var error = ApplicationError.For<DummyUsecase>(
-            new ApplicationErrorType.AlreadyExists(),
+            new ApplicationErrorKind.AlreadyExists(),
             currentValue: "test-id",
             message: "Already exists");
         Fin<string> fin = error;
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            fin.ShouldBeApplicationError<DummyUsecase, string>(new ApplicationErrorType.NotFound()));
+            fin.ShouldBeApplicationError<DummyUsecase, string>(new ApplicationErrorKind.NotFound()));
     }
 
     [Fact]
@@ -248,14 +248,14 @@ public class ApplicationErrorAssertionsTests
         // Arrange
         var entityId = Guid.NewGuid();
         var error = ApplicationError.For<DummyUsecase, Guid>(
-            new ApplicationErrorType.NotFound(),
+            new ApplicationErrorKind.NotFound(),
             currentValue: entityId,
             message: "Entity not found");
         Fin<Guid> fin = error;
 
         // Act & Assert (should not throw)
         fin.ShouldBeApplicationError<DummyUsecase, Guid, Guid>(
-            new ApplicationErrorType.NotFound(),
+            new ApplicationErrorKind.NotFound(),
             expectedCurrentValue: entityId);
     }
 
@@ -268,13 +268,13 @@ public class ApplicationErrorAssertionsTests
     {
         // Arrange
         var error = ApplicationError.For<DummyUsecase>(
-            new ApplicationErrorType.AlreadyExists(),
+            new ApplicationErrorKind.AlreadyExists(),
             currentValue: "test-id",
             message: "Already exists");
         Validation<Error, string> validation = error;
 
         // Act & Assert (should not throw)
-        validation.ShouldHaveApplicationError<DummyUsecase, string>(new ApplicationErrorType.AlreadyExists());
+        validation.ShouldHaveApplicationError<DummyUsecase, string>(new ApplicationErrorKind.AlreadyExists());
     }
 
     [Fact]
@@ -285,7 +285,7 @@ public class ApplicationErrorAssertionsTests
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            validation.ShouldHaveApplicationError<DummyUsecase, string>(new ApplicationErrorType.AlreadyExists()));
+            validation.ShouldHaveApplicationError<DummyUsecase, string>(new ApplicationErrorKind.AlreadyExists()));
     }
 
     [Fact]
@@ -293,14 +293,14 @@ public class ApplicationErrorAssertionsTests
     {
         // Arrange
         var error = ApplicationError.For<DummyUsecase>(
-            new ApplicationErrorType.AlreadyExists(),
+            new ApplicationErrorKind.AlreadyExists(),
             currentValue: "test-id",
             message: "Already exists");
         Validation<Error, string> validation = error;
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            validation.ShouldHaveApplicationError<DummyUsecase, string>(new ApplicationErrorType.NotFound()));
+            validation.ShouldHaveApplicationError<DummyUsecase, string>(new ApplicationErrorKind.NotFound()));
     }
 
     #endregion
@@ -312,13 +312,13 @@ public class ApplicationErrorAssertionsTests
     {
         // Arrange
         var error = ApplicationError.For<DummyUsecase>(
-            new ApplicationErrorType.ConcurrencyConflict(),
+            new ApplicationErrorKind.ConcurrencyConflict(),
             currentValue: "version-1",
             message: "Concurrency conflict");
         Validation<Error, string> validation = error;
 
         // Act & Assert (should not throw)
-        validation.ShouldHaveOnlyApplicationError<DummyUsecase, string>(new ApplicationErrorType.ConcurrencyConflict());
+        validation.ShouldHaveOnlyApplicationError<DummyUsecase, string>(new ApplicationErrorKind.ConcurrencyConflict());
     }
 
     [Fact]
@@ -326,11 +326,11 @@ public class ApplicationErrorAssertionsTests
     {
         // Arrange - Use Apply pattern to combine errors
         var error1 = ApplicationError.For<DummyUsecase>(
-            new ApplicationErrorType.AlreadyExists(),
+            new ApplicationErrorKind.AlreadyExists(),
             currentValue: "id-1",
             message: "Already exists");
         var error2 = ApplicationError.For<DummyUsecase>(
-            new ApplicationErrorType.ValidationFailed("Name"),
+            new ApplicationErrorKind.ValidationFailed("Name"),
             currentValue: "",
             message: "Name is required");
 
@@ -341,7 +341,7 @@ public class ApplicationErrorAssertionsTests
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            combined.ShouldHaveOnlyApplicationError<DummyUsecase, string>(new ApplicationErrorType.AlreadyExists()));
+            combined.ShouldHaveOnlyApplicationError<DummyUsecase, string>(new ApplicationErrorKind.AlreadyExists()));
     }
 
     #endregion
@@ -353,11 +353,11 @@ public class ApplicationErrorAssertionsTests
     {
         // Arrange - Use Apply pattern to combine errors
         var error1 = ApplicationError.For<DummyUsecase>(
-            new ApplicationErrorType.AlreadyExists(),
+            new ApplicationErrorKind.AlreadyExists(),
             currentValue: "id-1",
             message: "Already exists");
         var error2 = ApplicationError.For<DummyUsecase>(
-            new ApplicationErrorType.ValidationFailed("Name"),
+            new ApplicationErrorKind.ValidationFailed("Name"),
             currentValue: "",
             message: "Name is required");
 
@@ -368,8 +368,8 @@ public class ApplicationErrorAssertionsTests
 
         // Act & Assert (should not throw)
         combined.ShouldHaveApplicationErrors<DummyUsecase, string>(
-            new ApplicationErrorType.AlreadyExists(),
-            new ApplicationErrorType.ValidationFailed("Name"));
+            new ApplicationErrorKind.AlreadyExists(),
+            new ApplicationErrorKind.ValidationFailed("Name"));
     }
 
     [Fact]
@@ -377,7 +377,7 @@ public class ApplicationErrorAssertionsTests
     {
         // Arrange
         var error = ApplicationError.For<DummyUsecase>(
-            new ApplicationErrorType.AlreadyExists(),
+            new ApplicationErrorKind.AlreadyExists(),
             currentValue: "id-1",
             message: "Already exists");
         Validation<Error, string> validation = error;
@@ -385,8 +385,8 @@ public class ApplicationErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             validation.ShouldHaveApplicationErrors<DummyUsecase, string>(
-                new ApplicationErrorType.AlreadyExists(),
-                new ApplicationErrorType.ValidationFailed())); // ValidationFailed not present
+                new ApplicationErrorKind.AlreadyExists(),
+                new ApplicationErrorKind.ValidationFailed())); // ValidationFailed not present
     }
 
     #endregion
@@ -399,14 +399,14 @@ public class ApplicationErrorAssertionsTests
         // Arrange
         var entityId = Guid.NewGuid();
         var error = ApplicationError.For<DummyUsecase, Guid>(
-            new ApplicationErrorType.NotFound(),
+            new ApplicationErrorKind.NotFound(),
             currentValue: entityId,
             message: "Entity not found");
         Validation<Error, Guid> validation = error;
 
         // Act & Assert (should not throw)
         validation.ShouldHaveApplicationError<DummyUsecase, Guid, Guid>(
-            new ApplicationErrorType.NotFound(),
+            new ApplicationErrorKind.NotFound(),
             expectedCurrentValue: entityId);
     }
 
@@ -416,7 +416,7 @@ public class ApplicationErrorAssertionsTests
         // Arrange
         var entityId = Guid.NewGuid();
         var error = ApplicationError.For<DummyUsecase, Guid>(
-            new ApplicationErrorType.NotFound(),
+            new ApplicationErrorKind.NotFound(),
             currentValue: entityId,
             message: "Entity not found");
         Validation<Error, Guid> validation = error;
@@ -424,7 +424,7 @@ public class ApplicationErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             validation.ShouldHaveApplicationError<DummyUsecase, Guid, Guid>(
-                new ApplicationErrorType.NotFound(),
+                new ApplicationErrorKind.NotFound(),
                 expectedCurrentValue: Guid.Empty));
     }
 
@@ -537,13 +537,13 @@ public class ApplicationErrorAssertionsTests
     {
         // Arrange - Error is for CreateProductCommand
         var error = ApplicationError.For<CreateProductCommand>(
-            new ApplicationErrorType.AlreadyExists(),
+            new ApplicationErrorKind.AlreadyExists(),
             currentValue: "product-id",
             message: "Product already exists");
 
         // Act & Assert - Checking for UpdateProductCommand should fail
         Should.Throw<ShouldAssertException>(() =>
-            error.ShouldBeApplicationError<UpdateProductCommand>(new ApplicationErrorType.AlreadyExists()));
+            error.ShouldBeApplicationError<UpdateProductCommand>(new ApplicationErrorKind.AlreadyExists()));
     }
 
     [Fact]
@@ -551,12 +551,12 @@ public class ApplicationErrorAssertionsTests
     {
         // Arrange
         var error = ApplicationError.For<CreateProductCommand>(
-            new ApplicationErrorType.AlreadyExists(),
+            new ApplicationErrorKind.AlreadyExists(),
             currentValue: "product-id",
             message: "Product already exists");
 
         // Act & Assert (should not throw)
-        error.ShouldBeApplicationError<CreateProductCommand>(new ApplicationErrorType.AlreadyExists());
+        error.ShouldBeApplicationError<CreateProductCommand>(new ApplicationErrorKind.AlreadyExists());
     }
 
     #endregion

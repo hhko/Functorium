@@ -7,7 +7,7 @@ using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using LayeredArch.Domain.AggregateRoots.Orders.ValueObjects;
 using LayeredArch.Domain.AggregateRoots.Products;
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 namespace LayeredArch.Application.Usecases.Orders.Commands;
 

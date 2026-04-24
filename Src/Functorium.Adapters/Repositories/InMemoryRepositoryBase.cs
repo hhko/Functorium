@@ -5,7 +5,7 @@ using Functorium.Domains.Entities;
 using Functorium.Abstractions.Observabilities;
 using Functorium.Domains.Repositories;
 using Functorium.Domains.Specifications;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 using static LanguageExt.Prelude;
 
 namespace Functorium.Adapters.Repositories;

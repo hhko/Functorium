@@ -2,7 +2,7 @@ using LayeredArch.Domain.AggregateRoots.Products;
 using LayeredArch.Domain.AggregateRoots.Products.Specifications;
 using Functorium.Applications.Errors;
 using Functorium.Applications.Linq;
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 namespace LayeredArch.Application.Usecases.Products.Commands;
 

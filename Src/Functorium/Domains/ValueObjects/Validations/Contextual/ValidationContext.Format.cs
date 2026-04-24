@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 namespace Functorium.Domains.ValueObjects.Validations.Contextual;
 

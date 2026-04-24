@@ -9,10 +9,10 @@ namespace Functorium.Adapters.Errors;
 /// <remarks>
 /// 사용 예시:
 /// <code>
-/// using static Functorium.Adapters.Errors.AdapterErrorType;
+/// using static Functorium.Adapters.Errors.AdapterErrorKind;
 ///
 /// AdapterError.For&lt;UsecaseValidationPipeline&gt;(new PipelineValidation("PropertyName"), value, "Validation failed");
 /// AdapterError.FromException&lt;UsecaseExceptionPipeline&gt;(new PipelineException(), exception);
 /// </code>
 /// </remarks>
-public abstract partial record AdapterErrorType : ErrorType;
+public abstract partial record AdapterErrorKind : ErrorKind;

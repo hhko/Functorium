@@ -581,7 +581,7 @@ public class ValidationRulesContextualTests
         var actual = ValidationRules.For(TestContext).Must(
             value,
             v => v == v.ToUpperInvariant(),
-            new DomainErrorType.NotUpperCase(),
+            new DomainErrorKind.NotUpperCase(),
             "Value must be uppercase");
 
         // Assert
@@ -598,7 +598,7 @@ public class ValidationRulesContextualTests
         var actual = ValidationRules.For(TestContext).Must(
             value,
             v => v == v.ToUpperInvariant(),
-            new DomainErrorType.NotUpperCase(),
+            new DomainErrorKind.NotUpperCase(),
             "Value must be uppercase");
 
         // Assert

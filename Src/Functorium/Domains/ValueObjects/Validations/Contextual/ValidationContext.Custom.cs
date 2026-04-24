@@ -21,7 +21,7 @@ public readonly partial struct ValidationContext
     public ContextualValidation<T> Must<T>(
         T value,
         Func<T, bool> predicate,
-        DomainErrorType errorType,
+        DomainErrorKind errorType,
         string message)
         where T : notnull =>
         new(MustInternal(value, predicate, errorType, message), ContextName);
@@ -30,7 +30,7 @@ public readonly partial struct ValidationContext
     internal Validation<Error, T> MustInternal<T>(
         T value,
         Func<T, bool> predicate,
-        DomainErrorType errorType,
+        DomainErrorKind errorType,
         string message)
         where T : notnull =>
         predicate(value)

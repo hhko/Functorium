@@ -14,46 +14,46 @@ public static class AdapterErrorAssertions
 
     public static void ShouldBeAdapterError<TAdapter>(
         this Error error,
-        AdapterErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldBeError<TAdapter>(error, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName);
+        AdapterErrorKind expectedErrorType) =>
+        ErrorAssertionCore.ShouldBeError<TAdapter>(error, ErrorCodePrefixes.Adapter, expectedErrorType.Name);
 
     public static void ShouldBeAdapterError<TAdapter, TValue>(
         this Error error,
-        AdapterErrorType expectedErrorType,
+        AdapterErrorKind expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull =>
-        ErrorAssertionCore.ShouldBeError<TAdapter, TValue>(error, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName, expectedCurrentValue);
+        ErrorAssertionCore.ShouldBeError<TAdapter, TValue>(error, ErrorCodePrefixes.Adapter, expectedErrorType.Name, expectedCurrentValue);
 
     public static void ShouldBeAdapterError<TAdapter, T1, T2>(
         this Error error,
-        AdapterErrorType expectedErrorType,
+        AdapterErrorKind expectedErrorType,
         T1 expectedValue1,
         T2 expectedValue2)
         where T1 : notnull
         where T2 : notnull =>
-        ErrorAssertionCore.ShouldBeError<TAdapter, T1, T2>(error, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
+        ErrorAssertionCore.ShouldBeError<TAdapter, T1, T2>(error, ErrorCodePrefixes.Adapter, expectedErrorType.Name, expectedValue1, expectedValue2);
 
     public static void ShouldBeAdapterError<TAdapter, T1, T2, T3>(
         this Error error,
-        AdapterErrorType expectedErrorType,
+        AdapterErrorKind expectedErrorType,
         T1 expectedValue1,
         T2 expectedValue2,
         T3 expectedValue3)
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        ErrorAssertionCore.ShouldBeError<TAdapter, T1, T2, T3>(error, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
+        ErrorAssertionCore.ShouldBeError<TAdapter, T1, T2, T3>(error, ErrorCodePrefixes.Adapter, expectedErrorType.Name, expectedValue1, expectedValue2, expectedValue3);
 
     public static void ShouldBeAdapterExceptionalError<TAdapter>(
         this Error error,
-        AdapterErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldBeExceptionalError<TAdapter>(error, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName);
+        AdapterErrorKind expectedErrorType) =>
+        ErrorAssertionCore.ShouldBeExceptionalError<TAdapter>(error, ErrorCodePrefixes.Adapter, expectedErrorType.Name);
 
     public static void ShouldBeAdapterExceptionalError<TAdapter, TException>(
         this Error error,
-        AdapterErrorType expectedErrorType)
+        AdapterErrorKind expectedErrorType)
         where TException : Exception =>
-        ErrorAssertionCore.ShouldBeExceptionalError<TAdapter, TException>(error, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldBeExceptionalError<TAdapter, TException>(error, ErrorCodePrefixes.Adapter, expectedErrorType.Name);
 
     #endregion
 
@@ -61,20 +61,20 @@ public static class AdapterErrorAssertions
 
     public static void ShouldBeAdapterError<TAdapter, T>(
         this Fin<T> fin,
-        AdapterErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldBeFinError<TAdapter, T>(fin, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName);
+        AdapterErrorKind expectedErrorType) =>
+        ErrorAssertionCore.ShouldBeFinError<TAdapter, T>(fin, ErrorCodePrefixes.Adapter, expectedErrorType.Name);
 
     public static void ShouldBeAdapterError<TAdapter, T, TValue>(
         this Fin<T> fin,
-        AdapterErrorType expectedErrorType,
+        AdapterErrorKind expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull =>
-        ErrorAssertionCore.ShouldBeFinError<TAdapter, T, TValue>(fin, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName, expectedCurrentValue);
+        ErrorAssertionCore.ShouldBeFinError<TAdapter, T, TValue>(fin, ErrorCodePrefixes.Adapter, expectedErrorType.Name, expectedCurrentValue);
 
     public static void ShouldBeAdapterExceptionalError<TAdapter, T>(
         this Fin<T> fin,
-        AdapterErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldBeFinExceptionalError<TAdapter, T>(fin, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName);
+        AdapterErrorKind expectedErrorType) =>
+        ErrorAssertionCore.ShouldBeFinExceptionalError<TAdapter, T>(fin, ErrorCodePrefixes.Adapter, expectedErrorType.Name);
 
     #endregion
 
@@ -82,47 +82,47 @@ public static class AdapterErrorAssertions
 
     public static void ShouldHaveAdapterError<TAdapter, T>(
         this Validation<Error, T> validation,
-        AdapterErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldHaveError<TAdapter, T>(validation, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName);
+        AdapterErrorKind expectedErrorType) =>
+        ErrorAssertionCore.ShouldHaveError<TAdapter, T>(validation, ErrorCodePrefixes.Adapter, expectedErrorType.Name);
 
     public static void ShouldHaveOnlyAdapterError<TAdapter, T>(
         this Validation<Error, T> validation,
-        AdapterErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldHaveOnlyError<TAdapter, T>(validation, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName);
+        AdapterErrorKind expectedErrorType) =>
+        ErrorAssertionCore.ShouldHaveOnlyError<TAdapter, T>(validation, ErrorCodePrefixes.Adapter, expectedErrorType.Name);
 
     public static void ShouldHaveAdapterErrors<TAdapter, T>(
         this Validation<Error, T> validation,
-        params AdapterErrorType[] expectedErrorTypes) =>
+        params AdapterErrorKind[] expectedErrorTypes) =>
         ErrorAssertionCore.ShouldHaveErrors<TAdapter, T>(
             validation, ErrorCodePrefixes.Adapter,
-            expectedErrorTypes.Select(et => et.ErrorName).ToArray());
+            expectedErrorTypes.Select(et => et.Name).ToArray());
 
     public static void ShouldHaveAdapterError<TAdapter, T, TValue>(
         this Validation<Error, T> validation,
-        AdapterErrorType expectedErrorType,
+        AdapterErrorKind expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull =>
-        ErrorAssertionCore.ShouldHaveError<TAdapter, T, TValue>(validation, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName, expectedCurrentValue);
+        ErrorAssertionCore.ShouldHaveError<TAdapter, T, TValue>(validation, ErrorCodePrefixes.Adapter, expectedErrorType.Name, expectedCurrentValue);
 
     public static void ShouldHaveAdapterError<TAdapter, T, T1, T2>(
         this Validation<Error, T> validation,
-        AdapterErrorType expectedErrorType,
+        AdapterErrorKind expectedErrorType,
         T1 expectedValue1,
         T2 expectedValue2)
         where T1 : notnull
         where T2 : notnull =>
-        ErrorAssertionCore.ShouldHaveError<TAdapter, T, T1, T2>(validation, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
+        ErrorAssertionCore.ShouldHaveError<TAdapter, T, T1, T2>(validation, ErrorCodePrefixes.Adapter, expectedErrorType.Name, expectedValue1, expectedValue2);
 
     public static void ShouldHaveAdapterError<TAdapter, T, T1, T2, T3>(
         this Validation<Error, T> validation,
-        AdapterErrorType expectedErrorType,
+        AdapterErrorKind expectedErrorType,
         T1 expectedValue1,
         T2 expectedValue2,
         T3 expectedValue3)
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        ErrorAssertionCore.ShouldHaveError<TAdapter, T, T1, T2, T3>(validation, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
+        ErrorAssertionCore.ShouldHaveError<TAdapter, T, T1, T2, T3>(validation, ErrorCodePrefixes.Adapter, expectedErrorType.Name, expectedValue1, expectedValue2, expectedValue3);
 
     #endregion
 }

@@ -9,10 +9,10 @@ namespace Functorium.Applications.Errors;
 /// <remarks>
 /// 사용 예시:
 /// <code>
-/// using static Functorium.Applications.Errors.ApplicationErrorType;
+/// using static Functorium.Applications.Errors.ApplicationErrorKind;
 ///
 /// ApplicationError.For&lt;CreateProductCommand&gt;(new AlreadyExists(), productId, "Product already exists");
 /// ApplicationError.For&lt;UpdateOrderCommand&gt;(new ValidationFailed("Quantity"), value, "Quantity must be positive");
 /// </code>
 /// </remarks>
-public abstract partial record ApplicationErrorType : ErrorType;
+public abstract partial record ApplicationErrorKind : ErrorKind;

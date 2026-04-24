@@ -5,7 +5,7 @@ using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 using static LanguageExt.Prelude;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.Products.Repositories;

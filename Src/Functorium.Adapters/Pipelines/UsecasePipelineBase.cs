@@ -51,7 +51,7 @@ namespace Functorium.Adapters.Pipelines;
 //    - EndTime
 //
 //                  | ExpectedError | ExceptionalError | ManyErrors | 기본
-//  - ErrorType     | O                 | O                    | O          | O
+//  - ErrorKind     | O                 | O                    | O          | O
 //  - ErrorCode     | O                 | O                    | O          | X
 
 public abstract partial class UsecasePipelineBase<TRequest>

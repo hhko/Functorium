@@ -4,7 +4,7 @@ using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using LayeredArch.Application.Usecases.Customers.Ports;
 using LayeredArch.Domain.AggregateRoots.Customers;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 using static LanguageExt.Prelude;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.Customers.Queries;

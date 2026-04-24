@@ -14,35 +14,35 @@ public static class DomainErrorAssertions
 
     public static void ShouldBeDomainError<TDomain>(
         this Error error,
-        DomainErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldBeError<TDomain>(error, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName);
+        DomainErrorKind expectedErrorType) =>
+        ErrorAssertionCore.ShouldBeError<TDomain>(error, ErrorCodePrefixes.Domain, expectedErrorType.Name);
 
     public static void ShouldBeDomainError<TDomain, TValue>(
         this Error error,
-        DomainErrorType expectedErrorType,
+        DomainErrorKind expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull =>
-        ErrorAssertionCore.ShouldBeError<TDomain, TValue>(error, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName, expectedCurrentValue);
+        ErrorAssertionCore.ShouldBeError<TDomain, TValue>(error, ErrorCodePrefixes.Domain, expectedErrorType.Name, expectedCurrentValue);
 
     public static void ShouldBeDomainError<TDomain, T1, T2>(
         this Error error,
-        DomainErrorType expectedErrorType,
+        DomainErrorKind expectedErrorType,
         T1 expectedValue1,
         T2 expectedValue2)
         where T1 : notnull
         where T2 : notnull =>
-        ErrorAssertionCore.ShouldBeError<TDomain, T1, T2>(error, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
+        ErrorAssertionCore.ShouldBeError<TDomain, T1, T2>(error, ErrorCodePrefixes.Domain, expectedErrorType.Name, expectedValue1, expectedValue2);
 
     public static void ShouldBeDomainError<TDomain, T1, T2, T3>(
         this Error error,
-        DomainErrorType expectedErrorType,
+        DomainErrorKind expectedErrorType,
         T1 expectedValue1,
         T2 expectedValue2,
         T3 expectedValue3)
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        ErrorAssertionCore.ShouldBeError<TDomain, T1, T2, T3>(error, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
+        ErrorAssertionCore.ShouldBeError<TDomain, T1, T2, T3>(error, ErrorCodePrefixes.Domain, expectedErrorType.Name, expectedValue1, expectedValue2, expectedValue3);
 
     #endregion
 
@@ -50,15 +50,15 @@ public static class DomainErrorAssertions
 
     public static void ShouldBeDomainError<TDomain, T>(
         this Fin<T> fin,
-        DomainErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldBeFinError<TDomain, T>(fin, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName);
+        DomainErrorKind expectedErrorType) =>
+        ErrorAssertionCore.ShouldBeFinError<TDomain, T>(fin, ErrorCodePrefixes.Domain, expectedErrorType.Name);
 
     public static void ShouldBeDomainError<TDomain, T, TValue>(
         this Fin<T> fin,
-        DomainErrorType expectedErrorType,
+        DomainErrorKind expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull =>
-        ErrorAssertionCore.ShouldBeFinError<TDomain, T, TValue>(fin, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName, expectedCurrentValue);
+        ErrorAssertionCore.ShouldBeFinError<TDomain, T, TValue>(fin, ErrorCodePrefixes.Domain, expectedErrorType.Name, expectedCurrentValue);
 
     #endregion
 
@@ -66,47 +66,47 @@ public static class DomainErrorAssertions
 
     public static void ShouldHaveDomainError<TDomain, T>(
         this Validation<Error, T> validation,
-        DomainErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldHaveError<TDomain, T>(validation, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName);
+        DomainErrorKind expectedErrorType) =>
+        ErrorAssertionCore.ShouldHaveError<TDomain, T>(validation, ErrorCodePrefixes.Domain, expectedErrorType.Name);
 
     public static void ShouldHaveOnlyDomainError<TDomain, T>(
         this Validation<Error, T> validation,
-        DomainErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldHaveOnlyError<TDomain, T>(validation, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName);
+        DomainErrorKind expectedErrorType) =>
+        ErrorAssertionCore.ShouldHaveOnlyError<TDomain, T>(validation, ErrorCodePrefixes.Domain, expectedErrorType.Name);
 
     public static void ShouldHaveDomainErrors<TDomain, T>(
         this Validation<Error, T> validation,
-        params DomainErrorType[] expectedErrorTypes) =>
+        params DomainErrorKind[] expectedErrorTypes) =>
         ErrorAssertionCore.ShouldHaveErrors<TDomain, T>(
             validation, ErrorCodePrefixes.Domain,
-            expectedErrorTypes.Select(et => et.ErrorName).ToArray());
+            expectedErrorTypes.Select(et => et.Name).ToArray());
 
     public static void ShouldHaveDomainError<TDomain, T, TValue>(
         this Validation<Error, T> validation,
-        DomainErrorType expectedErrorType,
+        DomainErrorKind expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull =>
-        ErrorAssertionCore.ShouldHaveError<TDomain, T, TValue>(validation, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName, expectedCurrentValue);
+        ErrorAssertionCore.ShouldHaveError<TDomain, T, TValue>(validation, ErrorCodePrefixes.Domain, expectedErrorType.Name, expectedCurrentValue);
 
     public static void ShouldHaveDomainError<TDomain, T, T1, T2>(
         this Validation<Error, T> validation,
-        DomainErrorType expectedErrorType,
+        DomainErrorKind expectedErrorType,
         T1 expectedValue1,
         T2 expectedValue2)
         where T1 : notnull
         where T2 : notnull =>
-        ErrorAssertionCore.ShouldHaveError<TDomain, T, T1, T2>(validation, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
+        ErrorAssertionCore.ShouldHaveError<TDomain, T, T1, T2>(validation, ErrorCodePrefixes.Domain, expectedErrorType.Name, expectedValue1, expectedValue2);
 
     public static void ShouldHaveDomainError<TDomain, T, T1, T2, T3>(
         this Validation<Error, T> validation,
-        DomainErrorType expectedErrorType,
+        DomainErrorKind expectedErrorType,
         T1 expectedValue1,
         T2 expectedValue2,
         T3 expectedValue3)
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        ErrorAssertionCore.ShouldHaveError<TDomain, T, T1, T2, T3>(validation, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
+        ErrorAssertionCore.ShouldHaveError<TDomain, T, T1, T2, T3>(validation, ErrorCodePrefixes.Domain, expectedErrorType.Name, expectedValue1, expectedValue2, expectedValue3);
 
     #endregion
 }
