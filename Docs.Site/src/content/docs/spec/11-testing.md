@@ -19,7 +19,7 @@ This is the public API specification for the test utility library provided by th
 | `DomainErrorAssertions` | `Assertions.Errors` | Domain error verification extension methods |
 | `ApplicationErrorAssertions` | `Assertions.Errors` | Application error verification extension methods |
 | `AdapterErrorAssertions` | `Assertions.Errors` | Adapter error verification extension methods |
-| `ErrorCodeAssertions` | `Assertions.Errors` | General-purpose error code verification extension methods |
+| `ExpectedErrorAssertions` | `Assertions.Errors` | General-purpose error code verification extension methods |
 | `ExceptionalErrorAssertions` | `Assertions.Errors` | Exception-based error verification extension methods |
 | `ClassValidator` | `Assertions.ArchitectureRules` | Class-level architecture rules Fluent API |
 | `MethodValidator` | `Assertions.ArchitectureRules` | Method-level architecture rules Fluent API |
@@ -246,12 +246,12 @@ error.ShouldBeAdapterExceptionalError<TAdapter, TException>(errorType);
 fin.ShouldBeAdapterExceptionalError<TAdapter, T>(errorType);
 ```
 
-### ErrorCodeAssertions (General-purpose)
+### ExpectedErrorAssertions (General-purpose)
 
 General-purpose error code verification independent of `DomainErrorKind`, etc.
 
 ```csharp
-public static class ErrorCodeAssertions
+public static class ExpectedErrorAssertions
 {
     // Error state verification
     public static IHasErrorCode ShouldHaveErrorCode(this Error error);

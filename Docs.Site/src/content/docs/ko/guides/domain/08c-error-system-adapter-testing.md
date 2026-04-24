@@ -651,7 +651,7 @@ public void Cancel_ShouldFail_WhenOrderAlreadyShipped()
 using Functorium.Testing.Assertions.Errors;
 ```
 
-#### ErrorCodeAssertions — 범용 에러 코드 검증
+#### ExpectedErrorAssertions — 범용 에러 코드 검증
 
 | 메서드 | 설명 |
 |--------|------|
@@ -783,15 +783,6 @@ public void Error_ShouldHave_ErrorCode_Property()
 비즈니스:    BusinessRuleViolated, ConcurrencyConflict, ResourceLocked,
              OperationCancelled, InsufficientPermission
 커스텀:      Custom (abstract → sealed record MyError : ApplicationErrorKind.Custom)
-```
-
-### Event (EventErrorType)
-
-```
-발행:        PublishFailed, PublishCancelled
-핸들러:      HandlerFailed
-검증:        InvalidEventType
-커스텀:      Custom (abstract → sealed record MyError : EventErrorType.Custom)
 ```
 
 ### Adapter (AdapterErrorKind)

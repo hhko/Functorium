@@ -2,13 +2,13 @@
 title: "Error System — Domain/Application Errors"
 ---
 
-This document covers error definitions and test patterns for the Domain/Application/Event layers. For basic principles and naming rules of error handling, refer to [08a-error-system.md](../08a-error-system). For Adapter errors, Custom errors, testing best practices, and per-layer checklists, refer to [08c-error-system-adapter-testing.md](../08c-error-system-adapter-testing).
+This document covers error definitions and test patterns for the Domain/Application layers. For basic principles and naming rules of error handling, refer to [08a-error-system.md](../08a-error-system). For Adapter errors, Custom errors, testing best practices, and per-layer checklists, refer to [08c-error-system-adapter-testing.md](../08c-error-system-adapter-testing).
 
 ## Introduction
 
 [08a-error-system.md](../08a-error-system) covered the fundamentals and naming rules of the error system. This document examines Domain and Application layer error definitions, factory method usage, and test assertion patterns in detail.
 
-> Each layer's error factory (`DomainError.For`, `ApplicationError.For`, `EventError.For`) explicitly identifies the error source in the type system, making it immediately clear which layer the problem originated from based on the error code alone.
+> Each layer's error factory (`DomainError.For`, `ApplicationError.For`) explicitly identifies the error source in the type system, making it immediately clear which layer the problem originated from based on the error code alone.
 
 ## Summary
 
@@ -22,9 +22,6 @@ DomainError.For<Age, int>(new Negative(), value, "Age cannot be negative");
 // Application error
 ApplicationError.For<CreateProductCommand>(new AlreadyExists(), code, "Already exists");
 
-// Event error
-EventError.For<DomainEventPublisher>(new PublishFailed(), eventType, "Failed to publish event");
-
 // Test assertions
 result.ShouldBeDomainError<Email, Email>(new DomainErrorKind.Empty());
 fin.ShouldBeApplicationError<GetProductQuery, Product>(new ApplicationErrorKind.NotFound());
@@ -32,9 +29,9 @@ fin.ShouldBeApplicationError<GetProductQuery, Product>(new ApplicationErrorKind.
 
 ### Key Procedures
 
-1. Determine which layer the error originates from (Domain / Application / Event)
+1. Determine which layer the error originates from (Domain / Application)
 2. Select a standard error type or define a Custom sealed record
-3. Create the error using the layer factory (`DomainError.For`, `ApplicationError.For`, `EventError.For`)
+3. Create the error using the layer factory (`DomainError.For`, `ApplicationError.For`)
 4. Write tests using assertion methods from the `Functorium.Testing.Assertions.Errors` namespace
 
 ### Key Concepts
@@ -43,9 +40,8 @@ fin.ShouldBeApplicationError<GetProductQuery, Product>(new ApplicationErrorKind.
 |--------|--------|-----------------|----------|
 | Domain | `DomainError` | `Domain.` | VO validation, Entity invariants, Aggregate rules |
 | Application | `ApplicationError` | `Application.` | Usecase business logic, authorization/authentication |
-| Event | `EventError` | `Application.` | Event publishing/handler failures |
 
-We first examine Domain error creation and test patterns, then move on to Application errors and Event errors.
+We first examine Domain error creation and test patterns, then move on to Application errors.
 
 ---
 
@@ -738,60 +734,6 @@ Having examined the definition and testing of Application errors, let's now look
 
 ---
 
-## Event Errors
-
-### Error Creation and Return
-
-```csharp
-using Functorium.Applications.Errors;
-using static Functorium.Applications.Errors.EventErrorType;
-
-// Basic usage - event publishing failure
-EventError.For<DomainEventPublisher>(
-    new PublishFailed(),
-    eventType,
-    "Failed to publish event");
-
-// Generic value type
-EventError.For<ObservableDomainEventPublisher, Guid>(
-    new HandlerFailed(),
-    eventId,
-    "Event handler threw exception");
-
-// Exception wrapping (default PublishFailed type)
-EventError.FromException<DomainEventPublisher>(exception);
-
-// Exception wrapping (specifying a specific error type)
-EventError.FromException<DomainEventPublisher>(
-    new HandlerFailed(),
-    exception);
-```
-
-### Complete EventErrorType List
-
-| Error Type | Description | Usage Example |
-|-----------|------|----------|
-| `PublishFailed` | Event publishing failure | `new PublishFailed()` |
-| `HandlerFailed` | Event handler execution failure | `new HandlerFailed()` |
-| `InvalidEventType` | Invalid event type | `new InvalidEventType()` |
-| `PublishCancelled` | Event publishing cancelled | `new PublishCancelled()` |
-| `Custom` | Event-specific custom error (abstract) | `sealed record RetryExhausted : EventErrorType.Custom;` → `new RetryExhausted()` |
-
-### Error Code Format
-
-EventError uses the Application layer prefix:
-
-```
-ApplicationErrors.{PublisherName}.{ErrorTypeName}
-```
-
-Examples:
-- `Application.DomainEventPublisher.PublishFailed`
-- `Application.ObservableDomainEventPublisher.HandlerFailed`
-- `Application.DomainEventPublisher.InvalidEventType`
-
----
-
 ## Troubleshooting
 
 ### `ShouldBeDomainError` Assertion Fails in Tests
@@ -809,10 +751,7 @@ Examples:
 ### Q1. What is the criterion for distinguishing Domain errors from Application errors?
 Domain errors are used for invariant violations within the domain model (VO validation failures, Entity state rule violations). Application errors are used for Usecase-level business logic (duplicate checks, authorization checks, resource lookup failures). The criterion is the location (layer) of the code where the error occurs.
 
-### Q2. When should EventError be used?
-Use it for domain event publishing failures (`PublishFailed`, `PublishCancelled`) or event handler execution failures (`HandlerFailed`). It is a dedicated error type for expressing internal failures of the event system. The error code prefix uses `Application.`.
-
-### Q3. What information should be included as the current value (currentValue) in errors?
+### Q2. What information should be included as the current value (currentValue) in errors?
 Include information that helps with debugging. Typically this includes the failed validation input value (`id.ToString()`, `request.Name`), current state values (`Status.ToString()`, `(int)StockQuantity`), etc. Do not include sensitive information (passwords, tokens).
 
 ---

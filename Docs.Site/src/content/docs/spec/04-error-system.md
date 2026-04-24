@@ -2,7 +2,7 @@
 title: "Error System Specification"
 ---
 
-Functorium's error system consists of **per-layer sealed record hierarchies** (`DomainErrorKind`, `ApplicationErrorKind`, `AdapterErrorKind`) and **per-layer factories** (`DomainError`, `ApplicationError`, `EventError`, `AdapterError`). Common creation logic for the factories is centralized in the internal `LayerErrorCore`, and common overrides for Expected errors are consolidated in `ExpectedErrorBase`. This specification defines the signatures, properties, and error code generation rules for public/internal types.
+Functorium's error system consists of **per-layer sealed record hierarchies** (`DomainErrorKind`, `ApplicationErrorKind`, `AdapterErrorKind`) and **per-layer factories** (`DomainError`, `ApplicationError`, `AdapterError`). Common creation logic for the factories is centralized in the internal `LayerErrorCore`, and common overrides for Expected errors are consolidated in `ExpectedErrorBase`. This specification defines the signatures, properties, and error code generation rules for public/internal types.
 
 ## Summary
 
@@ -19,8 +19,6 @@ Functorium's error system consists of **per-layer sealed record hierarchies** (`
 | `DomainError` | `Functorium.Domains.Errors` | Domain error creation factory |
 | `ApplicationErrorKind` | `Functorium.Applications.Errors` | Application error type sealed record hierarchy (14 types) |
 | `ApplicationError` | `Functorium.Applications.Errors` | Application error creation factory |
-| `EventErrorType` | `Functorium.Applications.Errors` | Event error type sealed record hierarchy (4 types) |
-| `EventError` | `Functorium.Applications.Errors` | Event error creation factory |
 | `AdapterErrorKind` | `Functorium.Adapters.Errors` | Adapter error type sealed record hierarchy (20 types) |
 | `AdapterError` | `Functorium.Adapters.Errors` | Adapter error creation factory |
 
@@ -31,7 +29,7 @@ Functorium's error system consists of **per-layer sealed record hierarchies** (`
 | `ExpectedErrorBase` | `Functorium.Abstractions.Errors` | Base class for common LanguageExt `Error` overrides of 4 Expected error types |
 | `ExpectedError` (4 types) | `Functorium.Abstractions.Errors` | Expected errors -- responsible only for value storage, inheriting the rest from base |
 | `ExceptionalError` | `Functorium.Abstractions.Errors` | Wraps Exception with error code |
-| `LayerErrorCore` | `Functorium.Abstractions.Errors` | Common error code creation logic for all 4 layer factories |
+| `LayerErrorCore` | `Functorium.Abstractions.Errors` | Common error code creation logic for all 3 layer factories |
 | `ErrorAssertionCore` | `Functorium.Testing.Assertions.Errors` | Common validation logic for 3 layer Assertions |
 
 ### Error Code Format
@@ -198,44 +196,40 @@ internal record ExceptionalError : Error, IHasErrorCode
 | `IsExpected` | `bool` | Always `false` |
 | `IsExceptional` | `bool` | Always `true` |
 
-### ErrorFactory
+### ErrorFactory (internal)
 
 ```csharp
 namespace Functorium.Abstractions.Errors;
 
-public static class ErrorFactory
+internal static class ErrorFactory
 {
     // Expected error creation
-    public static Error Create(string errorCode, string errorCurrentValue, string errorMessage);
-    public static Error Create<T>(string errorCode, T errorCurrentValue, string errorMessage) where T : notnull;
-    public static Error Create<T1, T2>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, string errorMessage)
+    public static Error CreateExpected(string errorCode, string errorCurrentValue, string errorMessage);
+    public static Error CreateExpected<T>(string errorCode, T errorCurrentValue, string errorMessage) where T : notnull;
+    public static Error CreateExpected<T1, T2>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, string errorMessage)
         where T1 : notnull where T2 : notnull;
-    public static Error Create<T1, T2, T3>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, T3 errorCurrentValue3, string errorMessage)
+    public static Error CreateExpected<T1, T2, T3>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, T3 errorCurrentValue3, string errorMessage)
         where T1 : notnull where T2 : notnull where T3 : notnull;
 
     // Exceptional error creation
-    public static Error CreateFromException(string errorCode, Exception exception);
-
-    // Error code composition
-    public static string Format(params string[] parts);
+    public static Error CreateExceptional(string errorCode, Exception exception);
 }
 ```
 
-**`ErrorFactory`** is a static factory that creates `ExpectedError` and `ExceptionalError` instances. Per-layer factories create errors through the following flow:
+**`ErrorFactory`** is an internal static factory that creates `ExpectedError` and `ExceptionalError` instances. External consumers never call it directly; public per-layer factories delegate through it:
 
 ```
-DomainError.For<T>(DomainErrorKind, ...)        <- Layer type safety (public API)
-  -> LayerErrorCore.Create<T>(prefix, ErrorKind, ...)  <- Common error code assembly (internal)
-    -> ErrorFactory.CreateExpected(errorCode, ...)          <- ExpectedError instance creation (internal)
+DomainError.For<T>(DomainErrorKind, ...)                    <- Layer type safety (public API)
+  -> LayerErrorCore.Create<T>(ErrorCodePrefixes.Domain, kind, ...)   <- Common error code assembly (internal)
+    -> ErrorFactory.CreateExpected(errorCode, ...)                    <- ExpectedError instance creation (internal)
 ```
 
-`LayerErrorCore` assembles the error code string (`{Prefix}.{Context}.{ErrorName}`), and `ErrorFactory` creates the final `Error` instance. `[AggressiveInlining]` is applied to all methods so the JIT eliminates delegation calls, resulting in no performance difference.
+`LayerErrorCore` assembles the error code string (`{Prefix}.{Context}.{Kind.Name}`), and `ErrorFactory` creates the final `Error` instance. `[AggressiveInlining]` is applied to all methods so the JIT eliminates delegation calls, resulting in no performance difference.
 
 | Method | Return | Description |
 |--------|------|------|
-| `Create(...)` | `Error` | Creates Expected error (4 overloads) |
-| `CreateFromException(...)` | `Error` | Wraps Exception as Exceptional error |
-| `Format(...)` | `string` | Joins string array with `'.'` to generate error code |
+| `CreateExpected(...)` | `Error` | Creates Expected error (4 overloads) |
+| `CreateExceptional(...)` | `Error` | Wraps Exception as Exceptional error |
 
 ---
 
@@ -458,39 +452,6 @@ public abstract record Custom : ApplicationErrorKind;
 public sealed record CannotProcess : ApplicationErrorKind.Custom;
 ```
 
-### EventErrorType
-
-```csharp
-namespace Functorium.Applications.Errors;
-
-public abstract record EventErrorType : ErrorKind;
-```
-
-**`EventErrorType`** is the error type for domain event publishing/handling errors.
-
-| sealed record | Properties | Description |
-|---------------|------|------|
-| `PublishFailed` | (none) | Event publish failed |
-| `HandlerFailed` | (none) | Event handler execution failed |
-| `InvalidEventType` | (none) | Event type is invalid |
-| `PublishCancelled` | (none) | Event publish cancelled |
-
-```csharp
-public sealed record PublishFailed : EventErrorType;
-public sealed record HandlerFailed : EventErrorType;
-public sealed record InvalidEventType : EventErrorType;
-public sealed record PublishCancelled : EventErrorType;
-```
-
-**Custom extension:**
-
-```csharp
-public abstract record Custom : EventErrorType;
-
-// Usage example
-public sealed record RetryExhausted : EventErrorType.Custom;
-```
-
 ---
 
 ## Adapter ErrorKind Catalog
@@ -621,7 +582,7 @@ internal static class LayerErrorCore
 }
 ```
 
-**`LayerErrorCore`** is the common implementation for the 4 layer factories (`DomainError`, `ApplicationError`, `EventError`, `AdapterError`). It assembles the error code string `{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}` and delegates to `ErrorFactory`.
+**`LayerErrorCore`** is the common implementation for the 3 layer factories (`DomainError`, `ApplicationError`, `AdapterError`). It assembles the error code string `{prefix}.{typeof(TContext).Name}.{kind.Name}` and delegates to `ErrorFactory`.
 
 **Design principle**: Public factories maintain per-layer type parameters (`DomainErrorKind`, `ApplicationErrorKind`, etc.) to ensure **compile-time safety**. `LayerErrorCore` receives the base type `ErrorKind` to **eliminate implementation duplication**. `[AggressiveInlining]` is applied to all methods so the JIT inlines delegation calls.
 
@@ -676,7 +637,7 @@ public static class DomainError
 }
 ```
 
-**Error code format:** `Domain.{typeof(TDomain).Name}.{errorType.ErrorName}`
+**Error code format:** `Domain.{typeof(TDomain).Name}.{kind.Name}`
 
 | Overload | Value Parameters | Description |
 |----------|-----------|------|
@@ -724,7 +685,7 @@ public static class ApplicationError
 }
 ```
 
-**Error code format:** `Application.{typeof(TUsecase).Name}.{errorType.ErrorName}`
+**Error code format:** `Application.{typeof(TUsecase).Name}.{kind.Name}`
 
 **Usage examples:**
 
@@ -738,43 +699,6 @@ ApplicationError.For<UpdateOrderCommand>(new ValidationFailed("Quantity"), value
 // Error code: ApplicationErrors.UpdateOrderCommand.ValidationFailed
 ```
 
-### EventError
-
-```csharp
-namespace Functorium.Applications.Errors;
-
-public static class EventError
-{
-    public static Error For<TPublisher>(EventErrorType errorType, string currentValue, string message);
-    public static Error For<TPublisher, TValue>(EventErrorType errorType, TValue currentValue, string message)
-        where TValue : notnull;
-    public static Error FromException<TPublisher>(Exception exception);
-    public static Error FromException<TPublisher>(EventErrorType errorType, Exception exception);
-}
-```
-
-**Error code format:** `Application.{typeof(TPublisher).Name}.{errorType.ErrorName}`
-
-**`EventError`** shares the `ApplicationErrors` prefix and represents event publishing/handling failures.
-
-| Method | Description |
-|--------|------|
-| `For<TPublisher>(...)` | Creates Expected error |
-| `For<TPublisher, TValue>(...)` | Creates Expected error with generic value |
-| `FromException<TPublisher>(exception)` | Wraps exception as `PublishFailed` type Exceptional error |
-| `FromException<TPublisher>(errorType, exception)` | Wraps exception as specified type Exceptional error |
-
-**Usage examples:**
-
-```csharp
-using static Functorium.Applications.Errors.EventErrorType;
-
-EventError.For<DomainEventPublisher>(new PublishFailed(), eventType, "Event publishing failed");
-// Error code: ApplicationErrors.DomainEventPublisher.PublishFailed
-
-EventError.FromException<DomainEventPublisher>(exception);
-// Error code: ApplicationErrors.DomainEventPublisher.PublishFailed (Exceptional)
-```
 
 ### AdapterError
 
@@ -795,7 +719,7 @@ public static class AdapterError
 }
 ```
 
-**Error code format:** `Adapter.{typeof(TAdapter).Name}.{errorType.ErrorName}`
+**Error code format:** `Adapter.{typeof(TAdapter).Name}.{kind.Name}`
 
 | Overload | Value Parameters | Description |
 |----------|-----------|------|

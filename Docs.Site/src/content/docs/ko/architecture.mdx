@@ -47,7 +47,7 @@ Adapter → Application → Domain 방향으로만 의존합니다. 도메인은
 - Applications/
   - Cqrs/ ICommandRequest, IQueryRequest, FinResponse
   - Events/ IDomainEventHandler, IDomainEventPublisher
-  - Errors/ ApplicationError, EventError
+  - Errors/ ApplicationError, ApplicationErrorKind
   - Validations/ FluentValidation 확장
   - Linq/ FinT LINQ 확장
   - Queries/ IQueryPort, PagedResult, SortExpression, CursorPagination

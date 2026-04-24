@@ -651,7 +651,7 @@ In addition to layer-specific Assertions (`ShouldBeDomainError`, `ShouldBeApplic
 using Functorium.Testing.Assertions.Errors;
 ```
 
-#### ErrorCodeAssertions -- Generic Error Code Verification
+#### ExpectedErrorAssertions -- Generic Error Code Verification
 
 | Method | Description |
 |--------|------|
@@ -783,15 +783,6 @@ Validation:  ValidationFailed
 Business:    BusinessRuleViolated, ConcurrencyConflict, ResourceLocked,
              OperationCancelled, InsufficientPermission
 Custom:      Custom (abstract -> sealed record MyError : ApplicationErrorKind.Custom)
-```
-
-### Event (EventErrorType)
-
-```
-Publishing:  PublishFailed, PublishCancelled
-Handler:     HandlerFailed
-Validation:  InvalidEventType
-Custom:      Custom (abstract -> sealed record MyError : EventErrorType.Custom)
 ```
 
 ### Adapter (AdapterErrorKind)

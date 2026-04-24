@@ -8,7 +8,7 @@ title: "에러 시스템 — Domain/Application 에러"
 
 [08a-error-system.md](../08a-error-system)에서 에러 시스템의 기초와 네이밍 규칙을 다뤘습니다. 이 문서에서는 Domain과 Application 레이어의 에러 정의, 팩토리 메서드 사용법, 테스트 어설션 패턴을 구체적으로 살펴봅니다.
 
-> 각 레이어의 에러 팩토리(`DomainError.For`, `ApplicationError.For`, `EventError.For`)는 에러 출처를 타입 시스템에 명시하여, 에러 코드만으로 어느 레이어에서 발생한 문제인지 즉시 파악할 수 있게 합니다.
+> 각 레이어의 에러 팩토리(`DomainError.For`, `ApplicationError.For`)는 에러 출처를 타입 시스템에 명시하여, 에러 코드만으로 어느 레이어에서 발생한 문제인지 즉시 파악할 수 있게 합니다.
 
 ## 요약
 
@@ -22,9 +22,6 @@ DomainError.For<Age, int>(new Negative(), value, "나이는 음수일 수 없습
 // Application 에러
 ApplicationError.For<CreateProductCommand>(new AlreadyExists(), code, "이미 존재합니다");
 
-// Event 에러
-EventError.For<DomainEventPublisher>(new PublishFailed(), eventType, "Failed to publish event");
-
 // 테스트 어설션
 result.ShouldBeDomainError<Email, Email>(new DomainErrorKind.Empty());
 fin.ShouldBeApplicationError<GetProductQuery, Product>(new ApplicationErrorKind.NotFound());
@@ -34,7 +31,7 @@ fin.ShouldBeApplicationError<GetProductQuery, Product>(new ApplicationErrorKind.
 
 1. 에러가 발생하는 레이어 결정 (Domain / Application / Event)
 2. 표준 에러 타입 선택 또는 Custom sealed record 정의
-3. 레이어 팩토리로 에러 생성 (`DomainError.For`, `ApplicationError.For`, `EventError.For`)
+3. 레이어 팩토리로 에러 생성 (`DomainError.For`, `ApplicationError.For`)
 4. 테스트 작성 - `Functorium.Testing.Assertions.Errors` 네임스페이스의 어설션 메서드 사용
 
 ### 주요 개념
@@ -43,7 +40,6 @@ fin.ShouldBeApplicationError<GetProductQuery, Product>(new ApplicationErrorKind.
 |--------|--------|-----------------|----------|
 | Domain | `DomainError` | `Domain.` | VO 검증, Entity 불변식, Aggregate 규칙 |
 | Application | `ApplicationError` | `Application.` | Usecase 비즈니스 로직, 권한/인증 |
-| Event | `EventError` | `Application.` | 이벤트 발행/핸들러 실패 |
 
 먼저 Domain 에러의 생성과 테스트 패턴을 살펴본 뒤, Application 에러와 Event 에러로 넘어갑니다.
 
@@ -738,60 +734,6 @@ Application 에러의 정의와 테스트를 살펴보았으니, 마지막으로
 
 ---
 
-## Event 에러
-
-### 에러 생성 및 반환
-
-```csharp
-using Functorium.Applications.Errors;
-using static Functorium.Applications.Errors.EventErrorType;
-
-// 기본 사용법 - 이벤트 발행 실패
-EventError.For<DomainEventPublisher>(
-    new PublishFailed(),
-    eventType,
-    "Failed to publish event");
-
-// 제네릭 값 타입
-EventError.For<ObservableDomainEventPublisher, Guid>(
-    new HandlerFailed(),
-    eventId,
-    "Event handler threw exception");
-
-// 예외 래핑 (기본 PublishFailed 타입)
-EventError.FromException<DomainEventPublisher>(exception);
-
-// 예외 래핑 (특정 에러 타입 지정)
-EventError.FromException<DomainEventPublisher>(
-    new HandlerFailed(),
-    exception);
-```
-
-### EventErrorType 전체 목록
-
-| 에러 타입 | 설명 | 사용 예시 |
-|-----------|------|----------|
-| `PublishFailed` | 이벤트 발행 실패 | `new PublishFailed()` |
-| `HandlerFailed` | 이벤트 핸들러 실행 실패 | `new HandlerFailed()` |
-| `InvalidEventType` | 이벤트 타입이 유효하지 않음 | `new InvalidEventType()` |
-| `PublishCancelled` | 이벤트 발행 취소됨 | `new PublishCancelled()` |
-| `Custom` | 이벤트 특화 커스텀 에러 (abstract) | `sealed record RetryExhausted : EventErrorType.Custom;` → `new RetryExhausted()` |
-
-### 에러 코드 형식
-
-EventError는 Application 레이어 접두사를 사용합니다:
-
-```
-ApplicationErrors.{PublisherName}.{ErrorTypeName}
-```
-
-예시:
-- `Application.DomainEventPublisher.PublishFailed`
-- `Application.ObservableDomainEventPublisher.HandlerFailed`
-- `Application.DomainEventPublisher.InvalidEventType`
-
----
-
 ## 트러블슈팅
 
 ### 테스트에서 `ShouldBeDomainError` 어설션이 실패함
@@ -809,10 +751,7 @@ ApplicationErrors.{PublisherName}.{ErrorTypeName}
 ### Q1. Domain 에러와 Application 에러의 구분 기준은?
 Domain 에러는 도메인 모델 내부에서 발생하는 불변식 위반(VO 검증 실패, Entity 상태 규칙 위반)에 사용합니다. Application 에러는 Usecase 수준의 비즈니스 로직(중복 검사, 권한 확인, 리소스 조회 실패)에 사용합니다. 에러가 발생하는 코드의 위치(레이어)가 기준입니다.
 
-### Q2. EventError는 언제 사용하나요?
-도메인 이벤트 발행(`PublishFailed`, `PublishCancelled`)이나 이벤트 핸들러 실행 실패(`HandlerFailed`) 시 사용합니다. 이벤트 시스템 내부의 오류를 표현하기 위한 전용 에러 타입입니다. 에러 코드 접두사는 `Application.`를 사용합니다.
-
-### Q3. 에러에 포함하는 현재 값(currentValue)은 어떤 정보를 넣어야 하나요?
+### Q2. 에러에 포함하는 현재 값(currentValue)은 어떤 정보를 넣어야 하나요?
 디버깅에 도움이 되는 정보를 넣습니다. 주로 검증 실패한 입력값(`id.ToString()`, `request.Name`), 현재 상태값(`Status.ToString()`, `(int)StockQuantity`) 등입니다. 민감 정보(비밀번호, 토큰)는 포함하지 마세요.
 
 ---
