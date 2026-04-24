@@ -38,7 +38,7 @@ public class ValidationRulesExtensionsTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.Empty");
+                error.ErrorCode.ShouldBe("Domain.SampleValueObject.Empty");
             });
     }
 
@@ -234,7 +234,7 @@ public class ValidationRulesExtensionsTests
             {
                 errors.Count.ShouldBe(1);
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.Empty");
+                error.ErrorCode.ShouldBe("Domain.SampleValueObject.Empty");
             });
     }
 
@@ -380,7 +380,7 @@ public class ValidationRulesExtensionsTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.NotUpperCase");
+                error.ErrorCode.ShouldBe("Domain.SampleValueObject.NotUpperCase");
             });
     }
 
@@ -409,7 +409,7 @@ public class ValidationRulesExtensionsTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.NotLowerCase");
+                error.ErrorCode.ShouldBe("Domain.SampleValueObject.NotLowerCase");
             });
     }
 
@@ -445,7 +445,7 @@ public class ValidationRulesExtensionsTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.NumericValueObject.RangeInverted");
+                error.ErrorCode.ShouldBe("Domain.NumericValueObject.RangeInverted");
             });
     }
 
@@ -474,7 +474,7 @@ public class ValidationRulesExtensionsTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.NumericValueObject.RangeEmpty");
+                error.ErrorCode.ShouldBe("Domain.NumericValueObject.RangeEmpty");
             });
     }
 
@@ -510,7 +510,7 @@ public class ValidationRulesExtensionsTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.Empty");
+                error.ErrorCode.ShouldBe("Domain.SampleValueObject.Empty");
             });
     }
 

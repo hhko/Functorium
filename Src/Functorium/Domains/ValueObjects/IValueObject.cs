@@ -26,9 +26,10 @@ public interface IValueObject
         public const string ValidateMethodName = "Validate";
 
         /// <summary>
-        /// ValueObject 내부에 에러 코드 상수를 담는 nested 클래스 이름. 레이어 prefix
-        /// 값과 동기화됩니다 (1.0.0-alpha.4에서 "DomainErrors" → "Domain" 예정).
+        /// ValueObject 내부에 에러 코드 상수를 담는 nested 클래스 이름.
+        /// 레이어 prefix 값(<see cref="Functorium.Abstractions.Errors.ErrorCodePrefixes.Domain"/>)과
+        /// 동기화되어 있습니다.
         /// </summary>
-        public const string NestedErrorsClassName = "DomainErrors";
+        public const string NestedErrorsClassName = "Domain";
     }
 }

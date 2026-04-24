@@ -37,7 +37,7 @@ public class DomainErrorTests
         actual.IsExpected.ShouldBeTrue();
 
         var errorCode = (ErrorCodeExpected)actual;
-        errorCode.ErrorCode.ShouldBe("DomainErrors.TestValueObject.Empty");
+        errorCode.ErrorCode.ShouldBe("Domain.TestValueObject.Empty");
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class DomainErrorTests
         actual.Message.ShouldBe(message);
 
         var errorCode = (ErrorCodeExpected<int>)actual;
-        errorCode.ErrorCode.ShouldBe("DomainErrors.TestValueObject.Negative");
+        errorCode.ErrorCode.ShouldBe("Domain.TestValueObject.Negative");
         errorCode.ErrorCurrentValue.ShouldBe(-5);
     }
 
@@ -78,7 +78,7 @@ public class DomainErrorTests
         actual.ShouldBeOfType<ErrorCodeExpected<DateTime, DateTime>>();
 
         var errorCode = (ErrorCodeExpected<DateTime, DateTime>)actual;
-        errorCode.ErrorCode.ShouldBe("DomainErrors.TestValueObject.StartAfterEnd");
+        errorCode.ErrorCode.ShouldBe("Domain.TestValueObject.StartAfterEnd");
         errorCode.ErrorCurrentValue1.ShouldBe(startDate);
         errorCode.ErrorCurrentValue2.ShouldBe(endDate);
     }
@@ -102,7 +102,7 @@ public class DomainErrorTests
         actual.Message.ShouldBe(message);
 
         var errorCode = (ErrorCodeExpected)actual;
-        errorCode.ErrorCode.ShouldBe("DomainErrors.TestValueObject.TooShort");
+        errorCode.ErrorCode.ShouldBe("Domain.TestValueObject.TooShort");
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public class DomainErrorTests
 
         // Assert
         var errorCode = (ErrorCodeExpected)actual;
-        errorCode.ErrorCode.ShouldBe("DomainErrors.TestValueObject.InvalidFormat");
+        errorCode.ErrorCode.ShouldBe("Domain.TestValueObject.InvalidFormat");
     }
 
     [Fact]
@@ -140,7 +140,7 @@ public class DomainErrorTests
         actual.ShouldBeOfType<ErrorCodeExpected<int>>();
 
         var errorCode = (ErrorCodeExpected<int>)actual;
-        errorCode.ErrorCode.ShouldBe("DomainErrors.TestValueObject.OutOfRange");
+        errorCode.ErrorCode.ShouldBe("Domain.TestValueObject.OutOfRange");
         errorCode.ErrorCurrentValue.ShouldBe(150);
     }
 
@@ -159,7 +159,7 @@ public class DomainErrorTests
 
         // Assert
         var errorCode = (ErrorCodeExpected)actual;
-        errorCode.ErrorCode.ShouldBe("DomainErrors.TestValueObject.Unsupported");
+        errorCode.ErrorCode.ShouldBe("Domain.TestValueObject.Unsupported");
     }
 
     #endregion
@@ -177,7 +177,7 @@ public class DomainErrorTests
 
         // Assert
         var errorCode = (ErrorCodeExpected)actual;
-        errorCode.ErrorCode.ShouldBe($"DomainErrors.TestValueObject.{expectedName}");
+        errorCode.ErrorCode.ShouldBe($"Domain.TestValueObject.{expectedName}");
     }
 
     public static TheoryData<DomainErrorType, string> GetAllDomainErrorTypes() => new()

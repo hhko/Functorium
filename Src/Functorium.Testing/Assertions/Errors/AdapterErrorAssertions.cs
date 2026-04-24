@@ -15,14 +15,14 @@ public static class AdapterErrorAssertions
     public static void ShouldBeAdapterError<TAdapter>(
         this Error error,
         AdapterErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldBeError<TAdapter>(error, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldBeError<TAdapter>(error, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName);
 
     public static void ShouldBeAdapterError<TAdapter, TValue>(
         this Error error,
         AdapterErrorType expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull =>
-        ErrorAssertionCore.ShouldBeError<TAdapter, TValue>(error, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName, expectedCurrentValue);
+        ErrorAssertionCore.ShouldBeError<TAdapter, TValue>(error, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName, expectedCurrentValue);
 
     public static void ShouldBeAdapterError<TAdapter, T1, T2>(
         this Error error,
@@ -31,7 +31,7 @@ public static class AdapterErrorAssertions
         T2 expectedValue2)
         where T1 : notnull
         where T2 : notnull =>
-        ErrorAssertionCore.ShouldBeError<TAdapter, T1, T2>(error, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
+        ErrorAssertionCore.ShouldBeError<TAdapter, T1, T2>(error, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
 
     public static void ShouldBeAdapterError<TAdapter, T1, T2, T3>(
         this Error error,
@@ -42,18 +42,18 @@ public static class AdapterErrorAssertions
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        ErrorAssertionCore.ShouldBeError<TAdapter, T1, T2, T3>(error, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
+        ErrorAssertionCore.ShouldBeError<TAdapter, T1, T2, T3>(error, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
 
     public static void ShouldBeAdapterExceptionalError<TAdapter>(
         this Error error,
         AdapterErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldBeExceptionalError<TAdapter>(error, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldBeExceptionalError<TAdapter>(error, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName);
 
     public static void ShouldBeAdapterExceptionalError<TAdapter, TException>(
         this Error error,
         AdapterErrorType expectedErrorType)
         where TException : Exception =>
-        ErrorAssertionCore.ShouldBeExceptionalError<TAdapter, TException>(error, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldBeExceptionalError<TAdapter, TException>(error, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName);
 
     #endregion
 
@@ -62,19 +62,19 @@ public static class AdapterErrorAssertions
     public static void ShouldBeAdapterError<TAdapter, T>(
         this Fin<T> fin,
         AdapterErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldBeFinError<TAdapter, T>(fin, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldBeFinError<TAdapter, T>(fin, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName);
 
     public static void ShouldBeAdapterError<TAdapter, T, TValue>(
         this Fin<T> fin,
         AdapterErrorType expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull =>
-        ErrorAssertionCore.ShouldBeFinError<TAdapter, T, TValue>(fin, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName, expectedCurrentValue);
+        ErrorAssertionCore.ShouldBeFinError<TAdapter, T, TValue>(fin, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName, expectedCurrentValue);
 
     public static void ShouldBeAdapterExceptionalError<TAdapter, T>(
         this Fin<T> fin,
         AdapterErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldBeFinExceptionalError<TAdapter, T>(fin, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldBeFinExceptionalError<TAdapter, T>(fin, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName);
 
     #endregion
 
@@ -83,18 +83,18 @@ public static class AdapterErrorAssertions
     public static void ShouldHaveAdapterError<TAdapter, T>(
         this Validation<Error, T> validation,
         AdapterErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldHaveError<TAdapter, T>(validation, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldHaveError<TAdapter, T>(validation, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName);
 
     public static void ShouldHaveOnlyAdapterError<TAdapter, T>(
         this Validation<Error, T> validation,
         AdapterErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldHaveOnlyError<TAdapter, T>(validation, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldHaveOnlyError<TAdapter, T>(validation, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName);
 
     public static void ShouldHaveAdapterErrors<TAdapter, T>(
         this Validation<Error, T> validation,
         params AdapterErrorType[] expectedErrorTypes) =>
         ErrorAssertionCore.ShouldHaveErrors<TAdapter, T>(
-            validation, ErrorType.AdapterErrorsPrefix,
+            validation, ErrorCodePrefixes.Adapter,
             expectedErrorTypes.Select(et => et.ErrorName).ToArray());
 
     public static void ShouldHaveAdapterError<TAdapter, T, TValue>(
@@ -102,7 +102,7 @@ public static class AdapterErrorAssertions
         AdapterErrorType expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull =>
-        ErrorAssertionCore.ShouldHaveError<TAdapter, T, TValue>(validation, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName, expectedCurrentValue);
+        ErrorAssertionCore.ShouldHaveError<TAdapter, T, TValue>(validation, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName, expectedCurrentValue);
 
     public static void ShouldHaveAdapterError<TAdapter, T, T1, T2>(
         this Validation<Error, T> validation,
@@ -111,7 +111,7 @@ public static class AdapterErrorAssertions
         T2 expectedValue2)
         where T1 : notnull
         where T2 : notnull =>
-        ErrorAssertionCore.ShouldHaveError<TAdapter, T, T1, T2>(validation, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
+        ErrorAssertionCore.ShouldHaveError<TAdapter, T, T1, T2>(validation, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
 
     public static void ShouldHaveAdapterError<TAdapter, T, T1, T2, T3>(
         this Validation<Error, T> validation,
@@ -122,7 +122,7 @@ public static class AdapterErrorAssertions
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        ErrorAssertionCore.ShouldHaveError<TAdapter, T, T1, T2, T3>(validation, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
+        ErrorAssertionCore.ShouldHaveError<TAdapter, T, T1, T2, T3>(validation, ErrorCodePrefixes.Adapter, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
 
     #endregion
 }

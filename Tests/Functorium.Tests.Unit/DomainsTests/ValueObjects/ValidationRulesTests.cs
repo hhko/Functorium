@@ -58,7 +58,7 @@ public class ValidationRulesTests
             {
                 errors.Count.ShouldBe(1);
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.Empty");
+                error.ErrorCode.ShouldBe("Domain.SampleValueObject.Empty");
             });
     }
 
@@ -95,7 +95,7 @@ public class ValidationRulesTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.TooShort");
+                error.ErrorCode.ShouldBe("Domain.SampleValueObject.TooShort");
             });
     }
 
@@ -132,7 +132,7 @@ public class ValidationRulesTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.TooLong");
+                error.ErrorCode.ShouldBe("Domain.SampleValueObject.TooLong");
             });
     }
 
@@ -168,7 +168,7 @@ public class ValidationRulesTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.WrongLength");
+                error.ErrorCode.ShouldBe("Domain.SampleValueObject.WrongLength");
             });
     }
 
@@ -207,7 +207,7 @@ public class ValidationRulesTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.InvalidFormat");
+                error.ErrorCode.ShouldBe("Domain.SampleValueObject.InvalidFormat");
             });
     }
 
@@ -260,7 +260,7 @@ public class ValidationRulesTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<decimal>)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.NumericValueObject.Negative");
+                error.ErrorCode.ShouldBe("Domain.NumericValueObject.Negative");
             });
     }
 
@@ -295,7 +295,7 @@ public class ValidationRulesTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<decimal>)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.NumericValueObject.NotPositive");
+                error.ErrorCode.ShouldBe("Domain.NumericValueObject.NotPositive");
             });
     }
 
@@ -331,7 +331,7 @@ public class ValidationRulesTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<decimal>)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.NumericValueObject.OutOfRange");
+                error.ErrorCode.ShouldBe("Domain.NumericValueObject.OutOfRange");
             });
     }
 
@@ -368,7 +368,7 @@ public class ValidationRulesTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<decimal>)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.NumericValueObject.AboveMaximum");
+                error.ErrorCode.ShouldBe("Domain.NumericValueObject.AboveMaximum");
             });
     }
 
@@ -405,7 +405,7 @@ public class ValidationRulesTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<decimal>)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.NumericValueObject.BelowMinimum");
+                error.ErrorCode.ShouldBe("Domain.NumericValueObject.BelowMinimum");
             });
     }
 
@@ -450,7 +450,7 @@ public class ValidationRulesTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<string>)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.NotUpperCase");
+                error.ErrorCode.ShouldBe("Domain.SampleValueObject.NotUpperCase");
             });
     }
 
@@ -490,7 +490,7 @@ public class ValidationRulesTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.Null");
+                error.ErrorCode.ShouldBe("Domain.SampleValueObject.Null");
             });
     }
 
@@ -526,7 +526,7 @@ public class ValidationRulesTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.NumericValueObject.Null");
+                error.ErrorCode.ShouldBe("Domain.NumericValueObject.Null");
             });
     }
 
@@ -565,7 +565,7 @@ public class ValidationRulesTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.NotUpperCase");
+                error.ErrorCode.ShouldBe("Domain.SampleValueObject.NotUpperCase");
             });
     }
 
@@ -604,7 +604,7 @@ public class ValidationRulesTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.NotLowerCase");
+                error.ErrorCode.ShouldBe("Domain.SampleValueObject.NotLowerCase");
             });
     }
 

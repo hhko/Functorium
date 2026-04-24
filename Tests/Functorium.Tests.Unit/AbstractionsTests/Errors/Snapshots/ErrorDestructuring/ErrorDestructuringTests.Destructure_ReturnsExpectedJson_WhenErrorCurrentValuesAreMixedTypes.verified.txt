@@ -1,5 +1,5 @@
 ﻿{
-  ErrorCode: DomainErrors.Geometry.PointOutOfRange,
+  ErrorCode: Domain.Geometry.PointOutOfRange,
   ErrorCodeId: -1000,
   ErrorCurrentValue1: {
     X: 50,

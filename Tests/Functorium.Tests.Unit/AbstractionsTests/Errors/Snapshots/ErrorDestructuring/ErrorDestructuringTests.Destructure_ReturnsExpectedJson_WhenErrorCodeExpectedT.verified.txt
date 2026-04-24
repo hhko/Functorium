@@ -1,5 +1,5 @@
 ﻿{
-  ErrorCode: DomainErrors.Sensor.TemperatureOutOfRange,
+  ErrorCode: Domain.Sensor.TemperatureOutOfRange,
   ErrorCodeId: -1000,
   ErrorCurrentValue: 150,
   ErrorType: ErrorCodeExpected`1,

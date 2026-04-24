@@ -1,5 +1,5 @@
 ﻿{
-  ErrorCode: DomainErrors.User.NotFound,
+  ErrorCode: Domain.User.NotFound,
   ErrorCodeId: -1000,
   ErrorCurrentValue: user123,
   ErrorType: ErrorCodeExpected,

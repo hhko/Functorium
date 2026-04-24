@@ -6,8 +6,8 @@ using LanguageExt.Common;
 namespace Functorium.Adapters.Errors;
 
 /// <summary>
-/// 어댑터의 오류 생성을 위한 헬퍼 클래스
-/// 에러 코드를 자동으로 "AdapterErrors.{AdapterName}.{ErrorName}" 형식으로 생성
+/// 어댑터의 오류 생성을 위한 정적 팩토리 클래스.
+/// 에러 코드를 자동으로 "Adapter.{AdapterName}.{ErrorName}" 형식으로 생성합니다.
 /// </summary>
 /// <remarks>
 /// 사용 예시:
@@ -28,7 +28,7 @@ public static class AdapterError
         AdapterErrorType errorType,
         string currentValue,
         string message) =>
-        LayerErrorCore.Create<TAdapter>(ErrorType.AdapterErrorsPrefix, errorType, currentValue, message);
+        LayerErrorCore.Create<TAdapter>(ErrorCodePrefixes.Adapter, errorType, currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For(
@@ -36,7 +36,7 @@ public static class AdapterError
         AdapterErrorType errorType,
         string currentValue,
         string message) =>
-        LayerErrorCore.Create(ErrorType.AdapterErrorsPrefix, adapterType, errorType, currentValue, message);
+        LayerErrorCore.Create(ErrorCodePrefixes.Adapter, adapterType, errorType, currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TAdapter, TValue>(
@@ -44,7 +44,7 @@ public static class AdapterError
         TValue currentValue,
         string message)
         where TValue : notnull =>
-        LayerErrorCore.Create<TAdapter, TValue>(ErrorType.AdapterErrorsPrefix, errorType, currentValue, message);
+        LayerErrorCore.Create<TAdapter, TValue>(ErrorCodePrefixes.Adapter, errorType, currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TAdapter, T1, T2>(
@@ -54,7 +54,7 @@ public static class AdapterError
         string message)
         where T1 : notnull
         where T2 : notnull =>
-        LayerErrorCore.Create<TAdapter, T1, T2>(ErrorType.AdapterErrorsPrefix, errorType, value1, value2, message);
+        LayerErrorCore.Create<TAdapter, T1, T2>(ErrorCodePrefixes.Adapter, errorType, value1, value2, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TAdapter, T1, T2, T3>(
@@ -66,11 +66,11 @@ public static class AdapterError
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        LayerErrorCore.Create<TAdapter, T1, T2, T3>(ErrorType.AdapterErrorsPrefix, errorType, value1, value2, value3, message);
+        LayerErrorCore.Create<TAdapter, T1, T2, T3>(ErrorCodePrefixes.Adapter, errorType, value1, value2, value3, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error FromException<TAdapter>(
         AdapterErrorType errorType,
         Exception exception) =>
-        LayerErrorCore.FromException<TAdapter>(ErrorType.AdapterErrorsPrefix, errorType, exception);
+        LayerErrorCore.FromException<TAdapter>(ErrorCodePrefixes.Adapter, errorType, exception);
 }

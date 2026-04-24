@@ -9,28 +9,12 @@ namespace Functorium.Abstractions.Errors;
 ///
 /// 참고: C#의 nested sealed record는 파생 클래스로 자동 상속되지 않으므로,
 /// 공통 에러 타입(Empty, NotFound 등)은 각 파생 클래스에서 별도로 정의해야 합니다.
+///
+/// 레이어 접두사 상수는 <see cref="ErrorCodePrefixes"/>에 internal로
+/// 정의되어 있으며, 레이어 팩토리가 내부적으로 사용합니다.
 /// </remarks>
 public abstract record ErrorType
 {
-    #region 레이어별 에러 코드 접두사 상수
-
-    /// <summary>
-    /// 도메인 레이어 에러 코드 접두사
-    /// </summary>
-    public const string DomainErrorsPrefix = "DomainErrors";
-
-    /// <summary>
-    /// 애플리케이션 레이어 에러 코드 접두사
-    /// </summary>
-    public const string ApplicationErrorsPrefix = "ApplicationErrors";
-
-    /// <summary>
-    /// 어댑터 레이어 에러 코드 접두사
-    /// </summary>
-    public const string AdapterErrorsPrefix = "AdapterErrors";
-
-    #endregion
-
     /// <summary>
     /// 에러 코드에 사용될 에러 이름
     /// 기본적으로 record 타입 이름을 반환

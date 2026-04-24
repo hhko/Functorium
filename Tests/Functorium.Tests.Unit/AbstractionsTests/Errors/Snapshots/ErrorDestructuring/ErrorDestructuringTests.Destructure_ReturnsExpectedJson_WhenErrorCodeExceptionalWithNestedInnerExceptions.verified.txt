@@ -1,5 +1,5 @@
 ﻿{
-  ErrorCode: ApplicationErrors.Database.QueryExecutionFailed,
+  ErrorCode: Application.Database.QueryExecutionFailed,
   ErrorCodeId: -2146233079,
   ErrorType: ErrorCodeExceptional,
   ExceptionDetails: {

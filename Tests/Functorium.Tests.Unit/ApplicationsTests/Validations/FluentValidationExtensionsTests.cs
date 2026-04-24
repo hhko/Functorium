@@ -189,7 +189,7 @@ public class FluentValidationExtensionsTests
         actual.IsValid.ShouldBeFalse();
         actual.Errors.Count.ShouldBe(1);
         actual.Errors[0].PropertyName.ShouldBe("Name");
-        actual.Errors[0].ErrorMessage.ShouldContain("DomainErrors.TestProductName.Empty");
+        actual.Errors[0].ErrorMessage.ShouldContain("Domain.TestProductName.Empty");
     }
 
     [Fact]
@@ -206,7 +206,7 @@ public class FluentValidationExtensionsTests
         actual.IsValid.ShouldBeFalse();
         actual.Errors.Count.ShouldBe(1);
         actual.Errors[0].PropertyName.ShouldBe("Name");
-        actual.Errors[0].ErrorMessage.ShouldContain("DomainErrors.TestProductName.TooLong");
+        actual.Errors[0].ErrorMessage.ShouldContain("Domain.TestProductName.TooLong");
     }
 
     [Fact]
@@ -222,7 +222,7 @@ public class FluentValidationExtensionsTests
         actual.IsValid.ShouldBeFalse();
         actual.Errors.Count.ShouldBe(1);
         actual.Errors[0].PropertyName.ShouldBe("Price");
-        actual.Errors[0].ErrorMessage.ShouldContain("DomainErrors.TestPrice.NotPositive");
+        actual.Errors[0].ErrorMessage.ShouldContain("Domain.TestPrice.NotPositive");
     }
 
     [Fact]
@@ -238,7 +238,7 @@ public class FluentValidationExtensionsTests
         actual.IsValid.ShouldBeFalse();
         actual.Errors.Count.ShouldBe(1);
         actual.Errors[0].PropertyName.ShouldBe("Price");
-        actual.Errors[0].ErrorMessage.ShouldContain("DomainErrors.TestPrice.NotPositive");
+        actual.Errors[0].ErrorMessage.ShouldContain("Domain.TestPrice.NotPositive");
     }
 
     [Fact]
@@ -254,7 +254,7 @@ public class FluentValidationExtensionsTests
         actual.IsValid.ShouldBeFalse();
         actual.Errors.Count.ShouldBe(1);
         actual.Errors[0].PropertyName.ShouldBe("Price");
-        actual.Errors[0].ErrorMessage.ShouldContain("DomainErrors.TestPrice.AboveMaximum");
+        actual.Errors[0].ErrorMessage.ShouldContain("Domain.TestPrice.AboveMaximum");
     }
 
     #endregion
@@ -316,7 +316,7 @@ public class FluentValidationExtensionsTests
         var errorMessage = actual.Errors[0].ErrorMessage;
 
         // ErrorCode가 대괄호 안에 포함되어야 함
-        errorMessage.ShouldStartWith("[DomainErrors.");
+        errorMessage.ShouldStartWith("[Domain.");
         errorMessage.ShouldContain("]");
     }
 
@@ -570,7 +570,7 @@ public class MustSatisfyValidationOfTests
         actual.IsValid.ShouldBeFalse();
         actual.Errors.Count.ShouldBe(1);
         actual.Errors[0].PropertyName.ShouldBe("Age");
-        actual.Errors[0].ErrorMessage.ShouldContain("DomainErrors.TestAge.InvalidFormat");
+        actual.Errors[0].ErrorMessage.ShouldContain("Domain.TestAge.InvalidFormat");
     }
 
     #endregion
@@ -592,7 +592,7 @@ public class MustSatisfyValidationOfTests
         actual.IsValid.ShouldBeFalse();
         actual.Errors.Count.ShouldBe(1);
         actual.Errors[0].PropertyName.ShouldBe("Age");
-        actual.Errors[0].ErrorMessage.ShouldContain("DomainErrors.TestAge.OutOfRange");
+        actual.Errors[0].ErrorMessage.ShouldContain("Domain.TestAge.OutOfRange");
     }
 
     [Theory]
@@ -610,7 +610,7 @@ public class MustSatisfyValidationOfTests
         actual.IsValid.ShouldBeFalse();
         actual.Errors.Count.ShouldBe(1);
         actual.Errors[0].PropertyName.ShouldBe("Age");
-        actual.Errors[0].ErrorMessage.ShouldContain("DomainErrors.TestAge.OutOfRange");
+        actual.Errors[0].ErrorMessage.ShouldContain("Domain.TestAge.OutOfRange");
     }
 
     #endregion

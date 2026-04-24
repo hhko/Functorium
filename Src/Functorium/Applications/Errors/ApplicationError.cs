@@ -6,8 +6,8 @@ using LanguageExt.Common;
 namespace Functorium.Applications.Errors;
 
 /// <summary>
-/// 유스케이스의 애플리케이션 오류 생성을 위한 헬퍼 클래스
-/// 에러 코드를 자동으로 "ApplicationErrors.{UsecaseName}.{ErrorName}" 형식으로 생성
+/// 유스케이스의 애플리케이션 오류 생성을 위한 정적 팩토리 클래스.
+/// 에러 코드를 자동으로 "Application.{UsecaseName}.{ErrorName}" 형식으로 생성합니다.
 /// </summary>
 /// <remarks>
 /// 사용 예시:
@@ -28,7 +28,7 @@ public static class ApplicationError
         ApplicationErrorType errorType,
         string currentValue,
         string message) =>
-        LayerErrorCore.Create<TUsecase>(ErrorType.ApplicationErrorsPrefix, errorType, currentValue, message);
+        LayerErrorCore.Create<TUsecase>(ErrorCodePrefixes.Application, errorType, currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TUsecase, TValue>(
@@ -36,7 +36,7 @@ public static class ApplicationError
         TValue currentValue,
         string message)
         where TValue : notnull =>
-        LayerErrorCore.Create<TUsecase, TValue>(ErrorType.ApplicationErrorsPrefix, errorType, currentValue, message);
+        LayerErrorCore.Create<TUsecase, TValue>(ErrorCodePrefixes.Application, errorType, currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TUsecase, T1, T2>(
@@ -46,7 +46,7 @@ public static class ApplicationError
         string message)
         where T1 : notnull
         where T2 : notnull =>
-        LayerErrorCore.Create<TUsecase, T1, T2>(ErrorType.ApplicationErrorsPrefix, errorType, value1, value2, message);
+        LayerErrorCore.Create<TUsecase, T1, T2>(ErrorCodePrefixes.Application, errorType, value1, value2, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TUsecase, T1, T2, T3>(
@@ -58,5 +58,5 @@ public static class ApplicationError
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        LayerErrorCore.Create<TUsecase, T1, T2, T3>(ErrorType.ApplicationErrorsPrefix, errorType, value1, value2, value3, message);
+        LayerErrorCore.Create<TUsecase, T1, T2, T3>(ErrorCodePrefixes.Application, errorType, value1, value2, value3, message);
 }

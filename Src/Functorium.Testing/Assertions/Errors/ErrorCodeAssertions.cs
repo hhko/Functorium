@@ -19,21 +19,21 @@ namespace Functorium.Testing.Assertions.Errors;
 /// error.ShouldBeExceptional();
 ///
 /// // ErrorCode 매칭
-/// error.ShouldHaveErrorCode("DomainErrors.Email.Empty");
-/// error.ShouldHaveErrorCodeStartingWith("DomainErrors.Email");
+/// error.ShouldHaveErrorCode("Domain.Email.Empty");
+/// error.ShouldHaveErrorCodeStartingWith("Domain.Email");
 /// error.ShouldHaveErrorCode(code => code.Contains("Email"));
 ///
 /// // ErrorCodeExpected 검증
-/// error.ShouldBeErrorCodeExpected("DomainErrors.Email.Empty", "");
-/// error.ShouldBeErrorCodeExpected&lt;int&gt;("DomainErrors.Age.Negative", -5);
+/// error.ShouldBeErrorCodeExpected("Domain.Email.Empty", "");
+/// error.ShouldBeErrorCodeExpected&lt;int&gt;("Domain.Age.Negative", -5);
 ///
 /// // Fin 검증
 /// fin.ShouldSucceed();
-/// fin.ShouldFailWithErrorCode("DomainErrors.Email.Empty");
+/// fin.ShouldFailWithErrorCode("Domain.Email.Empty");
 ///
 /// // Validation 검증
 /// validation.ShouldBeValid();
-/// validation.ShouldContainErrorCode("DomainErrors.Email.Empty");
+/// validation.ShouldContainErrorCode("Domain.Email.Empty");
 /// </code>
 /// </remarks>
 public static class ErrorCodeAssertions

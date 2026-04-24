@@ -1,5 +1,5 @@
 ﻿{
-  ErrorCode: ApplicationErrors.Database.ConnectionFailedWithInner,
+  ErrorCode: Application.Database.ConnectionFailedWithInner,
   ErrorCodeId: -2146233079,
   ErrorType: ErrorCodeExceptional,
   ExceptionDetails: {

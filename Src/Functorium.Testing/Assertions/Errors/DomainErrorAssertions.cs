@@ -15,14 +15,14 @@ public static class DomainErrorAssertions
     public static void ShouldBeDomainError<TDomain>(
         this Error error,
         DomainErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldBeError<TDomain>(error, ErrorType.DomainErrorsPrefix, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldBeError<TDomain>(error, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName);
 
     public static void ShouldBeDomainError<TDomain, TValue>(
         this Error error,
         DomainErrorType expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull =>
-        ErrorAssertionCore.ShouldBeError<TDomain, TValue>(error, ErrorType.DomainErrorsPrefix, expectedErrorType.ErrorName, expectedCurrentValue);
+        ErrorAssertionCore.ShouldBeError<TDomain, TValue>(error, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName, expectedCurrentValue);
 
     public static void ShouldBeDomainError<TDomain, T1, T2>(
         this Error error,
@@ -31,7 +31,7 @@ public static class DomainErrorAssertions
         T2 expectedValue2)
         where T1 : notnull
         where T2 : notnull =>
-        ErrorAssertionCore.ShouldBeError<TDomain, T1, T2>(error, ErrorType.DomainErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
+        ErrorAssertionCore.ShouldBeError<TDomain, T1, T2>(error, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
 
     public static void ShouldBeDomainError<TDomain, T1, T2, T3>(
         this Error error,
@@ -42,7 +42,7 @@ public static class DomainErrorAssertions
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        ErrorAssertionCore.ShouldBeError<TDomain, T1, T2, T3>(error, ErrorType.DomainErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
+        ErrorAssertionCore.ShouldBeError<TDomain, T1, T2, T3>(error, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
 
     #endregion
 
@@ -51,14 +51,14 @@ public static class DomainErrorAssertions
     public static void ShouldBeDomainError<TDomain, T>(
         this Fin<T> fin,
         DomainErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldBeFinError<TDomain, T>(fin, ErrorType.DomainErrorsPrefix, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldBeFinError<TDomain, T>(fin, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName);
 
     public static void ShouldBeDomainError<TDomain, T, TValue>(
         this Fin<T> fin,
         DomainErrorType expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull =>
-        ErrorAssertionCore.ShouldBeFinError<TDomain, T, TValue>(fin, ErrorType.DomainErrorsPrefix, expectedErrorType.ErrorName, expectedCurrentValue);
+        ErrorAssertionCore.ShouldBeFinError<TDomain, T, TValue>(fin, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName, expectedCurrentValue);
 
     #endregion
 
@@ -67,18 +67,18 @@ public static class DomainErrorAssertions
     public static void ShouldHaveDomainError<TDomain, T>(
         this Validation<Error, T> validation,
         DomainErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldHaveError<TDomain, T>(validation, ErrorType.DomainErrorsPrefix, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldHaveError<TDomain, T>(validation, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName);
 
     public static void ShouldHaveOnlyDomainError<TDomain, T>(
         this Validation<Error, T> validation,
         DomainErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldHaveOnlyError<TDomain, T>(validation, ErrorType.DomainErrorsPrefix, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldHaveOnlyError<TDomain, T>(validation, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName);
 
     public static void ShouldHaveDomainErrors<TDomain, T>(
         this Validation<Error, T> validation,
         params DomainErrorType[] expectedErrorTypes) =>
         ErrorAssertionCore.ShouldHaveErrors<TDomain, T>(
-            validation, ErrorType.DomainErrorsPrefix,
+            validation, ErrorCodePrefixes.Domain,
             expectedErrorTypes.Select(et => et.ErrorName).ToArray());
 
     public static void ShouldHaveDomainError<TDomain, T, TValue>(
@@ -86,7 +86,7 @@ public static class DomainErrorAssertions
         DomainErrorType expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull =>
-        ErrorAssertionCore.ShouldHaveError<TDomain, T, TValue>(validation, ErrorType.DomainErrorsPrefix, expectedErrorType.ErrorName, expectedCurrentValue);
+        ErrorAssertionCore.ShouldHaveError<TDomain, T, TValue>(validation, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName, expectedCurrentValue);
 
     public static void ShouldHaveDomainError<TDomain, T, T1, T2>(
         this Validation<Error, T> validation,
@@ -95,7 +95,7 @@ public static class DomainErrorAssertions
         T2 expectedValue2)
         where T1 : notnull
         where T2 : notnull =>
-        ErrorAssertionCore.ShouldHaveError<TDomain, T, T1, T2>(validation, ErrorType.DomainErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
+        ErrorAssertionCore.ShouldHaveError<TDomain, T, T1, T2>(validation, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
 
     public static void ShouldHaveDomainError<TDomain, T, T1, T2, T3>(
         this Validation<Error, T> validation,
@@ -106,7 +106,7 @@ public static class DomainErrorAssertions
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        ErrorAssertionCore.ShouldHaveError<TDomain, T, T1, T2, T3>(validation, ErrorType.DomainErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
+        ErrorAssertionCore.ShouldHaveError<TDomain, T, T1, T2, T3>(validation, ErrorCodePrefixes.Domain, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
 
     #endregion
 }

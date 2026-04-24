@@ -1,5 +1,5 @@
 ﻿{
-  ErrorCode: DomainErrors.Geometry.InvalidPoint,
+  ErrorCode: Domain.Geometry.InvalidPoint,
   ErrorCodeId: -1000,
   ErrorCurrentValue: {
     X: 100,

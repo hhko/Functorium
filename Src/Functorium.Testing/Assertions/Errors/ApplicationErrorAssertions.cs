@@ -15,14 +15,14 @@ public static class ApplicationErrorAssertions
     public static void ShouldBeApplicationError<TUsecase>(
         this Error error,
         ApplicationErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldBeError<TUsecase>(error, ErrorType.ApplicationErrorsPrefix, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldBeError<TUsecase>(error, ErrorCodePrefixes.Application, expectedErrorType.ErrorName);
 
     public static void ShouldBeApplicationError<TUsecase, TValue>(
         this Error error,
         ApplicationErrorType expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull =>
-        ErrorAssertionCore.ShouldBeError<TUsecase, TValue>(error, ErrorType.ApplicationErrorsPrefix, expectedErrorType.ErrorName, expectedCurrentValue);
+        ErrorAssertionCore.ShouldBeError<TUsecase, TValue>(error, ErrorCodePrefixes.Application, expectedErrorType.ErrorName, expectedCurrentValue);
 
     public static void ShouldBeApplicationError<TUsecase, T1, T2>(
         this Error error,
@@ -31,7 +31,7 @@ public static class ApplicationErrorAssertions
         T2 expectedValue2)
         where T1 : notnull
         where T2 : notnull =>
-        ErrorAssertionCore.ShouldBeError<TUsecase, T1, T2>(error, ErrorType.ApplicationErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
+        ErrorAssertionCore.ShouldBeError<TUsecase, T1, T2>(error, ErrorCodePrefixes.Application, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
 
     public static void ShouldBeApplicationError<TUsecase, T1, T2, T3>(
         this Error error,
@@ -42,7 +42,7 @@ public static class ApplicationErrorAssertions
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        ErrorAssertionCore.ShouldBeError<TUsecase, T1, T2, T3>(error, ErrorType.ApplicationErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
+        ErrorAssertionCore.ShouldBeError<TUsecase, T1, T2, T3>(error, ErrorCodePrefixes.Application, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
 
     #endregion
 
@@ -51,14 +51,14 @@ public static class ApplicationErrorAssertions
     public static void ShouldBeApplicationError<TUsecase, T>(
         this Fin<T> fin,
         ApplicationErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldBeFinError<TUsecase, T>(fin, ErrorType.ApplicationErrorsPrefix, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldBeFinError<TUsecase, T>(fin, ErrorCodePrefixes.Application, expectedErrorType.ErrorName);
 
     public static void ShouldBeApplicationError<TUsecase, T, TValue>(
         this Fin<T> fin,
         ApplicationErrorType expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull =>
-        ErrorAssertionCore.ShouldBeFinError<TUsecase, T, TValue>(fin, ErrorType.ApplicationErrorsPrefix, expectedErrorType.ErrorName, expectedCurrentValue);
+        ErrorAssertionCore.ShouldBeFinError<TUsecase, T, TValue>(fin, ErrorCodePrefixes.Application, expectedErrorType.ErrorName, expectedCurrentValue);
 
     #endregion
 
@@ -67,18 +67,18 @@ public static class ApplicationErrorAssertions
     public static void ShouldHaveApplicationError<TUsecase, T>(
         this Validation<Error, T> validation,
         ApplicationErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldHaveError<TUsecase, T>(validation, ErrorType.ApplicationErrorsPrefix, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldHaveError<TUsecase, T>(validation, ErrorCodePrefixes.Application, expectedErrorType.ErrorName);
 
     public static void ShouldHaveOnlyApplicationError<TUsecase, T>(
         this Validation<Error, T> validation,
         ApplicationErrorType expectedErrorType) =>
-        ErrorAssertionCore.ShouldHaveOnlyError<TUsecase, T>(validation, ErrorType.ApplicationErrorsPrefix, expectedErrorType.ErrorName);
+        ErrorAssertionCore.ShouldHaveOnlyError<TUsecase, T>(validation, ErrorCodePrefixes.Application, expectedErrorType.ErrorName);
 
     public static void ShouldHaveApplicationErrors<TUsecase, T>(
         this Validation<Error, T> validation,
         params ApplicationErrorType[] expectedErrorTypes) =>
         ErrorAssertionCore.ShouldHaveErrors<TUsecase, T>(
-            validation, ErrorType.ApplicationErrorsPrefix,
+            validation, ErrorCodePrefixes.Application,
             expectedErrorTypes.Select(et => et.ErrorName).ToArray());
 
     public static void ShouldHaveApplicationError<TUsecase, T, TValue>(
@@ -86,7 +86,7 @@ public static class ApplicationErrorAssertions
         ApplicationErrorType expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull =>
-        ErrorAssertionCore.ShouldHaveError<TUsecase, T, TValue>(validation, ErrorType.ApplicationErrorsPrefix, expectedErrorType.ErrorName, expectedCurrentValue);
+        ErrorAssertionCore.ShouldHaveError<TUsecase, T, TValue>(validation, ErrorCodePrefixes.Application, expectedErrorType.ErrorName, expectedCurrentValue);
 
     public static void ShouldHaveApplicationError<TUsecase, T, T1, T2>(
         this Validation<Error, T> validation,
@@ -95,7 +95,7 @@ public static class ApplicationErrorAssertions
         T2 expectedValue2)
         where T1 : notnull
         where T2 : notnull =>
-        ErrorAssertionCore.ShouldHaveError<TUsecase, T, T1, T2>(validation, ErrorType.ApplicationErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
+        ErrorAssertionCore.ShouldHaveError<TUsecase, T, T1, T2>(validation, ErrorCodePrefixes.Application, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
 
     public static void ShouldHaveApplicationError<TUsecase, T, T1, T2, T3>(
         this Validation<Error, T> validation,
@@ -106,7 +106,7 @@ public static class ApplicationErrorAssertions
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        ErrorAssertionCore.ShouldHaveError<TUsecase, T, T1, T2, T3>(validation, ErrorType.ApplicationErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
+        ErrorAssertionCore.ShouldHaveError<TUsecase, T, T1, T2, T3>(validation, ErrorCodePrefixes.Application, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
 
     #endregion
 }

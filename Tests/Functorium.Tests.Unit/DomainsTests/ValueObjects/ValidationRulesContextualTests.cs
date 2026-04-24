@@ -74,7 +74,7 @@ public class ValidationRulesContextualTests
             {
                 errors.Count.ShouldBe(1);
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.Empty");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.Empty");
             });
     }
 
@@ -111,7 +111,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.TooShort");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.TooShort");
             });
     }
 
@@ -148,7 +148,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.TooLong");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.TooLong");
             });
     }
 
@@ -184,7 +184,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.WrongLength");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.WrongLength");
             });
     }
 
@@ -220,7 +220,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<decimal>)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.Negative");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.Negative");
             });
     }
 
@@ -251,7 +251,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<decimal>)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.NotPositive");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.NotPositive");
             });
     }
 
@@ -283,7 +283,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<decimal>)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.OutOfRange");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.OutOfRange");
             });
     }
 
@@ -316,7 +316,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<decimal>)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.Zero");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.Zero");
             });
     }
 
@@ -349,7 +349,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<decimal>)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.AboveMaximum");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.AboveMaximum");
             });
     }
 
@@ -382,7 +382,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<decimal>)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.BelowMinimum");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.BelowMinimum");
             });
     }
 
@@ -421,7 +421,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.InvalidFormat");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.InvalidFormat");
             });
     }
 
@@ -454,7 +454,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.NotUpperCase");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.NotUpperCase");
             });
     }
 
@@ -487,7 +487,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.NotLowerCase");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.NotLowerCase");
             });
     }
 
@@ -527,7 +527,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.Null");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.Null");
             });
     }
 
@@ -563,7 +563,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.Null");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.Null");
             });
     }
 
@@ -608,7 +608,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<string>)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.NotUpperCase");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.NotUpperCase");
             });
     }
 
@@ -645,7 +645,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<DateTime>)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.DefaultDate");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.DefaultDate");
             });
     }
 
@@ -678,7 +678,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<DateTime>)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.NotInPast");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.NotInPast");
             });
     }
 
@@ -711,7 +711,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<DateTime>)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.NotInFuture");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.NotInFuture");
             });
     }
 
@@ -746,7 +746,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<DateTime>)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.TooLate");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.TooLate");
             });
     }
 
@@ -781,7 +781,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<DateTime>)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.TooEarly");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.TooEarly");
             });
     }
 
@@ -818,7 +818,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<DateTime>)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.OutOfRange");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.OutOfRange");
             });
     }
 
@@ -861,7 +861,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.Empty");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.Empty");
             });
     }
 
@@ -883,7 +883,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected)errors.Head;
-                error.ErrorCode.ShouldBe($"DomainErrors.{TestContext}.TooShort");
+                error.ErrorCode.ShouldBe($"Domain.{TestContext}.TooShort");
             });
     }
 
@@ -958,7 +958,7 @@ public class ValidationRulesContextualTests
             Fail: errors =>
             {
                 var error = (ErrorCodeExpected<decimal>)errors.Head;
-                error.ErrorCode.ShouldBe("DomainErrors.ProductValidation.NotPositive");
+                error.ErrorCode.ShouldBe("Domain.ProductValidation.NotPositive");
             });
     }
 

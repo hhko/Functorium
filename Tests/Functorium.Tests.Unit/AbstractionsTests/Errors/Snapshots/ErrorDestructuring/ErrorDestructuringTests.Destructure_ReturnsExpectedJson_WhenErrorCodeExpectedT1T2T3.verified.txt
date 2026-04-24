@@ -1,5 +1,5 @@
 ﻿{
-  ErrorCode: DomainErrors.Schedule.InvalidDate,
+  ErrorCode: Domain.Schedule.InvalidDate,
   ErrorCodeId: -1000,
   ErrorCurrentValue1: 2025,
   ErrorCurrentValue2: 13,

@@ -6,8 +6,8 @@ using LanguageExt.Common;
 namespace Functorium.Domains.Errors;
 
 /// <summary>
-/// 값 객체의 도메인 오류 생성을 위한 헬퍼 클래스
-/// 에러 코드를 자동으로 "DomainErrors.{ValueObjectName}.{ErrorName}" 형식으로 생성
+/// 값 객체의 도메인 오류 생성을 위한 정적 팩토리 클래스.
+/// 에러 코드를 자동으로 "Domain.{ValueObjectName}.{ErrorName}" 형식으로 생성합니다.
 /// </summary>
 /// <remarks>
 /// 사용 예시:
@@ -28,7 +28,7 @@ public static class DomainError
         DomainErrorType errorType,
         string currentValue,
         string message) =>
-        LayerErrorCore.Create<TDomain>(ErrorType.DomainErrorsPrefix, errorType, currentValue, message);
+        LayerErrorCore.Create<TDomain>(ErrorCodePrefixes.Domain, errorType, currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TDomain, TValue>(
@@ -36,7 +36,7 @@ public static class DomainError
         TValue currentValue,
         string message)
         where TValue : notnull =>
-        LayerErrorCore.Create<TDomain, TValue>(ErrorType.DomainErrorsPrefix, errorType, currentValue, message);
+        LayerErrorCore.Create<TDomain, TValue>(ErrorCodePrefixes.Domain, errorType, currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TDomain, T1, T2>(
@@ -46,7 +46,7 @@ public static class DomainError
         string message)
         where T1 : notnull
         where T2 : notnull =>
-        LayerErrorCore.Create<TDomain, T1, T2>(ErrorType.DomainErrorsPrefix, errorType, value1, value2, message);
+        LayerErrorCore.Create<TDomain, T1, T2>(ErrorCodePrefixes.Domain, errorType, value1, value2, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TDomain, T1, T2, T3>(
@@ -58,7 +58,7 @@ public static class DomainError
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        LayerErrorCore.Create<TDomain, T1, T2, T3>(ErrorType.DomainErrorsPrefix, errorType, value1, value2, value3, message);
+        LayerErrorCore.Create<TDomain, T1, T2, T3>(ErrorCodePrefixes.Domain, errorType, value1, value2, value3, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error ForContext(
@@ -66,7 +66,7 @@ public static class DomainError
         DomainErrorType errorType,
         string currentValue,
         string message) =>
-        LayerErrorCore.ForContext(ErrorType.DomainErrorsPrefix, contextName, errorType, currentValue, message);
+        LayerErrorCore.ForContext(ErrorCodePrefixes.Domain, contextName, errorType, currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error ForContext<TValue>(
@@ -75,5 +75,5 @@ public static class DomainError
         TValue currentValue,
         string message)
         where TValue : notnull =>
-        LayerErrorCore.ForContext(ErrorType.DomainErrorsPrefix, contextName, errorType, currentValue, message);
+        LayerErrorCore.ForContext(ErrorCodePrefixes.Domain, contextName, errorType, currentValue, message);
 }
