@@ -9,6 +9,6 @@
     Item1: 0,
     Item2: 100
   },
-  ErrorType: ErrorCodeExpected`2,
+  ErrorType: ExpectedError`2,
   Message: 좌표가 범위를 벗어났습니다
 }

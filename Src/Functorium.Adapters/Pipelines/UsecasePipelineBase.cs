@@ -19,9 +19,9 @@ namespace Functorium.Adapters.Pipelines;
 // Response
 //  - Information
 //      {RequestLayer} {RequestCategory} {RequestCategoryType} {RequestHandler} {RequestHandlerPath} responded {Status} in {Elapsed:0.0000} ms
-//  - Warning: ErrorCodeExpected
+//  - Warning: ExpectedError
 //      {RequestLayer} {RequestCategory} {RequestCategoryType} {RequestHandler} {RequestHandlerPath} responded {Status} in {Elapsed:0.0000} ms with {@Error:Error}
-//  - Error: ErrorCodeExceptional
+//  - Error: ExceptionalError
 //      {RequestLayer} {RequestCategory} {RequestCategoryType} {RequestHandler} {RequestHandlerPath} responded {Status} in {Elapsed:0.0000} ms with {@Error:Error}
 //
 // Fields
@@ -32,7 +32,7 @@ namespace Functorium.Adapters.Pipelines;
 //  - RequestHandlerPath       : 네임스페이스를 포함한 전체 클래스 이름
 //  - Status            : Succ, Fail
 //  - Elapsed           : 0.0000
-//  - Error             : ErrorCodeExpected, ErrorCodeExpected<T1, T2, T3>, ErrorCodeExceptional, ManyErrors
+//  - Error             : ExpectedError, ExpectedError<T1, T2, T3>, ExceptionalError, ManyErrors
 
 // ---------------------------------------
 // Tracing
@@ -50,7 +50,7 @@ namespace Functorium.Adapters.Pipelines;
 //    - StartTime
 //    - EndTime
 //
-//                  | ErrorCodeExpected | ErrorCodeExceptional | ManyErrors | 기본
+//                  | ExpectedError | ExceptionalError | ManyErrors | 기본
 //  - ErrorType     | O                 | O                    | O          | O
 //  - ErrorCode     | O                 | O                    | O          | X
 

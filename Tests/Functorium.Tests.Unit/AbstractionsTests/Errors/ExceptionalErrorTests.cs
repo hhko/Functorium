@@ -3,7 +3,7 @@ using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 namespace Functorium.Tests.Unit.AbstractionsTests.Errors;
 
 [Trait(nameof(UnitTest), UnitTest.Functorium_Abstractions)]
-public class ErrorCodeExceptionalTests
+public class ExceptionalErrorTests
 {
     [Fact]
     public void ErrorCode_ReturnsCorrectValue_WhenCreated()
@@ -13,7 +13,7 @@ public class ErrorCodeExceptionalTests
         var exception = new InvalidOperationException("Connection failed");
 
         // Act
-        var sut = new ErrorCodeExceptional(errorCode, exception);
+        var sut = new ExceptionalError(errorCode, exception);
 
         // Assert
         sut.ErrorCode.ShouldBe(errorCode);
@@ -27,7 +27,7 @@ public class ErrorCodeExceptionalTests
         var exception = new InvalidOperationException(exceptionMessage);
 
         // Act
-        var sut = new ErrorCodeExceptional("code", exception);
+        var sut = new ExceptionalError("code", exception);
 
         // Assert
         sut.Message.ShouldBe(exceptionMessage);
@@ -40,7 +40,7 @@ public class ErrorCodeExceptionalTests
         var exception = new InvalidOperationException("test");
 
         // Act
-        var sut = new ErrorCodeExceptional("code", exception);
+        var sut = new ExceptionalError("code", exception);
 
         // Assert
         sut.Code.ShouldBe(exception.HResult);
@@ -53,7 +53,7 @@ public class ErrorCodeExceptionalTests
         var exception = new InvalidOperationException("test");
 
         // Act
-        var sut = new ErrorCodeExceptional("code", exception);
+        var sut = new ExceptionalError("code", exception);
 
         // Assert
         sut.IsExpected.ShouldBeFalse();
@@ -66,7 +66,7 @@ public class ErrorCodeExceptionalTests
         var exception = new InvalidOperationException("test");
 
         // Act
-        var sut = new ErrorCodeExceptional("code", exception);
+        var sut = new ExceptionalError("code", exception);
 
         // Assert
         sut.IsExceptional.ShouldBeTrue();
@@ -77,7 +77,7 @@ public class ErrorCodeExceptionalTests
     {
         // Arrange
         var exception = new InvalidOperationException("test");
-        var sut = new ErrorCodeExceptional("code", exception);
+        var sut = new ExceptionalError("code", exception);
 
         // Act
         var actual = sut.HasException<InvalidOperationException>();
@@ -91,7 +91,7 @@ public class ErrorCodeExceptionalTests
     {
         // Arrange
         var exception = new InvalidOperationException("test");
-        var sut = new ErrorCodeExceptional("code", exception);
+        var sut = new ExceptionalError("code", exception);
 
         // Act
         var actual = sut.HasException<ArgumentException>();
@@ -105,7 +105,7 @@ public class ErrorCodeExceptionalTests
     {
         // Arrange
         var exception = new InvalidOperationException("test");
-        var sut = new ErrorCodeExceptional("code", exception);
+        var sut = new ExceptionalError("code", exception);
 
         // Act
         var actual = sut.ToException();
@@ -120,7 +120,7 @@ public class ErrorCodeExceptionalTests
         // Arrange
         var exceptionMessage = "Connection failed";
         var exception = new InvalidOperationException(exceptionMessage);
-        var sut = new ErrorCodeExceptional("code", exception);
+        var sut = new ExceptionalError("code", exception);
 
         // Act
         var actual = sut.ToString();
@@ -134,7 +134,7 @@ public class ErrorCodeExceptionalTests
     {
         // Arrange
         var exception = new InvalidOperationException("test");
-        var sut = new ErrorCodeExceptional("code", exception);
+        var sut = new ExceptionalError("code", exception);
 
         // Act
         var actual = sut.Inner;
@@ -149,7 +149,7 @@ public class ErrorCodeExceptionalTests
         // Arrange
         var innerException = new ArgumentException("inner");
         var exception = new InvalidOperationException("outer", innerException);
-        var sut = new ErrorCodeExceptional("code", exception);
+        var sut = new ExceptionalError("code", exception);
 
         // Act
         var actual = sut.Inner;
@@ -164,8 +164,8 @@ public class ErrorCodeExceptionalTests
         // Arrange
         var exception1 = new InvalidOperationException("test");
         var exception2 = new InvalidOperationException("test2");
-        var sut = new ErrorCodeExceptional("code", exception1);
-        var other = new ErrorCodeExceptional("code2", exception2);
+        var sut = new ExceptionalError("code", exception1);
+        var other = new ExceptionalError("code2", exception2);
 
         // Act
         var actual = sut.Is(other);
@@ -180,8 +180,8 @@ public class ErrorCodeExceptionalTests
         // Arrange
         var exception1 = new InvalidOperationException("test");
         var exception2 = new ArgumentException("test");
-        var sut = new ErrorCodeExceptional("code", exception1);
-        var other = new ErrorCodeExceptional("code2", exception2);
+        var sut = new ExceptionalError("code", exception1);
+        var other = new ExceptionalError("code2", exception2);
 
         // Act
         var actual = sut.Is(other);
@@ -195,7 +195,7 @@ public class ErrorCodeExceptionalTests
     {
         // Arrange
         var exception = new InvalidOperationException("test");
-        var sut = new ErrorCodeExceptional("code", exception);
+        var sut = new ExceptionalError("code", exception);
 
         // Act & Assert
         Should.Throw<InvalidOperationException>(() => sut.Throw<int>());
@@ -206,7 +206,7 @@ public class ErrorCodeExceptionalTests
     {
         // Arrange
         var exception = new InvalidOperationException("test");
-        var sut = new ErrorCodeExceptional("code", exception);
+        var sut = new ExceptionalError("code", exception);
 
         // Act
         var actual = sut.ToErrorException();
@@ -217,26 +217,26 @@ public class ErrorCodeExceptionalTests
 }
 
 [Trait(nameof(UnitTest), UnitTest.Functorium_Abstractions)]
-public class ErrorCodeExceptionalInterfaceTests
+public class ExceptionalErrorInterfaceTests
 {
     [Fact]
-    public void ErrorCodeExceptional_ImplementsIHasErrorCode()
+    public void ExceptionalError_ImplementsIHasErrorCode()
     {
         // Arrange
         var exception = new InvalidOperationException("Test");
-        var sut = new ErrorCodeExceptional("error.code", exception);
+        var sut = new ExceptionalError("error.code", exception);
 
         // Assert
         sut.ShouldBeAssignableTo<IHasErrorCode>();
     }
 
     [Fact]
-    public void ErrorCodeExceptional_IHasErrorCode_ReturnsCorrectErrorCode()
+    public void ExceptionalError_IHasErrorCode_ReturnsCorrectErrorCode()
     {
         // Arrange
         var errorCode = "Database.ConnectionTimeout";
         var exception = new InvalidOperationException("Connection timed out");
-        var sut = new ErrorCodeExceptional(errorCode, exception);
+        var sut = new ExceptionalError(errorCode, exception);
         IHasErrorCode hasErrorCode = sut;
 
         // Act & Assert

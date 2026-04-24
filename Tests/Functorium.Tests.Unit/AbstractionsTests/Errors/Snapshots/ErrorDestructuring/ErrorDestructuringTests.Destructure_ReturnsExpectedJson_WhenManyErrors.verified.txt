@@ -6,14 +6,14 @@
       ErrorCode: Application.User.NameRequired,
       ErrorCodeId: -1000,
       ErrorCurrentValue: name,
-      ErrorType: ErrorCodeExpected,
+      ErrorType: ExpectedError,
       Message: 이름은 필수입니다
     },
     {
       ErrorCode: Application.User.DescriptionTooLong,
       ErrorCodeId: -1000,
       ErrorCurrentValue: description,
-      ErrorType: ErrorCodeExpected,
+      ErrorType: ExpectedError,
       Message: 설명이 너무 깁니다
     }
   ],

@@ -409,8 +409,8 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
         TestCommandRequest request,
         CancellationToken cancellationToken)
     {
-        // Generic ErrorCodeExpected<T>로 실패
-        var error = new ErrorCodeExpected<int>("Test.GenericError", 42, "Generic error occurred");
+        // Generic ExpectedError<T>로 실패
+        var error = new ExpectedError<int>("Test.GenericError", 42, "Generic error occurred");
         return ValueTask.FromResult(TestResponseWithError.CreateFail(error));
     }
 
@@ -427,7 +427,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
     {
         // Exceptional 에러로 실패
         var exception = new InvalidOperationException("Exceptional error occurred");
-        var error = new ErrorCodeExceptional("Test.ExceptionalError", exception);
+        var error = new ExceptionalError("Test.ExceptionalError", exception);
         return ValueTask.FromResult(TestResponseWithError.CreateFail(error));
     }
 
@@ -438,8 +438,8 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
         // Aggregate 에러로 실패
         var errors = new Error[]
         {
-            new ErrorCodeExpected("Test.Error1", "value1", "First error"),
-            new ErrorCodeExpected("Test.Error2", "value2", "Second error")
+            new ExpectedError("Test.Error1", "value1", "First error"),
+            new ExpectedError("Test.Error2", "value2", "Second error")
         };
         var error = Error.Many(errors);
         return ValueTask.FromResult(TestResponseWithError.CreateFail(error));

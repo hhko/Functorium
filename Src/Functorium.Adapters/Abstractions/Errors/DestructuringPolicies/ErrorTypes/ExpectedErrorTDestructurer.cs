@@ -5,12 +5,12 @@ using Serilog.Events;
 
 namespace Functorium.Adapters.Abstractions.Errors.DestructuringPolicies.ErrorTypes;
 
-public class ErrorCodeExpectedTDestructurer : IErrorDestructurer
+public class ExpectedErrorTDestructurer : IErrorDestructurer
 {
     public bool CanHandle(Error error)
     {
         Type type = error.GetType();
-        return type.IsGenericType && type.Name.StartsWith(nameof(ErrorCodeExpected));
+        return type.IsGenericType && type.Name.StartsWith(nameof(ExpectedError));
     }
 
     public LogEventPropertyValue Destructure(Error error, ILogEventPropertyValueFactory factory)

@@ -1,7 +1,7 @@
 ﻿{
   ErrorCode: Application.Database.QueryExecutionFailed,
   ErrorCodeId: -2146233079,
-  ErrorType: ErrorCodeExceptional,
+  ErrorType: ExceptionalError,
   ExceptionDetails: {
     HResult: {Scrubbed},
     InnerException: {

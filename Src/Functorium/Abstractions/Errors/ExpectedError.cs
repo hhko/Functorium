@@ -4,13 +4,13 @@ using System.Runtime.Serialization;
 namespace Functorium.Abstractions.Errors;
 
 [DataContract]
-internal record ErrorCodeExpected(
+internal record ExpectedError(
     string ErrorCode,
     string ErrorCurrentValue,
     string ErrorMessage,
     int ErrorCodeId = -1000,
     Option<Error> Inner = default)
-    : ErrorCodeExpectedBase(ErrorCode, ErrorMessage, ErrorCodeId, Inner)
+    : ExpectedErrorBase(ErrorCode, ErrorMessage, ErrorCodeId, Inner)
 {
     [Pure]
     [DataMember]
@@ -19,13 +19,13 @@ internal record ErrorCodeExpected(
 }
 
 [DataContract]
-internal record ErrorCodeExpected<T>(
+internal record ExpectedError<T>(
     string ErrorCode,
     T ErrorCurrentValue,
     string ErrorMessage,
     int ErrorCodeId = -1000,
     Option<Error> Inner = default)
-    : ErrorCodeExpectedBase(ErrorCode, ErrorMessage, ErrorCodeId, Inner)
+    : ExpectedErrorBase(ErrorCode, ErrorMessage, ErrorCodeId, Inner)
         where T : notnull
 {
     [Pure]
@@ -35,14 +35,14 @@ internal record ErrorCodeExpected<T>(
 }
 
 [DataContract]
-internal record ErrorCodeExpected<T1, T2>(
+internal record ExpectedError<T1, T2>(
     string ErrorCode,
     T1 ErrorCurrentValue1,
     T2 ErrorCurrentValue2,
     string ErrorMessage,
     int ErrorCodeId = -1000,
     Option<Error> Inner = default)
-    : ErrorCodeExpectedBase(ErrorCode, ErrorMessage, ErrorCodeId, Inner)
+    : ExpectedErrorBase(ErrorCode, ErrorMessage, ErrorCodeId, Inner)
         where T1 : notnull
         where T2 : notnull
 {
@@ -58,7 +58,7 @@ internal record ErrorCodeExpected<T1, T2>(
 }
 
 [DataContract]
-internal record ErrorCodeExpected<T1, T2, T3>(
+internal record ExpectedError<T1, T2, T3>(
     string ErrorCode,
     T1 ErrorCurrentValue1,
     T2 ErrorCurrentValue2,
@@ -66,7 +66,7 @@ internal record ErrorCodeExpected<T1, T2, T3>(
     string ErrorMessage,
     int ErrorCodeId = -1000,
     Option<Error> Inner = default)
-    : ErrorCodeExpectedBase(ErrorCode, ErrorMessage, ErrorCodeId, Inner)
+    : ExpectedErrorBase(ErrorCode, ErrorMessage, ErrorCodeId, Inner)
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull

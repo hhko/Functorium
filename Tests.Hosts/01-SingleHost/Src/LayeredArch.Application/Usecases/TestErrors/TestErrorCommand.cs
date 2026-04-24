@@ -7,7 +7,7 @@ namespace LayeredArch.Application.Usecases.TestErrors;
 
 /// <summary>
 /// 에러 처리 테스트 Command - UsecaseMetricsPipeline의 에러 태그 기능 검증
-/// ErrorCodeExpected, ErrorCodeExceptional, ManyErrors 시나리오 테스트
+/// ExpectedError, ExceptionalError, ManyErrors 시나리오 테스트
 /// </summary>
 public sealed class TestErrorCommand
 {
@@ -31,7 +31,7 @@ public sealed class TestErrorCommand
         /// <summary>복합 에러 (ManyErrors - Expected + Exceptional)</summary>
         ManyMixed,
 
-        /// <summary>제네릭 Expected 에러 (ErrorCodeExpected&lt;T&gt;)</summary>
+        /// <summary>제네릭 Expected 에러 (ExpectedError&lt;T&gt;)</summary>
         GenericExpected
     }
 
@@ -153,7 +153,7 @@ public sealed class TestErrorCommand
         }
 
         /// <summary>
-        /// 제네릭 Expected 에러 - ErrorCodeExpected&lt;T&gt; 테스트
+        /// 제네릭 Expected 에러 - ExpectedError&lt;T&gt; 테스트
         /// 메트릭: response.status=failure, error.type=expected, error.code=TestErrors.TestErrorCommand.GenericError
         /// </summary>
         private FinResponse<Response> HandleGenericExpected(Request request)

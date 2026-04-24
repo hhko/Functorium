@@ -67,13 +67,13 @@ GetOrderSummary Result: Succ(Response { OrderId = ORD-123, Status = Completed })
 === FailExpectedCommand (Expected Error) ===
 [18:19:09 INF] application usecase.command FailExpectedCommand.Handle requesting with {"OrderId": "ORD-NOT-EXIST", "$type": "Request"}
 [18:19:09 WRN] application usecase.command FailExpectedCommand.Handle responded failure in 0.0044 s with expected:Order.NotFound
-  {"ErrorType": "ErrorCodeExpected", "ErrorCode": "Order.NotFound", "Message": "주문을 찾을 수 없습니다"}
+  {"ErrorType": "ExpectedError", "ErrorCode": "Order.NotFound", "Message": "주문을 찾을 수 없습니다"}
 FailExpected Result: Fail(주문을 찾을 수 없습니다)
 
 === FailExceptionalCommand (Exceptional Error) ===
 [18:19:09 INF] application usecase.command FailExceptionalCommand.Handle requesting with {"OrderId": "ORD-DB-FAIL", "$type": "Request"}
 [18:19:09 ERR] application usecase.command FailExceptionalCommand.Handle responded failure in 0.0331 s with exceptional:Database.ConnectionFailed
-  {"ErrorType": "ErrorCodeExceptional", "ErrorCode": "Database.ConnectionFailed", "Message": "데이터베이스 연결이 끊어졌습니다"}
+  {"ErrorType": "ExceptionalError", "ErrorCode": "Database.ConnectionFailed", "Message": "데이터베이스 연결이 끊어졌습니다"}
 FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
 
 === Done ===

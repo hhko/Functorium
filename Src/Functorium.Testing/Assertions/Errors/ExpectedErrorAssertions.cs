@@ -23,9 +23,9 @@ namespace Functorium.Testing.Assertions.Errors;
 /// error.ShouldHaveErrorCodeStartingWith("Domain.Email");
 /// error.ShouldHaveErrorCode(code => code.Contains("Email"));
 ///
-/// // ErrorCodeExpected 검증
-/// error.ShouldBeErrorCodeExpected("Domain.Email.Empty", "");
-/// error.ShouldBeErrorCodeExpected&lt;int&gt;("Domain.Age.Negative", -5);
+/// // ExpectedError 검증
+/// error.ShouldBeExpectedError("Domain.Email.Empty", "");
+/// error.ShouldBeExpectedError&lt;int&gt;("Domain.Age.Negative", -5);
 ///
 /// // Fin 검증
 /// fin.ShouldSucceed();
@@ -36,7 +36,7 @@ namespace Functorium.Testing.Assertions.Errors;
 /// validation.ShouldContainErrorCode("Domain.Email.Empty");
 /// </code>
 /// </remarks>
-public static class ErrorCodeAssertions
+public static class ExpectedErrorAssertions
 {
     #region Error State Assertions
 
@@ -114,68 +114,68 @@ public static class ErrorCodeAssertions
 
     #endregion
 
-    #region ErrorCodeExpected Variants Assertions
+    #region ExpectedError Variants Assertions
 
     /// <summary>
-    /// Error가 특정 ErrorCodeExpected인지 검증합니다 (비제네릭).
+    /// Error가 특정 ExpectedError인지 검증합니다 (비제네릭).
     /// </summary>
     /// <param name="error">검증할 Error</param>
     /// <param name="expectedErrorCode">기대하는 에러 코드</param>
     /// <param name="expectedCurrentValue">기대하는 현재 값</param>
-    public static void ShouldBeErrorCodeExpected(
+    public static void ShouldBeExpectedError(
         this Error error,
         string expectedErrorCode,
         string expectedCurrentValue)
     {
-        error.ShouldBeOfType<ErrorCodeExpected>();
-        var errorCodeExpected = (ErrorCodeExpected)error;
+        error.ShouldBeOfType<ExpectedError>();
+        var errorCodeExpected = (ExpectedError)error;
         errorCodeExpected.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue.ShouldBe(expectedCurrentValue);
     }
 
     /// <summary>
-    /// Error가 특정 ErrorCodeExpected&lt;T&gt;인지 검증합니다.
+    /// Error가 특정 ExpectedError&lt;T&gt;인지 검증합니다.
     /// </summary>
     /// <typeparam name="T">현재 값의 타입</typeparam>
     /// <param name="error">검증할 Error</param>
     /// <param name="expectedErrorCode">기대하는 에러 코드</param>
     /// <param name="expectedCurrentValue">기대하는 현재 값</param>
-    public static void ShouldBeErrorCodeExpected<T>(
+    public static void ShouldBeExpectedError<T>(
         this Error error,
         string expectedErrorCode,
         T expectedCurrentValue)
         where T : notnull
     {
-        error.ShouldBeOfType<ErrorCodeExpected<T>>();
-        var errorCodeExpected = (ErrorCodeExpected<T>)error;
+        error.ShouldBeOfType<ExpectedError<T>>();
+        var errorCodeExpected = (ExpectedError<T>)error;
         errorCodeExpected.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue.ShouldBe(expectedCurrentValue);
     }
 
     /// <summary>
-    /// Error가 특정 ErrorCodeExpected&lt;T&gt;인지 검증합니다 (predicate 기반).
+    /// Error가 특정 ExpectedError&lt;T&gt;인지 검증합니다 (predicate 기반).
     /// </summary>
     /// <typeparam name="T">현재 값의 타입</typeparam>
     /// <param name="error">검증할 Error</param>
     /// <param name="expectedErrorCode">기대하는 에러 코드</param>
     /// <param name="valuePredicate">값 검증 조건</param>
     /// <param name="customMessage">실패 시 메시지 (선택)</param>
-    public static void ShouldBeErrorCodeExpected<T>(
+    public static void ShouldBeExpectedError<T>(
         this Error error,
         string expectedErrorCode,
         Func<T, bool> valuePredicate,
         string? customMessage = null)
         where T : notnull
     {
-        error.ShouldBeOfType<ErrorCodeExpected<T>>();
-        var errorCodeExpected = (ErrorCodeExpected<T>)error;
+        error.ShouldBeOfType<ExpectedError<T>>();
+        var errorCodeExpected = (ExpectedError<T>)error;
         errorCodeExpected.ErrorCode.ShouldBe(expectedErrorCode);
         valuePredicate(errorCodeExpected.ErrorCurrentValue).ShouldBeTrue(
             customMessage ?? $"Value '{errorCodeExpected.ErrorCurrentValue}' did not match the predicate");
     }
 
     /// <summary>
-    /// Error가 특정 ErrorCodeExpected&lt;T1, T2&gt;인지 검증합니다.
+    /// Error가 특정 ExpectedError&lt;T1, T2&gt;인지 검증합니다.
     /// </summary>
     /// <typeparam name="T1">첫 번째 값의 타입</typeparam>
     /// <typeparam name="T2">두 번째 값의 타입</typeparam>
@@ -183,7 +183,7 @@ public static class ErrorCodeAssertions
     /// <param name="expectedErrorCode">기대하는 에러 코드</param>
     /// <param name="expectedValue1">기대하는 첫 번째 값</param>
     /// <param name="expectedValue2">기대하는 두 번째 값</param>
-    public static void ShouldBeErrorCodeExpected<T1, T2>(
+    public static void ShouldBeExpectedError<T1, T2>(
         this Error error,
         string expectedErrorCode,
         T1 expectedValue1,
@@ -191,15 +191,15 @@ public static class ErrorCodeAssertions
         where T1 : notnull
         where T2 : notnull
     {
-        error.ShouldBeOfType<ErrorCodeExpected<T1, T2>>();
-        var errorCodeExpected = (ErrorCodeExpected<T1, T2>)error;
+        error.ShouldBeOfType<ExpectedError<T1, T2>>();
+        var errorCodeExpected = (ExpectedError<T1, T2>)error;
         errorCodeExpected.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue1.ShouldBe(expectedValue1);
         errorCodeExpected.ErrorCurrentValue2.ShouldBe(expectedValue2);
     }
 
     /// <summary>
-    /// Error가 특정 ErrorCodeExpected&lt;T1, T2, T3&gt;인지 검증합니다.
+    /// Error가 특정 ExpectedError&lt;T1, T2, T3&gt;인지 검증합니다.
     /// </summary>
     /// <typeparam name="T1">첫 번째 값의 타입</typeparam>
     /// <typeparam name="T2">두 번째 값의 타입</typeparam>
@@ -209,7 +209,7 @@ public static class ErrorCodeAssertions
     /// <param name="expectedValue1">기대하는 첫 번째 값</param>
     /// <param name="expectedValue2">기대하는 두 번째 값</param>
     /// <param name="expectedValue3">기대하는 세 번째 값</param>
-    public static void ShouldBeErrorCodeExpected<T1, T2, T3>(
+    public static void ShouldBeExpectedError<T1, T2, T3>(
         this Error error,
         string expectedErrorCode,
         T1 expectedValue1,
@@ -219,8 +219,8 @@ public static class ErrorCodeAssertions
         where T2 : notnull
         where T3 : notnull
     {
-        error.ShouldBeOfType<ErrorCodeExpected<T1, T2, T3>>();
-        var errorCodeExpected = (ErrorCodeExpected<T1, T2, T3>)error;
+        error.ShouldBeOfType<ExpectedError<T1, T2, T3>>();
+        var errorCodeExpected = (ExpectedError<T1, T2, T3>)error;
         errorCodeExpected.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue1.ShouldBe(expectedValue1);
         errorCodeExpected.ErrorCurrentValue2.ShouldBe(expectedValue2);

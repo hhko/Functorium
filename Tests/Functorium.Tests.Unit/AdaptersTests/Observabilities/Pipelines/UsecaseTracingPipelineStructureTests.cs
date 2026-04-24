@@ -350,7 +350,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
         TestCommandRequest request,
         CancellationToken cancellationToken)
     {
-        var error = new ErrorCodeExpected("Test.ExpectedError", "currentValue", "Expected error occurred");
+        var error = new ExpectedError("Test.ExpectedError", "currentValue", "Expected error occurred");
         return ValueTask.FromResult(TestResponse.CreateFail(error));
     }
 
@@ -359,7 +359,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
         CancellationToken cancellationToken)
     {
         var exception = new InvalidOperationException("Exceptional error occurred");
-        var error = new ErrorCodeExceptional("Test.ExceptionalError", exception);
+        var error = new ExceptionalError("Test.ExceptionalError", exception);
         return ValueTask.FromResult(TestResponse.CreateFail(error));
     }
 
@@ -369,8 +369,8 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
     {
         var errors = new Error[]
         {
-            new ErrorCodeExpected("Test.Error1", "value1", "First error"),
-            new ErrorCodeExpected("Test.Error2", "value2", "Second error")
+            new ExpectedError("Test.Error1", "value1", "First error"),
+            new ExpectedError("Test.Error2", "value2", "Second error")
         };
         var error = Error.Many(errors);
         return ValueTask.FromResult(TestResponse.CreateFail(error));
@@ -380,7 +380,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
         TestCommandRequest request,
         CancellationToken cancellationToken)
     {
-        var error = new ErrorCodeExpected<int>("Test.GenericError", 42, "Generic error occurred");
+        var error = new ExpectedError<int>("Test.GenericError", 42, "Generic error occurred");
         return ValueTask.FromResult(TestResponse.CreateFail(error));
     }
 

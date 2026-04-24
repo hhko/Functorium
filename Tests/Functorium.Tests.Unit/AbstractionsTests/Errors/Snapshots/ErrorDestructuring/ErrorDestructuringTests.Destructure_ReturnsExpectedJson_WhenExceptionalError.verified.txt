@@ -1,7 +1,7 @@
 ﻿{
   ErrorCode: Application.Database.ConnectionFailed,
   ErrorCodeId: -2146233079,
-  ErrorType: ErrorCodeExceptional,
+  ErrorType: ExceptionalError,
   ExceptionDetails: {
     HResult: {Scrubbed},
     Message: Connection failed,

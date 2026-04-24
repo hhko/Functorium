@@ -21,57 +21,57 @@ namespace Functorium.Abstractions.Errors;
 /// </remarks>
 internal static class ErrorFactory
 {
-    // ErrorCodeExpected
+    // ExpectedError
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error CreateExpected(string errorCode,
                                        string errorCurrentValue,
                                        string errorMessage) =>
-        new ErrorCodeExpected(
+        new ExpectedError(
             errorCode,
             errorCurrentValue,
             errorMessage);
 
-    // ErrorCodeExpected<T>
+    // ExpectedError<T>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error CreateExpected<T>(string errorCode,
                                           T errorCurrentValue,
                                           string errorMessage) where T : notnull =>
-        new ErrorCodeExpected<T>(
+        new ExpectedError<T>(
             errorCode,
             errorCurrentValue,
             errorMessage);
 
-    // ErrorCodeExpected<T1, T2>
+    // ExpectedError<T1, T2>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error CreateExpected<T1, T2>(string errorCode,
                                                T1 errorCurrentValue1,
                                                T2 errorCurrentValue2,
                                                string errorMessage) where T1 : notnull where T2 : notnull =>
-        new ErrorCodeExpected<T1, T2>(
+        new ExpectedError<T1, T2>(
             errorCode,
             errorCurrentValue1,
             errorCurrentValue2,
             errorMessage);
 
-    // ErrorCodeExpected<T1, T2, T3>
+    // ExpectedError<T1, T2, T3>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error CreateExpected<T1, T2, T3>(string errorCode,
                                                    T1 errorCurrentValue1,
                                                    T2 errorCurrentValue2,
                                                    T3 errorCurrentValue3,
                                                    string errorMessage) where T1 : notnull where T2 : notnull where T3 : notnull =>
-        new ErrorCodeExpected<T1, T2, T3>(
+        new ExpectedError<T1, T2, T3>(
             errorCode,
             errorCurrentValue1,
             errorCurrentValue2,
             errorCurrentValue3,
             errorMessage);
 
-    // ErrorCodeExceptional
+    // ExceptionalError
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error CreateExceptional(string errorCode,
                                           Exception exception) =>
-        new ErrorCodeExceptional(
+        new ExceptionalError(
             errorCode,
             exception);
 }

@@ -37,7 +37,7 @@ public class ValidationRulesExtensionsTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.SampleValueObject.Empty");
             });
     }
@@ -233,7 +233,7 @@ public class ValidationRulesExtensionsTests
             Fail: errors =>
             {
                 errors.Count.ShouldBe(1);
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.SampleValueObject.Empty");
             });
     }
@@ -379,7 +379,7 @@ public class ValidationRulesExtensionsTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.SampleValueObject.NotUpperCase");
             });
     }
@@ -408,7 +408,7 @@ public class ValidationRulesExtensionsTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.SampleValueObject.NotLowerCase");
             });
     }
@@ -444,7 +444,7 @@ public class ValidationRulesExtensionsTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.NumericValueObject.RangeInverted");
             });
     }
@@ -473,7 +473,7 @@ public class ValidationRulesExtensionsTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.NumericValueObject.RangeEmpty");
             });
     }
@@ -509,7 +509,7 @@ public class ValidationRulesExtensionsTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.SampleValueObject.Empty");
             });
     }

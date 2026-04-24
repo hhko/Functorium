@@ -3,7 +3,7 @@ using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 namespace Functorium.Tests.Unit.AbstractionsTests.Errors;
 
 [Trait(nameof(UnitTest), UnitTest.Functorium_Abstractions)]
-public class ErrorCodeExpectedTests
+public class ExpectedErrorTests
 {
     [Fact]
     public void ErrorCode_ReturnsCorrectValue_WhenCreated()
@@ -12,7 +12,7 @@ public class ErrorCodeExpectedTests
         var errorCode = "User.NotFound";
 
         // Act
-        var sut = new ErrorCodeExpected(errorCode, "value", "message");
+        var sut = new ExpectedError(errorCode, "value", "message");
 
         // Assert
         sut.ErrorCode.ShouldBe(errorCode);
@@ -25,7 +25,7 @@ public class ErrorCodeExpectedTests
         var errorCurrentValue = "user123";
 
         // Act
-        var sut = new ErrorCodeExpected("code", errorCurrentValue, "message");
+        var sut = new ExpectedError("code", errorCurrentValue, "message");
 
         // Assert
         sut.ErrorCurrentValue.ShouldBe(errorCurrentValue);
@@ -38,7 +38,7 @@ public class ErrorCodeExpectedTests
         var errorMessage = "User not found";
 
         // Act
-        var sut = new ErrorCodeExpected("code", "value", errorMessage);
+        var sut = new ExpectedError("code", "value", errorMessage);
 
         // Assert
         sut.Message.ShouldBe(errorMessage);
@@ -48,7 +48,7 @@ public class ErrorCodeExpectedTests
     public void Code_ReturnsDefaultValue_WhenNotSpecified()
     {
         // Arrange & Act
-        var sut = new ErrorCodeExpected("code", "value", "message");
+        var sut = new ExpectedError("code", "value", "message");
 
         // Assert
         sut.Code.ShouldBe(-1000);
@@ -61,7 +61,7 @@ public class ErrorCodeExpectedTests
         var errorCodeId = 404;
 
         // Act
-        var sut = new ErrorCodeExpected("code", "value", "message", errorCodeId);
+        var sut = new ExpectedError("code", "value", "message", errorCodeId);
 
         // Assert
         sut.Code.ShouldBe(errorCodeId);
@@ -71,7 +71,7 @@ public class ErrorCodeExpectedTests
     public void IsExpected_ReturnsTrue_Always()
     {
         // Arrange & Act
-        var sut = new ErrorCodeExpected("code", "value", "message");
+        var sut = new ExpectedError("code", "value", "message");
 
         // Assert
         sut.IsExpected.ShouldBeTrue();
@@ -81,7 +81,7 @@ public class ErrorCodeExpectedTests
     public void IsExceptional_ReturnsFalse_Always()
     {
         // Arrange & Act
-        var sut = new ErrorCodeExpected("code", "value", "message");
+        var sut = new ExpectedError("code", "value", "message");
 
         // Assert
         sut.IsExceptional.ShouldBeFalse();
@@ -91,7 +91,7 @@ public class ErrorCodeExpectedTests
     public void HasException_ReturnsFalse_Always()
     {
         // Arrange
-        var sut = new ErrorCodeExpected("code", "value", "message");
+        var sut = new ExpectedError("code", "value", "message");
 
         // Act
         var actual = sut.HasException<InvalidOperationException>();
@@ -105,7 +105,7 @@ public class ErrorCodeExpectedTests
     {
         // Arrange
         var errorMessage = "User not found";
-        var sut = new ErrorCodeExpected("code", "value", errorMessage);
+        var sut = new ExpectedError("code", "value", errorMessage);
 
         // Act
         var actual = sut.ToString();
@@ -118,7 +118,7 @@ public class ErrorCodeExpectedTests
     public void Throw_ThrowsWrappedErrorExpectedException_WhenCalled()
     {
         // Arrange
-        var sut = new ErrorCodeExpected("code", "value", "message");
+        var sut = new ExpectedError("code", "value", "message");
 
         // Act & Assert
         Should.Throw<WrappedErrorExpectedException>(() => sut.Throw<int>());
@@ -128,7 +128,7 @@ public class ErrorCodeExpectedTests
     public void ToErrorException_ReturnsWrappedErrorExpectedException_WhenCalled()
     {
         // Arrange
-        var sut = new ErrorCodeExpected("code", "value", "message");
+        var sut = new ExpectedError("code", "value", "message");
 
         // Act
         var actual = sut.ToErrorException();
@@ -141,7 +141,7 @@ public class ErrorCodeExpectedTests
     public void Inner_ReturnsNone_WhenNotProvided()
     {
         // Arrange & Act
-        var sut = new ErrorCodeExpected("code", "value", "message");
+        var sut = new ExpectedError("code", "value", "message");
 
         // Assert
         sut.Inner.IsNone.ShouldBeTrue();
@@ -154,14 +154,14 @@ public class ErrorCodeExpectedTests
         Error innerError = Error.New("Inner error");
 
         // Act
-        var sut = new ErrorCodeExpected("code", "value", "message", Inner: innerError);
+        var sut = new ExpectedError("code", "value", "message", Inner: innerError);
 
         // Assert
         sut.Inner.IsSome.ShouldBeTrue();
     }
 }
 
-public class ErrorCodeExpectedGenericTests
+public class ExpectedErrorGenericTests
 {
     [Fact]
     public void ErrorCurrentValue_ReturnsTypedValue_WhenGenericTypeProvided()
@@ -170,7 +170,7 @@ public class ErrorCodeExpectedGenericTests
         var errorCurrentValue = 42;
 
         // Act
-        var sut = new ErrorCodeExpected<int>("code", errorCurrentValue, "message");
+        var sut = new ExpectedError<int>("code", errorCurrentValue, "message");
 
         // Assert
         sut.ErrorCurrentValue.ShouldBe(errorCurrentValue);
@@ -184,7 +184,7 @@ public class ErrorCodeExpectedGenericTests
         var value2 = "test";
 
         // Act
-        var sut = new ErrorCodeExpected<int, string>("code", value1, value2, "message");
+        var sut = new ExpectedError<int, string>("code", value1, value2, "message");
 
         // Assert
         sut.ErrorCurrentValue1.ShouldBe(value1);
@@ -200,7 +200,7 @@ public class ErrorCodeExpectedGenericTests
         var value3 = 3.14;
 
         // Act
-        var sut = new ErrorCodeExpected<int, string, double>("code", value1, value2, value3, "message");
+        var sut = new ExpectedError<int, string, double>("code", value1, value2, value3, "message");
 
         // Assert
         sut.ErrorCurrentValue1.ShouldBe(value1);
@@ -212,9 +212,9 @@ public class ErrorCodeExpectedGenericTests
     public void IsExpected_ReturnsTrue_ForAllGenericVariants()
     {
         // Arrange
-        var sut1 = new ErrorCodeExpected<int>("code", 1, "message");
-        var sut2 = new ErrorCodeExpected<int, string>("code", 1, "a", "message");
-        var sut3 = new ErrorCodeExpected<int, string, double>("code", 1, "a", 1.0, "message");
+        var sut1 = new ExpectedError<int>("code", 1, "message");
+        var sut2 = new ExpectedError<int, string>("code", 1, "a", "message");
+        var sut3 = new ExpectedError<int, string, double>("code", 1, "a", 1.0, "message");
 
         // Assert
         sut1.IsExpected.ShouldBeTrue();
@@ -226,9 +226,9 @@ public class ErrorCodeExpectedGenericTests
     public void IsExceptional_ReturnsFalse_ForAllGenericVariants()
     {
         // Arrange
-        var sut1 = new ErrorCodeExpected<int>("code", 1, "message");
-        var sut2 = new ErrorCodeExpected<int, string>("code", 1, "a", "message");
-        var sut3 = new ErrorCodeExpected<int, string, double>("code", 1, "a", 1.0, "message");
+        var sut1 = new ExpectedError<int>("code", 1, "message");
+        var sut2 = new ExpectedError<int, string>("code", 1, "a", "message");
+        var sut3 = new ExpectedError<int, string, double>("code", 1, "a", 1.0, "message");
 
         // Assert
         sut1.IsExceptional.ShouldBeFalse();
@@ -238,24 +238,24 @@ public class ErrorCodeExpectedGenericTests
 }
 
 [Trait(nameof(UnitTest), UnitTest.Functorium_Abstractions)]
-public class ErrorCodeExpectedInterfaceTests
+public class ExpectedErrorInterfaceTests
 {
     [Fact]
-    public void ErrorCodeExpected_ImplementsIHasErrorCode()
+    public void ExpectedError_ImplementsIHasErrorCode()
     {
         // Arrange
-        var sut = new ErrorCodeExpected("code", "value", "message");
+        var sut = new ExpectedError("code", "value", "message");
 
         // Assert
         sut.ShouldBeAssignableTo<IHasErrorCode>();
     }
 
     [Fact]
-    public void ErrorCodeExpected_IHasErrorCode_ReturnsCorrectErrorCode()
+    public void ExpectedError_IHasErrorCode_ReturnsCorrectErrorCode()
     {
         // Arrange
         var errorCode = "User.NotFound";
-        var sut = new ErrorCodeExpected(errorCode, "value", "message");
+        var sut = new ExpectedError(errorCode, "value", "message");
         IHasErrorCode hasErrorCode = sut;
 
         // Act & Assert
@@ -263,12 +263,12 @@ public class ErrorCodeExpectedInterfaceTests
     }
 
     [Fact]
-    public void ErrorCodeExpectedGeneric_AllVariants_ImplementIHasErrorCode()
+    public void ExpectedErrorGeneric_AllVariants_ImplementIHasErrorCode()
     {
         // Arrange
-        var sut1 = new ErrorCodeExpected<int>("code", 1, "message");
-        var sut2 = new ErrorCodeExpected<int, string>("code", 1, "a", "message");
-        var sut3 = new ErrorCodeExpected<int, string, double>("code", 1, "a", 1.0, "message");
+        var sut1 = new ExpectedError<int>("code", 1, "message");
+        var sut2 = new ExpectedError<int, string>("code", 1, "a", "message");
+        var sut3 = new ExpectedError<int, string, double>("code", 1, "a", 1.0, "message");
 
         // Assert
         sut1.ShouldBeAssignableTo<IHasErrorCode>();
@@ -277,13 +277,13 @@ public class ErrorCodeExpectedInterfaceTests
     }
 
     [Fact]
-    public void ErrorCodeExpectedGeneric_AllVariants_IHasErrorCode_ReturnCorrectErrorCode()
+    public void ExpectedErrorGeneric_AllVariants_IHasErrorCode_ReturnCorrectErrorCode()
     {
         // Arrange
         var errorCode = "Domain.ValidationError";
-        var sut1 = new ErrorCodeExpected<int>(errorCode, 1, "message");
-        var sut2 = new ErrorCodeExpected<int, string>(errorCode, 1, "a", "message");
-        var sut3 = new ErrorCodeExpected<int, string, double>(errorCode, 1, "a", 1.0, "message");
+        var sut1 = new ExpectedError<int>(errorCode, 1, "message");
+        var sut2 = new ExpectedError<int, string>(errorCode, 1, "a", "message");
+        var sut3 = new ExpectedError<int, string, double>(errorCode, 1, "a", 1.0, "message");
 
         IHasErrorCode hasErrorCode1 = sut1;
         IHasErrorCode hasErrorCode2 = sut2;

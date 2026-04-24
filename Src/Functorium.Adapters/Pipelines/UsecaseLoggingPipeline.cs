@@ -75,8 +75,8 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
         {
             //          | Framework            | Language-Ext   | bool
             // ---------|----------------------|----------------|----------------
-            // Error    | ErrorCodeExceptional | Exceptional    | IsExceptional
-            // Warnning | ErrorCodeExpected    | Expected       | IsExpected
+            // Error    | ExceptionalError | Exceptional    | IsExceptional
+            // Warnning | ExpectedError    | Expected       | IsExpected
 
             // IFinResponseWithError를 통해 Error 접근
             if (response is IFinResponseWithError errorResponse)

@@ -80,16 +80,16 @@ public class TestObservabilityAdapter : ITestObservabilityAdapter
 public static class TestErrors
 {
     public static Error CreateExpectedError() =>
-        new ErrorCodeExpected("Test.NotFound", "testValue", "Entity not found");
+        new ExpectedError("Test.NotFound", "testValue", "Entity not found");
 
     public static Error CreateExpectedErrorT() =>
-        new ErrorCodeExpected<int>("Test.InvalidValue", 42, "Invalid value provided");
+        new ExpectedError<int>("Test.InvalidValue", 42, "Invalid value provided");
 
     public static Error CreateExceptionalError() =>
-        new ErrorCodeExceptional("Test.DatabaseError", new InvalidOperationException("Database connection failed"));
+        new ExceptionalError("Test.DatabaseError", new InvalidOperationException("Database connection failed"));
 
     public static Error CreateAggregateError() =>
         Error.Many(
-            new ErrorCodeExpected("Test.Error1", "value1", "First error"),
-            new ErrorCodeExpected("Test.Error2", "value2", "Second error"));
+            new ExpectedError("Test.Error1", "value1", "First error"),
+            new ExpectedError("Test.Error2", "value2", "Second error"));
 }

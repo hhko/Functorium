@@ -6,7 +6,7 @@ using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 namespace Functorium.Tests.Unit.TestingTests.Assertions;
 
 [Trait(nameof(UnitTest), UnitTest.Functorium_Testing)]
-public class ErrorCodeAssertionsTests
+public class ExpectedErrorAssertionsTests
 {
     private const string TestErrorCode = "TestErrors.Example.SampleError";
 
@@ -157,123 +157,123 @@ public class ErrorCodeAssertionsTests
 
     #endregion
 
-    #region ErrorCodeExpected - ShouldBeErrorCodeExpected (non-generic)
+    #region ExpectedError - ShouldBeExpectedError (non-generic)
 
     [Fact]
-    public void ShouldBeErrorCodeExpected_ReturnsSuccess_WhenCodeAndValueMatch()
+    public void ShouldBeExpectedError_ReturnsSuccess_WhenCodeAndValueMatch()
     {
         // Arrange
         var error = ErrorFactory.CreateExpected(TestErrorCode, "test-value", "Test error");
 
         // Act & Assert (should not throw)
-        error.ShouldBeErrorCodeExpected(TestErrorCode, "test-value");
+        error.ShouldBeExpectedError(TestErrorCode, "test-value");
     }
 
     [Fact]
-    public void ShouldBeErrorCodeExpected_ThrowsException_WhenValueDoesNotMatch()
+    public void ShouldBeExpectedError_ThrowsException_WhenValueDoesNotMatch()
     {
         // Arrange
         var error = ErrorFactory.CreateExpected(TestErrorCode, "test-value", "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            error.ShouldBeErrorCodeExpected(TestErrorCode, "different-value"));
+            error.ShouldBeExpectedError(TestErrorCode, "different-value"));
     }
 
     #endregion
 
-    #region ErrorCodeExpected<T> - ShouldBeErrorCodeExpected<T>
+    #region ExpectedError<T> - ShouldBeExpectedError<T>
 
     [Fact]
-    public void ShouldBeErrorCodeExpected_Generic_ReturnsSuccess_WhenCodeAndValueMatch()
+    public void ShouldBeExpectedError_Generic_ReturnsSuccess_WhenCodeAndValueMatch()
     {
         // Arrange
         var error = ErrorFactory.CreateExpected(TestErrorCode, 42, "Test error");
 
         // Act & Assert (should not throw)
-        error.ShouldBeErrorCodeExpected(TestErrorCode, 42);
+        error.ShouldBeExpectedError(TestErrorCode, 42);
     }
 
     [Fact]
-    public void ShouldBeErrorCodeExpected_Generic_ThrowsException_WhenValueDoesNotMatch()
+    public void ShouldBeExpectedError_Generic_ThrowsException_WhenValueDoesNotMatch()
     {
         // Arrange
         var error = ErrorFactory.CreateExpected(TestErrorCode, 42, "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            error.ShouldBeErrorCodeExpected(TestErrorCode, 100));
+            error.ShouldBeExpectedError(TestErrorCode, 100));
     }
 
     [Fact]
-    public void ShouldBeErrorCodeExpected_WithPredicate_ReturnsSuccess_WhenPredicateMatches()
+    public void ShouldBeExpectedError_WithPredicate_ReturnsSuccess_WhenPredicateMatches()
     {
         // Arrange
         var error = ErrorFactory.CreateExpected(TestErrorCode, 42, "Test error");
 
         // Act & Assert (should not throw)
-        error.ShouldBeErrorCodeExpected<int>(TestErrorCode, value => value > 0);
+        error.ShouldBeExpectedError<int>(TestErrorCode, value => value > 0);
     }
 
     [Fact]
-    public void ShouldBeErrorCodeExpected_WithPredicate_ThrowsException_WhenPredicateDoesNotMatch()
+    public void ShouldBeExpectedError_WithPredicate_ThrowsException_WhenPredicateDoesNotMatch()
     {
         // Arrange
         var error = ErrorFactory.CreateExpected(TestErrorCode, 42, "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            error.ShouldBeErrorCodeExpected<int>(TestErrorCode, value => value < 0));
+            error.ShouldBeExpectedError<int>(TestErrorCode, value => value < 0));
     }
 
     #endregion
 
-    #region ErrorCodeExpected<T1, T2> - ShouldBeErrorCodeExpected<T1, T2>
+    #region ExpectedError<T1, T2> - ShouldBeExpectedError<T1, T2>
 
     [Fact]
-    public void ShouldBeErrorCodeExpected_TwoValues_ReturnsSuccess_WhenAllValuesMatch()
+    public void ShouldBeExpectedError_TwoValues_ReturnsSuccess_WhenAllValuesMatch()
     {
         // Arrange
         var error = ErrorFactory.CreateExpected(TestErrorCode, "first", 42, "Test error");
 
         // Act & Assert (should not throw)
-        error.ShouldBeErrorCodeExpected(TestErrorCode, "first", 42);
+        error.ShouldBeExpectedError(TestErrorCode, "first", 42);
     }
 
     [Fact]
-    public void ShouldBeErrorCodeExpected_TwoValues_ThrowsException_WhenSecondValueDoesNotMatch()
+    public void ShouldBeExpectedError_TwoValues_ThrowsException_WhenSecondValueDoesNotMatch()
     {
         // Arrange
         var error = ErrorFactory.CreateExpected(TestErrorCode, "first", 42, "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            error.ShouldBeErrorCodeExpected(TestErrorCode, "first", 100));
+            error.ShouldBeExpectedError(TestErrorCode, "first", 100));
     }
 
     #endregion
 
-    #region ErrorCodeExpected<T1, T2, T3> - ShouldBeErrorCodeExpected<T1, T2, T3>
+    #region ExpectedError<T1, T2, T3> - ShouldBeExpectedError<T1, T2, T3>
 
     [Fact]
-    public void ShouldBeErrorCodeExpected_ThreeValues_ReturnsSuccess_WhenAllValuesMatch()
+    public void ShouldBeExpectedError_ThreeValues_ReturnsSuccess_WhenAllValuesMatch()
     {
         // Arrange
         var error = ErrorFactory.CreateExpected(TestErrorCode, "first", 42, 3.14, "Test error");
 
         // Act & Assert (should not throw)
-        error.ShouldBeErrorCodeExpected(TestErrorCode, "first", 42, 3.14);
+        error.ShouldBeExpectedError(TestErrorCode, "first", 42, 3.14);
     }
 
     [Fact]
-    public void ShouldBeErrorCodeExpected_ThreeValues_ThrowsException_WhenThirdValueDoesNotMatch()
+    public void ShouldBeExpectedError_ThreeValues_ThrowsException_WhenThirdValueDoesNotMatch()
     {
         // Arrange
         var error = ErrorFactory.CreateExpected(TestErrorCode, "first", 42, 3.14, "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            error.ShouldBeErrorCodeExpected(TestErrorCode, "first", 42, 2.71));
+            error.ShouldBeExpectedError(TestErrorCode, "first", 42, 2.71));
     }
 
     #endregion

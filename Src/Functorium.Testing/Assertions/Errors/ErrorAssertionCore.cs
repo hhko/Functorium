@@ -20,7 +20,7 @@ internal static class ErrorAssertionCore
         var expectedErrorCode = $"{prefix}.{typeof(TContext).Name}.{errorName}";
 
         var actualErrorCode = error.ErrorCode;
-        actualErrorCode.ShouldNotBeNull($"Error should be ErrorCodeExpected or ErrorCodeExpected<T>, but was {error.GetType().Name}");
+        actualErrorCode.ShouldNotBeNull($"Error should be ExpectedError or ExpectedError<T>, but was {error.GetType().Name}");
         actualErrorCode.ShouldBe(expectedErrorCode);
     }
 
@@ -30,8 +30,8 @@ internal static class ErrorAssertionCore
     {
         var expectedErrorCode = $"{prefix}.{typeof(TContext).Name}.{errorName}";
 
-        error.ShouldBeOfType<ErrorCodeExpected<TValue>>();
-        var errorCodeExpected = (ErrorCodeExpected<TValue>)error;
+        error.ShouldBeOfType<ExpectedError<TValue>>();
+        var errorCodeExpected = (ExpectedError<TValue>)error;
         errorCodeExpected.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue.ShouldBe(expectedCurrentValue);
     }
@@ -44,8 +44,8 @@ internal static class ErrorAssertionCore
     {
         var expectedErrorCode = $"{prefix}.{typeof(TContext).Name}.{errorName}";
 
-        error.ShouldBeOfType<ErrorCodeExpected<T1, T2>>();
-        var errorCodeExpected = (ErrorCodeExpected<T1, T2>)error;
+        error.ShouldBeOfType<ExpectedError<T1, T2>>();
+        var errorCodeExpected = (ExpectedError<T1, T2>)error;
         errorCodeExpected.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue1.ShouldBe(expectedValue1);
         errorCodeExpected.ErrorCurrentValue2.ShouldBe(expectedValue2);
@@ -60,8 +60,8 @@ internal static class ErrorAssertionCore
     {
         var expectedErrorCode = $"{prefix}.{typeof(TContext).Name}.{errorName}";
 
-        error.ShouldBeOfType<ErrorCodeExpected<T1, T2, T3>>();
-        var errorCodeExpected = (ErrorCodeExpected<T1, T2, T3>)error;
+        error.ShouldBeOfType<ExpectedError<T1, T2, T3>>();
+        var errorCodeExpected = (ExpectedError<T1, T2, T3>)error;
         errorCodeExpected.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue1.ShouldBe(expectedValue1);
         errorCodeExpected.ErrorCurrentValue2.ShouldBe(expectedValue2);
@@ -73,8 +73,8 @@ internal static class ErrorAssertionCore
     {
         var expectedErrorCode = $"{prefix}.{typeof(TContext).Name}.{errorName}";
 
-        error.ShouldBeOfType<ErrorCodeExceptional>();
-        var errorCodeExceptional = (ErrorCodeExceptional)error;
+        error.ShouldBeOfType<ExceptionalError>();
+        var errorCodeExceptional = (ExceptionalError)error;
         errorCodeExceptional.ErrorCode.ShouldBe(expectedErrorCode);
     }
 
@@ -84,8 +84,8 @@ internal static class ErrorAssertionCore
     {
         var expectedErrorCode = $"{prefix}.{typeof(TContext).Name}.{errorName}";
 
-        error.ShouldBeOfType<ErrorCodeExceptional>();
-        var errorCodeExceptional = (ErrorCodeExceptional)error;
+        error.ShouldBeOfType<ExceptionalError>();
+        var errorCodeExceptional = (ExceptionalError)error;
         errorCodeExceptional.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExceptional.ToException().ShouldBeOfType<TException>();
     }
@@ -147,7 +147,7 @@ internal static class ErrorAssertionCore
 
         var singleError = errors[0];
         var actualErrorCode = singleError.ErrorCode;
-        actualErrorCode.ShouldNotBeNull($"Error should be ErrorCodeExpected or ErrorCodeExpected<T>, but was {singleError.GetType().Name}");
+        actualErrorCode.ShouldNotBeNull($"Error should be ExpectedError or ExpectedError<T>, but was {singleError.GetType().Name}");
         actualErrorCode.ShouldBe(expectedErrorCode);
     }
 
@@ -186,7 +186,7 @@ internal static class ErrorAssertionCore
         var errors = validation.Errors;
 
         var matchingError = errors
-            .OfType<ErrorCodeExpected<TValue>>()
+            .OfType<ExpectedError<TValue>>()
             .FirstOrDefault(e => e.ErrorCode == expectedErrorCode);
 
         matchingError.ShouldNotBeNull(
@@ -208,7 +208,7 @@ internal static class ErrorAssertionCore
         var errors = validation.Errors;
 
         var matchingError = errors
-            .OfType<ErrorCodeExpected<T1, T2>>()
+            .OfType<ExpectedError<T1, T2>>()
             .FirstOrDefault(e => e.ErrorCode == expectedErrorCode);
 
         matchingError.ShouldNotBeNull(
@@ -232,7 +232,7 @@ internal static class ErrorAssertionCore
         var errors = validation.Errors;
 
         var matchingError = errors
-            .OfType<ErrorCodeExpected<T1, T2, T3>>()
+            .OfType<ExpectedError<T1, T2, T3>>()
             .FirstOrDefault(e => e.ErrorCode == expectedErrorCode);
 
         matchingError.ShouldNotBeNull(

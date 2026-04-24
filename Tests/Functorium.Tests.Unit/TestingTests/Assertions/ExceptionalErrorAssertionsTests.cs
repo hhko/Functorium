@@ -6,36 +6,36 @@ using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 namespace Functorium.Tests.Unit.TestingTests.Assertions;
 
 [Trait(nameof(UnitTest), UnitTest.Functorium_Testing)]
-public class ErrorCodeExceptionalAssertionsTests
+public class ExceptionalErrorAssertionsTests
 {
     private const string TestErrorCode = "TestErrors.Exception.Sample";
 
-    #region Error - ShouldBeErrorCodeExceptional
+    #region Error - ShouldBeExceptionalError
 
     [Fact]
-    public void ShouldBeErrorCodeExceptional_ReturnsSuccess_WhenErrorIsCorrectType()
+    public void ShouldBeExceptionalError_ReturnsSuccess_WhenErrorIsCorrectType()
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
         var error = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert (should not throw)
-        error.ShouldBeErrorCodeExceptional(TestErrorCode);
+        error.ShouldBeExceptionalError(TestErrorCode);
     }
 
     [Fact]
-    public void ShouldBeErrorCodeExceptional_ThrowsException_WhenErrorIsNotExceptional()
+    public void ShouldBeExceptionalError_ThrowsException_WhenErrorIsNotExceptional()
     {
         // Arrange
         var error = ErrorFactory.CreateExpected(TestErrorCode, "value", "Not exceptional");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            error.ShouldBeErrorCodeExceptional(TestErrorCode));
+            error.ShouldBeExceptionalError(TestErrorCode));
     }
 
     [Fact]
-    public void ShouldBeErrorCodeExceptional_ThrowsException_WhenErrorCodeDoesNotMatch()
+    public void ShouldBeExceptionalError_ThrowsException_WhenErrorCodeDoesNotMatch()
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
@@ -43,26 +43,26 @@ public class ErrorCodeExceptionalAssertionsTests
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            error.ShouldBeErrorCodeExceptional("DifferentErrorCode"));
+            error.ShouldBeExceptionalError("DifferentErrorCode"));
     }
 
     #endregion
 
-    #region Error - ShouldBeErrorCodeExceptional<TException>
+    #region Error - ShouldBeExceptionalError<TException>
 
     [Fact]
-    public void ShouldBeErrorCodeExceptional_Generic_ReturnsSuccess_WhenExceptionTypeMatches()
+    public void ShouldBeExceptionalError_Generic_ReturnsSuccess_WhenExceptionTypeMatches()
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
         var error = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert (should not throw)
-        error.ShouldBeErrorCodeExceptional<InvalidOperationException>(TestErrorCode);
+        error.ShouldBeExceptionalError<InvalidOperationException>(TestErrorCode);
     }
 
     [Fact]
-    public void ShouldBeErrorCodeExceptional_Generic_ThrowsException_WhenExceptionTypeDoesNotMatch()
+    public void ShouldBeExceptionalError_Generic_ThrowsException_WhenExceptionTypeDoesNotMatch()
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
@@ -70,7 +70,7 @@ public class ErrorCodeExceptionalAssertionsTests
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
-            error.ShouldBeErrorCodeExceptional<ArgumentException>(TestErrorCode));
+            error.ShouldBeExceptionalError<ArgumentException>(TestErrorCode));
     }
 
     #endregion
@@ -113,10 +113,10 @@ public class ErrorCodeExceptionalAssertionsTests
 
     #endregion
 
-    #region Error - ShouldBeErrorCodeExceptional with Action
+    #region Error - ShouldBeExceptionalError with Action
 
     [Fact]
-    public void ShouldBeErrorCodeExceptional_WithAction_ExecutesAssertion()
+    public void ShouldBeExceptionalError_WithAction_ExecutesAssertion()
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
@@ -124,7 +124,7 @@ public class ErrorCodeExceptionalAssertionsTests
         var assertionExecuted = false;
 
         // Act
-        error.ShouldBeErrorCodeExceptional(TestErrorCode, ex =>
+        error.ShouldBeExceptionalError(TestErrorCode, ex =>
         {
             ex.ShouldBeOfType<InvalidOperationException>();
             assertionExecuted = true;

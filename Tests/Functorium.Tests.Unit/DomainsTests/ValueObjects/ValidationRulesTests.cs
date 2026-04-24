@@ -57,7 +57,7 @@ public class ValidationRulesTests
             Fail: errors =>
             {
                 errors.Count.ShouldBe(1);
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.SampleValueObject.Empty");
             });
     }
@@ -94,7 +94,7 @@ public class ValidationRulesTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.SampleValueObject.TooShort");
             });
     }
@@ -131,7 +131,7 @@ public class ValidationRulesTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.SampleValueObject.TooLong");
             });
     }
@@ -167,7 +167,7 @@ public class ValidationRulesTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.SampleValueObject.WrongLength");
             });
     }
@@ -206,7 +206,7 @@ public class ValidationRulesTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.SampleValueObject.InvalidFormat");
             });
     }
@@ -259,7 +259,7 @@ public class ValidationRulesTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected<decimal>)errors.Head;
+                var error = (ExpectedError<decimal>)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.NumericValueObject.Negative");
             });
     }
@@ -294,7 +294,7 @@ public class ValidationRulesTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected<decimal>)errors.Head;
+                var error = (ExpectedError<decimal>)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.NumericValueObject.NotPositive");
             });
     }
@@ -330,7 +330,7 @@ public class ValidationRulesTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected<decimal>)errors.Head;
+                var error = (ExpectedError<decimal>)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.NumericValueObject.OutOfRange");
             });
     }
@@ -367,7 +367,7 @@ public class ValidationRulesTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected<decimal>)errors.Head;
+                var error = (ExpectedError<decimal>)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.NumericValueObject.AboveMaximum");
             });
     }
@@ -404,7 +404,7 @@ public class ValidationRulesTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected<decimal>)errors.Head;
+                var error = (ExpectedError<decimal>)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.NumericValueObject.BelowMinimum");
             });
     }
@@ -449,7 +449,7 @@ public class ValidationRulesTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected<string>)errors.Head;
+                var error = (ExpectedError<string>)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.SampleValueObject.NotUpperCase");
             });
     }
@@ -489,7 +489,7 @@ public class ValidationRulesTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.SampleValueObject.Null");
             });
     }
@@ -525,7 +525,7 @@ public class ValidationRulesTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.NumericValueObject.Null");
             });
     }
@@ -564,7 +564,7 @@ public class ValidationRulesTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.SampleValueObject.NotUpperCase");
             });
     }
@@ -603,7 +603,7 @@ public class ValidationRulesTests
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
-                var error = (ErrorCodeExpected)errors.Head;
+                var error = (ExpectedError)errors.Head;
                 error.ErrorCode.ShouldBe("Domain.SampleValueObject.NotLowerCase");
             });
     }

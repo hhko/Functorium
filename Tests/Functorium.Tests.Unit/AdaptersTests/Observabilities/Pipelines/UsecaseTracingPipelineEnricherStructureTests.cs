@@ -128,7 +128,7 @@ public sealed class UsecaseTracingPipelineEnricherStructureTests : IDisposable
         var tracingPipeline = new UsecaseTracingPipeline<TestCommandRequest, TestResponse>(_activitySource);
         var request = new TestCommandRequest("TestName");
 
-        var error = new ErrorCodeExpected("Test.ExpectedError", "currentValue", "Expected error occurred");
+        var error = new ExpectedError("Test.ExpectedError", "currentValue", "Expected error occurred");
 
         // Act — TracingPipeline이 Activity 생성 → CtxEnricherPipeline이 Activity.SetTag
         await tracingPipeline.Handle(request,

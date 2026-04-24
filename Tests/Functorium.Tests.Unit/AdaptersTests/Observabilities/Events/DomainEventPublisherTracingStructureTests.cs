@@ -149,7 +149,7 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
         // Arrange
         var sut = CreateSut();
         var domainEvent = new TestDomainEvent("Test");
-        var error = new ErrorCodeExpected("Event.NotFound", "testValue", "Event not found");
+        var error = new ExpectedError("Event.NotFound", "testValue", "Event not found");
         _mockInner
             .Publish(Arg.Any<TestDomainEvent>(), Arg.Any<CancellationToken>())
             .Returns(FinT.Fail<IO, LanguageExt.Unit>(error));
@@ -196,7 +196,7 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
         // Arrange
         var sut = CreateSut();
         var domainEvent = new TestDomainEvent("Test");
-        var error = new ErrorCodeExpected("Event.NotFound", "testValue", "Event not found");
+        var error = new ExpectedError("Event.NotFound", "testValue", "Event not found");
         _mockInner
             .Publish(Arg.Any<TestDomainEvent>(), Arg.Any<CancellationToken>())
             .Returns(FinT.Fail<IO, LanguageExt.Unit>(error));
@@ -245,7 +245,7 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
         // Arrange
         var sut = CreateSut();
         var domainEvent = new TestDomainEvent("Test");
-        var error = new ErrorCodeExpected("Event.NotFound", "testValue", "Event not found");
+        var error = new ExpectedError("Event.NotFound", "testValue", "Event not found");
         _mockInner
             .Publish(Arg.Any<TestDomainEvent>(), Arg.Any<CancellationToken>())
             .Returns(FinT.Fail<IO, LanguageExt.Unit>(error));
@@ -270,7 +270,7 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
         var sut = CreateSut();
         var domainEvent = new TestDomainEvent("Test");
         var exception = new InvalidOperationException("Connection failed");
-        var error = new ErrorCodeExceptional("Event.ConnectionError", exception);
+        var error = new ExceptionalError("Event.ConnectionError", exception);
         _mockInner
             .Publish(Arg.Any<TestDomainEvent>(), Arg.Any<CancellationToken>())
             .Returns(FinT.Fail<IO, LanguageExt.Unit>(error));

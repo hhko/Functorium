@@ -4,10 +4,10 @@ using System.Runtime.Serialization;
 namespace Functorium.Abstractions.Errors;
 
 /// <summary>
-/// ErrorCodeExpected 계열 record의 공통 Error override를 제공하는 기반 클래스
+/// ExpectedError 계열 record의 공통 Error override를 제공하는 기반 클래스
 /// </summary>
 [DataContract]
-internal abstract record ErrorCodeExpectedBase(
+internal abstract record ExpectedErrorBase(
     string ErrorCode,
     string ErrorMessage,
     int ErrorCodeId = -1000,

@@ -16,8 +16,8 @@ public static class ErrorInfoExtractor
     /// <remarks>
     /// 패턴 매칭 순서가 중요합니다:
     /// 1. ManyErrors - 특수 처리 필요
-    /// 2. ErrorCodeExceptional - Exceptional 명시적 처리
-    /// 3. IHasErrorCode - Expected 에러 (ErrorCodeExceptional도 이 인터페이스를 구현하므로 순서 중요!)
+    /// 2. ExceptionalError - Exceptional 명시적 처리
+    /// 3. IHasErrorCode - Expected 에러 (ExceptionalError도 이 인터페이스를 구현하므로 순서 중요!)
     /// 4. Fallback - 알 수 없는 에러 타입
     /// </remarks>
     public static (string ErrorType, string ErrorCode) GetErrorInfo(Error error)
@@ -29,13 +29,13 @@ public static class ErrorInfoExtractor
                 ErrorType: ObservabilityNaming.ErrorTypes.Aggregate,
                 ErrorCode: GetPrimaryErrorCode(many)
             ),
-            // 2순위: ErrorCodeExceptional - Exceptional을 먼저 매칭
+            // 2순위: ExceptionalError - Exceptional을 먼저 매칭
             // (IHasErrorCode보다 먼저 와야 함!)
-            ErrorCodeExceptional exceptional => (
+            ExceptionalError exceptional => (
                 ErrorType: ObservabilityNaming.ErrorTypes.Exceptional,
                 ErrorCode: exceptional.ErrorCode
             ),
-            // 3순위: IHasErrorCode - Expected 에러 (모든 ErrorCodeExpected<...> 변형 포함)
+            // 3순위: IHasErrorCode - Expected 에러 (모든 ExpectedError<...> 변형 포함)
             IHasErrorCode hasErrorCode => (
                 ErrorType: ObservabilityNaming.ErrorTypes.Expected,
                 ErrorCode: hasErrorCode.ErrorCode

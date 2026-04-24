@@ -5,6 +5,6 @@
     X: 100,
     Y: 200
   },
-  ErrorType: ErrorCodeExpected`1,
+  ErrorType: ExpectedError`1,
   Message: 좌표가 유효하지 않습니다
 }

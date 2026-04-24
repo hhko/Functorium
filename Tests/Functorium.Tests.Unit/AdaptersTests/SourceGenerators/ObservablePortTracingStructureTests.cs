@@ -388,7 +388,7 @@ public sealed class ObservablePortTracingStructureTests : IDisposable
     }
 
     /// <summary>
-    /// Failure (Generic Error - ErrorCodeExpected&lt;T&gt;) 태그 구조를 스냅샷으로 검증합니다.
+    /// Failure (Generic Error - ExpectedError&lt;T&gt;) 태그 구조를 스냅샷으로 검증합니다.
     /// </summary>
     [Fact]
     public async Task Snapshot_FailureResponse_GenericError_Tags()

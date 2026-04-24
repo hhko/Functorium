@@ -415,7 +415,7 @@
 
 ```
 [20:40:36 INF] application usecase.command CreateProductCommand.Handle requesting with {"Name": "", "Description": "Empty name test", "Price": 1000, "StockQuantity": 5, "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "RequestId": "0HNK77Q79FSRM:00000001", "RequestPath": "/api/products", "ConnectionId": "0HNK77Q79FSRM"}
-[20:40:36 WRN] application usecase.command CreateProductCommand.Handle responded failure in 0.0035 s with expected:AdapterErrors.UsecaseValidationPipeline`2.PipelineValidation {"ErrorType": "ErrorCodeExpected`1", "ErrorCodeId": -1000, "ErrorCode": "AdapterErrors.UsecaseValidationPipeline`2.PipelineValidation", "Message": "Name: [DomainErrors.ProductName.Empty] ProductName cannot be empty. Current value: ''"} {"EventId": {"Id": 1003, "Name": "application.response.warning"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "RequestId": "0HNK77Q79FSRM:00000001", "RequestPath": "/api/products", "ConnectionId": "0HNK77Q79FSRM"}
+[20:40:36 WRN] application usecase.command CreateProductCommand.Handle responded failure in 0.0035 s with expected:AdapterErrors.UsecaseValidationPipeline`2.PipelineValidation {"ErrorType": "ExpectedError`1", "ErrorCodeId": -1000, "ErrorCode": "AdapterErrors.UsecaseValidationPipeline`2.PipelineValidation", "Message": "Name: [DomainErrors.ProductName.Empty] ProductName cannot be empty. Current value: ''"} {"EventId": {"Id": 1003, "Name": "application.response.warning"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "RequestId": "0HNK77Q79FSRM:00000001", "RequestPath": "/api/products", "ConnectionId": "0HNK77Q79FSRM"}
 ```
 
 ### OpenSearch JSON 로그
@@ -451,7 +451,7 @@
   "response.elapsed": 0.0035165,
   "error.type": "expected",
   "error.code": "AdapterErrors.UsecaseValidationPipeline`2.PipelineValidation",
-  "error.detail": "{\"ErrorType\":\"ErrorCodeExpected`1\",\"ErrorCodeId\":-1000,\"ErrorCode\":\"AdapterErrors.UsecaseValidationPipeline`2.PipelineValidation\",\"Message\":\"Name: [DomainErrors.ProductName.Empty] ProductName cannot be empty. Current value: ''\"}",
+  "error.detail": "{\"ErrorType\":\"ExpectedError`1\",\"ErrorCodeId\":-1000,\"ErrorCode\":\"AdapterErrors.UsecaseValidationPipeline`2.PipelineValidation\",\"Message\":\"Name: [DomainErrors.ProductName.Empty] ProductName cannot be empty. Current value: ''\"}",
   "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
 }
 ```
@@ -466,7 +466,7 @@
 
 ```
 [20:40:37 INF] application usecase.command TestErrorCommand.Handle requesting with {"Scenario": "SingleExpected", "TestMessage": "Business rule violation test", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "RequestId": "0HNK77Q79FSRN:00000001", "RequestPath": "/api/test-error", "ConnectionId": "0HNK77Q79FSRN"}
-[20:40:37 WRN] application usecase.command TestErrorCommand.Handle responded failure in 0.0050 s with expected:TestErrors.TestErrorCommand.BusinessRuleViolation {"ErrorType": "ErrorCodeExpected", "ErrorCode": "TestErrors.TestErrorCommand.BusinessRuleViolation", "ErrorCodeId": -1000, "ErrorCurrentValue": "Business rule violation test", "Message": "Business rule violated: Business rule violation test"} {"EventId": {"Id": 1003, "Name": "application.response.warning"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "RequestId": "0HNK77Q79FSRN:00000001", "RequestPath": "/api/test-error", "ConnectionId": "0HNK77Q79FSRN"}
+[20:40:37 WRN] application usecase.command TestErrorCommand.Handle responded failure in 0.0050 s with expected:TestErrors.TestErrorCommand.BusinessRuleViolation {"ErrorType": "ExpectedError", "ErrorCode": "TestErrors.TestErrorCommand.BusinessRuleViolation", "ErrorCodeId": -1000, "ErrorCurrentValue": "Business rule violation test", "Message": "Business rule violated: Business rule violation test"} {"EventId": {"Id": 1003, "Name": "application.response.warning"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "RequestId": "0HNK77Q79FSRN:00000001", "RequestPath": "/api/test-error", "ConnectionId": "0HNK77Q79FSRN"}
 ```
 
 ### OpenSearch JSON 로그
@@ -502,7 +502,7 @@
   "response.elapsed": 0.0049922,
   "error.type": "expected",
   "error.code": "TestErrors.TestErrorCommand.BusinessRuleViolation",
-  "error.detail": "{\"ErrorType\":\"ErrorCodeExpected\",\"ErrorCode\":\"TestErrors.TestErrorCommand.BusinessRuleViolation\",\"ErrorCodeId\":-1000,\"ErrorCurrentValue\":\"Business rule violation test\",\"Message\":\"Business rule violated: Business rule violation test\"}",
+  "error.detail": "{\"ErrorType\":\"ExpectedError\",\"ErrorCode\":\"TestErrors.TestErrorCommand.BusinessRuleViolation\",\"ErrorCodeId\":-1000,\"ErrorCurrentValue\":\"Business rule violation test\",\"Message\":\"Business rule violated: Business rule violation test\"}",
   "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
 }
 ```
@@ -515,7 +515,7 @@
 
 ```
 [20:40:39 INF] application usecase.command TestErrorCommand.Handle requesting with {"Scenario": "SingleExceptional", "TestMessage": "System error test", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "RequestId": "0HNK77Q79FSRO:00000001", "RequestPath": "/api/test-error", "ConnectionId": "0HNK77Q79FSRO"}
-[20:40:39 ERR] application usecase.command TestErrorCommand.Handle responded failure in 0.0198 s with exceptional:TestErrors.TestErrorCommand.SystemFailure {"ErrorType": "ErrorCodeExceptional", "ErrorCode": "TestErrors.TestErrorCommand.SystemFailure", "ErrorCodeId": -2146233079, "Message": "System failure: System error test", "ExceptionDetails": {"TargetSite": null, "Message": "System failure: System error test", "Data": [], "InnerException": null, "HelpLink": null, "Source": null, "HResult": -2146233079, "StackTrace": null, "$type": "InvalidOperationException"}} {"EventId": {"Id": 1004, "Name": "application.response.error"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "RequestId": "0HNK77Q79FSRO:00000001", "RequestPath": "/api/test-error", "ConnectionId": "0HNK77Q79FSRO"}
+[20:40:39 ERR] application usecase.command TestErrorCommand.Handle responded failure in 0.0198 s with exceptional:TestErrors.TestErrorCommand.SystemFailure {"ErrorType": "ExceptionalError", "ErrorCode": "TestErrors.TestErrorCommand.SystemFailure", "ErrorCodeId": -2146233079, "Message": "System failure: System error test", "ExceptionDetails": {"TargetSite": null, "Message": "System failure: System error test", "Data": [], "InnerException": null, "HelpLink": null, "Source": null, "HResult": -2146233079, "StackTrace": null, "$type": "InvalidOperationException"}} {"EventId": {"Id": 1004, "Name": "application.response.error"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "RequestId": "0HNK77Q79FSRO:00000001", "RequestPath": "/api/test-error", "ConnectionId": "0HNK77Q79FSRO"}
 ```
 
 ### OpenSearch JSON 로그
@@ -551,7 +551,7 @@
   "response.elapsed": 0.0198294,
   "error.type": "exceptional",
   "error.code": "TestErrors.TestErrorCommand.SystemFailure",
-  "error.detail": "{\"ErrorType\":\"ErrorCodeExceptional\",\"ErrorCode\":\"TestErrors.TestErrorCommand.SystemFailure\",\"ErrorCodeId\":-2146233079,\"Message\":\"System failure: System error test\",\"ExceptionDetails\":{\"TargetSite\":null,\"Message\":\"System failure: System error test\",\"Data\":[],\"InnerException\":null,\"HelpLink\":null,\"Source\":null,\"HResult\":-2146233079,\"StackTrace\":null}}",
+  "error.detail": "{\"ErrorType\":\"ExceptionalError\",\"ErrorCode\":\"TestErrors.TestErrorCommand.SystemFailure\",\"ErrorCodeId\":-2146233079,\"Message\":\"System failure: System error test\",\"ExceptionDetails\":{\"TargetSite\":null,\"Message\":\"System failure: System error test\",\"Data\":[],\"InnerException\":null,\"HelpLink\":null,\"Source\":null,\"HResult\":-2146233079,\"StackTrace\":null}}",
   "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
 }
 ```

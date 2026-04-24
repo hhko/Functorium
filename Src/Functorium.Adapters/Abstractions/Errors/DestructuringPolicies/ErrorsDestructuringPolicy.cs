@@ -12,9 +12,9 @@ public class ErrorsDestructuringPolicy : IDestructuringPolicy
     private static readonly List<IErrorDestructurer> Destructurers =
     [
         // ErrorCode
-        new ErrorCodeExpectedDestructurer(),
-        new ErrorCodeExceptionalDestructurer(),
-        new ErrorCodeExpectedTDestructurer(),
+        new ExpectedErrorDestructurer(),
+        new ExceptionalErrorDestructurer(),
+        new ExpectedErrorTDestructurer(),
 
         // ManyErrors
         new ManyErrorsDestructurer(),

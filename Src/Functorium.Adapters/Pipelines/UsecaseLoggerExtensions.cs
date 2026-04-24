@@ -83,7 +83,7 @@ public static class UsecaseLoggerExtensions
             response);
     }
 
-    // ===== Response - 실패, 경고 ErrorCodeExpected =====
+    // ===== Response - 실패, 경고 ExpectedError =====
 
     /// <summary>
     /// Usecase 응답 경고 로그를 출력합니다 (예상된 에러).
@@ -124,7 +124,7 @@ public static class UsecaseLoggerExtensions
             error);
     }
 
-    // ===== Response - 실패, 에러 ErrorCodeExceptional =====
+    // ===== Response - 실패, 에러 ExceptionalError =====
 
     /// <summary>
     /// Usecase 응답 에러 로그를 출력합니다 (예외적 에러).

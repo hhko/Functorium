@@ -14,7 +14,7 @@ public class ErrorDestructuringTests
     private readonly SerilogTestPropertyValueFactory _factory = new();
 
     [Fact]
-    public Task Destructure_ReturnsExpectedJson_WhenErrorCodeExpected()
+    public Task Destructure_ReturnsExpectedJson_WhenExpectedError()
     {
         // Arrange
         Error error = ErrorFactory.CreateExpected(
@@ -31,7 +31,7 @@ public class ErrorDestructuringTests
     }
 
     [Fact]
-    public Task Destructure_ReturnsExpectedJson_WhenErrorCodeExpectedT()
+    public Task Destructure_ReturnsExpectedJson_WhenExpectedErrorT()
     {
         // Arrange
         Error error = ErrorFactory.CreateExpected(
@@ -48,7 +48,7 @@ public class ErrorDestructuringTests
     }
 
     [Fact]
-    public Task Destructure_ReturnsExpectedJson_WhenErrorCodeExpectedT1T2()
+    public Task Destructure_ReturnsExpectedJson_WhenExpectedErrorT1T2()
     {
         // Arrange
         Error error = ErrorFactory.CreateExpected(
@@ -66,7 +66,7 @@ public class ErrorDestructuringTests
     }
 
     [Fact]
-    public Task Destructure_ReturnsExpectedJson_WhenErrorCodeExpectedT1T2T3()
+    public Task Destructure_ReturnsExpectedJson_WhenExpectedErrorT1T2T3()
     {
         // Arrange
         Error error = ErrorFactory.CreateExpected(
@@ -85,7 +85,7 @@ public class ErrorDestructuringTests
     }
 
     [Fact]
-    public Task Destructure_ReturnsExpectedJson_WhenErrorCodeExceptional()
+    public Task Destructure_ReturnsExpectedJson_WhenExceptionalError()
     {
         // Arrange
         var exception = new InvalidOperationException("Connection failed");
@@ -106,7 +106,7 @@ public class ErrorDestructuringTests
     }
 
     [Fact]
-    public Task Destructure_ReturnsExpectedJson_WhenErrorCodeExceptionalWithInnerException()
+    public Task Destructure_ReturnsExpectedJson_WhenExceptionalErrorWithInnerException()
     {
         // Arrange
         var innerException = new ArgumentNullException("connectionString", "Connection string cannot be null");
@@ -128,7 +128,7 @@ public class ErrorDestructuringTests
     }
 
     [Fact]
-    public Task Destructure_ReturnsExpectedJson_WhenErrorCodeExceptionalWithNestedInnerExceptions()
+    public Task Destructure_ReturnsExpectedJson_WhenExceptionalErrorWithNestedInnerExceptions()
     {
         // Arrange
         var rootCause = new TimeoutException("Network timeout after 30 seconds");
@@ -226,7 +226,7 @@ public class ErrorDestructuringTests
     }
 
     [Fact]
-    public void TryDestructure_ReturnsTrue_WhenErrorCodeExpected()
+    public void TryDestructure_ReturnsTrue_WhenExpectedError()
     {
         // Arrange
         Error error = ErrorFactory.CreateExpected("Code", "value", "message");

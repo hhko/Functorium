@@ -2,10 +2,10 @@
 
 internal static class ErrorCodeFieldNames
 {
-    public const string ErrorCode = nameof(ErrorCodeExpected.ErrorCode);
-    public const string Message = nameof(ErrorCodeExpected.Message);
-    public const string ErrorCurrentValue = nameof(ErrorCodeExpected.ErrorCurrentValue);
-    public const string ErrorCodeId = nameof(ErrorCodeExpected.ErrorCodeId);
+    public const string ErrorCode = nameof(ExpectedError.ErrorCode);
+    public const string Message = nameof(ExpectedError.Message);
+    public const string ErrorCurrentValue = nameof(ExpectedError.ErrorCurrentValue);
+    public const string ErrorCodeId = nameof(ExpectedError.ErrorCodeId);
 
     public const string ErrorType = nameof(ErrorType);
     public const string Count = nameof(Count);

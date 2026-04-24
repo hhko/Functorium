@@ -1,7 +1,7 @@
 ﻿{
   ErrorCode: Application.Database.ConnectionFailedWithInner,
   ErrorCodeId: -2146233079,
-  ErrorType: ErrorCodeExceptional,
+  ErrorType: ExceptionalError,
   ExceptionDetails: {
     HResult: {Scrubbed},
     InnerException: {

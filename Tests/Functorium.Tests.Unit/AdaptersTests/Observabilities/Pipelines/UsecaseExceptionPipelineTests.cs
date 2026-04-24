@@ -6,7 +6,7 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines;
 
 /// <summary>
 /// UsecaseExceptionPipeline 테스트
-/// 예외를 ErrorCodeExceptional로 변환하는 파이프라인 테스트
+/// 예외를 ExceptionalError로 변환하는 파이프라인 테스트
 /// </summary>
 public sealed class UsecaseExceptionPipelineTests
 {

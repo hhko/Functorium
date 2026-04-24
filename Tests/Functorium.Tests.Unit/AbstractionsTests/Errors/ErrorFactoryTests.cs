@@ -6,7 +6,7 @@ namespace Functorium.Tests.Unit.AbstractionsTests.Errors;
 public class ErrorFactoryTests
 {
     [Fact]
-    public void CreateExpected_ReturnsErrorCodeExpected_WhenStringValueProvided()
+    public void CreateExpected_ReturnsExpectedError_WhenStringValueProvided()
     {
         // Arrange
         var errorCode = "User.NotFound";
@@ -17,14 +17,14 @@ public class ErrorFactoryTests
         var actual = ErrorFactory.CreateExpected(errorCode, errorCurrentValue, errorMessage);
 
         // Assert
-        actual.ShouldBeOfType<ErrorCodeExpected>();
+        actual.ShouldBeOfType<ExpectedError>();
         actual.Message.ShouldBe(errorMessage);
         actual.IsExpected.ShouldBeTrue();
         actual.IsExceptional.ShouldBeFalse();
     }
 
     [Fact]
-    public void CreateExpected_ReturnsErrorCodeExpectedGeneric_WhenGenericValueProvided()
+    public void CreateExpected_ReturnsExpectedErrorGeneric_WhenGenericValueProvided()
     {
         // Arrange
         var errorCode = "Temperature.OutOfRange";
@@ -35,13 +35,13 @@ public class ErrorFactoryTests
         var actual = ErrorFactory.CreateExpected(errorCode, errorCurrentValue, errorMessage);
 
         // Assert
-        actual.ShouldBeOfType<ErrorCodeExpected<int>>();
+        actual.ShouldBeOfType<ExpectedError<int>>();
         actual.Message.ShouldBe(errorMessage);
         actual.IsExpected.ShouldBeTrue();
     }
 
     [Fact]
-    public void CreateExpected_ReturnsErrorCodeExpectedT1T2_WhenTwoValuesProvided()
+    public void CreateExpected_ReturnsExpectedErrorT1T2_WhenTwoValuesProvided()
     {
         // Arrange
         var errorCode = "Range.Invalid";
@@ -53,13 +53,13 @@ public class ErrorFactoryTests
         var actual = ErrorFactory.CreateExpected(errorCode, min, max, errorMessage);
 
         // Assert
-        actual.ShouldBeOfType<ErrorCodeExpected<int, int>>();
+        actual.ShouldBeOfType<ExpectedError<int, int>>();
         actual.Message.ShouldBe(errorMessage);
         actual.IsExpected.ShouldBeTrue();
     }
 
     [Fact]
-    public void CreateExpected_ReturnsErrorCodeExpectedT1T2T3_WhenThreeValuesProvided()
+    public void CreateExpected_ReturnsExpectedErrorT1T2T3_WhenThreeValuesProvided()
     {
         // Arrange
         var errorCode = "Date.Invalid";
@@ -72,13 +72,13 @@ public class ErrorFactoryTests
         var actual = ErrorFactory.CreateExpected(errorCode, year, month, day, errorMessage);
 
         // Assert
-        actual.ShouldBeOfType<ErrorCodeExpected<int, int, int>>();
+        actual.ShouldBeOfType<ExpectedError<int, int, int>>();
         actual.Message.ShouldBe(errorMessage);
         actual.IsExpected.ShouldBeTrue();
     }
 
     [Fact]
-    public void CreateExceptional_ReturnsErrorCodeExceptional_WhenExceptionProvided()
+    public void CreateExceptional_ReturnsExceptionalError_WhenExceptionProvided()
     {
         // Arrange
         var errorCode = "Database.ConnectionFailed";
@@ -88,7 +88,7 @@ public class ErrorFactoryTests
         var actual = ErrorFactory.CreateExceptional(errorCode, exception);
 
         // Assert
-        actual.ShouldBeOfType<ErrorCodeExceptional>();
+        actual.ShouldBeOfType<ExceptionalError>();
         actual.Message.ShouldBe(exception.Message);
         actual.IsExceptional.ShouldBeTrue();
         actual.IsExpected.ShouldBeFalse();
