@@ -27,7 +27,7 @@ Each state is defined as a sealed record inheriting `UnionValueObject<TSelf>`, w
 
 - **Match**: Takes a function for every state as arguments and returns a result. If any state is missing, it immediately produces a compile error.
 - **Switch**: Same as Match but performs side effects without a return value.
-- **State transitions**: `TransitionTo()` methods defined on each state type express only allowed transitions at the type level. Invalid transitions like Shipped to Draft return `DomainErrorType.InvalidTransition`, and methods for disallowed transitions simply do not exist.
+- **State transitions**: `TransitionTo()` methods defined on each state type express only allowed transitions at the type level. Invalid transitions like Shipped to Draft return `DomainErrorKind.InvalidTransition`, and methods for disallowed transitions simply do not exist.
 
 Since this is Value Object-based, immutability is guaranteed. State-specific associated data (e.g., a tracking number on the Shipped state) can be attached in a type-safe manner, and it integrates naturally with LINQ and collection operations.
 

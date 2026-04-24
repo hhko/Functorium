@@ -84,7 +84,7 @@ using Functorium.Domains.ValueObjects;
 
 public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 {
-    public sealed record Unsupported : DomainErrorType.Custom;
+    public sealed record Unsupported : DomainErrorKind.Custom;
 
     public static readonly Currency KRW = new(nameof(KRW), "KRW", "Korean Won", "₩");
     public static readonly Currency USD = new(nameof(USD), "USD", "US Dollar", "$");
@@ -243,7 +243,7 @@ Note the tuple + `Apply` parallel validation in the `Validate` method and the cu
 using Functorium.Domains.ValueObjects;
 using Functorium.Domains.ValueObjects.Validations;
 using Functorium.Domains.ValueObjects.Validations.Typed;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 public sealed class Money : ValueObject
 {

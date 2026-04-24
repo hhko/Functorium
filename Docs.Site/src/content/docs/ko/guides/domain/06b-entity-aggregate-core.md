@@ -195,7 +195,7 @@ public class Order : AggregateRoot<OrderId>
     #region Error Types
 
     // 상태 전이 위반 에러 타입
-    public sealed record InvalidOrderStatusTransition : DomainErrorType.Custom;
+    public sealed record InvalidOrderStatusTransition : DomainErrorKind.Custom;
 
     #endregion
 
@@ -536,7 +536,7 @@ public class Product : Entity<ProductId>
 {
     #region Error Types
 
-    public sealed record SellingPriceBelowCost : DomainErrorType.Custom;
+    public sealed record SellingPriceBelowCost : DomainErrorKind.Custom;
 
     #endregion
 
@@ -568,7 +568,7 @@ public class Subscription : Entity<SubscriptionId>
 {
     #region Error Types
 
-    public sealed record StartAfterEnd : DomainErrorType.Custom;
+    public sealed record StartAfterEnd : DomainErrorKind.Custom;
 
     #endregion
 
@@ -627,7 +627,7 @@ Entity를 생성하는 방법을 다루었으니, 이제 생성된 Entity의 상
 
 ```csharp
 // Inventory: 재고 차감 (불변식: 재고 ≥ 0)
-// Error type definition: public sealed record InsufficientStock : DomainErrorType.Custom;
+// Error type definition: public sealed record InsufficientStock : DomainErrorKind.Custom;
 public Fin<Unit> DeductStock(Quantity quantity)
 {
     if (quantity > StockQuantity)
@@ -768,7 +768,7 @@ public sealed class Tag : Entity<TagId>
 [GenerateEntityId]
 public sealed class OrderLine : Entity<OrderLineId>
 {
-    public sealed record InvalidQuantity : DomainErrorType.Custom;
+    public sealed record InvalidQuantity : DomainErrorKind.Custom;
 
     public ProductId ProductId { get; private set; }
     public Quantity Quantity { get; private set; }
@@ -894,7 +894,7 @@ public class Order : AggregateRoot<OrderId>
 {
     #region Error Types
 
-    public sealed record InvalidStatus : DomainErrorType.Custom;
+    public sealed record InvalidStatus : DomainErrorKind.Custom;
 
     #endregion
 

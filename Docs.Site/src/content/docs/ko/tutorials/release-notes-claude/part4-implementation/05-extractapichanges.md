@@ -2,7 +2,7 @@
 title: "ExtractApiChanges"
 ---
 
-릴리스 노트에 "ErrorCodeFactory 클래스가 추가되었습니다"라고 적었는데, 실제 코드에는 해당 클래스가 없다면 어떻게 될까요? API 정확성은 릴리스 노트의 신뢰를 좌우합니다. ExtractApiChanges.cs는 이 문제를 근본적으로 해결합니다. 소스 코드가 아니라 **컴파일된 DLL에서 직접 Public API를 추출하여**, 실제로 빌드된 결과물과 100% 일치하는 API 정보를 생성합니다. 모든 어셈블리의 API를 하나로 합친 Uber 파일은 이후 Claude가 릴리스 노트를 작성할 때 단일 진실 공급원(Single Source of Truth) 역할을 합니다.
+릴리스 노트에 "ErrorFactory 클래스가 추가되었습니다"라고 적었는데, 실제 코드에는 해당 클래스가 없다면 어떻게 될까요? API 정확성은 릴리스 노트의 신뢰를 좌우합니다. ExtractApiChanges.cs는 이 문제를 근본적으로 해결합니다. 소스 코드가 아니라 **컴파일된 DLL에서 직접 Public API를 추출하여**, 실제로 빌드된 결과물과 100% 일치하는 API 정보를 생성합니다. 모든 어셈블리의 API를 하나로 합친 Uber 파일은 이후 Claude가 릴리스 노트를 작성할 때 단일 진실 공급원(Single Source of Truth) 역할을 합니다.
 
 ## 파일 위치와 사용법
 
@@ -222,7 +222,7 @@ Src/
 
 namespace Functorium.Abstractions.Errors
 {
-    public static class ErrorCodeFactory
+    public static class ErrorFactory
     {
         public static LanguageExt.Common.Error Create(string errorCode, string errorCurrentValue, string errorMessage);
         public static LanguageExt.Common.Error Create<T>(string errorCode, T errorCurrentValue, string errorMessage) where T : notnull;
@@ -254,7 +254,7 @@ index abc1234..def5678 100644
 --- a/Src/Functorium/.api/Functorium.cs
 +++ b/Src/Functorium/.api/Functorium.cs
 @@ -10,6 +10,7 @@ namespace Functorium.Abstractions.Errors
-     public static class ErrorCodeFactory
+     public static class ErrorFactory
      {
          public static Error Create(string errorCode, string errorCurrentValue, string errorMessage);
 +        public static Error CreateFromException(string errorCode, Exception exception);

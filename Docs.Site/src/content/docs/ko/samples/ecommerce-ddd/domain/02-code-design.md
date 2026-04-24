@@ -18,7 +18,7 @@ title: "도메인 코드 설계"
 | 교차 Aggregate 비즈니스 규칙 | `IDomainService` | OrderCreditCheckService | Customer와 Order 간 신용 한도 검증 |
 | 쿼리 가능한 도메인 사양 | `ExpressionSpecification<T>` | ProductNameUniqueSpec, CustomerEmailSpec | Expression Tree 기반 EF Core SQL 자동 번역 |
 | 영속성 추상화 | `IRepository<T, TId>` + 커스텀 메서드 | ICustomerRepository | Specification 기반 존재 여부 확인(Exists) |
-| 도메인 이벤트 + 도메인 오류 | 중첩 `sealed record : DomainEvent` / `DomainErrorType.Custom` | Customer.CreatedEvent, Order.EmptyOrderLines | Aggregate 내부에 이벤트/오류 타입 응집 |
+| 도메인 이벤트 + 도메인 오류 | 중첩 `sealed record : DomainEvent` / `DomainErrorKind.Custom` | Customer.CreatedEvent, Order.EmptyOrderLines | Aggregate 내부에 이벤트/오류 타입 응집 |
 | Soft Delete + 가드 | `ISoftDeletableWithUser` + `DeletedAt.IsSome` 가드 | Product.Update() | 삭제된 Aggregate에 대한 변경 차단 |
 
 ## 패턴별 코드 스니펫
@@ -168,7 +168,7 @@ public sealed class OrderStatus : SimpleValueObject<string>
 {
     #region Error Types
 
-    public sealed record InvalidValue : DomainErrorType.Custom;
+    public sealed record InvalidValue : DomainErrorKind.Custom;
 
     #endregion
 
@@ -434,7 +434,7 @@ public sealed class OrderCreditCheckService : IDomainService
 {
     #region Error Types
 
-    public sealed record CreditLimitExceeded : DomainErrorType.Custom;
+    public sealed record CreditLimitExceeded : DomainErrorKind.Custom;
 
     #endregion
 
@@ -532,15 +532,15 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditable
 {
     #region Error Types
 
-    public sealed record EmptyOrderLines : DomainErrorType.Custom;
-    public sealed record InvalidOrderStatusTransition : DomainErrorType.Custom;
+    public sealed record EmptyOrderLines : DomainErrorKind.Custom;
+    public sealed record InvalidOrderStatusTransition : DomainErrorKind.Custom;
 
     #endregion
     // ...
 }
 ```
 
-이벤트는 변경 전/후 값을 포함하여(예: `OldPrice`, `NewPrice`) 이벤트 소비자가 변경 내용을 파악할 수 있게 합니다. 오류 타입은 `DomainErrorType.Custom`을 상속하며, `DomainError.For<T>()`로 오류를 생성할 때 Aggregate 타입 정보가 자동으로 포함됩니다.
+이벤트는 변경 전/후 값을 포함하여(예: `OldPrice`, `NewPrice`) 이벤트 소비자가 변경 내용을 파악할 수 있게 합니다. 오류 타입은 `DomainErrorKind.Custom`을 상속하며, `DomainError.For<T>()`로 오류를 생성할 때 Aggregate 타입 정보가 자동으로 포함됩니다.
 
 ## Failable vs Idempotent 반환 타입
 

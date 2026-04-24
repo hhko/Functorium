@@ -81,7 +81,7 @@ public abstract partial class UsecasePipelineBase<TRequest>
 | `GetRequestHandlerPath()` | `string` | Returns the `FullName` of `TRequest` (full path including namespace) |
 | `GetRequestHandler()` | `string` | Extracts handler class name from the `FullName` of `TRequest` |
 | `GetRequestHandlerLower()` | `string` | Lowercase conversion of `GetRequestHandler()` (for metric naming) |
-| `GetErrorInfo(Error error)` | `(string ErrorType, string ErrorCode)` | Extracts type/code information from error |
+| `GetErrorInfo(Error error)` | `(string ErrorKind, string ErrorCode)` | Extracts type/code information from error |
 
 - `GetRequestCategoryType` determines the type by checking whether `ICommandRequest<>` / `IQueryRequest<>` interfaces are implemented.
 - `GetRequestHandler()` parses nested types (`+`) and namespaces (`.`) from `typeof(TRequest).FullName` to extract only the class name.
@@ -106,7 +106,7 @@ internal sealed class UsecaseExceptionPipeline<TRequest, TResponse>
 | Constraint | `TResponse : IFinResponseFactory<TResponse>` |
 | Behavior | Catches exceptions via `try-catch` and returns `TResponse.CreateFail(AdapterError.FromException(...))` |
 | Cancellation | `OperationCanceledException` (and its subtype `TaskCanceledException`) is **re-thrown**, not wrapped — so callers can distinguish cancellation from business failure |
-| Error Type | `AdapterErrorType.PipelineException` |
+| Error Type | `AdapterErrorKind.PipelineException` |
 
 ### UsecaseValidationPipeline
 
@@ -123,7 +123,7 @@ internal sealed class UsecaseValidationPipeline<TRequest, TResponse>
 |------|------|
 | DI Dependencies | `IEnumerable<IValidator<TRequest>>` |
 | Behavior | Passes through `next()` if no Validators exist; runs all Validators otherwise |
-| Error Type | `AdapterErrorType.PipelineValidation(PropertyName)` |
+| Error Type | `AdapterErrorKind.PipelineValidation(PropertyName)` |
 | Multiple errors | Returns `Error.Many(errors)` when there are 2 or more validation failures |
 
 ### UsecaseLoggingPipeline
@@ -628,7 +628,7 @@ public static partial class ObservabilityNaming
 
 | Constant | Value |
 |------|----|
-| `ErrorType` | `"error.type"` |
+| `ErrorKind` | `"error.type"` |
 | `ServiceNamespace` | `"service.namespace"` |
 | `ServiceName` | `"service.name"` |
 | `ServiceVersion` | `"service.version"` |

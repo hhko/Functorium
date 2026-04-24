@@ -556,7 +556,7 @@ public void ValidateCreditLimitWithExistingOrders_ReturnsFail_WhenTotalExceedsLi
 
 Domain errors are defined as nested records within each Aggregate or Domain Service. The reason for using per-type sealed records instead of a centralized ErrorCode enum is that the type system guarantees error origin and classification, and `DomainError.For<T>()` auto-generates error codes.
 
-Each rejection scenario structurally identifies failure causes through `sealed record` error types. `DomainError.For<TDomain>()` auto-generates error codes in the format `DomainErrors.{TypeName}.{ErrorName}`, enabling pattern matching without string comparison.
+Each rejection scenario structurally identifies failure causes through `sealed record` error types. `DomainError.For<TDomain>()` auto-generates error codes in the format `Domain.{TypeName}.{ErrorName}`, enabling pattern matching without string comparison.
 
 | Aggregate/Service | Error Type | Trigger Condition | Return Type |
 |-------------------|-----------|-------------------|------------|
@@ -610,8 +610,8 @@ Functorium's functional types provide "how to delegate rule verification to the 
 |------|------------|--------|
 | `Fin<T>` | `Order.Create`, `DeductStock`, `ValidateCreditLimit`, etc. | Expresses failure via return type instead of exceptions, forcing callers to handle failures |
 | `Option<T>` | `DeletedAt`, `DeletedBy`, `UpdatedAt` | Type-safe optional value expression instead of null, clearly distinguishing presence/absence of deleted state via `IsSome`/`IsNone` |
-| `DomainErrorType.Custom` | `EmptyOrderLines`, `InsufficientStock`, `CreditLimitExceeded`, etc. | Structurally identifies failure causes via `sealed record` instead of string messages, auto-generates error codes |
-| `DomainError.For<T>()` | All error creation | Auto-generates error codes in `DomainErrors.{TypeName}.{ErrorName}` format, enabling precise branching via pattern matching |
+| `DomainErrorKind.Custom` | `EmptyOrderLines`, `InsufficientStock`, `CreditLimitExceeded`, etc. | Structurally identifies failure causes via `sealed record` instead of string messages, auto-generates error codes |
+| `DomainError.For<T>()` | All error creation | Auto-generates error codes in `Domain.{TypeName}.{ErrorName}` format, enabling precise branching via pattern matching |
 | Value Object Factory | `Money.Create`, `Quantity.Create`, `OrderStatus.Create` | Validation complete at creation time, no need to re-verify validity in subsequent domain logic |
 | `CreateFromValidated` | ORM restoration for all Aggregates | Skips validation and event publication, trusts already persisted data to separate domain creation from ORM restoration |
 

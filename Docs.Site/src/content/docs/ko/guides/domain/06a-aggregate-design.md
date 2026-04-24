@@ -118,7 +118,7 @@ Aggregate는 **하나의 단위로 일관성을 보장하는 객체 그룹입니
 
 ```csharp
 // Inventory Aggregate의 불변식: 재고는 음수가 될 수 없다
-// Error type definition: public sealed record InsufficientStock : DomainErrorType.Custom;
+// Error type definition: public sealed record InsufficientStock : DomainErrorKind.Custom;
 public Fin<Unit> DeductStock(Quantity quantity)
 {
     if (quantity > StockQuantity)
@@ -583,7 +583,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 {
     #region Error Types
 
-    public sealed record InsufficientStock : DomainErrorType.Custom;
+    public sealed record InsufficientStock : DomainErrorKind.Custom;
 
     #endregion
 
@@ -746,7 +746,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 
 ```csharp
 // EfCoreUnitOfWork: 동시성 예외를 AdapterError로 변환, 재시도 없이 반환
-// Error type definition: public sealed record ConcurrencyConflict : AdapterErrorType.Custom;
+// Error type definition: public sealed record ConcurrencyConflict : AdapterErrorKind.Custom;
 public virtual FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default)
 {
     return IO.liftAsync(async () =>

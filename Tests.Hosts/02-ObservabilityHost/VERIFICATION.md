@@ -247,7 +247,7 @@
 
 ```
 [20:36:05 INF] application usecase.command FailExpectedCommand.Handle requesting with {"OrderId": "ORD-NOT-EXIST", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
-[20:36:05 WRN] application usecase.command FailExpectedCommand.Handle responded failure in 0.0031 s with expected:Order.NotFound {"ErrorType": "ExpectedError", "ErrorCode": "Order.NotFound", "ErrorCodeId": -1000, "ErrorCurrentValue": "ORD-NOT-EXIST", "Message": "주문을 찾을 수 없습니다"} {"EventId": {"Id": 1003, "Name": "application.response.warning"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+[20:36:05 WRN] application usecase.command FailExpectedCommand.Handle responded failure in 0.0031 s with expected:Order.NotFound {"ErrorKind": "ExpectedError", "ErrorCode": "Order.NotFound", "NumericCode": -1000, "ErrorCurrentValue": "ORD-NOT-EXIST", "Message": "주문을 찾을 수 없습니다"} {"EventId": {"Id": 1003, "Name": "application.response.warning"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
 ```
 
 ### OpenSearch JSON 로그
@@ -287,7 +287,7 @@
   "response.elapsed": 0.0030533,
   "error.type": "expected",
   "error.code": "Order.NotFound",
-  "error.detail": "{\"ErrorType\":\"ExpectedError\",\"ErrorCode\":\"Order.NotFound\",\"ErrorCodeId\":-1000,\"ErrorCurrentValue\":\"ORD-NOT-EXIST\",\"Message\":\"주문을 찾을 수 없습니다\"}",
+  "error.detail": "{\"ErrorKind\":\"ExpectedError\",\"ErrorCode\":\"Order.NotFound\",\"NumericCode\":-1000,\"ErrorCurrentValue\":\"ORD-NOT-EXIST\",\"Message\":\"주문을 찾을 수 없습니다\"}",
   "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
 }
 ```
@@ -302,7 +302,7 @@
 
 ```
 [20:36:05 INF] application usecase.command FailExceptionalCommand.Handle requesting with {"OrderId": "ORD-DB-FAIL", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
-[20:36:05 ERR] application usecase.command FailExceptionalCommand.Handle responded failure in 0.0292 s with exceptional:Database.ConnectionFailed {"ErrorType": "ExceptionalError", "ErrorCode": "Database.ConnectionFailed", "ErrorCodeId": -2146233079, "Message": "데이터베이스 연결이 끊어졌습니다", "ExceptionDetails": {"TargetSite": null, "Message": "데이터베이스 연결이 끊어졌습니다", "Data": [], "InnerException": null, "HelpLink": null, "Source": null, "HResult": -2146233079, "StackTrace": null, "$type": "InvalidOperationException"}} {"EventId": {"Id": 1004, "Name": "application.response.error"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+[20:36:05 ERR] application usecase.command FailExceptionalCommand.Handle responded failure in 0.0292 s with exceptional:Database.ConnectionFailed {"ErrorKind": "ExceptionalError", "ErrorCode": "Database.ConnectionFailed", "NumericCode": -2146233079, "Message": "데이터베이스 연결이 끊어졌습니다", "ExceptionDetails": {"TargetSite": null, "Message": "데이터베이스 연결이 끊어졌습니다", "Data": [], "InnerException": null, "HelpLink": null, "Source": null, "HResult": -2146233079, "StackTrace": null, "$type": "InvalidOperationException"}} {"EventId": {"Id": 1004, "Name": "application.response.error"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
 ```
 
 ### OpenSearch JSON 로그
@@ -342,7 +342,7 @@
   "response.elapsed": 0.0291804,
   "error.type": "exceptional",
   "error.code": "Database.ConnectionFailed",
-  "error.detail": "{\"ErrorType\":\"ExceptionalError\",\"ErrorCode\":\"Database.ConnectionFailed\",\"ErrorCodeId\":-2146233079,\"Message\":\"데이터베이스 연결이 끊어졌습니다\",\"ExceptionDetails\":{\"TargetSite\":null,\"Message\":\"데이터베이스 연결이 끊어졌습니다\",\"Data\":[],\"InnerException\":null,\"HelpLink\":null,\"Source\":null,\"HResult\":-2146233079,\"StackTrace\":null}}",
+  "error.detail": "{\"ErrorKind\":\"ExceptionalError\",\"ErrorCode\":\"Database.ConnectionFailed\",\"NumericCode\":-2146233079,\"Message\":\"데이터베이스 연결이 끊어졌습니다\",\"ExceptionDetails\":{\"TargetSite\":null,\"Message\":\"데이터베이스 연결이 끊어졌습니다\",\"Data\":[],\"InnerException\":null,\"HelpLink\":null,\"Source\":null,\"HResult\":-2146233079,\"StackTrace\":null}}",
   "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
 }
 ```

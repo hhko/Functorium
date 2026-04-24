@@ -54,18 +54,18 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 #### Error Field 값 (Logging 전용)
 
-> `error.type`과 `@error.ErrorType`은 서로 다른 목적을 위해 다른 값 형식을 사용합니다.
+> `error.type`과 `@error.ErrorKind`은 서로 다른 목적을 위해 다른 값 형식을 사용합니다.
 
-| Error Type | `error.type` (필터링용) | `@error.ErrorType` (상세용) |
+| Error Type | `error.type` (필터링용) | `@error.ErrorKind` (상세용) |
 |------------|------------------------|----------------------------|
-| Expected Error | `"expected"` | `"ErrorCodeExpected"` |
-| Exceptional Error | `"exceptional"` | `"ErrorCodeExceptional"` |
+| Expected Error | `"expected"` | `"ExpectedError"` |
+| Exceptional Error | `"exceptional"` | `"ExceptionalError"` |
 | Aggregate Error | `"aggregate"` | `"ManyErrors"` |
 | LanguageExt Expected | `"expected"` | `"Expected"` |
 | LanguageExt Exceptional | `"exceptional"` | `"Exceptional"` |
 
 - **`error.type`**: 로그 필터링/쿼리를 위한 표준화된 값(Metrics/Tracing과 일관됨)
-- **`@error.ErrorType`**: 상세한 오류 타입 식별을 위한 실제 클래스 이름
+- **`@error.ErrorKind`**: 상세한 오류 타입 식별을 위한 실제 클래스 이름
 
 ### 필드/태그 네이밍 규칙
 

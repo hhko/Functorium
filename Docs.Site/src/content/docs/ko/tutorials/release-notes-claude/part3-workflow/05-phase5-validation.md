@@ -43,7 +43,7 @@ title: "검증"
 grep "MethodName" .analysis-output/api-changes-build-current/all-api-changes.txt
 
 # 시그니처 확인
-grep -A 5 "ErrorCodeFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
+grep -A 5 "ErrorFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
 ```
 
 ### 2. Breaking Changes 확인
@@ -198,7 +198,7 @@ Phase 5: 검증 완료
 
 검증 항목 통과:
   API 정확성 (0 오류)
-    - ErrorCodeFactory
+    - ErrorFactory
     - OpenTelemetryRegistration
     - ArchitectureValidationEntryPoint
     - HostTestFixture
@@ -234,10 +234,10 @@ Phase 5: 검증 실패
 발견된 문제:
 
 API 정확성 (2 오류):
-  ErrorCodeFactory.FromException (line 123)
+  ErrorFactory.FromException (line 123)
     위치: RELEASE-v1.2.0.md:123
     문제: Uber 파일에 없는 API
-    제안: ErrorCodeFactory.CreateFromException 사용
+    제안: ErrorFactory.CreateExceptional 사용
 
   OpenTelemetryBuilder.Register (line 456)
     위치: RELEASE-v1.2.0.md:456

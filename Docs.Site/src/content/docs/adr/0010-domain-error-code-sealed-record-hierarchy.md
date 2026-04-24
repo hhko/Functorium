@@ -16,25 +16,25 @@ The problems with string-based error management do not stop there. If one develo
 2. Enum-based error types
 3. String constants
 4. Exception class hierarchy
-5. Single ErrorType (no layer distinction)
+5. Single ErrorKind (no layer distinction)
 
 ## Decision
 
 **Chosen option: "Per-layer sealed record hierarchy + automatic error code generation"**, to represent errors through the type system instead of strings, blocking typos and duplicates at compile time and enabling immediate identification of error origin from the code itself.
 
-- **DomainErrorType**: Defines 27 domain error types as sealed records, including `NotFound`, `InvalidState`, `InvalidTransition`, and `DuplicateValue`. The 27 types are the result of cataloging recurring domain error patterns from actual business scenarios.
-- **ApplicationErrorType**: Defines application layer errors such as `Unauthorized`, `Forbidden`, and `Conflict`.
-- **AdapterErrorType**: Defines adapter layer errors such as `ExternalServiceFailure` and `DatabaseError`.
+- **DomainErrorKind**: Defines 27 domain error types as sealed records, including `NotFound`, `InvalidState`, `InvalidTransition`, and `DuplicateValue`. The 27 types are the result of cataloging recurring domain error patterns from actual business scenarios.
+- **ApplicationErrorKind**: Defines application layer errors such as `Unauthorized`, `Forbidden`, and `Conflict`.
+- **AdapterErrorKind**: Defines adapter layer errors such as `ExternalServiceFailure` and `DatabaseError`.
 - **Error code format**: Structured codes in the format `{Layer}.{Context}.{Name}` -- such as `Domain.Order.InvalidTransition` and `Application.Auth.Unauthorized` -- are automatically generated, enabling immediate identification of the layer and originating Aggregate from just the error code in logs.
 - **Factory**: The `DomainError.For<T>()` method automatically extracts Context information from the generic type `T` to generate error codes, eliminating manual string assembly.
 
 ### Consequences
 
-- <span class="adr-good">Good</span>, because using `DomainErrorType.NotFound` means a typo like `"Notfound"` is immediately caught as a compile error, structurally preventing runtime matching failures.
+- <span class="adr-good">Good</span>, because using `DomainErrorKind.NotFound` means a typo like `"Notfound"` is immediately caught as a compile error, structurally preventing runtime matching failures.
 - <span class="adr-good">Good</span>, because `switch` expressions on the sealed record hierarchy display unhandled error types as compile warnings, ensuring exhaustive handling of all error cases.
 - <span class="adr-good">Good</span>, because when `Domain.Order.InvalidTransition` appears in logs, "state transition failure in the Order Aggregate at the domain layer" can be immediately understood from the error code alone.
 - <span class="adr-good">Good</span>, because `DomainError.For<Order>()` automatically extracts the Context (`Order`) from the generic type, eliminating the need to manually compose error code strings.
-- <span class="adr-bad">Bad</span>, because the initial design and classification of per-layer sealed record hierarchies (27 DomainErrorType variants + ApplicationErrorType + AdapterErrorType) requires significant investment.
+- <span class="adr-bad">Bad</span>, because the initial design and classification of per-layer sealed record hierarchies (27 DomainErrorKind variants + ApplicationErrorKind + AdapterErrorKind) requires significant investment.
 - <span class="adr-bad">Bad</span>, because when new domain error patterns emerge, new types must be added to the sealed record hierarchy, and existing `switch` expressions must be updated with the corresponding cases.
 
 ### Confirmation
@@ -46,11 +46,11 @@ The problems with string-based error management do not stop there. If one develo
 
 ### Per-Layer Sealed Record Hierarchy + Automatic Error Code Generation
 
-- <span class="adr-good">Good</span>, because representing errors as types like `DomainErrorType.NotFound` blocks typos and case-sensitivity mismatches at compile time.
+- <span class="adr-good">Good</span>, because representing errors as types like `DomainErrorKind.NotFound` blocks typos and case-sensitivity mismatches at compile time.
 - <span class="adr-good">Good</span>, because `switch` expressions on sealed records alert unhandled cases as compile warnings, preventing missed error handling.
 - <span class="adr-good">Good</span>, because structured error codes in the `Domain.Order.InvalidTransition` format are used consistently across log searches, Grafana dashboard filters, and API responses.
 - <span class="adr-good">Good</span>, because the `IHasErrorCode` interface unifies domain/application/adapter errors under the same format (`{Layer}.{Context}.{Name}`), enabling cross-layer error handling pipelines.
-- <span class="adr-bad">Bad</span>, because there is maintenance cost in initially designing the 27 DomainErrorType variants + ApplicationErrorType + AdapterErrorType hierarchy and extending it when new error patterns emerge.
+- <span class="adr-bad">Bad</span>, because there is maintenance cost in initially designing the 27 DomainErrorKind variants + ApplicationErrorKind + AdapterErrorKind hierarchy and extending it when new error patterns emerge.
 
 ### Enum-Based Error Types
 
@@ -73,9 +73,9 @@ The problems with string-based error management do not stop there. If one develo
 - <span class="adr-bad">Bad</span>, because .NET exceptions have high stack trace capture costs, causing unnecessary performance degradation when used for "expected failures" like business rule violations that occur frequently.
 - <span class="adr-bad">Bad</span>, because ADR-0002 decided to represent failures with `Fin<T>` instead of exceptions, so defining error types as exception classes directly conflicts with that existing architecture decision.
 
-### Single ErrorType (No Layer Distinction)
+### Single ErrorKind (No Layer Distinction)
 
-- <span class="adr-good">Good</span>, because all errors belong to a single `ErrorType` hierarchy, keeping the structure simple with low learning cost.
+- <span class="adr-good">Good</span>, because all errors belong to a single `ErrorKind` hierarchy, keeping the structure simple with low learning cost.
 - <span class="adr-bad">Bad</span>, because the error type alone cannot distinguish whether `NotFound` means "order not in DB" (domain) or "external API returned 404" (adapter), mixing domain and infrastructure issues in monitoring.
 - <span class="adr-bad">Bad</span>, because per-layer HTTP status code mapping like "return 400 for domain errors, 502 for adapter errors" is impossible with error type branching alone.
 

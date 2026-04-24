@@ -39,7 +39,7 @@ The `/domain-develop` skill automates this repetition. When you convey domain re
 | Entity | `Entity<TId>` | Child entity within an Aggregate |
 | Aggregate Root | `AggregateRoot<TId>` | Transaction boundary |
 | Domain Event | `DomainEvent` | State change notification |
-| Domain Error | `DomainErrorType.Custom` | Business rule violation |
+| Domain Error | `DomainErrorKind.Custom` | Business rule violation |
 | Specification | `ExpressionSpecification<T>` | Query/search conditions |
 | Domain Service | `IDomainService` | Cross-Aggregate pure logic |
 | Repository | `IRepository<T, TId>` | Persistence interface |
@@ -330,7 +330,7 @@ public sealed class InventoryLowStockSpec : ExpressionSpecification<Inventory>
 ```csharp
 public sealed class InventoryTransferService : IDomainService
 {
-    public sealed record InsufficientStock : DomainErrorType.Custom;
+    public sealed record InsufficientStock : DomainErrorKind.Custom;
 
     public Fin<Unit> Transfer(
         Inventory source, Inventory target, StockQuantity amount, DateTime now)

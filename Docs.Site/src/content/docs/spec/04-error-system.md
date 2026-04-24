@@ -2,7 +2,7 @@
 title: "Error System Specification"
 ---
 
-Functorium's error system consists of **per-layer sealed record hierarchies** (`DomainErrorType`, `ApplicationErrorType`, `AdapterErrorType`) and **per-layer factories** (`DomainError`, `ApplicationError`, `EventError`, `AdapterError`). Common creation logic for the factories is centralized in the internal `LayerErrorCore`, and common overrides for Expected errors are consolidated in `ErrorCodeExpectedBase`. This specification defines the signatures, properties, and error code generation rules for public/internal types.
+Functorium's error system consists of **per-layer sealed record hierarchies** (`DomainErrorKind`, `ApplicationErrorKind`, `AdapterErrorKind`) and **per-layer factories** (`DomainError`, `ApplicationError`, `EventError`, `AdapterError`). Common creation logic for the factories is centralized in the internal `LayerErrorCore`, and common overrides for Expected errors are consolidated in `ExpectedErrorBase`. This specification defines the signatures, properties, and error code generation rules for public/internal types.
 
 ## Summary
 
@@ -12,25 +12,25 @@ Functorium's error system consists of **per-layer sealed record hierarchies** (`
 
 | Type | Namespace | Description |
 |------|-------------|------|
-| `ErrorType` | `Functorium.Abstractions.Errors` | Abstract base record for all layer error types |
+| `ErrorKind` | `Functorium.Abstractions.Errors` | Abstract base record for all layer error types |
 | `IHasErrorCode` | `Functorium.Abstractions.Errors` | Error code access interface |
-| `ErrorCodeFactory` | `Functorium.Abstractions.Errors` | Expected/Exceptional error creation factory |
-| `DomainErrorType` | `Functorium.Domains.Errors` | Domain error type sealed record hierarchy (10 categories) |
+| `ErrorFactory` | `Functorium.Abstractions.Errors` | Expected/Exceptional error creation factory |
+| `DomainErrorKind` | `Functorium.Domains.Errors` | Domain error type sealed record hierarchy (10 categories) |
 | `DomainError` | `Functorium.Domains.Errors` | Domain error creation factory |
-| `ApplicationErrorType` | `Functorium.Applications.Errors` | Application error type sealed record hierarchy (14 types) |
+| `ApplicationErrorKind` | `Functorium.Applications.Errors` | Application error type sealed record hierarchy (14 types) |
 | `ApplicationError` | `Functorium.Applications.Errors` | Application error creation factory |
 | `EventErrorType` | `Functorium.Applications.Errors` | Event error type sealed record hierarchy (4 types) |
 | `EventError` | `Functorium.Applications.Errors` | Event error creation factory |
-| `AdapterErrorType` | `Functorium.Adapters.Errors` | Adapter error type sealed record hierarchy (20 types) |
+| `AdapterErrorKind` | `Functorium.Adapters.Errors` | Adapter error type sealed record hierarchy (20 types) |
 | `AdapterError` | `Functorium.Adapters.Errors` | Adapter error creation factory |
 
 #### Internal Types
 
 | Type | Namespace | Description |
 |------|-------------|------|
-| `ErrorCodeExpectedBase` | `Functorium.Abstractions.Errors` | Base class for common LanguageExt `Error` overrides of 4 Expected error types |
-| `ErrorCodeExpected` (4 types) | `Functorium.Abstractions.Errors` | Expected errors -- responsible only for value storage, inheriting the rest from base |
-| `ErrorCodeExceptional` | `Functorium.Abstractions.Errors` | Wraps Exception with error code |
+| `ExpectedErrorBase` | `Functorium.Abstractions.Errors` | Base class for common LanguageExt `Error` overrides of 4 Expected error types |
+| `ExpectedError` (4 types) | `Functorium.Abstractions.Errors` | Expected errors -- responsible only for value storage, inheriting the rest from base |
+| `ExceptionalError` | `Functorium.Abstractions.Errors` | Wraps Exception with error code |
 | `LayerErrorCore` | `Functorium.Abstractions.Errors` | Common error code creation logic for all 4 layer factories |
 | `ErrorAssertionCore` | `Functorium.Testing.Assertions.Errors` | Common validation logic for 3 layer Assertions |
 
@@ -44,13 +44,13 @@ All error codes follow this pattern:
 
 | Layer | Prefix | Example |
 |--------|--------|------|
-| Domain | `DomainErrors` | `DomainErrors.Email.Empty` |
-| Application | `ApplicationErrors` | `ApplicationErrors.CreateProductCommand.AlreadyExists` |
-| Adapter | `AdapterErrors` | `AdapterErrors.ProductRepository.NotFound` |
+| Domain | `Domain` | `Domain.Email.Empty` |
+| Application | `Application` | `Application.CreateProductCommand.AlreadyExists` |
+| Adapter | `Adapter` | `Adapter.ProductRepository.NotFound` |
 
-### Relationship Diagram (1.0.0-alpha.4 Target State)
+### Relationship Diagram
 
-The diagram below shows the flow from the user code entry point (layer factory), through internal error record creation, to the observability layer. It reflects the **upcoming 1.0.0-alpha.4 naming** (ErrorType -> ErrorKind, ErrorCodeFactory -> ErrorFactory, etc.) and the shortened prefix values ("Domain" / "Application" / "Adapter").
+The diagram below shows the flow from the user code entry point (layer factory) through internal error record creation to the observability layer. It reflects the 1.0.0-alpha.4 redesign: the `ErrorKind` abstract base, internal `ErrorFactory`, `ExpectedError` / `ExceptionalError`, and shortened prefix values (`"Domain"` / `"Application"` / `"Adapter"`).
 
 ```
 [Public API -- User Code Path]
@@ -90,35 +90,30 @@ The diagram below shows the flow from the user code entry point (layer factory),
       --> ErrorLogFieldNames.{Kind, NumericCode, Message, Inner, ...}
 ```
 
-> **Note**: The type signatures and property descriptions in the rest of this document reflect the current (1.0.0-alpha.3) code. The diagram above is a roadmap preview of the target state after the comprehensive redesign; the names it uses (`ErrorKind`, `ErrorFactory`, `ExpectedError`, shortened prefixes, etc.) take effect in 1.0.0-alpha.4. See the release notes for full change details.
+> **Note**: The comprehensive redesign landed in 1.0.0-alpha.4 (`ErrorType` -> `ErrorKind`, `ErrorCodeFactory` -> internal `ErrorFactory`, shortened prefix values, etc.) is reflected throughout the body, diagram, and tables. See the release notes for the full migration guide from earlier versions.
 
 ---
 
 ## Error Code System
 
-### ErrorType (Abstract Base)
+### ErrorKind (Abstract Base)
 
 ```csharp
 namespace Functorium.Abstractions.Errors;
 
-public abstract record ErrorType
+public abstract record ErrorKind
 {
-    public const string DomainErrorsPrefix = "DomainErrors";
-    public const string ApplicationErrorsPrefix = "ApplicationErrors";
-    public const string AdapterErrorsPrefix = "AdapterErrors";
-
-    public virtual string ErrorName => GetType().Name;
+    public virtual string Name => GetType().Name;
 }
 ```
 
-**`ErrorType`** is the common base for all per-layer error types (`DomainErrorType`, `ApplicationErrorType`, `AdapterErrorType`).
+**`ErrorKind`** is the common base for all per-layer error types (`DomainErrorKind`, `ApplicationErrorKind`, `AdapterErrorKind`).
 
 | Member | Kind | Description |
 |------|------|------|
-| `DomainErrorsPrefix` | `const string` | Domain error code prefix `"DomainErrors"` |
-| `ApplicationErrorsPrefix` | `const string` | Application error code prefix `"ApplicationErrors"` |
-| `AdapterErrorsPrefix` | `const string` | Adapter error code prefix `"AdapterErrors"` |
-| `ErrorName` | `virtual string` | Last segment of the error code. Defaults to `GetType().Name` |
+| `Name` | `virtual string` | Last segment of the error code. Defaults to `GetType().Name` |
+
+> **Layer prefix constants**: `"Domain"` / `"Application"` / `"Adapter"` prefix constants live in the internal `ErrorCodePrefixes` class (namespace `Functorium.Abstractions.Errors`, `internal`) and are not exposed on the public API. Consumers use them indirectly through layer factories such as `DomainError.For<T>(...)`.
 
 ### IHasErrorCode
 
@@ -131,23 +126,23 @@ public interface IHasErrorCode
 }
 ```
 
-**`IHasErrorCode`** is an interface for type-safe error code access without reflection. `ErrorCodeExpected` and `ErrorCodeExceptional` implement this interface.
+**`IHasErrorCode`** is an interface for type-safe error code access without reflection. `ExpectedError` and `ExceptionalError` implement this interface.
 
 ---
 
 ## ErrorCode Types
 
-### ErrorCodeExpectedBase (internal)
+### ExpectedErrorBase (internal)
 
 ```csharp
-internal abstract record ErrorCodeExpectedBase(
+internal abstract record ExpectedErrorBase(
     string ErrorCode,
     string ErrorMessage,
-    int ErrorCodeId = -1000,
+    int NumericCode = -1000,
     Option<Error> Inner = default) : Error, IHasErrorCode
 ```
 
-**`ErrorCodeExpectedBase`** is the common base class for the 4 Expected error types (`ErrorCodeExpected`, `<T>`, `<T1,T2>`, `<T1,T2,T3>`). It defines all 13 LanguageExt `Error` overrides in one place, eliminating duplication in derived types.
+**`ExpectedErrorBase`** is the common base class for the 4 Expected error types (`ExpectedError`, `<T>`, `<T1,T2>`, `<T1,T2,T3>`). It defines all 13 LanguageExt `Error` overrides in one place, eliminating duplication in derived types.
 
 | Member | Kind | Description |
 |------|------|------|
@@ -162,37 +157,37 @@ internal abstract record ErrorCodeExpectedBase(
 
 > **`sealed override ToString()`**: C# records auto-regenerate `ToString()` in derived classes. `sealed` blocks this to ensure all derived types consistently return `Message`.
 
-### ErrorCodeExpected (internal)
+### ExpectedError (internal)
 
 ```csharp
-internal record ErrorCodeExpected(
+internal record ExpectedError(
     string ErrorCode,
     string ErrorCurrentValue,
     string ErrorMessage,
-    int ErrorCodeId = -1000,
+    int NumericCode = -1000,
     Option<Error> Inner = default)
-    : ErrorCodeExpectedBase(ErrorCode, ErrorMessage, ErrorCodeId, Inner)
+    : ExpectedErrorBase(ErrorCode, ErrorMessage, NumericCode, Inner)
 ```
 
-**`ErrorCodeExpected`** represents expected errors such as business rule violations. It inherits common members (`ErrorCode`, `Message`, `Code`, `Inner`, `ToString()`, `IsExpected`, `IsExceptional`) from `ErrorCodeExpectedBase`, and derived types only add the value at error time (`ErrorCurrentValue`).
+**`ExpectedError`** represents expected errors such as business rule violations. It inherits common members (`ErrorCode`, `Message`, `Code`, `Inner`, `ToString()`, `IsExpected`, `IsExceptional`) from `ExpectedErrorBase`, and derived types only add the value at error time (`ErrorCurrentValue`).
 
 | Overload | Additional Properties | Description |
 |----------|----------|------|
-| `ErrorCodeExpected` | `ErrorCurrentValue: string` | String value |
-| `ErrorCodeExpected<T>` | `ErrorCurrentValue: T` | Typed value (1) |
-| `ErrorCodeExpected<T1, T2>` | `ErrorCurrentValue1: T1`, `ErrorCurrentValue2: T2` | Typed values (2) |
-| `ErrorCodeExpected<T1, T2, T3>` | `ErrorCurrentValue1: T1`, `ErrorCurrentValue2: T2`, `ErrorCurrentValue3: T3` | Typed values (3) |
+| `ExpectedError` | `ErrorCurrentValue: string` | String value |
+| `ExpectedError<T>` | `ErrorCurrentValue: T` | Typed value (1) |
+| `ExpectedError<T1, T2>` | `ErrorCurrentValue1: T1`, `ErrorCurrentValue2: T2` | Typed values (2) |
+| `ExpectedError<T1, T2, T3>` | `ErrorCurrentValue1: T1`, `ErrorCurrentValue2: T2`, `ErrorCurrentValue3: T3` | Typed values (3) |
 
-### ErrorCodeExceptional (internal)
+### ExceptionalError (internal)
 
 ```csharp
-internal record ErrorCodeExceptional : Error, IHasErrorCode
+internal record ExceptionalError : Error, IHasErrorCode
 {
-    public ErrorCodeExceptional(string errorCode, Exception exception);
+    public ExceptionalError(string errorCode, Exception exception);
 }
 ```
 
-**`ErrorCodeExceptional`** wraps a system Exception with an error code. `IsExpected = false`, `IsExceptional = true`.
+**`ExceptionalError`** wraps a system Exception with an error code. `IsExpected = false`, `IsExceptional = true`.
 
 | Property | Type | Description |
 |------|------|------|
@@ -203,12 +198,12 @@ internal record ErrorCodeExceptional : Error, IHasErrorCode
 | `IsExpected` | `bool` | Always `false` |
 | `IsExceptional` | `bool` | Always `true` |
 
-### ErrorCodeFactory
+### ErrorFactory
 
 ```csharp
 namespace Functorium.Abstractions.Errors;
 
-public static class ErrorCodeFactory
+public static class ErrorFactory
 {
     // Expected error creation
     public static Error Create(string errorCode, string errorCurrentValue, string errorMessage);
@@ -226,15 +221,15 @@ public static class ErrorCodeFactory
 }
 ```
 
-**`ErrorCodeFactory`** is a static factory that creates `ErrorCodeExpected` and `ErrorCodeExceptional` instances. Per-layer factories create errors through the following flow:
+**`ErrorFactory`** is a static factory that creates `ExpectedError` and `ExceptionalError` instances. Per-layer factories create errors through the following flow:
 
 ```
-DomainError.For<T>(DomainErrorType, ...)        <- Layer type safety (public API)
-  -> LayerErrorCore.Create<T>(prefix, ErrorType, ...)  <- Common error code assembly (internal)
-    -> ErrorCodeFactory.Create(errorCode, ...)          <- ErrorCodeExpected instance creation (internal)
+DomainError.For<T>(DomainErrorKind, ...)        <- Layer type safety (public API)
+  -> LayerErrorCore.Create<T>(prefix, ErrorKind, ...)  <- Common error code assembly (internal)
+    -> ErrorFactory.CreateExpected(errorCode, ...)          <- ExpectedError instance creation (internal)
 ```
 
-`LayerErrorCore` assembles the error code string (`{Prefix}.{Context}.{ErrorName}`), and `ErrorCodeFactory` creates the final `Error` instance. `[AggressiveInlining]` is applied to all methods so the JIT eliminates delegation calls, resulting in no performance difference.
+`LayerErrorCore` assembles the error code string (`{Prefix}.{Context}.{ErrorName}`), and `ErrorFactory` creates the final `Error` instance. `[AggressiveInlining]` is applied to all methods so the JIT eliminates delegation calls, resulting in no performance difference.
 
 | Method | Return | Description |
 |--------|------|------|
@@ -244,15 +239,15 @@ DomainError.For<T>(DomainErrorType, ...)        <- Layer type safety (public API
 
 ---
 
-## Domain ErrorType Catalog
+## Domain ErrorKind Catalog
 
 ```csharp
 namespace Functorium.Domains.Errors;
 
-public abstract partial record DomainErrorType : ErrorType;
+public abstract partial record DomainErrorKind : ErrorKind;
 ```
 
-**`DomainErrorType`** is the sealed record hierarchy base for domain layer errors. Classified into 10 categories.
+**`DomainErrorKind`** is the sealed record hierarchy base for domain layer errors. Classified into 10 categories.
 
 ### Existence
 
@@ -264,10 +259,10 @@ public abstract partial record DomainErrorType : ErrorType;
 | `Mismatch` | (none) | Value mismatch (e.g., password confirmation) |
 
 ```csharp
-public sealed record NotFound : DomainErrorType;
-public sealed record AlreadyExists : DomainErrorType;
-public sealed record Duplicate : DomainErrorType;
-public sealed record Mismatch : DomainErrorType;
+public sealed record NotFound : DomainErrorKind;
+public sealed record AlreadyExists : DomainErrorKind;
+public sealed record Duplicate : DomainErrorKind;
+public sealed record Mismatch : DomainErrorKind;
 ```
 
 ### Presence
@@ -278,8 +273,8 @@ public sealed record Mismatch : DomainErrorType;
 | `Null` | (none) | Value is null |
 
 ```csharp
-public sealed record Empty : DomainErrorType;
-public sealed record Null : DomainErrorType;
+public sealed record Empty : DomainErrorKind;
+public sealed record Null : DomainErrorKind;
 ```
 
 ### Format
@@ -291,9 +286,9 @@ public sealed record Null : DomainErrorType;
 | `NotLowerCase` | (none) | Value is not lowercase |
 
 ```csharp
-public sealed record InvalidFormat(string? Pattern = null) : DomainErrorType;
-public sealed record NotUpperCase : DomainErrorType;
-public sealed record NotLowerCase : DomainErrorType;
+public sealed record InvalidFormat(string? Pattern = null) : DomainErrorKind;
+public sealed record NotUpperCase : DomainErrorKind;
+public sealed record NotLowerCase : DomainErrorKind;
 ```
 
 ### Length
@@ -305,9 +300,9 @@ public sealed record NotLowerCase : DomainErrorType;
 | `WrongLength` | `int Expected` | Value length does not match expected. Default `0` (unspecified) |
 
 ```csharp
-public sealed record TooShort(int MinLength = 0) : DomainErrorType;
-public sealed record TooLong(int MaxLength = int.MaxValue) : DomainErrorType;
-public sealed record WrongLength(int Expected = 0) : DomainErrorType;
+public sealed record TooShort(int MinLength = 0) : DomainErrorKind;
+public sealed record TooLong(int MaxLength = int.MaxValue) : DomainErrorKind;
+public sealed record WrongLength(int Expected = 0) : DomainErrorKind;
 ```
 
 ### Numeric
@@ -322,12 +317,12 @@ public sealed record WrongLength(int Expected = 0) : DomainErrorType;
 | `AboveMaximum` | `string? Maximum` | Value exceeds maximum |
 
 ```csharp
-public sealed record Zero : DomainErrorType;
-public sealed record Negative : DomainErrorType;
-public sealed record NotPositive : DomainErrorType;
-public sealed record OutOfRange(string? Min = null, string? Max = null) : DomainErrorType;
-public sealed record BelowMinimum(string? Minimum = null) : DomainErrorType;
-public sealed record AboveMaximum(string? Maximum = null) : DomainErrorType;
+public sealed record Zero : DomainErrorKind;
+public sealed record Negative : DomainErrorKind;
+public sealed record NotPositive : DomainErrorKind;
+public sealed record OutOfRange(string? Min = null, string? Max = null) : DomainErrorKind;
+public sealed record BelowMinimum(string? Minimum = null) : DomainErrorKind;
+public sealed record AboveMaximum(string? Maximum = null) : DomainErrorKind;
 ```
 
 ### DateTime
@@ -341,11 +336,11 @@ public sealed record AboveMaximum(string? Maximum = null) : DomainErrorType;
 | `TooEarly` | `string? Boundary` | Date is before the boundary (should be after) |
 
 ```csharp
-public sealed record DefaultDate : DomainErrorType;
-public sealed record NotInPast : DomainErrorType;
-public sealed record NotInFuture : DomainErrorType;
-public sealed record TooLate(string? Boundary = null) : DomainErrorType;
-public sealed record TooEarly(string? Boundary = null) : DomainErrorType;
+public sealed record DefaultDate : DomainErrorKind;
+public sealed record NotInPast : DomainErrorKind;
+public sealed record NotInFuture : DomainErrorKind;
+public sealed record TooLate(string? Boundary = null) : DomainErrorKind;
+public sealed record TooEarly(string? Boundary = null) : DomainErrorKind;
 ```
 
 ### Range
@@ -356,8 +351,8 @@ public sealed record TooEarly(string? Boundary = null) : DomainErrorType;
 | `RangeEmpty` | `string? Value` | Range is empty (minimum equals maximum) |
 
 ```csharp
-public sealed record RangeInverted(string? Min = null, string? Max = null) : DomainErrorType;
-public sealed record RangeEmpty(string? Value = null) : DomainErrorType;
+public sealed record RangeInverted(string? Min = null, string? Max = null) : DomainErrorKind;
+public sealed record RangeEmpty(string? Value = null) : DomainErrorKind;
 ```
 
 ### State Transition
@@ -367,7 +362,7 @@ public sealed record RangeEmpty(string? Value = null) : DomainErrorType;
 | `InvalidTransition` | `string? FromState`, `string? ToState` | Invalid state transition (e.g., `Paid` -> `Active`) |
 
 ```csharp
-public sealed record InvalidTransition(string? FromState = null, string? ToState = null) : DomainErrorType;
+public sealed record InvalidTransition(string? FromState = null, string? ToState = null) : DomainErrorKind;
 ```
 
 Records the pre- and post-transition states via `FromState` and `ToState`. Preserves transition information as structured data independent of the error message, enabling use in logging/monitoring.
@@ -375,14 +370,14 @@ Records the pre- and post-transition states via `FromState` and `ToState`. Prese
 ### Custom
 
 ```csharp
-public abstract record Custom : DomainErrorType;
+public abstract record Custom : DomainErrorKind;
 ```
 
 **`Custom`** is the base class for domain-specific errors that cannot be expressed with standard error types. Define derived sealed records to use.
 
 ```csharp
 // Define as a nested record inside an Entity
-public sealed record InsufficientStock : DomainErrorType.Custom;
+public sealed record InsufficientStock : DomainErrorKind.Custom;
 
 DomainError.For<Inventory>(new InsufficientStock(), currentStock, "Insufficient stock");
 // Error code: DomainErrors.Inventory.InsufficientStock
@@ -390,15 +385,15 @@ DomainError.For<Inventory>(new InsufficientStock(), currentStock, "Insufficient 
 
 ---
 
-## Application ErrorType Catalog
+## Application ErrorKind Catalog
 
 ```csharp
 namespace Functorium.Applications.Errors;
 
-public abstract record ApplicationErrorType : ErrorType;
+public abstract record ApplicationErrorKind : ErrorKind;
 ```
 
-**`ApplicationErrorType`** is the sealed record hierarchy base for application layer errors.
+**`ApplicationErrorKind`** is the sealed record hierarchy base for application layer errors.
 
 ### Common
 
@@ -414,14 +409,14 @@ public abstract record ApplicationErrorType : ErrorType;
 | `Forbidden` | (none) | Access forbidden |
 
 ```csharp
-public sealed record Empty : ApplicationErrorType;
-public sealed record Null : ApplicationErrorType;
-public sealed record NotFound : ApplicationErrorType;
-public sealed record AlreadyExists : ApplicationErrorType;
-public sealed record Duplicate : ApplicationErrorType;
-public sealed record InvalidState : ApplicationErrorType;
-public sealed record Unauthorized : ApplicationErrorType;
-public sealed record Forbidden : ApplicationErrorType;
+public sealed record Empty : ApplicationErrorKind;
+public sealed record Null : ApplicationErrorKind;
+public sealed record NotFound : ApplicationErrorKind;
+public sealed record AlreadyExists : ApplicationErrorKind;
+public sealed record Duplicate : ApplicationErrorKind;
+public sealed record InvalidState : ApplicationErrorKind;
+public sealed record Unauthorized : ApplicationErrorKind;
+public sealed record Forbidden : ApplicationErrorKind;
 ```
 
 ### Validation
@@ -431,7 +426,7 @@ public sealed record Forbidden : ApplicationErrorType;
 | `ValidationFailed` | `string? PropertyName` | Validation failed. `PropertyName` is the failed property name |
 
 ```csharp
-public sealed record ValidationFailed(string? PropertyName = null) : ApplicationErrorType;
+public sealed record ValidationFailed(string? PropertyName = null) : ApplicationErrorKind;
 ```
 
 ### Business Rules
@@ -445,22 +440,22 @@ public sealed record ValidationFailed(string? PropertyName = null) : Application
 | `InsufficientPermission` | `string? Permission` | Insufficient permission. `Permission` is the required permission |
 
 ```csharp
-public sealed record BusinessRuleViolated(string? RuleName = null) : ApplicationErrorType;
-public sealed record ConcurrencyConflict : ApplicationErrorType;
-public sealed record ResourceLocked(string? ResourceName = null) : ApplicationErrorType;
-public sealed record OperationCancelled : ApplicationErrorType;
-public sealed record InsufficientPermission(string? Permission = null) : ApplicationErrorType;
+public sealed record BusinessRuleViolated(string? RuleName = null) : ApplicationErrorKind;
+public sealed record ConcurrencyConflict : ApplicationErrorKind;
+public sealed record ResourceLocked(string? ResourceName = null) : ApplicationErrorKind;
+public sealed record OperationCancelled : ApplicationErrorKind;
+public sealed record InsufficientPermission(string? Permission = null) : ApplicationErrorKind;
 ```
 
 ### Custom
 
 ```csharp
-public abstract record Custom : ApplicationErrorType;
+public abstract record Custom : ApplicationErrorKind;
 ```
 
 ```csharp
 // Usage example
-public sealed record CannotProcess : ApplicationErrorType.Custom;
+public sealed record CannotProcess : ApplicationErrorKind.Custom;
 ```
 
 ### EventErrorType
@@ -468,7 +463,7 @@ public sealed record CannotProcess : ApplicationErrorType.Custom;
 ```csharp
 namespace Functorium.Applications.Errors;
 
-public abstract record EventErrorType : ErrorType;
+public abstract record EventErrorType : ErrorKind;
 ```
 
 **`EventErrorType`** is the error type for domain event publishing/handling errors.
@@ -498,15 +493,15 @@ public sealed record RetryExhausted : EventErrorType.Custom;
 
 ---
 
-## Adapter ErrorType Catalog
+## Adapter ErrorKind Catalog
 
 ```csharp
 namespace Functorium.Adapters.Errors;
 
-public abstract record AdapterErrorType : ErrorType;
+public abstract record AdapterErrorKind : ErrorKind;
 ```
 
-**`AdapterErrorType`** is the sealed record hierarchy base for adapter layer errors.
+**`AdapterErrorKind`** is the sealed record hierarchy base for adapter layer errors.
 
 ### Common
 
@@ -525,17 +520,17 @@ public abstract record AdapterErrorType : ErrorType;
 | `Forbidden` | (none) | Access forbidden |
 
 ```csharp
-public sealed record Empty : AdapterErrorType;
-public sealed record Null : AdapterErrorType;
-public sealed record NotFound : AdapterErrorType;
-public sealed record PartialNotFound : AdapterErrorType;
-public sealed record AlreadyExists : AdapterErrorType;
-public sealed record Duplicate : AdapterErrorType;
-public sealed record InvalidState : AdapterErrorType;
-public sealed record NotConfigured : AdapterErrorType;
-public sealed record NotSupported : AdapterErrorType;
-public sealed record Unauthorized : AdapterErrorType;
-public sealed record Forbidden : AdapterErrorType;
+public sealed record Empty : AdapterErrorKind;
+public sealed record Null : AdapterErrorKind;
+public sealed record NotFound : AdapterErrorKind;
+public sealed record PartialNotFound : AdapterErrorKind;
+public sealed record AlreadyExists : AdapterErrorKind;
+public sealed record Duplicate : AdapterErrorKind;
+public sealed record InvalidState : AdapterErrorKind;
+public sealed record NotConfigured : AdapterErrorKind;
+public sealed record NotSupported : AdapterErrorKind;
+public sealed record Unauthorized : AdapterErrorKind;
+public sealed record Forbidden : AdapterErrorKind;
 ```
 
 ### Pipeline
@@ -546,8 +541,8 @@ public sealed record Forbidden : AdapterErrorType;
 | `PipelineException` | (none) | Pipeline exception occurred |
 
 ```csharp
-public sealed record PipelineValidation(string? PropertyName = null) : AdapterErrorType;
-public sealed record PipelineException : AdapterErrorType;
+public sealed record PipelineValidation(string? PropertyName = null) : AdapterErrorKind;
+public sealed record PipelineException : AdapterErrorKind;
 ```
 
 ### External Service
@@ -559,9 +554,9 @@ public sealed record PipelineException : AdapterErrorType;
 | `Timeout` | `TimeSpan? Duration` | Timeout. `Duration` is the timeout duration |
 
 ```csharp
-public sealed record ExternalServiceUnavailable(string? ServiceName = null) : AdapterErrorType;
-public sealed record ConnectionFailed(string? Target = null) : AdapterErrorType;
-public sealed record Timeout(TimeSpan? Duration = null) : AdapterErrorType;
+public sealed record ExternalServiceUnavailable(string? ServiceName = null) : AdapterErrorKind;
+public sealed record ConnectionFailed(string? Target = null) : AdapterErrorKind;
+public sealed record Timeout(TimeSpan? Duration = null) : AdapterErrorKind;
 ```
 
 ### Data
@@ -573,9 +568,9 @@ public sealed record Timeout(TimeSpan? Duration = null) : AdapterErrorType;
 | `DataCorruption` | (none) | Data corruption |
 
 ```csharp
-public sealed record Serialization(string? Format = null) : AdapterErrorType;
-public sealed record Deserialization(string? Format = null) : AdapterErrorType;
-public sealed record DataCorruption : AdapterErrorType;
+public sealed record Serialization(string? Format = null) : AdapterErrorKind;
+public sealed record Deserialization(string? Format = null) : AdapterErrorKind;
+public sealed record DataCorruption : AdapterErrorKind;
 ```
 
 ### Concurrency
@@ -585,21 +580,21 @@ public sealed record DataCorruption : AdapterErrorType;
 | `ConcurrencyConflict` | (none) | Optimistic concurrency conflict detected during `Update`/`UpdateRange`. Returned when the Aggregate was modified by another operation after it was loaded. Distinguished from `NotFound`. Retry eligibility is the caller's responsibility. |
 
 ```csharp
-public sealed record ConcurrencyConflict : AdapterErrorType;
+public sealed record ConcurrencyConflict : AdapterErrorKind;
 ```
 
-> Relationship with `ApplicationErrorType.ConcurrencyConflict`:
+> Relationship with `ApplicationErrorKind.ConcurrencyConflict`:
 > The Application-layer variant represents a **business-level conflict** raised by use-case logic, while the Adapter-layer variant is **detected by the persistence layer** (EF Core `RowVersion` / `DbUpdateConcurrencyException`, or `affected == 0` with existing ID).
 
 ### Custom
 
 ```csharp
-public abstract record Custom : AdapterErrorType;
+public abstract record Custom : AdapterErrorKind;
 ```
 
 ```csharp
 // Usage example
-public sealed record RateLimited : AdapterErrorType.Custom;
+public sealed record RateLimited : AdapterErrorKind.Custom;
 ```
 
 ---
@@ -613,27 +608,27 @@ namespace Functorium.Abstractions.Errors;
 
 internal static class LayerErrorCore
 {
-    internal static Error Create<TContext>(string prefix, ErrorType errorType, string currentValue, string message);
-    internal static Error Create<TContext, TValue>(string prefix, ErrorType errorType, TValue currentValue, string message)
+    internal static Error Create<TContext>(string prefix, ErrorKind errorType, string currentValue, string message);
+    internal static Error Create<TContext, TValue>(string prefix, ErrorKind errorType, TValue currentValue, string message)
         where TValue : notnull;
     internal static Error Create<TContext, T1, T2>(...) where T1 : notnull where T2 : notnull;
     internal static Error Create<TContext, T1, T2, T3>(...) where T1 : notnull where T2 : notnull where T3 : notnull;
-    internal static Error Create(string prefix, Type contextType, ErrorType errorType, string currentValue, string message);
-    internal static Error ForContext(string prefix, string contextName, ErrorType errorType, string currentValue, string message);
-    internal static Error ForContext<TValue>(string prefix, string contextName, ErrorType errorType, TValue currentValue, string message)
+    internal static Error Create(string prefix, Type contextType, ErrorKind errorType, string currentValue, string message);
+    internal static Error ForContext(string prefix, string contextName, ErrorKind errorType, string currentValue, string message);
+    internal static Error ForContext<TValue>(string prefix, string contextName, ErrorKind errorType, TValue currentValue, string message)
         where TValue : notnull;
-    internal static Error FromException<TContext>(string prefix, ErrorType errorType, Exception exception);
+    internal static Error FromException<TContext>(string prefix, ErrorKind errorType, Exception exception);
 }
 ```
 
-**`LayerErrorCore`** is the common implementation for the 4 layer factories (`DomainError`, `ApplicationError`, `EventError`, `AdapterError`). It assembles the error code string `{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}` and delegates to `ErrorCodeFactory`.
+**`LayerErrorCore`** is the common implementation for the 4 layer factories (`DomainError`, `ApplicationError`, `EventError`, `AdapterError`). It assembles the error code string `{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}` and delegates to `ErrorFactory`.
 
-**Design principle**: Public factories maintain per-layer type parameters (`DomainErrorType`, `ApplicationErrorType`, etc.) to ensure **compile-time safety**. `LayerErrorCore` receives the base type `ErrorType` to **eliminate implementation duplication**. `[AggressiveInlining]` is applied to all methods so the JIT inlines delegation calls.
+**Design principle**: Public factories maintain per-layer type parameters (`DomainErrorKind`, `ApplicationErrorKind`, etc.) to ensure **compile-time safety**. `LayerErrorCore` receives the base type `ErrorKind` to **eliminate implementation duplication**. `[AggressiveInlining]` is applied to all methods so the JIT inlines delegation calls.
 
 ```csharp
 // Compile-time safety example
-DomainError.For<Email>(new DomainErrorType.Empty(), ...)       // Compiles OK
-DomainError.For<Email>(new AdapterErrorType.Timeout(), ...)    // CS1503
+DomainError.For<Email>(new DomainErrorKind.Empty(), ...)       // Compiles OK
+DomainError.For<Email>(new AdapterErrorKind.Timeout(), ...)    // CS1503
 ```
 
 ### ErrorAssertionCore (internal)
@@ -658,7 +653,7 @@ internal static class ErrorAssertionCore
 }
 ```
 
-**`ErrorAssertionCore`** is the common validation logic for the 3 layer Assertions (`DomainErrorAssertions`, `ApplicationErrorAssertions`, `AdapterErrorAssertions`). It provides error code assembly (`{prefix}.{typeof(TContext).Name}.{errorName}`), `ErrorCodeExpected<T>` type casting, and value comparison. Per-layer Assertions are thin wrappers that bind only the prefix and error type.
+**`ErrorAssertionCore`** is the common validation logic for the 3 layer Assertions (`DomainErrorAssertions`, `ApplicationErrorAssertions`, `AdapterErrorAssertions`). It provides error code assembly (`{prefix}.{typeof(TContext).Name}.{errorName}`), `ExpectedError<T>` type casting, and value comparison. Per-layer Assertions are thin wrappers that bind only the prefix and error type.
 
 ---
 
@@ -671,17 +666,17 @@ namespace Functorium.Domains.Errors;
 
 public static class DomainError
 {
-    public static Error For<TDomain>(DomainErrorType errorType, string currentValue, string message);
-    public static Error For<TDomain, TValue>(DomainErrorType errorType, TValue currentValue, string message)
+    public static Error For<TDomain>(DomainErrorKind errorType, string currentValue, string message);
+    public static Error For<TDomain, TValue>(DomainErrorKind errorType, TValue currentValue, string message)
         where TValue : notnull;
-    public static Error For<TDomain, T1, T2>(DomainErrorType errorType, T1 value1, T2 value2, string message)
+    public static Error For<TDomain, T1, T2>(DomainErrorKind errorType, T1 value1, T2 value2, string message)
         where T1 : notnull where T2 : notnull;
-    public static Error For<TDomain, T1, T2, T3>(DomainErrorType errorType, T1 value1, T2 value2, T3 value3, string message)
+    public static Error For<TDomain, T1, T2, T3>(DomainErrorKind errorType, T1 value1, T2 value2, T3 value3, string message)
         where T1 : notnull where T2 : notnull where T3 : notnull;
 }
 ```
 
-**Error code format:** `DomainErrors.{typeof(TDomain).Name}.{errorType.ErrorName}`
+**Error code format:** `Domain.{typeof(TDomain).Name}.{errorType.ErrorName}`
 
 | Overload | Value Parameters | Description |
 |----------|-----------|------|
@@ -693,7 +688,7 @@ public static class DomainError
 **Usage examples:**
 
 ```csharp
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 // Basic usage
 DomainError.For<Email>(new Empty(), "", "Email cannot be empty");
@@ -719,22 +714,22 @@ namespace Functorium.Applications.Errors;
 
 public static class ApplicationError
 {
-    public static Error For<TUsecase>(ApplicationErrorType errorType, string currentValue, string message);
-    public static Error For<TUsecase, TValue>(ApplicationErrorType errorType, TValue currentValue, string message)
+    public static Error For<TUsecase>(ApplicationErrorKind errorType, string currentValue, string message);
+    public static Error For<TUsecase, TValue>(ApplicationErrorKind errorType, TValue currentValue, string message)
         where TValue : notnull;
-    public static Error For<TUsecase, T1, T2>(ApplicationErrorType errorType, T1 value1, T2 value2, string message)
+    public static Error For<TUsecase, T1, T2>(ApplicationErrorKind errorType, T1 value1, T2 value2, string message)
         where T1 : notnull where T2 : notnull;
-    public static Error For<TUsecase, T1, T2, T3>(ApplicationErrorType errorType, T1 value1, T2 value2, T3 value3, string message)
+    public static Error For<TUsecase, T1, T2, T3>(ApplicationErrorKind errorType, T1 value1, T2 value2, T3 value3, string message)
         where T1 : notnull where T2 : notnull where T3 : notnull;
 }
 ```
 
-**Error code format:** `ApplicationErrors.{typeof(TUsecase).Name}.{errorType.ErrorName}`
+**Error code format:** `Application.{typeof(TUsecase).Name}.{errorType.ErrorName}`
 
 **Usage examples:**
 
 ```csharp
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 ApplicationError.For<CreateProductCommand>(new AlreadyExists(), productId, "Already exists");
 // Error code: ApplicationErrors.CreateProductCommand.AlreadyExists
@@ -758,7 +753,7 @@ public static class EventError
 }
 ```
 
-**Error code format:** `ApplicationErrors.{typeof(TPublisher).Name}.{errorType.ErrorName}`
+**Error code format:** `Application.{typeof(TPublisher).Name}.{errorType.ErrorName}`
 
 **`EventError`** shares the `ApplicationErrors` prefix and represents event publishing/handling failures.
 
@@ -788,19 +783,19 @@ namespace Functorium.Adapters.Errors;
 
 public static class AdapterError
 {
-    public static Error For<TAdapter>(AdapterErrorType errorType, string currentValue, string message);
-    public static Error For(Type adapterType, AdapterErrorType errorType, string currentValue, string message);
-    public static Error For<TAdapter, TValue>(AdapterErrorType errorType, TValue currentValue, string message)
+    public static Error For<TAdapter>(AdapterErrorKind errorType, string currentValue, string message);
+    public static Error For(Type adapterType, AdapterErrorKind errorType, string currentValue, string message);
+    public static Error For<TAdapter, TValue>(AdapterErrorKind errorType, TValue currentValue, string message)
         where TValue : notnull;
-    public static Error For<TAdapter, T1, T2>(AdapterErrorType errorType, T1 value1, T2 value2, string message)
+    public static Error For<TAdapter, T1, T2>(AdapterErrorKind errorType, T1 value1, T2 value2, string message)
         where T1 : notnull where T2 : notnull;
-    public static Error For<TAdapter, T1, T2, T3>(AdapterErrorType errorType, T1 value1, T2 value2, T3 value3, string message)
+    public static Error For<TAdapter, T1, T2, T3>(AdapterErrorKind errorType, T1 value1, T2 value2, T3 value3, string message)
         where T1 : notnull where T2 : notnull where T3 : notnull;
-    public static Error FromException<TAdapter>(AdapterErrorType errorType, Exception exception);
+    public static Error FromException<TAdapter>(AdapterErrorKind errorType, Exception exception);
 }
 ```
 
-**Error code format:** `AdapterErrors.{typeof(TAdapter).Name}.{errorType.ErrorName}`
+**Error code format:** `Adapter.{typeof(TAdapter).Name}.{errorType.ErrorName}`
 
 | Overload | Value Parameters | Description |
 |----------|-----------|------|
@@ -814,7 +809,7 @@ public static class AdapterError
 **Usage examples:**
 
 ```csharp
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 // Expected error
 AdapterError.For<ProductRepository>(new NotFound(), id, "Product not found");

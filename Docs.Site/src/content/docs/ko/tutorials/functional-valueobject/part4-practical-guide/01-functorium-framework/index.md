@@ -88,16 +88,16 @@ public abstract class ComparableSimpleValueObject<T> : ComparableValueObject
 Functorium은 `DomainError.For<T>()` 헬퍼를 통해 구조화된 에러를 간결하게 생성합니다.
 
 ```csharp
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 DomainError.For<Email>(new Empty(), value, "Email cannot be empty");
 DomainError.For<Password>(new TooShort(MinLength: 8), value, "Password too short");
 // 커스텀 에러 타입 정의
-public sealed record Unsupported : DomainErrorType.Custom;
+public sealed record Unsupported : DomainErrorKind.Custom;
 DomainError.For<Currency>(new Unsupported(), value, "Currency not supported");
 ```
 
-에러 코드가 `DomainErrors.{타입명}.{에러명}` 형식으로 자동 생성되어 로깅, 국제화, API 응답 등에서 일관되게 활용할 수 있습니다.
+에러 코드가 `Domain.{타입명}.{에러명}` 형식으로 자동 생성되어 로깅, 국제화, API 응답 등에서 일관되게 활용할 수 있습니다.
 
 ### ValidationRules\<T\> 체이닝 시스템
 
@@ -153,7 +153,7 @@ public static Validation<Error, string> Validate(string? value) =>
 다음은 `SimpleValueObject<T>`를 상속하여 Email 값 객체를 구현하는 전체 패턴입니다.
 
 ```csharp
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 // 1. SimpleValueObject<T> 상속
 public sealed class Email : SimpleValueObject<string>
@@ -250,9 +250,9 @@ public sealed class Age : ComparableSimpleValueObject<int>
 ```csharp
 public sealed class Address : ValueObject
 {
-    public sealed record CityEmpty : DomainErrorType.Custom;
-    public sealed record StreetEmpty : DomainErrorType.Custom;
-    public sealed record PostalCodeEmpty : DomainErrorType.Custom;
+    public sealed record CityEmpty : DomainErrorKind.Custom;
+    public sealed record StreetEmpty : DomainErrorKind.Custom;
+    public sealed record PostalCodeEmpty : DomainErrorKind.Custom;
 
     public string City { get; }
     public string Street { get; }

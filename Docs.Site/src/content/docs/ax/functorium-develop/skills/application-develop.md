@@ -207,7 +207,7 @@ Adds a Query use case and duplication validation to Example 1. Shows duplication
 **Duplication check with guard** -- Declarative condition check within a LINQ chain:
 
 ```csharp
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 FinT<IO, Response> usecase =
     from exists in _productRepository.Exists(new ProductNameUniqueSpec(productName))

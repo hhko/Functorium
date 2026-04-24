@@ -87,7 +87,7 @@ Functorium leverages LanguageExt's `Fin<T>` and `Validation<Error, T>`:
 - **`Fin<T>`**: Operations that return a single error (Entity methods, Usecases, etc.)
 - **`Validation<Error, T>`**: Validation that accumulates multiple errors (Value Object creation, etc.)
 - **Per-layer error factories**: Clearly distinguish error origins with `DomainError`, `ApplicationError`, `AdapterError`
-- **Type-safe error codes**: Use `DomainErrorType`, `ApplicationErrorType`, `AdapterErrorType` instead of strings
+- **Type-safe error codes**: Use `DomainErrorKind`, `ApplicationErrorKind`, `AdapterErrorKind` instead of strings
 
 Now that we understand the need for explicit error handling, let us examine the specific patterns for returning errors in Functorium.
 
@@ -127,7 +127,7 @@ return AdapterError.For<MyAdapter>(
 
 ```csharp
 // Domain Layer - Entity method
-// Error type definition: public sealed record InsufficientStock : DomainErrorType.Custom;
+// Error type definition: public sealed record InsufficientStock : DomainErrorKind.Custom;
 public Fin<Unit> DeductStock(Quantity quantity)
 {
     if ((int)quantity > (int)StockQuantity)
@@ -182,7 +182,7 @@ return IO.lift(() =>
 });
 
 // Asynchronous operation
-// Error type definition: public sealed record HttpError : AdapterErrorType.Custom;
+// Error type definition: public sealed record HttpError : AdapterErrorKind.Custom;
 return IO.liftAsync(async () =>
 {
     try
@@ -231,8 +231,8 @@ catch (HttpRequestException ex)
         ex);
 }
 // Error type definitions:
-// public sealed record OperationCancelled : AdapterErrorType.Custom;
-// public sealed record UnexpectedException : AdapterErrorType.Custom;
+// public sealed record OperationCancelled : AdapterErrorKind.Custom;
+// public sealed record UnexpectedException : AdapterErrorKind.Custom;
 catch (TaskCanceledException ex) when (ex.CancellationToken == cancellationToken)
 {
     return AdapterError.For<ExternalPricingApiService>(
@@ -466,7 +466,7 @@ When a `Custom` error at the end of the flowchart is used repeatedly throughout 
 > 3. Can be **naturally mapped** to existing naming rules (R1-R8)
 > 4. **Stability confirmed** (meaning is no longer changing)
 
-When all 4 conditions are met, add it to the standard `DomainErrorType` / `ApplicationErrorType` / `AdapterErrorType`.
+When all 4 conditions are met, add it to the standard `DomainErrorKind` / `ApplicationErrorKind` / `AdapterErrorKind`.
 
 ---
 
@@ -502,18 +502,18 @@ Use Custom when the error is domain-specific and cannot be expressed with standa
 
 ---
 
-## Appendix: ErrorCodeFactory API
+## Appendix: ErrorFactory API
 
 ### File Structure
 
 ```
 Src/Functorium/Abstractions/Errors/
-├── ErrorCodeExpected.cs              # Expected error type (4 variants)
-├── ErrorCodeExpectedBase.cs          # Expected error common base class (13 overrides unified)
-├── ErrorCodeExceptional.cs           # Exceptional error type
-├── ErrorCodeFactory.cs               # ErrorCodeExpected/Exceptional instance creation
-├── ErrorCodeFieldNames.cs            # Serilog structured field name constants
-├── ErrorType.cs                      # Error prefix constants (DomainErrorsPrefix, etc.)
+├── ExpectedError.cs              # Expected error type (4 variants)
+├── ExpectedErrorBase.cs          # Expected error common base class (13 overrides unified)
+├── ExceptionalError.cs           # Exceptional error type
+├── ErrorFactory.cs               # ExpectedError/Exceptional instance creation
+├── ErrorLogFieldNames.cs            # Serilog structured field name constants
+├── ErrorKind.cs                      # Error prefix constants (DomainErrorsPrefix, etc.)
 ├── IHasErrorCode.cs                  # Error code access interface
 └── LayerErrorCore.cs                 # Per-layer factory common error code generation logic
 
@@ -524,16 +524,16 @@ Src/Functorium.Testing/Assertions/Errors/
 ├── ErrorAssertionCore.cs             # Per-layer Assertion common validation logic
 ├── ErrorAssertionHelpers.cs          # Shared utilities
 ├── ErrorCodeAssertions.cs            # General-purpose error code validation
-└── ErrorCodeExceptionalAssertions.cs # Exceptional error validation
+└── ExceptionalErrorAssertions.cs # Exceptional error validation
 
 Src/Functorium.Adapters/Abstractions/Errors/
 └── DestructuringPolicies/            # Serilog destructuring policies
     ├── IErrorDestructurer.cs
     ├── ErrorsDestructuringPolicy.cs
     └── ErrorTypes/
-        ├── ErrorCodeExpectedDestructurer.cs
-        ├── ErrorCodeExpectedTDestructurer.cs
-        ├── ErrorCodeExceptionalDestructurer.cs
+        ├── ExpectedErrorDestructurer.cs
+        ├── ExpectedErrorTDestructurer.cs
+        ├── ExceptionalErrorDestructurer.cs
         ├── ExceptionalDestructurer.cs    # LanguageExt Exceptional destructuring
         ├── ExpectedDestructurer.cs       # LanguageExt Expected destructuring
         └── ManyErrorsDestructurer.cs
@@ -545,27 +545,27 @@ Functorium's error types extend LanguageExt's `Error` to form the following hier
 
 ```
 Error (LanguageExt.Common)
-├── ErrorCodeExpectedBase             - Expected error common base (13 overrides unified)
-│   ├── ErrorCodeExpected             - Domain/business error (string value)
-│   ├── ErrorCodeExpected<T>          - Domain/business error (1 typed value)
-│   ├── ErrorCodeExpected<T1, T2>     - Domain/business error (2 typed values)
-│   └── ErrorCodeExpected<T1, T2, T3> - Domain/business error (3 typed values)
-├── ErrorCodeExceptional              - Exception wrapper
+├── ExpectedErrorBase             - Expected error common base (13 overrides unified)
+│   ├── ExpectedError             - Domain/business error (string value)
+│   ├── ExpectedError<T>          - Domain/business error (1 typed value)
+│   ├── ExpectedError<T1, T2>     - Domain/business error (2 typed values)
+│   └── ExpectedError<T1, T2, T3> - Domain/business error (3 typed values)
+├── ExceptionalError              - Exception wrapper
 └── ManyErrors                        - Multiple error collection
 ```
 
-`ErrorCodeExpectedBase` defines common members including `ErrorCode`, `Message`, `Code`, `Inner` properties and `sealed override ToString() => Message`, `IsExpected = true`, `IsExceptional = false`. The 4 derived types only add `ErrorCurrentValue`-related properties. `sealed override ToString()` prevents C# records from auto-regenerating `ToString()` in derived classes, ensuring all Expected errors consistently return `Message`.
+`ExpectedErrorBase` defines common members including `ErrorCode`, `Message`, `Code`, `Inner` properties and `sealed override ToString() => Message`, `IsExpected = true`, `IsExceptional = false`. The 4 derived types only add `ErrorCurrentValue`-related properties. `sealed override ToString()` prevents C# records from auto-regenerating `ToString()` in derived classes, ensuring all Expected errors consistently return `Message`.
 
-All `ErrorCodeExpected` variants and `ErrorCodeExceptional` are **internal records** implementing the `IHasErrorCode` interface.
+All `ExpectedError` variants and `ExceptionalError` are **internal records** implementing the `IHasErrorCode` interface.
 
 | Type | `IsExpected` | `IsExceptional` | Access Modifier |
 |------|:---:|:---:|:---:|
-| `ErrorCodeExpectedBase` | `true` | `false` | internal (abstract) |
-| `ErrorCodeExpected` | `true` | `false` | internal |
-| `ErrorCodeExpected<T>` | `true` | `false` | internal |
-| `ErrorCodeExpected<T1, T2>` | `true` | `false` | internal |
-| `ErrorCodeExpected<T1, T2, T3>` | `true` | `false` | internal |
-| `ErrorCodeExceptional` | `false` | `true` | internal |
+| `ExpectedErrorBase` | `true` | `false` | internal (abstract) |
+| `ExpectedError` | `true` | `false` | internal |
+| `ExpectedError<T>` | `true` | `false` | internal |
+| `ExpectedError<T1, T2>` | `true` | `false` | internal |
+| `ExpectedError<T1, T2, T3>` | `true` | `false` | internal |
+| `ExceptionalError` | `false` | `true` | internal |
 
 > **Note**: The 3-value overload `DomainError.For<TDomain, T1, T2, T3>()` is also supported. For detailed signatures and usage examples, see [Error System: Domain/Application Errors](../08b-error-system-domain-app).
 
@@ -574,38 +574,38 @@ All `ErrorCodeExpected` variants and `ErrorCodeExceptional` are **internal recor
 Per-layer factories (`DomainError`, `ApplicationError`, `EventError`, `AdapterError`) create errors through a 2-stage internal delegation.
 
 ```
-DomainError.For<Email>(new Empty(), value, msg)     ← Public API (DomainErrorType enforced)
+DomainError.For<Email>(new Empty(), value, msg)     ← Public API (DomainErrorKind enforced)
   → LayerErrorCore.Create<Email>(prefix, errorType, value, msg)
-      ← Received as ErrorType(base) → Assemble error code: "DomainErrors.Email.Empty"
-    → ErrorCodeFactory.Create(errorCode, value, msg)
-        ← Create ErrorCodeExpected instance
+      ← Received as ErrorKind(base) → Assemble error code: "Domain.Email.Empty"
+    → ErrorFactory.CreateExpected(errorCode, value, msg)
+        ← Create ExpectedError instance
 ```
 
-`LayerErrorCore` is the shared implementation for the 4 factories, assembling the error code string `{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}`. The public factories maintain per-layer type parameters (`DomainErrorType`, `ApplicationErrorType`, etc.) to **prevent incorrect layer error usage at compile time.** All methods have `[AggressiveInlining]` applied so the JIT inlines the delegation calls, achieving the same performance as direct calls.
+`LayerErrorCore` is the shared implementation for the 4 factories, assembling the error code string `{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}`. The public factories maintain per-layer type parameters (`DomainErrorKind`, `ApplicationErrorKind`, etc.) to **prevent incorrect layer error usage at compile time.** All methods have `[AggressiveInlining]` applied so the JIT inlines the delegation calls, achieving the same performance as direct calls.
 
-### ErrorCodeFactory API
+### ErrorFactory API
 
-`ErrorCodeFactory` is a **static class** located in `Abstractions/Errors/ErrorCodeFactory.cs` that directly creates `ErrorCodeExpected` and `ErrorCodeExceptional` instances.
+`ErrorFactory` is a **static class** located in `Abstractions/Errors/ErrorFactory.cs` that directly creates `ExpectedError` and `ExceptionalError` instances.
 
 ```csharp
-public static class ErrorCodeFactory
+public static class ErrorFactory
 {
-    // Expected error (string value) → ErrorCodeExpected
+    // Expected error (string value) → ExpectedError
     public static Error Create(string errorCode, string errorCurrentValue, string errorMessage);
 
-    // Expected error (typed value) → ErrorCodeExpected<T>
+    // Expected error (typed value) → ExpectedError<T>
     public static Error Create<T>(string errorCode, T errorCurrentValue, string errorMessage)
         where T : notnull;
 
-    // Expected error (2 typed values) → ErrorCodeExpected<T1, T2>
+    // Expected error (2 typed values) → ExpectedError<T1, T2>
     public static Error Create<T1, T2>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, string errorMessage)
         where T1 : notnull where T2 : notnull;
 
-    // Expected error (3 typed values) → ErrorCodeExpected<T1, T2, T3>
+    // Expected error (3 typed values) → ExpectedError<T1, T2, T3>
     public static Error Create<T1, T2, T3>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, T3 errorCurrentValue3, string errorMessage)
         where T1 : notnull where T2 : notnull where T3 : notnull;
 
-    // Exceptional error → ErrorCodeExceptional
+    // Exceptional error → ExceptionalError
     public static Error CreateFromException(string errorCode, Exception exception);
 
     // Error code format → string.Join('.', parts)
@@ -617,20 +617,20 @@ public static class ErrorCodeFactory
 
 ```csharp
 // Expected error (string value)
-Error error = ErrorCodeFactory.Create(
-    "DomainErrors.User.NotFound", "user123", "User not found");
+Error error = ErrorFactory.CreateExpected(
+    "Domain.User.NotFound", "user123", "User not found");
 
 // Expected error (typed value)
-Error error = ErrorCodeFactory.Create(
-    "DomainErrors.Sensor.TemperatureOutOfRange", 150, "Temperature out of range");
+Error error = ErrorFactory.CreateExpected(
+    "Domain.Sensor.TemperatureOutOfRange", 150, "Temperature out of range");
 
 // Expected error (2 typed values)
-Error error = ErrorCodeFactory.Create(
-    "DomainErrors.Range.InvalidBounds", 100, 50, "Minimum is greater than maximum");
+Error error = ErrorFactory.CreateExpected(
+    "Domain.Range.InvalidBounds", 100, 50, "Minimum is greater than maximum");
 
 // Exceptional error
-Error error = ErrorCodeFactory.CreateFromException(
-    "ApplicationErrors.Database.ConnectionFailed", exception);
+Error error = ErrorFactory.CreateExceptional(
+    "Application.Database.ConnectionFailed", exception);
 ```
 
 ### Serilog Destructuring
@@ -647,9 +647,9 @@ Log.Logger = new LoggerConfiguration()
 
 | Field | Expected | Expected&lt;T&gt; | Exceptional | ManyErrors |
 |-------|:---:|:---:|:---:|:---:|
-| ErrorType | O | O | O | O |
+| ErrorKind | O | O | O | O |
 | ErrorCode | O | O | O | X |
-| ErrorCodeId | O | O | O | O |
+| NumericCode | O | O | O | O |
 | ErrorCurrentValue | O | O | X | X |
 | Message | O | O | O | X |
 | Count | X | X | X | O |

@@ -472,7 +472,7 @@ public sealed class CtxIgnoreAttribute : Attribute;
 |------|------|
 | [Use Case와 CQRS 가이드](../guides/application/11-usecases-and-cqrs) | CQRS 패턴 설계 의도와 구현 가이드 |
 | [검증 시스템 사양](../03-validation) | `TypedValidation`, FluentValidation 통합 |
-| [에러 시스템 사양](../04-error-system) | `DomainErrorType`, `ApplicationErrorType` 등 |
+| [에러 시스템 사양](../04-error-system) | `DomainErrorKind`, `ApplicationErrorKind` 등 |
 | [포트와 어댑터 사양](../06-port-adapter) | `IRepository`, `IQueryPort` 등 |
 | [파이프라인 사양](../07-pipeline) | Pipeline 동작, `UsecaseTransactionPipeline` 등 |
 | [관측 가능성 사양](../08-observability) | Field/Tag 사양, Meter 정의 |

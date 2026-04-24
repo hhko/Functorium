@@ -73,7 +73,7 @@ The same signatures are copied every time an Aggregate is added. If the return t
 > ```
 > `Delete`, `DeleteRange`, and `DeleteBy` are intended for administrative, migration, or test-fixture cleanup.
 
-> **Optimistic concurrency**: `Update` returns `AdapterErrorType.ConcurrencyConflict` when the Aggregate was modified after load (distinguished from `NotFound`). RowVersion/Timestamp column configuration is the subclass Model's responsibility.
+> **Optimistic concurrency**: `Update` returns `AdapterErrorKind.ConcurrencyConflict` when the Aggregate was modified after load (distinguished from `NotFound`). RowVersion/Timestamp column configuration is the subclass Model's responsibility.
 
 ### FinT\<IO, T\> Return Type
 

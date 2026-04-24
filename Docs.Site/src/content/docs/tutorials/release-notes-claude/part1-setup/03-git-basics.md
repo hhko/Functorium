@@ -62,7 +62,7 @@ git diff --stat
 
 **Output example (--stat):**
 ```
-Src/Functorium/Abstractions/Errors/ErrorCodeFactory.cs | 50 +++++++++++
+Src/Functorium/Abstractions/Errors/ErrorFactory.cs | 50 +++++++++++
 Src/Functorium/Applications/Linq/FinTUtilites.cs      | 30 +++++++
 2 files changed, 80 insertions(+)
 ```
@@ -199,7 +199,7 @@ fix(build): Fix NuGet package icon path
 refactor(observability): Improve observability abstraction and structure
 
 # Breaking Change
-feat!(api): Change ErrorCodeFactory.Create method signature
+feat!(api): Change ErrorFactory.CreateExpected method signature
 
 BREAKING CHANGE: The errorMessage parameter is now required.
 ```

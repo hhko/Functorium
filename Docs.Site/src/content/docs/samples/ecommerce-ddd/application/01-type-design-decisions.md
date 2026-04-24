@@ -286,9 +286,9 @@ var priceLookup = pricesResult.ThrowIfFail().ToDictionary(p => p.Id, p => p.Pric
 
 ## Error Type Strategy
 
-### ApplicationErrorType Hierarchy
+### ApplicationErrorKind Hierarchy
 
-`ApplicationErrorType` defines type-safe errors with a `sealed record` hierarchy.
+`ApplicationErrorKind` defines type-safe errors with a `sealed record` hierarchy.
 
 | Error Type | Purpose | Usage Example |
 |-----------|---------|--------------|
@@ -301,7 +301,7 @@ var priceLookup = pricesResult.ThrowIfFail().ToDictionary(p => p.Id, p => p.Pric
 
 ### ApplicationError.For\<TUsecase\>() Factory
 
-Auto-generates error codes in `ApplicationErrors.{UsecaseName}.{ErrorName}` format.
+Auto-generates error codes in `Application.{UsecaseName}.{ErrorName}` format.
 
 ```csharp
 // Duplicate product name error
@@ -309,19 +309,19 @@ ApplicationError.For<CreateProductCommand>(
     new AlreadyExists(),
     request.Name,
     $"Product name already exists: '{request.Name}'")
-// -> Error code: "ApplicationErrors.CreateProductCommand.AlreadyExists"
+// -> Error code: "Application.CreateProductCommand.AlreadyExists"
 
 // Product not found error
 ApplicationError.For<CreateOrderCommand>(
     new NotFound(),
     productId.ToString(),
     $"Product not found: '{productId}'")
-// -> Error code: "ApplicationErrors.CreateOrderCommand.NotFound"
+// -> Error code: "Application.CreateOrderCommand.NotFound"
 ```
 
 ### Domain Error Propagation
 
-`DomainErrorType` errors (e.g., credit limit exceeded) originating from the Domain Layer propagate naturally to the Application Layer within the `FinT<IO, T>` chain. The `FinT` monad automatically short-circuits on failure, so no separate error conversion code is needed.
+`DomainErrorKind` errors (e.g., credit limit exceeded) originating from the Domain Layer propagate naturally to the Application Layer within the `FinT<IO, T>` chain. The `FinT` monad automatically short-circuits on failure, so no separate error conversion code is needed.
 
 ## FinT\<IO, T\> LINQ Monad Transformer
 

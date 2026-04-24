@@ -173,15 +173,15 @@ The `DomainError` includes the `TSelf` type information passed via CRTP and `Fro
 **InvalidTransition Error Type:**
 
 ```csharp
-// Defined in DomainErrorType.Transition.cs
-public sealed record InvalidTransition(string? FromState = null, string? ToState = null) : DomainErrorType;
+// Defined in DomainErrorKind.Transition.cs
+public sealed record InvalidTransition(string? FromState = null, string? ToState = null) : DomainErrorKind;
 ```
 
 Example of the error JSON structure generated on transition failure:
 
 ```json
 {
-  "ErrorCode": "DomainErrors.EmailVerificationState.InvalidTransition",
+  "ErrorCode": "Domain.EmailVerificationState.InvalidTransition",
   "ErrorCurrentValue": "Verified { Email = user@example.com, VerifiedAt = 2026-01-15 }",
   "Message": "Invalid transition from Verified to Verified"
 }
@@ -289,8 +289,8 @@ The Aggregate does not perform the transition itself, but **validates guard cond
 
 ```csharp
 // Error type definitions
-public sealed record AlreadyDeleted : DomainErrorType.Custom;
-public sealed record NoEmailToVerify : DomainErrorType.Custom;
+public sealed record AlreadyDeleted : DomainErrorKind.Custom;
+public sealed record NoEmailToVerify : DomainErrorKind.Custom;
 
 // Contact Aggregate's VerifyEmail method
 public Fin<Unit> VerifyEmail(DateTime verifiedAt)
@@ -510,6 +510,6 @@ public abstract partial record EmailVerificationState : UnionValueObject<EmailVe
 
 - [Value Objects](../05a-value-objects) - Core value object concepts and base class selection
 - [Value Objects: Enumerations, Validation, and Practical Patterns](../05b-value-objects-validation) - SmartEnum, Application Layer validation merging
-- [Error System: Basics and Naming](../08a-error-system) - DomainError, DomainErrorType
+- [Error System: Basics and Naming](../08a-error-system) - DomainError, DomainErrorKind
 - [Error System: Domain/Application Errors](../08b-error-system-domain-app) - InvalidTransition error type
 - [Unit Testing Guide](../testing/15a-unit-testing)

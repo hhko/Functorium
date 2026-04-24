@@ -26,7 +26,7 @@ Check the commit list from the component analysis files.
 
 ```markdown
 # Example from analysis file:
-6b5ef99 Add ErrorCodeFactory for structured error creation (#123)
+6b5ef99 Add ErrorFactory for structured error creation (#123)
 853c918 Rename IErrorHandler to IErrorDestructurer (#124)
 c5e604f Add OpenTelemetry integration support (#125)
 4ee28c2 Improve Serilog destructuring for LanguageExt errors (#126)
@@ -42,7 +42,7 @@ PR #106 description:
 - Fixed issues: #101 and #102
 - Implementation: Better error handling and validation
 
-Issue #101: "ErrorCodeFactory doesn't support nested errors"
+Issue #101: "ErrorFactory doesn't support nested errors"
 - User problem: Information loss when creating nested errors
 - Pain point: "Internal error information is not displayed in logs"
 
@@ -108,10 +108,10 @@ Let's look at an actual Git Diff example.
 diff --git a/Src/Functorium/.api/Functorium.cs b/Src/Functorium/.api/Functorium.cs
 @@ -34,11 +34,11 @@ namespace Functorium.Abstractions.Errors
  {
--    public class ErrorCodeExceptionalDestructurer : IErrorDestructurer
-+    public class ErrorCodeExceptionalDestructurer : IErrorProcessor
+-    public class ExceptionalErrorDestructurer : IErrorDestructurer
++    public class ExceptionalErrorDestructurer : IErrorProcessor
      {
-         public ErrorCodeExceptionalDestructurer() { }
+         public ExceptionalErrorDestructurer() { }
 -        public bool CanHandle(Error error) { }
 +        public bool CanProcess(Error error) { }
      }
@@ -197,8 +197,8 @@ Phase 3's analysis results are saved in the following files.
 
 ## Group 1: Functional Error Handling
 **Related Commits:**
-- Add ErrorCodeFactory.Create
-- Add ErrorCodeFactory.CreateFromException
+- Add ErrorFactory.CreateExpected
+- Add ErrorFactory.CreateExceptional
 - Add ErrorsDestructuringPolicy
 
 **User Value:**
@@ -229,7 +229,7 @@ Analysis Results:
   Feature Groups: 8
 
 Identified Key Features:
-  1. Functional Error Handling (ErrorCodeFactory)
+  1. Functional Error Handling (ErrorFactory)
   2. OpenTelemetry Integration (Observability)
   3. Architecture Validation (ArchUnitNET)
   4. Test Fixtures (Host, Quartz)
@@ -253,7 +253,7 @@ First, review whether commit priorities are appropriate. New types, integration 
 Next, verify all API references against the Uber file.
 
 ```bash
-grep "ErrorCodeFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
+grep "ErrorFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
 ```
 
 Finally, confirm that Breaking Changes are comprehensively included. All deleted/changed APIs in `api-changes-diff.txt` must be documented, and commits marked with commit message patterns (`!:`, `breaking`) must also be included.

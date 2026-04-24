@@ -55,7 +55,7 @@ Functorium must solve this problem at the type level. A type system is needed th
 
 - <span class="adr-good">Good</span>, because it is widely used in the .NET ecosystem, reducing onboarding effort for new team members.
 - <span class="adr-bad">Bad</span>, because it does not support `Bind`/`Map`/LINQ composition, so connecting multiple steps ultimately regresses to if-else branching.
-- <span class="adr-bad">Bad</span>, because errors are string-based, making type-safe classification like `DomainErrorType.InsufficientStock` and pattern matching impossible.
+- <span class="adr-bad">Bad</span>, because errors are string-based, making type-safe classification like `DomainErrorKind.InsufficientStock` and pattern matching impossible.
 
 ### ErrorOr Library
 

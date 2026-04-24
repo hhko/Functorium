@@ -53,10 +53,10 @@ public sealed partial class Email : SimpleValueObject<string>
         CreateFromValidation(Validate(value), v => new Email(v));
 
     // Each validation condition failure auto-generates a corresponding error code:
-    //   NotNull    → "DomainErrors.Email.Null"
-    //   NotEmpty   → "DomainErrors.Email.Empty"
-    //   MaxLength  → "DomainErrors.Email.TooLong"
-    //   Matches    → "DomainErrors.Email.InvalidFormat"
+    //   NotNull    → "Domain.Email.Null"
+    //   NotEmpty   → "Domain.Email.Empty"
+    //   MaxLength  → "Domain.Email.TooLong"
+    //   Matches    → "Domain.Email.InvalidFormat"
     // Composite Value Objects use the Apply pattern to validate multiple fields
     // in parallel, collecting all errors at once.
     public static Validation<Error, string> Validate(string? value) =>
@@ -278,10 +278,10 @@ public abstract class AggregateRoot<TId> : Entity<TId>, IDomainEventDrain
 **DomainError** — Ensures recoverability through structured error codes:
 
 ```csharp
-// Auto-generated error code: "DomainErrors.Email.Empty"
+// Auto-generated error code: "Domain.Email.Empty"
 DomainError.For<Email>(new Empty(), value, "Email cannot be empty");
 
-// Auto-generated error code: "DomainErrors.Password.TooShort"
+// Auto-generated error code: "Domain.Password.TooShort"
 DomainError.For<Password>(new TooShort(MinLength: 8), value, "Password too short");
 ```
 
@@ -491,7 +491,7 @@ Here we visualize how the "24h post-delivery cancellation" policy from the [requ
   "ctx.cancellation_reason": "ChangeOfMind",
   "ctx.hours_since_delivery": 25,
   "error.type": "expected",
-  "error.codes": ["DomainErrors.Order.InvalidOrderStatusTransition"],
+  "error.codes": ["Domain.Order.InvalidOrderStatusTransition"],
   "error.message": "Cancel window (24h) exceeded for ChangeOfMind",
   "elapsed_ms": 7,
   "status": "Failed"
@@ -516,7 +516,7 @@ sequenceDiagram
   PL->>OT: Metric (usecase_failed{error_type="expected"}+1)
   PL->>OT: Trace span(status=ERROR, tags: ctx.order_id, ctx.hours_since_delivery=25)
   PL-->>EP: FinResponse.Fail (HTTP 409)
-  EP-->>C: error_code="DomainErrors.Order.InvalidOrderStatusTransition"
+  EP-->>C: error_code="Domain.Order.InvalidOrderStatusTransition"
 
   Note over OT: All three pillars share the same trace_id/request_id<br/>→ one filter correlates Logs, Metrics, and Traces
 ```
@@ -536,7 +536,7 @@ The three pillars (Logs, Metrics, Traces) shown above are emitted **automaticall
 > **"No stack trace = undebuggable" is a misconception.**
 >
 > 1. **Exceptional errors (system failures) retain their stack traces in full** — a `NullReferenceException` debugs exactly the way you already know.
-> 2. **Expected and Aggregate errors (business / validation failures) use `{Layer}.{Class}.{Reason}` error codes in place of stack traces** — e.g., `DomainErrors.Email.Empty` tells you instantly: *"Empty-value rule violated in the `Email` class of the Domain layer."* You can jump straight to that Value Object's `Validate` method.
+> 2. **Expected and Aggregate errors (business / validation failures) use `{Layer}.{Class}.{Reason}` error codes in place of stack traces** — e.g., `Domain.Email.Empty` tells you instantly: *"Empty-value rule violated in the `Email` class of the Domain layer."* You can jump straight to that Value Object's `Validate` method.
 > 3. **Business concerns (Usecase) and technical concerns (Port/Adapter) are observed independently** — a single `request_id` correlates a failed `CancelOrderCommand` (Usecase) with its downstream `IOrderRepository` (Port) calls side-by-side on your dashboard (`EventId 1001–1004` ↔ `2001–2004`).
 > 4. **Every observability record is emitted in a consistent schema by Source Generators with zero gaps** — no context loss from a missed log line.
 >

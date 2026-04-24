@@ -40,7 +40,7 @@ This example follows the 7-step workflow of functorium-develop plugin v0.4.0.
 | Entity | `Entity<TId>` | AssessmentCriterion (child entity) |
 | Aggregate Root | `AggregateRoot<TId>` | AIModel, ModelDeployment, ComplianceAssessment, ModelIncident |
 | Domain Event | `DomainEvent` | 18 types (Registered, Quarantined, Reported, etc.) |
-| Domain Error | `DomainErrorType.Custom` | InvalidStatusTransition, AlreadyDeleted, etc. |
+| Domain Error | `DomainErrorKind.Custom` | InvalidStatusTransition, AlreadyDeleted, etc. |
 | Specification | `ExpressionSpecification<T>` | 12 types (ModelNameSpec, DeploymentActiveSpec, etc.) |
 | Domain Service | `IDomainService` | RiskClassificationService, DeploymentEligibilityService |
 | Repository | `IRepository<T, TId>` | 4 Repository Interfaces |

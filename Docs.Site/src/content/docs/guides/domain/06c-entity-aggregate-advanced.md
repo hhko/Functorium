@@ -318,7 +318,7 @@ Idempotency guarantee pattern for `Delete()` and `Restore()`, and guard pattern 
 public sealed class Product : AggregateRoot<ProductId>, ISoftDeletableWithUser
 {
     // --- Error Type ---
-    public sealed record AlreadyDeleted : DomainErrorType.Custom;
+    public sealed record AlreadyDeleted : DomainErrorKind.Custom;
 
     // --- Domain Events ---
     public sealed record DeletedEvent(ProductId ProductId, string DeletedBy) : DomainEvent;
@@ -476,7 +476,7 @@ Key point: The `if (quantity > StockQuantity)` guard in `DeductStock()` judges *
 [GenerateEntityId]
 public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurrencyAware
 {
-    public sealed record InsufficientStock : DomainErrorType.Custom;
+    public sealed record InsufficientStock : DomainErrorKind.Custom;
 
     // Value Object properties
     public Quantity StockQuantity { get; private set; }
@@ -635,13 +635,13 @@ A complete example including Value Object properties, Entity references, and dom
 using Functorium.Domains.Entities;
 using Functorium.Domains.Events;
 using Functorium.Domains.Errors;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 using static LanguageExt.Prelude;
 
 // OrderStatus: Smart Enum based on SimpleValueObject<string> + state transition rules
 public sealed class OrderStatus : SimpleValueObject<string>
 {
-    public sealed record InvalidValue : DomainErrorType.Custom;
+    public sealed record InvalidValue : DomainErrorKind.Custom;
 
     public static readonly OrderStatus Pending = new("Pending");
     public static readonly OrderStatus Confirmed = new("Confirmed");
@@ -683,7 +683,7 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
 {
     #region Error Types
 
-    public sealed record InvalidOrderStatusTransition : DomainErrorType.Custom;
+    public sealed record InvalidOrderStatusTransition : DomainErrorKind.Custom;
 
     #endregion
 

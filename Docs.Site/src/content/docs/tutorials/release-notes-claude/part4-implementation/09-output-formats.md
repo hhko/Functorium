@@ -45,13 +45,13 @@ Comparing: origin/release/1.0 -> HEAD
 
 ## Change Summary
 
- Src/Functorium/Abstractions/Errors/ErrorCodeFactory.cs | 45 +++++
+ Src/Functorium/Abstractions/Errors/ErrorFactory.cs | 45 +++++
  Src/Functorium/Applications/ElapsedTimeCalculator.cs   | 32 +++
  37 files changed, 1542 insertions(+), 89 deletions(-)
 
 ## All Commits
 
-6b5ef99 feat(errors): Add ErrorCodeFactory
+6b5ef99 feat(errors): Add ErrorFactory
 853c918 feat(logging): Add Serilog integration
 c5e604f fix(build): Fix NuGet package icon path
 d4eacc6 docs: Update README
@@ -65,7 +65,7 @@ d4eacc6 docs: Update README
 
 ### Feature Commits
 
-6b5ef99 feat(errors): Add ErrorCodeFactory
+6b5ef99 feat(errors): Add ErrorFactory
 853c918 feat(logging): Add Serilog integration
 
 ### Bug Fixes
@@ -130,7 +130,7 @@ The consumers of this file are **Phase 4 and Phase 5.** In Phase 4, it verifies 
 
 namespace Functorium.Abstractions.Errors
 {
-    public static class ErrorCodeFactory
+    public static class ErrorFactory
     {
         public static LanguageExt.Common.Error Create(
             string errorCode,
@@ -180,7 +180,7 @@ index abc1234..def5678 100644
 --- a/Src/Functorium/.api/Functorium.cs
 +++ b/Src/Functorium/.api/Functorium.cs
 @@ -10,6 +10,10 @@ namespace Functorium.Abstractions.Errors
-     public static class ErrorCodeFactory
+     public static class ErrorFactory
      {
          public static Error Create(string errorCode, string errorCurrentValue, string errorMessage) { }
 +        public static Error Create<T>(string errorCode, T errorCurrentValue, string errorMessage)
@@ -231,7 +231,7 @@ Phase work files are generated in the `.analysis-output/work/` directory. These 
 - IErrorHandler → IErrorDestructurer name change
 
 ## Feature Commits (High Priority)
-- [6b5ef99] feat(errors): Add ErrorCodeFactory
+- [6b5ef99] feat(errors): Add ErrorFactory
 - [853c918] feat(logging): Add Serilog integration
 
 ## Feature Commits (Medium Priority)
@@ -248,8 +248,8 @@ Phase work files are generated in the `.analysis-output/work/` directory. These 
 
 ## Group 1: Functional Error Handling
 **Related Commits:**
-- ErrorCodeFactory.Create added
-- ErrorCodeFactory.CreateFromException added
+- ErrorFactory.CreateExpected added
+- ErrorFactory.CreateExceptional added
 
 **User Value:**
 Structured error creation and Serilog integration
@@ -285,8 +285,8 @@ Unified distributed tracing, metrics, and logging
 ### API Validation
 | API | Status | Uber File Line |
 |-----|------|---------------|
-| ErrorCodeFactory.Create | Verified | 75-77 |
-| ErrorCodeFactory.CreateFromException | Verified | 78-79 |
+| ErrorFactory.CreateExpected | Verified | 75-77 |
+| ErrorFactory.CreateExceptional | Verified | 78-79 |
 | OpenTelemetryRegistration.RegisterObservability | Verified | 93-95 |
 ```
 
@@ -341,7 +341,7 @@ This concludes our examination of all the template and configuration files cover
 **A**: The **Uber file (`all-api-changes.txt`)** is a snapshot containing the entire Public API of the current branch, while the **API Diff file (`api-changes-diff.txt`)** shows only the differences—APIs added, deleted, or changed between the previous and current versions. The Uber file is used for API accuracy validation, and the Diff file is used for Breaking Change detection.
 
 ### Q4: What criteria are used for feature grouping in `phase3-feature-groups.md`?
-**A**: In Phase 3, Claude analyzes the commit message scopes (`feat(errors)`, `feat(logging)`) and the changed file paths, then **groups commits that provide the same user value** into a single feature group. For example, commits related to `ErrorCodeFactory.Create` and `ErrorCodeFactory.CreateFromException` are combined into a "Functional Error Handling" group.
+**A**: In Phase 3, Claude analyzes the commit message scopes (`feat(errors)`, `feat(logging)`) and the changed file paths, then **groups commits that provide the same user value** into a single feature group. For example, commits related to `ErrorFactory.CreateExpected` and `ErrorFactory.CreateExceptional` are combined into a "Functional Error Handling" group.
 
 ## Next Step
 

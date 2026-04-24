@@ -88,16 +88,16 @@ The generic constraint `where T : notnull, IComparable` ensures only comparable 
 Functorium concisely creates structured errors through the `DomainError.For<T>()` helper.
 
 ```csharp
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 DomainError.For<Email>(new Empty(), value, "Email cannot be empty");
 DomainError.For<Password>(new TooShort(MinLength: 8), value, "Password too short");
 // Custom error type definition
-public sealed record Unsupported : DomainErrorType.Custom;
+public sealed record Unsupported : DomainErrorKind.Custom;
 DomainError.For<Currency>(new Unsupported(), value, "Currency not supported");
 ```
 
-Error codes are automatically generated in the `DomainErrors.{TypeName}.{ErrorName}` format, enabling consistent use across logging, internationalization, and API responses.
+Error codes are automatically generated in the `Domain.{TypeName}.{ErrorName}` format, enabling consistent use across logging, internationalization, and API responses.
 
 ### ValidationRules\<T\> Chaining System
 
@@ -153,7 +153,7 @@ The `Then*` methods execute sequentially and short-circuit immediately on failur
 The following is the complete pattern for implementing an Email value object by inheriting from `SimpleValueObject<T>`.
 
 ```csharp
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 // 1. Inherit SimpleValueObject<T>
 public sealed class Email : SimpleValueObject<string>
@@ -250,9 +250,9 @@ public sealed class Age : ComparableSimpleValueObject<int>
 ```csharp
 public sealed class Address : ValueObject
 {
-    public sealed record CityEmpty : DomainErrorType.Custom;
-    public sealed record StreetEmpty : DomainErrorType.Custom;
-    public sealed record PostalCodeEmpty : DomainErrorType.Custom;
+    public sealed record CityEmpty : DomainErrorKind.Custom;
+    public sealed record StreetEmpty : DomainErrorKind.Custom;
+    public sealed record PostalCodeEmpty : DomainErrorKind.Custom;
 
     public string City { get; }
     public string Street { get; }

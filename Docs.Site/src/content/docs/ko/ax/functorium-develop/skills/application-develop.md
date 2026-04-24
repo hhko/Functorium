@@ -207,7 +207,7 @@ public sealed class CreateProductCommand
 **guard를 활용한 중복 검사** — LINQ 체인 안에서 선언적 조건 검사:
 
 ```csharp
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 FinT<IO, Response> usecase =
     from exists in _productRepository.Exists(new ProductNameUniqueSpec(productName))

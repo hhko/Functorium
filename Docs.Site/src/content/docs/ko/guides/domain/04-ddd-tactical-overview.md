@@ -151,15 +151,15 @@ block-beta
 | Domain Event | `IDomainEvent`, `DomainEvent` | `Functorium.Domains.Events` |
 | Domain Service | `IDomainService` | `Functorium.Domains.Services` |
 | Specification | `Specification<T>` | `Functorium.Domains.Specifications` |
-| Domain Error | `DomainError`, `DomainErrorType` | `Functorium.Domains.Errors` |
+| Domain Error | `DomainError`, `DomainErrorKind` | `Functorium.Domains.Errors` |
 | Command | `ICommandRequest<T>`, `ICommandUsecase<T,R>` | `Functorium.Applications.Usecases` |
 | Query | `IQueryRequest<T>`, `IQueryUsecase<T,R>` | `Functorium.Applications.Usecases` |
 | Event Handler | `IDomainEventHandler<T>` | `Functorium.Applications.Events` |
-| Application Error | `ApplicationError`, `ApplicationErrorType` | `Functorium.Applications.Errors` |
+| Application Error | `ApplicationError`, `ApplicationErrorKind` | `Functorium.Applications.Errors` |
 | Port | `IObservablePort` | `Functorium.Abstractions.Observabilities` |
 | Repository | `IRepository<TAggregate, TId>` | `Functorium.Domains.Repositories` |
 | Adapter | `[GenerateObservablePort]` | Adapter Layer 프로젝트 |
-| Adapter Error | `AdapterError`, `AdapterErrorType` | `Functorium.Adapters.Errors` |
+| Adapter Error | `AdapterError`, `AdapterErrorKind` | `Functorium.Adapters.Errors` |
 | 검증 | `ValidationRules<T>`, `TypedValidation<T,V>` | `Functorium.Domains.ValueObjects.Validations` |
 | 결과 타입 | `Fin<T>`, `Validation<Error, T>`, `FinResponse<T>` | LanguageExt / Functorium |
 
@@ -359,13 +359,13 @@ IHasDomainEvents (읽기 전용 이벤트 조회)
 Error (LanguageExt)
 │
 ├── DomainError
-│   └── DomainErrorType (Presence, Length, Format, DateTime, Numeric, Range, Existence, Transition, Custom)
+│   └── DomainErrorKind (Presence, Length, Format, DateTime, Numeric, Range, Existence, Transition, Custom)
 │
 ├── ApplicationError
-│   └── ApplicationErrorType (공통, 권한, 검증, 비즈니스 규칙, 커스텀)
+│   └── ApplicationErrorKind (공통, 권한, 검증, 비즈니스 규칙, 커스텀)
 │
 └── AdapterError
-    └── AdapterErrorType (공통, Pipeline, 외부 서비스, 데이터, 커스텀)
+    └── AdapterErrorKind (공통, Pipeline, 외부 서비스, 데이터, 커스텀)
 ```
 
 ### Specification 계층
@@ -749,7 +749,7 @@ invalid.IfFail(e => Console.WriteLine(e.Code));  // DomainErrors.Email.InvalidFo
 
 ```csharp
 using Functorium.Testing.Assertions.Errors;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 [Fact]
 public void Create_ShouldFail_WhenEmailIsEmpty()

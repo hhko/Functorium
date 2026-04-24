@@ -97,7 +97,7 @@ In Functorium, each use case is represented as a single class. The business inte
 
 ```csharp
 using Functorium.Applications.Errors;
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 public sealed class CreateProductCommand
 {
@@ -277,7 +277,7 @@ public sealed class {Verb}{Entity}{Command|Query}
             CancellationToken cancellationToken)
         {
             // Implementation (executed after Validator passes)
-            // Application error: use ApplicationError.For<{UsecaseName}>(new {ErrorType}(), value, message)
+            // Application error: use ApplicationError.For<{UsecaseName}>(new {ErrorKind}(), value, message)
         }
     }
 }
@@ -396,7 +396,7 @@ Functional conditional checks are implemented using LanguageExt's `guard`.
 The key point in the following code is that `guard(!exists, error)` returns an immediate failure when the condition is `false`, expressing conditional checks declaratively within a LINQ chain without the imperative `if` + `return` pattern.
 
 ```csharp
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 // Using guard in a LINQ query
 from exists in _productRepository.ExistsByName(productName)
@@ -443,11 +443,11 @@ return response.ToFinResponse();
 
 ### Usage
 
-Use the `ApplicationError.For<TUsecase>()` method with `ApplicationErrorType` sealed records:
+Use the `ApplicationError.For<TUsecase>()` method with `ApplicationErrorKind` sealed records:
 
 ```csharp
 using Functorium.Applications.Errors;
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 // Using within guard in a LINQ query
 from exists in _productRepository.ExistsByName(productName)
@@ -466,7 +466,7 @@ return FinResponse.Fail<Response>(
         $"Product not found. ID: {productId}"));
 ```
 
-### Key ApplicationErrorType
+### Key ApplicationErrorKind
 
 The following table lists the standard Application error types provided by Functorium. Most use cases require only these types, and for special cases you can extend by inheriting from `Custom`.
 
@@ -486,7 +486,7 @@ The following table lists the standard Application error types provided by Funct
 | `ResourceLocked` | Resource locked | `new ResourceLocked(ResourceName: "Order")` |
 | `OperationCancelled` | Operation cancelled | `new OperationCancelled()` |
 | `InsufficientPermission` | Insufficient permission | `new InsufficientPermission(Permission: "Admin")` |
-| `Custom` | Custom error (define by inheritance) | `public sealed record PaymentDeclined : ApplicationErrorType.Custom;` → `new PaymentDeclined()` |
+| `Custom` | Custom error (define by inheritance) | `public sealed record PaymentDeclined : ApplicationErrorKind.Custom;` → `new PaymentDeclined()` |
 
 ### Error Code Format
 
@@ -495,16 +495,16 @@ ApplicationErrors.{UsecaseName}.{ErrorTypeName}
 ```
 
 Examples:
-- `ApplicationErrors.CreateProductCommand.AlreadyExists`
-- `ApplicationErrors.GetProductByIdQuery.NotFound`
-- `ApplicationErrors.UpdateOrderCommand.BusinessRuleViolated`
+- `Application.CreateProductCommand.AlreadyExists`
+- `Application.GetProductByIdQuery.NotFound`
+- `Application.UpdateOrderCommand.BusinessRuleViolated`
 
 ### Advantages
 
 - **Type safety**: Compile-time validation based on sealed records
 - **Consistency**: Same API pattern as DomainError and AdapterError
 - **Conciseness**: Can be used inline without separate class definitions
-- **Standardization**: Leverages standard error types from `ApplicationErrorType`
+- **Standardization**: Leverages standard error types from `ApplicationErrorKind`
 
 ---
 
@@ -518,7 +518,7 @@ using LayeredArch.Domain.ValueObjects;
 using LayeredArch.Domain.Repositories;
 using Functorium.Applications.Errors;
 using Functorium.Applications.Linq;
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 namespace LayeredArch.Application.Usecases.Products;
 
@@ -1125,12 +1125,12 @@ services
 
 ### FluentValidation Failure and Error Type Mapping
 
-FluentValidation validation failures are converted to `AdapterErrorType.PipelineValidation` in `UsecaseValidationPipeline`. This is a different error type from the Application layer's `ApplicationErrorType.ValidationFailed`:
+FluentValidation validation failures are converted to `AdapterErrorKind.PipelineValidation` in `UsecaseValidationPipeline`. This is a different error type from the Application layer's `ApplicationErrorKind.ValidationFailed`:
 
 | Validation Layer | Error Type | Usage Location |
 |------------|----------|----------|
-| FluentValidation (Pipeline) | `AdapterErrorType.PipelineValidation(PropertyName)` | Handled automatically by `UsecaseValidationPipeline` |
-| VO/Business rules (Usecase) | `ApplicationErrorType.ValidationFailed(PropertyName)` | Used manually within the Usecase |
+| FluentValidation (Pipeline) | `AdapterErrorKind.PipelineValidation(PropertyName)` | Handled automatically by `UsecaseValidationPipeline` |
+| VO/Business rules (Usecase) | `ApplicationErrorKind.ValidationFailed(PropertyName)` | Used manually within the Usecase |
 
 On FluentValidation failure, each `ValidationFailure`'s `PropertyName` and `ErrorMessage` are converted to `AdapterError.For<UsecaseValidationPipeline>(new PipelineValidation(PropertyName), ...)` and returned as `FinResponse.Fail`.
 
@@ -1266,7 +1266,7 @@ from _ in guard(!exists, ApplicationError.For<CreateProductCommand>(
 
 ### Q4. How are Application errors defined?
 
-**A:** Use the `ApplicationError.For<TUsecase>(ApplicationErrorType, value, message)` pattern. Use inline without separate class definitions. Error codes are automatically generated in the format `ApplicationErrors.{UsecaseName}.{ErrorTypeName}`.
+**A:** Use the `ApplicationError.For<TUsecase>(ApplicationErrorKind, value, message)` pattern. Use inline without separate class definitions. Error codes are automatically generated in the format `Application.{UsecaseName}.{ErrorTypeName}`.
 
 ### Q5. Can domain entities be returned directly in the Response?
 

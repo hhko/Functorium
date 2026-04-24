@@ -32,8 +32,8 @@ Validation rules are defined in a single Value Object location, and `ValidationR
 
 ```csharp
 // On validation failure, condition-specific DomainErrors are auto-generated:
-//   "DomainErrors.Email.Null", "DomainErrors.Email.Empty",
-//   "DomainErrors.Email.TooLong", "DomainErrors.Email.InvalidFormat"
+//   "Domain.Email.Null", "Domain.Email.Empty",
+//   "Domain.Email.TooLong", "Domain.Email.InvalidFormat"
 public sealed partial class Email : SimpleValueObject<string>
 {
     public const int MaxLength = 320;
@@ -44,19 +44,19 @@ public sealed partial class Email : SimpleValueObject<string>
         CreateFromValidation(Validate(value), v => new Email(v));
 
     // Each validation condition that fails generates a corresponding error code.
-    //   NotNull  → "DomainErrors.Email.Null"
-    //   NotEmpty → "DomainErrors.Email.Empty"
-    //   MaxLength→ "DomainErrors.Email.TooLong"
-    //   Matches  → "DomainErrors.Email.InvalidFormat"
+    //   NotNull  → "Domain.Email.Null"
+    //   NotEmpty → "Domain.Email.Empty"
+    //   MaxLength→ "Domain.Email.TooLong"
+    //   Matches  → "Domain.Email.InvalidFormat"
     // Composite Value Objects use the Apply pattern to validate multiple fields
     // in parallel, collecting all failures at once.
     public static Validation<Error, string> Validate(string? value) =>
         ValidationRules<Email>
-            .NotNull(value)             // → "DomainErrors.Email.Null"
-            .ThenNotEmpty()             // → "DomainErrors.Email.Empty"
+            .NotNull(value)             // → "Domain.Email.Null"
+            .ThenNotEmpty()             // → "Domain.Email.Empty"
             .ThenNormalize(v => v.Trim().ToLowerInvariant())
-            .ThenMaxLength(MaxLength)   // → "DomainErrors.Email.TooLong"
-            .ThenMatches(EmailRegex(), "Invalid email format");  // → "DomainErrors.Email.InvalidFormat"
+            .ThenMaxLength(MaxLength)   // → "Domain.Email.TooLong"
+            .ThenMatches(EmailRegex(), "Invalid email format");  // → "Domain.Email.InvalidFormat"
 }
 ```
 
@@ -87,10 +87,10 @@ public abstract class AggregateRoot<TId> : Entity<TId>, IDomainEventDrain
 Error codes are automatically generated from type names. Thanks to this structure, error codes appear with the same name across code, logs, and operational dashboards.
 
 ```csharp
-// "DomainErrors.Email.Empty"
+// "Domain.Email.Empty"
 DomainError.For<Email>(new Empty(), value, "Email cannot be empty");
 
-// "DomainErrors.Password.TooShort"
+// "Domain.Password.TooShort"
 DomainError.For<Password>(new TooShort(MinLength: 8), value, "Password too short");
 ```
 
@@ -284,13 +284,13 @@ The three design philosophies do not exist independently — they combine natura
 
 ### Domain Layer — Always-Valid Value Object
 
-To create a customer, the email address must first be valid. The `Email` Value Object introduced earlier completes all validations at creation time, so there is no path through which an invalid email can enter the system. When a validation condition fails, error codes like `"DomainErrors.Email.Empty"` or `"DomainErrors.Email.TooLong"` are automatically generated, allowing the cause to be immediately identified in logs.
+To create a customer, the email address must first be valid. The `Email` Value Object introduced earlier completes all validations at creation time, so there is no path through which an invalid email can enter the system. When a validation condition fails, error codes like `"Domain.Email.Empty"` or `"Domain.Email.TooLong"` are automatically generated, allowing the cause to be immediately identified in logs.
 
 Composite Value Objects (e.g., customer information) use the Apply pattern to validate multiple fields in parallel. If the name is empty and the email format is invalid, both errors are collected and returned in a single response. Unlike the approach of validating individual fields sequentially and stopping at the first error, users can see and fix all issues at once.
 
 ### Application Layer — CQRS Usecase
 
-Once domain objects are prepared, the use case assembles them. In the Command (write) path, `FinT<IO, T>`'s `from ... in ... select` syntax composes side effects. Email duplication check, customer creation, and response transformation are expressed as a single declarative pipeline. When a business rule is violated, `ApplicationError` automatically generates an error code in the format `"ApplicationErrors.CreateCustomerCommand.AlreadyExists"`.
+Once domain objects are prepared, the use case assembles them. In the Command (write) path, `FinT<IO, T>`'s `from ... in ... select` syntax composes side effects. Email duplication check, customer creation, and response transformation are expressed as a single declarative pipeline. When a business rule is violated, `ApplicationError` automatically generates an error code in the format `"Application.CreateCustomerCommand.AlreadyExists"`.
 
 In the Query (read) path, Dapper projects directly to DTOs without reconstructing Aggregates. While read and write paths each use their optimal technology, the result type is unified as `FinResponse<T>`.
 
@@ -301,7 +301,7 @@ In the Query (read) path, Dapper projects directly to DTOs without reconstructin
 //   → Return type: FinT<IO, Customer> (domain object)
 //   → Implementation: EF Core (change tracking, transactions)
 
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 public sealed class CreateCustomerCommand
 {
@@ -318,7 +318,7 @@ public sealed class CreateCustomerCommand
             FinT<IO, Response> usecase =
                 from exists  in repository.Exists(new CustomerEmailSpec(email))
                 from _       in guard(!exists, ApplicationError.For<CreateCustomerCommand>(
-                    new AlreadyExists(),                    // ApplicationErrorType sealed record
+                    new AlreadyExists(),                    // ApplicationErrorKind sealed record
                     request.Email,                          // current value
                     $"Email already exists: '{request.Email}'"))
                 from customer in repository.Create(newCustomer)
@@ -362,19 +362,19 @@ public sealed class GetCustomerByIdQuery
 :::tip[Layer-Specific Structured Errors]
 Error codes have an independent hierarchy per layer. Domain validation failures, business rule violations, and infrastructure failures are each distinguished by different prefixes, so when reviewing logs, the origin and nature of an error can be immediately identified.
 
-- **Domain:** `DomainError.For<Email>(new Empty(), ...)` → `"DomainErrors.Email.Empty"`
-- **Application:** `ApplicationError.For<CreateCustomerCommand>(new AlreadyExists(), ...)` → `"ApplicationErrors.CreateCustomerCommand.AlreadyExists"`
-- **Adapter:** `AdapterError.For<OrderRepository>(new NotFound(), ...)` → `"AdapterErrors.OrderRepository.NotFound"`
+- **Domain:** `DomainError.For<Email>(new Empty(), ...)` → `"Domain.Email.Empty"`
+- **Application:** `ApplicationError.For<CreateCustomerCommand>(new AlreadyExists(), ...)` → `"Application.CreateCustomerCommand.AlreadyExists"`
+- **Adapter:** `AdapterError.For<OrderRepository>(new NotFound(), ...)` → `"Adapter.OrderRepository.NotFound"`
 
 These errors are output as structured logs. Single validation failures are classified as `expected` type, while composite failures from the Apply pattern are classified as `aggregate` type. In log analysis tools like Seq, you can filter by `error.code` or `error.type`.
 
 ```json
 // Single error — Domain validation failure
 {
-  "error.code": "DomainErrors.Email.Empty",
+  "error.code": "Domain.Email.Empty",
   "error.type": "expected",
   "@error": {
-    "ErrorCode": "DomainErrors.Email.Empty",
+    "ErrorCode": "Domain.Email.Empty",
     "ErrorCurrentValue": "",
     "Message": "Email cannot be empty"
   }
@@ -382,12 +382,12 @@ These errors are output as structured logs. Single validation failures are class
 
 // Composite error — Multiple field failures collected via Apply pattern
 {
-  "error.code": "DomainErrors.Email.Empty",
+  "error.code": "Domain.Email.Empty",
   "error.type": "aggregate",
   "@error": {
     "Errors": [
-      { "ErrorCode": "DomainErrors.Email.Empty", "ErrorCurrentValue": "", "Message": "Email cannot be empty" },
-      { "ErrorCode": "DomainErrors.Password.TooShort", "ErrorCurrentValue": "ab", "Message": "Password too short" }
+      { "ErrorCode": "Domain.Email.Empty", "ErrorCurrentValue": "", "Message": "Email cannot be empty" },
+      { "ErrorCode": "Domain.Password.TooShort", "ErrorCurrentValue": "ab", "Message": "Password too short" }
     ]
   }
 }
@@ -450,9 +450,9 @@ The Usecase Pipeline (`IPipelineBehavior`) instruments the **external I/O** of a
   "response.status": "failure",
   "response.elapsed": 0.0012,
   "error.type": "expected",
-  "error.code": "ApplicationErrors.CreateCustomerCommand.AlreadyExists",
+  "error.code": "Application.CreateCustomerCommand.AlreadyExists",
   "@error": {
-    "ErrorCode": "ApplicationErrors.CreateCustomerCommand.AlreadyExists",
+    "ErrorCode": "Application.CreateCustomerCommand.AlreadyExists",
     "ErrorCurrentValue": "alice@example.com",
     "Message": "Email already exists: 'alice@example.com'"
   }

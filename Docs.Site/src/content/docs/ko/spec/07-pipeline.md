@@ -81,7 +81,7 @@ public abstract partial class UsecasePipelineBase<TRequest>
 | `GetRequestHandlerPath()` | `string` | `TRequest`의 `FullName` 반환 (네임스페이스 포함 전체 경로) |
 | `GetRequestHandler()` | `string` | `TRequest`의 `FullName`에서 핸들러 클래스 이름 추출 |
 | `GetRequestHandlerLower()` | `string` | `GetRequestHandler()`의 소문자 변환 (메트릭 네이밍용) |
-| `GetErrorInfo(Error error)` | `(string ErrorType, string ErrorCode)` | 에러에서 타입/코드 정보 추출 |
+| `GetErrorInfo(Error error)` | `(string ErrorKind, string ErrorCode)` | 에러에서 타입/코드 정보 추출 |
 
 - `GetRequestCategoryType`은 `ICommandRequest<>` / `IQueryRequest<>` 인터페이스 구현 여부로 판별합니다.
 - `GetRequestHandler()`는 `typeof(TRequest).FullName`에서 중첩 타입(`+`)과 네임스페이스(`.`)를 파싱하여 클래스 이름만 추출합니다.
@@ -106,7 +106,7 @@ internal sealed class UsecaseExceptionPipeline<TRequest, TResponse>
 | 제약 조건 | `TResponse : IFinResponseFactory<TResponse>` |
 | 동작 | `try-catch`로 예외 포착 후 `TResponse.CreateFail(AdapterError.FromException(...))` 반환 |
 | 취소 처리 | `OperationCanceledException`(서브타입 `TaskCanceledException` 포함)은 **재발생(throw)되며 래핑되지 않음** — 호출자가 "취소"와 "비즈니스 실패"를 구분할 수 있음 |
-| 에러 타입 | `AdapterErrorType.PipelineException` |
+| 에러 타입 | `AdapterErrorKind.PipelineException` |
 
 ### UsecaseValidationPipeline
 
@@ -123,7 +123,7 @@ internal sealed class UsecaseValidationPipeline<TRequest, TResponse>
 |------|------|
 | DI 의존성 | `IEnumerable<IValidator<TRequest>>` |
 | 동작 | Validator가 없으면 `next()` 통과, 있으면 모든 Validator 실행 |
-| 에러 타입 | `AdapterErrorType.PipelineValidation(PropertyName)` |
+| 에러 타입 | `AdapterErrorKind.PipelineValidation(PropertyName)` |
 | 다중 에러 | 검증 실패가 2개 이상이면 `Error.Many(errors)` 반환 |
 
 ### UsecaseLoggingPipeline
@@ -628,7 +628,7 @@ public static partial class ObservabilityNaming
 
 | 상수 | 값 |
 |------|----|
-| `ErrorType` | `"error.type"` |
+| `ErrorKind` | `"error.type"` |
 | `ServiceNamespace` | `"service.namespace"` |
 | `ServiceName` | `"service.name"` |
 | `ServiceVersion` | `"service.version"` |

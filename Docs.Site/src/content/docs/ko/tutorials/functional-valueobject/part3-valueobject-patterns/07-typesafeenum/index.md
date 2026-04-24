@@ -126,7 +126,7 @@ SmartEnum 구현 시 다음 세 가지 영역을 구분합니다.
 ```csharp
 public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 {
-    public sealed record Unsupported : DomainErrorType.Custom;
+    public sealed record Unsupported : DomainErrorKind.Custom;
 
     // 정적 인스턴스들
     public static readonly Currency KRW = new(nameof(KRW), "KRW", "한국 원화", "₩");
@@ -158,13 +158,13 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
     private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =>
         !string.IsNullOrWhiteSpace(currencyCode)
             ? currencyCode
-            : DomainError.For<Currency>(new DomainErrorType.Empty(), currencyCode,
+            : DomainError.For<Currency>(new DomainErrorKind.Empty(), currencyCode,
                 $"Currency code cannot be empty. Current value: '{currencyCode}'");
 
     private static Validation<Error, string> ValidateFormat(string currencyCode) =>
         currencyCode.Length == 3 && currencyCode.All(char.IsLetter)
             ? currencyCode.ToUpperInvariant()
-            : DomainError.For<Currency>(new DomainErrorType.WrongLength(), currencyCode,
+            : DomainError.For<Currency>(new DomainErrorKind.WrongLength(), currencyCode,
                 $"Currency code must be exactly 3 letters. Current value: '{currencyCode}'");
 
     // 비즈니스 로직
@@ -181,7 +181,7 @@ SmartEnum 외에도 프레임워크의 `SimpleValueObject<string>`과 LanguageEx
 ```csharp
 public sealed class OrderStatus : SimpleValueObject<string>
 {
-    public sealed record InvalidValue : DomainErrorType.Custom;
+    public sealed record InvalidValue : DomainErrorKind.Custom;
 
     // 정적 인스턴스들
     public static readonly OrderStatus Pending = new("Pending");
@@ -338,7 +338,7 @@ JPY: ¥1,000
 **A**: 포맷팅, 계산, 검증 같은 도메인 로직이 필요하거나, 잘못된 값 입력을 타입 수준에서 방지해야 하거나, 새로운 속성이나 메서드 추가가 예상되는 열거형에 적합합니다.
 
 ### Q3: SmartEnum에서 ValueObject 규칙을 어떻게 준수하나요?
-**A**: `IValueObject` 인터페이스를 구현하고, `DomainError.For<T>()` 패턴으로 구조화된 에러를 처리합니다. 커스텀 에러 타입은 `sealed record Unsupported : DomainErrorType.Custom` 형식으로 정의합니다.
+**A**: `IValueObject` 인터페이스를 구현하고, `DomainError.For<T>()` 패턴으로 구조화된 에러를 처리합니다. 커스텀 에러 타입은 `sealed record Unsupported : DomainErrorKind.Custom` 형식으로 정의합니다.
 
 ```csharp
 // ValueObject 규칙 준수 예시
@@ -346,7 +346,7 @@ private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =
     !string.IsNullOrWhiteSpace(currencyCode)
         ? currencyCode                    // 성공: 값 반환
         : DomainError.For<Currency>(      // 실패: DomainError.For<T>() 사용
-            new DomainErrorType.Empty(), currencyCode,
+            new DomainErrorKind.Empty(), currencyCode,
             $"Currency code cannot be empty. Current value: '{currencyCode}'");
 ```
 

@@ -174,7 +174,7 @@ cat .analysis-output/analysis-summary.md
 wc -l .analysis-output/api-changes-build-current/all-api-changes.txt
 
 # Check key APIs (example)
-grep -c "ErrorCodeFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
+grep -c "ErrorFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
 
 # Check API files
 ls Src/*/.api/*.cs

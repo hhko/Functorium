@@ -150,7 +150,7 @@ public class CriteriaApiService : ICriteriaApiService
     public string RequestCategory => "ExternalApi";
 
     #region Error Types
-    public sealed record ResponseNull : AdapterErrorType.Custom;
+    public sealed record ResponseNull : AdapterErrorKind.Custom;
     #endregion
 
     public virtual FinT<IO, ICriteriaApiService.Response> GetEquipHistoriesAsync(
@@ -347,8 +347,8 @@ catch (HttpRequestException ex)
 ##### FinT<IO, T> and AdapterError Integration
 
 ```csharp
-// AdapterErrorType usage pattern
-using static Functorium.Adapters.Errors.AdapterErrorType;
+// AdapterErrorKind usage pattern
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 // NotFound - Resource not found
 AdapterError.For<ProductRepository>(
@@ -369,7 +369,7 @@ AdapterError.For<CriteriaApiService>(
     "API connection failed");
 
 // Custom - User-defined error type
-// Error type definition: public sealed record ReservationFailed : AdapterErrorType.Custom;
+// Error type definition: public sealed record ReservationFailed : AdapterErrorKind.Custom;
 AdapterError.For<InventoryRepository>(
     new ReservationFailed(),
     orderId.ToString(),
@@ -659,7 +659,7 @@ using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 [GenerateObservablePort]
 public class EfCoreProductRepository
@@ -770,8 +770,8 @@ public class EfCoreUnitOfWork : IUnitOfWork
     public string RequestCategory => "UnitOfWork";
 
     #region Error Types
-    public sealed record ConcurrencyConflict : AdapterErrorType.Custom;
-    public sealed record DatabaseUpdateFailed : AdapterErrorType.Custom;
+    public sealed record ConcurrencyConflict : AdapterErrorKind.Custom;
+    public sealed record DatabaseUpdateFailed : AdapterErrorKind.Custom;
     #endregion
 
     public EfCoreUnitOfWork(LayeredArchDbContext dbContext) => _dbContext = dbContext;
@@ -878,7 +878,7 @@ The key point to note in the following code is the error mapping by HTTP status 
 
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 [GenerateObservablePort]
 public class ExternalPricingApiService : IExternalPricingService
@@ -888,10 +888,10 @@ public class ExternalPricingApiService : IExternalPricingService
     public string RequestCategory => "ExternalApi";       // 2. Request category
 
     #region Error Types
-    public sealed record OperationCancelled : AdapterErrorType.Custom;
-    public sealed record UnexpectedException : AdapterErrorType.Custom;
-    public sealed record RateLimited : AdapterErrorType.Custom;
-    public sealed record HttpError : AdapterErrorType.Custom;
+    public sealed record OperationCancelled : AdapterErrorKind.Custom;
+    public sealed record UnexpectedException : AdapterErrorKind.Custom;
+    public sealed record RateLimited : AdapterErrorKind.Custom;
+    public sealed record HttpError : AdapterErrorKind.Custom;
     #endregion
 
     public ExternalPricingApiService(HttpClient httpClient)  // 3. Constructor injection
@@ -948,7 +948,7 @@ public class ExternalPricingApiService : IExternalPricingService
             catch (TaskCanceledException ex)              // 10. Timeout
             {
                 return AdapterError.FromException<ExternalPricingApiService>(
-                    new AdapterErrorType.Timeout(TimeSpan.FromSeconds(30)),
+                    new AdapterErrorKind.Timeout(TimeSpan.FromSeconds(30)),
                     ex);
             }
             catch (Exception ex)                          // 11. Other exceptions
@@ -990,9 +990,9 @@ public class ExternalPricingApiService : IExternalPricingService
 
 > **Reference**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Infrastructure/ExternalApis/ExternalPricingApiService.cs`
 
-**HTTP Status Code → AdapterErrorType Mapping Reference**:
+**HTTP Status Code → AdapterErrorKind Mapping Reference**:
 
-| HTTP Status Code | AdapterErrorType | Description |
+| HTTP Status Code | AdapterErrorKind | Description |
 |---------------|------------------|------|
 | 404 | `new NotFound()` | Resource not found |
 | 401 | `new Unauthorized()` | Authentication failure |
@@ -1001,9 +1001,9 @@ public class ExternalPricingApiService : IExternalPricingService
 | 503 | `new ExternalServiceUnavailable(name)` | Service unavailable |
 | Other | `new HttpError()` | General HTTP error |
 
-**Exception → AdapterErrorType Mapping Reference**:
+**Exception → AdapterErrorKind Mapping Reference**:
 
-| Exception Type | AdapterErrorType | Description |
+| Exception Type | AdapterErrorKind | Description |
 |----------|------------------|------|
 | `HttpRequestException` | `new ConnectionFailed(name)` | Connection failure |
 | `TaskCanceledException` (user) | `new OperationCancelled()` | Request cancelled |

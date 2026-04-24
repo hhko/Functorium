@@ -201,13 +201,13 @@ Comparing: origin/release/1.0 -> HEAD
 
 ## Change Summary
 
- Src/Functorium/Abstractions/Errors/ErrorCodeFactory.cs | 45 +++++
+ Src/Functorium/Abstractions/Errors/ErrorFactory.cs | 45 +++++
  Src/Functorium/Applications/ElapsedTimeCalculator.cs   | 32 +++
  37 files changed, 1542 insertions(+), 89 deletions(-)
 
 ## All Commits
 
-6b5ef99 feat(errors): Add ErrorCodeFactory
+6b5ef99 feat(errors): Add ErrorFactory
 853c918 feat(logging): Add Serilog integration
 c5e604f fix(build): Fix NuGet package icon path
 ...
@@ -221,7 +221,7 @@ c5e604f fix(build): Fix NuGet package icon path
 
 ### Feature Commits
 
-6b5ef99 feat(errors): Add ErrorCodeFactory
+6b5ef99 feat(errors): Add ErrorFactory
 853c918 feat(logging): Add Serilog integration
 
 ### Bug Fixes

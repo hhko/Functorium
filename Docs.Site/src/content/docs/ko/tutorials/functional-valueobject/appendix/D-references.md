@@ -132,7 +132,7 @@ Src/Functorium/Domains/ValueObjects/
 
 Src/Functorium/Domains/Errors/
 ├── DomainError.cs                     # DomainError.For<T>() 헬퍼
-└── DomainErrorType.cs                 # 에러 타입 sealed record 계층
+└── DomainErrorKind.cs                 # 에러 타입 sealed record 계층
 ```
 
 ### CQRS 통합

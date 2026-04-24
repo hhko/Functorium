@@ -26,8 +26,8 @@ ApplicationError.For<CreateProductCommand>(new AlreadyExists(), code, "Already e
 EventError.For<DomainEventPublisher>(new PublishFailed(), eventType, "Failed to publish event");
 
 // Test assertions
-result.ShouldBeDomainError<Email, Email>(new DomainErrorType.Empty());
-fin.ShouldBeApplicationError<GetProductQuery, Product>(new ApplicationErrorType.NotFound());
+result.ShouldBeDomainError<Email, Email>(new DomainErrorKind.Empty());
+fin.ShouldBeApplicationError<GetProductQuery, Product>(new ApplicationErrorKind.NotFound());
 ```
 
 ### Key Procedures
@@ -41,9 +41,9 @@ fin.ShouldBeApplicationError<GetProductQuery, Product>(new ApplicationErrorType.
 
 | Layer | Factory | Error Code Prefix | When to Use |
 |--------|--------|-----------------|----------|
-| Domain | `DomainError` | `DomainErrors.` | VO validation, Entity invariants, Aggregate rules |
-| Application | `ApplicationError` | `ApplicationErrors.` | Usecase business logic, authorization/authentication |
-| Event | `EventError` | `ApplicationErrors.` | Event publishing/handler failures |
+| Domain | `DomainError` | `Domain.` | VO validation, Entity invariants, Aggregate rules |
+| Application | `ApplicationError` | `Application.` | Usecase business logic, authorization/authentication |
+| Event | `EventError` | `Application.` | Event publishing/handler failures |
 
 We first examine Domain error creation and test patterns, then move on to Application errors and Event errors.
 
@@ -57,7 +57,7 @@ Use `DomainError.For<T>()` to create errors for Value Object validation or Entit
 
 ```csharp
 using Functorium.Domains.Errors;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 // Basic usage - return directly via implicit conversion
 public Fin<Email> Create(string? value)
@@ -84,7 +84,7 @@ public Fin<Age> Create(int value)
 }
 
 // Two values included
-// Error type definition: public sealed record InvalidRange : DomainErrorType.Custom;
+// Error type definition: public sealed record InvalidRange : DomainErrorKind.Custom;
 public Fin<DateRange> Create(DateTime start, DateTime end)
 {
     if (start >= end)
@@ -97,7 +97,7 @@ public Fin<DateRange> Create(DateTime start, DateTime end)
 }
 
 // Three values included
-// Error type definition: public sealed record InvalidTriangle : DomainErrorType.Custom;
+// Error type definition: public sealed record InvalidTriangle : DomainErrorKind.Custom;
 public Fin<Triangle> Create(double a, double b, double c)
 {
     if (a + b <= c || b + c <= a || c + a <= b)
@@ -115,7 +115,7 @@ public Fin<Triangle> Create(double a, double b, double c)
 ```csharp
 public sealed class Product : AggregateRoot<ProductId>
 {
-    public sealed record InsufficientStock : DomainErrorType.Custom;
+    public sealed record InsufficientStock : DomainErrorKind.Custom;
 
     public Fin<Unit> DeductStock(Quantity quantity)
     {
@@ -132,20 +132,20 @@ public sealed class Product : AggregateRoot<ProductId>
 }
 ```
 
-### DomainErrorType Category Structure and Complete List
+### DomainErrorKind Category Structure and Complete List
 
-The following table categorizes `DomainErrorType` by category and lists the files where each error type is defined.
+The following table categorizes `DomainErrorKind` by category and lists the files where each error type is defined.
 
 | Category | File | Description |
 |------|------|------|
-| Presence | `DomainErrorType.Presence.cs` | Value existence validation |
-| Length | `DomainErrorType.Length.cs` | String/collection length validation |
-| Format | `DomainErrorType.Format.cs` | Format and case validation |
-| DateTime | `DomainErrorType.DateTime.cs` | Date validation |
-| Numeric | `DomainErrorType.Numeric.cs` | Numeric value/range validation |
-| Range | `DomainErrorType.Range.cs` | min/max pair validation |
-| Existence | `DomainErrorType.Existence.cs` | Existence validation |
-| Custom | `DomainErrorType.Custom.cs` | Custom errors |
+| Presence | `DomainErrorKind.Presence.cs` | Value existence validation |
+| Length | `DomainErrorKind.Length.cs` | String/collection length validation |
+| Format | `DomainErrorKind.Format.cs` | Format and case validation |
+| DateTime | `DomainErrorKind.DateTime.cs` | Date validation |
+| Numeric | `DomainErrorKind.Numeric.cs` | Numeric value/range validation |
+| Range | `DomainErrorKind.Range.cs` | min/max pair validation |
+| Existence | `DomainErrorKind.Existence.cs` | Existence validation |
+| Custom | `DomainErrorKind.Custom.cs` | Custom errors |
 
 #### Presence (Value Existence Validation) - R1
 
@@ -211,7 +211,7 @@ The following table categorizes `DomainErrorType` by category and lists the file
 
 | Error Type | Description | Usage Example |
 |-----------|------|----------|
-| `Custom` | Domain-specific error (abstract) | `sealed record AlreadyShipped : DomainErrorType.Custom;` -> `new AlreadyShipped()` |
+| `Custom` | Domain-specific error (abstract) | `sealed record AlreadyShipped : DomainErrorKind.Custom;` -> `new AlreadyShipped()` |
 
 ### Value Object Usage Example
 
@@ -252,12 +252,12 @@ public void ShouldBeDomainError_WhenValueIsEmpty()
 {
     // Arrange
     var error = DomainError.For<Email>(
-        new DomainErrorType.Empty(),
+        new DomainErrorKind.Empty(),
         currentValue: "",
         message: "Email cannot be empty");
 
     // Act & Assert
-    error.ShouldBeDomainError<Email>(new DomainErrorType.Empty());
+    error.ShouldBeDomainError<Email>(new DomainErrorKind.Empty());
 }
 
 // Verification including current value
@@ -266,18 +266,18 @@ public void ShouldBeDomainError_WithValue_WhenValueIsNegative()
 {
     // Arrange
     var error = DomainError.For<Age, int>(
-        new DomainErrorType.Negative(),
+        new DomainErrorKind.Negative(),
         currentValue: -5,
         message: "Age cannot be negative");
 
     // Act & Assert
     error.ShouldBeDomainError<Age, int>(
-        new DomainErrorType.Negative(),
+        new DomainErrorKind.Negative(),
         expectedCurrentValue: -5);
 }
 
 // Verification including two values
-// Error type definition: public sealed record InvalidRange : DomainErrorType.Custom;
+// Error type definition: public sealed record InvalidRange : DomainErrorKind.Custom;
 [Fact]
 public void ShouldBeDomainError_WithTwoValues_WhenRangeIsInvalid()
 {
@@ -298,7 +298,7 @@ public void ShouldBeDomainError_WithTwoValues_WhenRangeIsInvalid()
 }
 
 // Verification including three values
-// Error type definition: public sealed record InvalidTriangle : DomainErrorType.Custom;
+// Error type definition: public sealed record InvalidTriangle : DomainErrorKind.Custom;
 [Fact]
 public void ShouldBeDomainError_WithThreeValues()
 {
@@ -325,13 +325,13 @@ public void Fin_ShouldBeDomainError_WhenCreationFails()
 {
     // Arrange
     Fin<Email> fin = DomainError.For<Email>(
-        new DomainErrorType.InvalidFormat(),
+        new DomainErrorKind.InvalidFormat(),
         currentValue: "invalid-email",
         message: "Invalid email format");
 
     // Act & Assert
     // ShouldBeDomainError<TErrorSource, TFin>: TErrorSource = error source type, TFin = T of Fin<T>
-    fin.ShouldBeDomainError<Email, Email>(new DomainErrorType.InvalidFormat());
+    fin.ShouldBeDomainError<Email, Email>(new DomainErrorKind.InvalidFormat());
 }
 
 [Fact]
@@ -339,13 +339,13 @@ public void Fin_ShouldBeDomainError_WithValue()
 {
     // Arrange
     Fin<Age> fin = DomainError.For<Age, int>(
-        new DomainErrorType.Negative(),
+        new DomainErrorKind.Negative(),
         currentValue: -5,
         message: "Age cannot be negative");
 
     // Act & Assert
     fin.ShouldBeDomainError<Age, Age, int>(
-        new DomainErrorType.Negative(),
+        new DomainErrorKind.Negative(),
         expectedCurrentValue: -5);
 }
 ```
@@ -360,12 +360,12 @@ public void Validation_ShouldHaveDomainError()
     // Arrange
     Validation<Error, Address> validation = Fail<Error, Address>(
         DomainError.For<Street>(
-            new DomainErrorType.Empty(),
+            new DomainErrorKind.Empty(),
             currentValue: "",
             message: "Street cannot be empty"));
 
     // Act & Assert
-    validation.ShouldHaveDomainError<Street, Address>(new DomainErrorType.Empty());
+    validation.ShouldHaveDomainError<Street, Address>(new DomainErrorKind.Empty());
 }
 
 // Verify exactly one error is included
@@ -375,13 +375,13 @@ public void Validation_ShouldHaveOnlyDomainError()
     // Arrange
     Validation<Error, PostalCode> validation = Fail<Error, PostalCode>(
         DomainError.For<PostalCode>(
-            new DomainErrorType.InvalidFormat(),
+            new DomainErrorKind.InvalidFormat(),
             currentValue: "invalid",
             message: "Invalid postal code format"));
 
     // Act & Assert
     validation.ShouldHaveOnlyDomainError<PostalCode, PostalCode>(
-        new DomainErrorType.InvalidFormat());
+        new DomainErrorKind.InvalidFormat());
 }
 
 // Verify all multiple errors are included
@@ -390,12 +390,12 @@ public void Validation_ShouldHaveDomainErrors_WhenMultipleErrorsExist()
 {
     // Arrange
     var error1 = DomainError.For<Password>(
-        new DomainErrorType.TooShort(MinLength: 8),
+        new DomainErrorKind.TooShort(MinLength: 8),
         currentValue: "abc",
         message: "Password too short");
 
     var error2 = DomainError.For<Password>(
-        new DomainErrorType.NotUpperCase(),
+        new DomainErrorKind.NotUpperCase(),
         currentValue: "abc",
         message: "Password must contain uppercase");
 
@@ -403,8 +403,8 @@ public void Validation_ShouldHaveDomainErrors_WhenMultipleErrorsExist()
 
     // Act & Assert
     validation.ShouldHaveDomainErrors<Password, Password>(
-        new DomainErrorType.TooShort(MinLength: 8),
-        new DomainErrorType.NotUpperCase());
+        new DomainErrorKind.TooShort(MinLength: 8),
+        new DomainErrorKind.NotUpperCase());
 }
 
 // Verification including current value
@@ -414,13 +414,13 @@ public void Validation_ShouldHaveDomainError_WithValue()
     // Arrange
     Validation<Error, Quantity> validation = Fail<Error, Quantity>(
         DomainError.For<Quantity, int>(
-            new DomainErrorType.Negative(),
+            new DomainErrorKind.Negative(),
             currentValue: -10,
             message: "Quantity cannot be negative"));
 
     // Act & Assert
     validation.ShouldHaveDomainError<Quantity, Quantity, int>(
-        new DomainErrorType.Negative(),
+        new DomainErrorKind.Negative(),
         expectedCurrentValue: -10);
 }
 ```
@@ -435,7 +435,7 @@ Now that we have confirmed Domain error creation and test patterns, let's move o
 
 ```csharp
 using Functorium.Applications.Errors;
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 // Basic usage - return directly via implicit conversion
 if (await _repository.ExistsAsync(command.ProductCode))
@@ -459,7 +459,7 @@ return ApplicationError.For<TransferCommand, decimal, decimal>(
     "Insufficient balance");
 ```
 
-### Complete ApplicationErrorType List
+### Complete ApplicationErrorKind List
 
 The following table categorizes Application error types by category.
 
@@ -496,7 +496,7 @@ The following table categorizes Application error types by category.
 
 | Error Type | Description | Usage Example |
 |-----------|------|----------|
-| `Custom` | Application-specific error (abstract) | `sealed record PaymentDeclined : ApplicationErrorType.Custom;` → `new PaymentDeclined()` |
+| `Custom` | Application-specific error (abstract) | `sealed record PaymentDeclined : ApplicationErrorKind.Custom;` → `new PaymentDeclined()` |
 
 ### Usecase Error Usage Pattern
 
@@ -504,7 +504,7 @@ This shows both the pattern of using `ApplicationError.For` in LINQ query `guard
 
 ```csharp
 using Functorium.Applications.Errors;
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 public sealed class CreateProductCommand
 {
@@ -543,9 +543,9 @@ ApplicationErrors.{UsecaseName}.{ErrorTypeName}
 ```
 
 Examples:
-- `ApplicationErrors.CreateProductCommand.AlreadyExists`
-- `ApplicationErrors.UpdateProductCommand.NotFound`
-- `ApplicationErrors.DeleteOrderCommand.BusinessRuleViolated`
+- `Application.CreateProductCommand.AlreadyExists`
+- `Application.UpdateProductCommand.NotFound`
+- `Application.DeleteOrderCommand.BusinessRuleViolated`
 
 Usecase usage example:
 
@@ -600,12 +600,12 @@ public void ShouldBeApplicationError_WhenProductNotFound()
 {
     // Arrange
     var error = ApplicationError.For<GetProductQuery>(
-        new ApplicationErrorType.NotFound(),
+        new ApplicationErrorKind.NotFound(),
         currentValue: "PROD-001",
         message: "Product not found");
 
     // Act & Assert
-    error.ShouldBeApplicationError<GetProductQuery>(new ApplicationErrorType.NotFound());
+    error.ShouldBeApplicationError<GetProductQuery>(new ApplicationErrorKind.NotFound());
 }
 
 // Verification including current value
@@ -615,13 +615,13 @@ public void ShouldBeApplicationError_WithValue_WhenDuplicate()
     // Arrange
     var productId = Guid.NewGuid();
     var error = ApplicationError.For<CreateProductCommand, Guid>(
-        new ApplicationErrorType.AlreadyExists(),
+        new ApplicationErrorKind.AlreadyExists(),
         currentValue: productId,
         message: "Product already exists");
 
     // Act & Assert
     error.ShouldBeApplicationError<CreateProductCommand, Guid>(
-        new ApplicationErrorType.AlreadyExists(),
+        new ApplicationErrorKind.AlreadyExists(),
         expectedCurrentValue: productId);
 }
 
@@ -631,14 +631,14 @@ public void ShouldBeApplicationError_WithTwoValues_WhenBusinessRuleViolated()
 {
     // Arrange
     var error = ApplicationError.For<TransferCommand, decimal, decimal>(
-        new ApplicationErrorType.BusinessRuleViolated("InsufficientBalance"),
+        new ApplicationErrorKind.BusinessRuleViolated("InsufficientBalance"),
         100m,
         500m,
         message: "Insufficient balance for transfer");
 
     // Act & Assert
     error.ShouldBeApplicationError<TransferCommand, decimal, decimal>(
-        new ApplicationErrorType.BusinessRuleViolated("InsufficientBalance"),
+        new ApplicationErrorKind.BusinessRuleViolated("InsufficientBalance"),
         expectedValue1: 100m,
         expectedValue2: 500m);
 }
@@ -652,13 +652,13 @@ public void Fin_ShouldBeApplicationError_WhenQueryFails()
 {
     // Arrange
     Fin<Product> fin = ApplicationError.For<GetProductQuery>(
-        new ApplicationErrorType.NotFound(),
+        new ApplicationErrorKind.NotFound(),
         currentValue: "PROD-001",
         message: "Product not found");
 
     // Act & Assert
     fin.ShouldBeApplicationError<GetProductQuery, Product>(
-        new ApplicationErrorType.NotFound());
+        new ApplicationErrorKind.NotFound());
 }
 
 [Fact]
@@ -667,13 +667,13 @@ public void Fin_ShouldBeApplicationError_WithValue()
     // Arrange
     var orderId = Guid.NewGuid();
     Fin<Order> fin = ApplicationError.For<CancelOrderCommand, Guid>(
-        new ApplicationErrorType.InvalidState(),
+        new ApplicationErrorKind.InvalidState(),
         currentValue: orderId,
         message: "Cannot cancel shipped order");
 
     // Act & Assert
     fin.ShouldBeApplicationError<CancelOrderCommand, Order, Guid>(
-        new ApplicationErrorType.InvalidState(),
+        new ApplicationErrorKind.InvalidState(),
         expectedCurrentValue: orderId);
 }
 ```
@@ -687,13 +687,13 @@ public void Validation_ShouldHaveApplicationError()
     // Arrange
     Validation<Error, ProductId> validation = Fail<Error, ProductId>(
         ApplicationError.For<CreateProductCommand>(
-            new ApplicationErrorType.AlreadyExists(),
+            new ApplicationErrorKind.AlreadyExists(),
             currentValue: "PROD-001",
             message: "Product already exists"));
 
     // Act & Assert
     validation.ShouldHaveApplicationError<CreateProductCommand, ProductId>(
-        new ApplicationErrorType.AlreadyExists());
+        new ApplicationErrorKind.AlreadyExists());
 }
 
 [Fact]
@@ -702,13 +702,13 @@ public void Validation_ShouldHaveOnlyApplicationError()
     // Arrange
     Validation<Error, Unit> validation = Fail<Error, Unit>(
         ApplicationError.For<DeleteOrderCommand>(
-            new ApplicationErrorType.Forbidden(),
+            new ApplicationErrorKind.Forbidden(),
             currentValue: "ORDER-001",
             message: "Cannot delete this order"));
 
     // Act & Assert
     validation.ShouldHaveOnlyApplicationError<DeleteOrderCommand, Unit>(
-        new ApplicationErrorType.Forbidden());
+        new ApplicationErrorKind.Forbidden());
 }
 
 [Fact]
@@ -716,12 +716,12 @@ public void Validation_ShouldHaveApplicationErrors()
 {
     // Arrange
     var error1 = ApplicationError.For<UpdateUserCommand>(
-        new ApplicationErrorType.ValidationFailed("Email"),
+        new ApplicationErrorKind.ValidationFailed("Email"),
         currentValue: "",
         message: "Email is required");
 
     var error2 = ApplicationError.For<UpdateUserCommand>(
-        new ApplicationErrorType.ValidationFailed("Name"),
+        new ApplicationErrorKind.ValidationFailed("Name"),
         currentValue: "",
         message: "Name is required");
 
@@ -729,8 +729,8 @@ public void Validation_ShouldHaveApplicationErrors()
 
     // Act & Assert
     validation.ShouldHaveApplicationErrors<UpdateUserCommand, Unit>(
-        new ApplicationErrorType.ValidationFailed("Email"),
-        new ApplicationErrorType.ValidationFailed("Name"));
+        new ApplicationErrorKind.ValidationFailed("Email"),
+        new ApplicationErrorKind.ValidationFailed("Name"));
 }
 ```
 
@@ -786,9 +786,9 @@ ApplicationErrors.{PublisherName}.{ErrorTypeName}
 ```
 
 Examples:
-- `ApplicationErrors.DomainEventPublisher.PublishFailed`
-- `ApplicationErrors.ObservableDomainEventPublisher.HandlerFailed`
-- `ApplicationErrors.DomainEventPublisher.InvalidEventType`
+- `Application.DomainEventPublisher.PublishFailed`
+- `Application.ObservableDomainEventPublisher.HandlerFailed`
+- `Application.DomainEventPublisher.InvalidEventType`
 
 ---
 
@@ -799,8 +799,8 @@ Examples:
 **Resolution:** Error type parameters must match exactly. Since they are sealed record-based, all fields are included in equality comparison.
 
 ### Custom Error Not Recognized by `ShouldBeDomainError`
-**Cause:** The Custom error may be defined in the wrong location, or it may not inherit from `DomainErrorType.Custom`.
-**Resolution:** Custom errors must inherit from the corresponding layer's `Custom` abstract record. Example: `public sealed record InsufficientStock : DomainErrorType.Custom;`
+**Cause:** The Custom error may be defined in the wrong location, or it may not inherit from `DomainErrorKind.Custom`.
+**Resolution:** Custom errors must inherit from the corresponding layer's `Custom` abstract record. Example: `public sealed record InsufficientStock : DomainErrorKind.Custom;`
 
 ---
 
@@ -810,7 +810,7 @@ Examples:
 Domain errors are used for invariant violations within the domain model (VO validation failures, Entity state rule violations). Application errors are used for Usecase-level business logic (duplicate checks, authorization checks, resource lookup failures). The criterion is the location (layer) of the code where the error occurs.
 
 ### Q2. When should EventError be used?
-Use it for domain event publishing failures (`PublishFailed`, `PublishCancelled`) or event handler execution failures (`HandlerFailed`). It is a dedicated error type for expressing internal failures of the event system. The error code prefix uses `ApplicationErrors.`.
+Use it for domain event publishing failures (`PublishFailed`, `PublishCancelled`) or event handler execution failures (`HandlerFailed`). It is a dedicated error type for expressing internal failures of the event system. The error code prefix uses `Application.`.
 
 ### Q3. What information should be included as the current value (currentValue) in errors?
 Include information that helps with debugging. Typically this includes the failed validation input value (`id.ToString()`, `request.Name`), current state values (`Status.ToString()`, `(int)StockQuantity`), etc. Do not include sensitive information (passwords, tokens).

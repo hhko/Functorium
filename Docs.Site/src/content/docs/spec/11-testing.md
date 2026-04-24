@@ -20,7 +20,7 @@ This is the public API specification for the test utility library provided by th
 | `ApplicationErrorAssertions` | `Assertions.Errors` | Application error verification extension methods |
 | `AdapterErrorAssertions` | `Assertions.Errors` | Adapter error verification extension methods |
 | `ErrorCodeAssertions` | `Assertions.Errors` | General-purpose error code verification extension methods |
-| `ErrorCodeExceptionalAssertions` | `Assertions.Errors` | Exception-based error verification extension methods |
+| `ExceptionalErrorAssertions` | `Assertions.Errors` | Exception-based error verification extension methods |
 | `ClassValidator` | `Assertions.ArchitectureRules` | Class-level architecture rules Fluent API |
 | `MethodValidator` | `Assertions.ArchitectureRules` | Method-level architecture rules Fluent API |
 | `InterfaceValidator` | `Assertions.ArchitectureRules` | Interface-level architecture rules Fluent API |
@@ -216,9 +216,9 @@ Type-safe verification extension methods for per-layer error types. All assertio
 
 | Class | `TContext` Meaning | Error Code Format |
 |--------|----------------|---------------|
-| `DomainErrorAssertions` | `TDomain` (Domain type) | `DomainErrors.{Name}.{ErrorName}` |
-| `ApplicationErrorAssertions` | `TUsecase` (Usecase type) | `ApplicationErrors.{Name}.{ErrorName}` |
-| `AdapterErrorAssertions` | `TAdapter` (Adapter type) | `AdapterErrors.{Name}.{ErrorName}` |
+| `DomainErrorAssertions` | `TDomain` (Domain type) | `Domain.{Name}.{ErrorName}` |
+| `ApplicationErrorAssertions` | `TUsecase` (Usecase type) | `Application.{Name}.{ErrorName}` |
+| `AdapterErrorAssertions` | `TAdapter` (Adapter type) | `Adapter.{Name}.{ErrorName}` |
 
 **Common method pattern (based on Domain):**
 
@@ -248,7 +248,7 @@ fin.ShouldBeAdapterExceptionalError<TAdapter, T>(errorType);
 
 ### ErrorCodeAssertions (General-purpose)
 
-General-purpose error code verification independent of `DomainErrorType`, etc.
+General-purpose error code verification independent of `DomainErrorKind`, etc.
 
 ```csharp
 public static class ErrorCodeAssertions
@@ -263,9 +263,9 @@ public static class ErrorCodeAssertions
     public static void ShouldHaveErrorCodeStartingWith(this Error error, string prefix);
     public static void ShouldHaveErrorCode(this Error error, Func<string, bool> predicate, ...);
 
-    // ErrorCodeExpected variants (0-3 value overloads + predicate)
-    public static void ShouldBeErrorCodeExpected(this Error error, string code, string value);
-    public static void ShouldBeErrorCodeExpected<T>(this Error error, string code, T value);
+    // ExpectedError variants (0-3 value overloads + predicate)
+    public static void ShouldBeExpectedError(this Error error, string code, string value);
+    public static void ShouldBeExpectedError<T>(this Error error, string code, T value);
 
     // Fin<T> verification
     public static T ShouldSucceed<T>(this Fin<T> fin);
@@ -283,16 +283,16 @@ public static class ErrorCodeAssertions
 }
 ```
 
-### ErrorCodeExceptionalAssertions
+### ExceptionalErrorAssertions
 
-Specialized extension methods for exception-based error (`ErrorCodeExceptional`) verification.
+Specialized extension methods for exception-based error (`ExceptionalError`) verification.
 
 ```csharp
-public static class ErrorCodeExceptionalAssertions
+public static class ExceptionalErrorAssertions
 {
     // Error verification
-    public static void ShouldBeErrorCodeExceptional(this Error error, string code);
-    public static void ShouldBeErrorCodeExceptional<TException>(this Error error, string code);
+    public static void ShouldBeExceptionalError(this Error error, string code);
+    public static void ShouldBeExceptionalError<TException>(this Error error, string code);
     public static void ShouldWrapException<TException>(
         this Error error, string code, string? message = null);
 

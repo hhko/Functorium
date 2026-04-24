@@ -119,7 +119,7 @@ Chaining (`TypedValidationExtensions`):
 | `ThenNotNull` | `ThenNotNull<TVO, T>(this TypedValidation<TVO, T?>) where T : class` | Reference type null check |
 | `ThenNotNull` | `ThenNotNull<TVO, T>(this TypedValidation<TVO, T?>) where T : struct` | Nullable value type null check |
 
-**DomainErrorType:** `Null()`
+**DomainErrorKind:** `Null()`
 
 ### Length (String Length)
 
@@ -142,7 +142,7 @@ Chaining:
 | `ThenExactLength` | `ThenExactLength<TVO>(this TypedValidation<TVO, string>, int)` | Exact length |
 | `ThenNormalize` | `ThenNormalize<TVO>(this TypedValidation<TVO, string>, Func<string, string>)` | String transformation (normalization) |
 
-**DomainErrorType:** `Empty()`, `TooShort(minLength)`, `TooLong(maxLength)`, `WrongLength(length)`
+**DomainErrorKind:** `Empty()`, `TooShort(minLength)`, `TooLong(maxLength)`, `WrongLength(length)`
 
 ### Numeric
 
@@ -168,7 +168,7 @@ Chaining (`where T : notnull, INumber<T>`):
 | `ThenAtMost` | `ThenAtMost<TVO, T>(this TypedValidation<TVO, T>, T max)` | Maximum value check |
 | `ThenAtLeast` | `ThenAtLeast<TVO, T>(this TypedValidation<TVO, T>, T min)` | Minimum value check |
 
-**DomainErrorType:** `Zero()`, `Negative()`, `NotPositive()`, `OutOfRange(min, max)`, `AboveMaximum(max)`, `BelowMinimum(min)`
+**DomainErrorKind:** `Zero()`, `Negative()`, `NotPositive()`, `OutOfRange(min, max)`, `AboveMaximum(max)`, `BelowMinimum(min)`
 
 ### Format
 
@@ -188,7 +188,7 @@ Chaining:
 | `ThenIsUpperCase` | `ThenIsUpperCase<TVO>(this TypedValidation<TVO, string>)` | Uppercase check |
 | `ThenIsLowerCase` | `ThenIsLowerCase<TVO>(this TypedValidation<TVO, string>)` | Lowercase check |
 
-**DomainErrorType:** `InvalidFormat(pattern)`, `NotUpperCase()`, `NotLowerCase()`
+**DomainErrorKind:** `InvalidFormat(pattern)`, `NotUpperCase()`, `NotLowerCase()`
 
 > The `pattern` parameter of `ThenMatches` is of type `Regex`. Using `[GeneratedRegex]` patterns is recommended for performance.
 
@@ -216,7 +216,7 @@ Chaining:
 | `ThenAfter` | `ThenAfter<TVO>(this TypedValidation<TVO, DateTime>, DateTime)` | After boundary check |
 | `ThenDateBetween` | `ThenDateBetween<TVO>(this TypedValidation<TVO, DateTime>, DateTime, DateTime)` | Date range check |
 
-**DomainErrorType:** `DefaultDate()`, `NotInPast()`, `NotInFuture()`, `TooLate(boundary)`, `TooEarly(boundary)`, `OutOfRange(min, max)`
+**DomainErrorKind:** `DefaultDate()`, `NotInPast()`, `NotInFuture()`, `TooLate(boundary)`, `TooEarly(boundary)`, `OutOfRange(min, max)`
 
 ### Range (Range Pair)
 
@@ -236,7 +236,7 @@ Chaining:
 
 Return type is `TypedValidation<TVO, (TValue Min, TValue Max)>`.
 
-**DomainErrorType:** `RangeInverted(min, max)`, `RangeEmpty(value)` (StrictRange only)
+**DomainErrorKind:** `RangeInverted(min, max)`, `RangeEmpty(value)` (StrictRange only)
 
 ### Collection
 
@@ -252,7 +252,7 @@ Chaining:
 |--------|---------|------|
 | `ThenNotEmptyArray` | `ThenNotEmptyArray<TVO, TElement>(this TypedValidation<TVO, TElement[]>)` | Array not empty check |
 
-**DomainErrorType:** `Empty()`
+**DomainErrorKind:** `Empty()`
 
 ### Generic (User-Defined)
 
@@ -260,20 +260,20 @@ Entry points:
 
 | Method | Signature | Description |
 |--------|---------|------|
-| `Must` | `Must<T>(T value, Func<T, bool> predicate, DomainErrorType errorType, string message) where T : notnull` | User-defined condition validation |
+| `Must` | `Must<T>(T value, Func<T, bool> predicate, DomainErrorKind errorType, string message) where T : notnull` | User-defined condition validation |
 
 Chaining:
 
 | Method | Signature | Description |
 |--------|---------|------|
-| `ThenMust` | `ThenMust<TVO, T>(this TypedValidation<TVO, T>, Func<T, bool>, DomainErrorType, string)` | User-defined condition |
-| `ThenMust` | `ThenMust<TVO, T>(this TypedValidation<TVO, T>, Func<T, bool>, DomainErrorType, Func<T, string>)` | Message factory overload |
+| `ThenMust` | `ThenMust<TVO, T>(this TypedValidation<TVO, T>, Func<T, bool>, DomainErrorKind, string)` | User-defined condition |
+| `ThenMust` | `ThenMust<TVO, T>(this TypedValidation<TVO, T>, Func<T, bool>, DomainErrorKind, Func<T, string>)` | Message factory overload |
 
 ```csharp
 ValidationRules<Discount>.Must(
     rate,
     r => r <= 100m,
-    new DomainErrorType.BusinessRule("MaxDiscount"),
+    new DomainErrorKind.BusinessRule("MaxDiscount"),
     $"Discount rate must not exceed 100%. Current: {rate}%");
 ```
 
@@ -580,5 +580,5 @@ this.MustBePairedRange(
 |------|------|
 | [Value Object: Enumeration/Validation/Practical Patterns](../guides/domain/05b-value-objects-validation) | Apply merging, chaining patterns, SmartEnum Create guide |
 | [Value Object Base Classes](../guides/domain/05a-value-objects) | `SimpleValueObject<T>`, `ValueObject`, Create patterns |
-| [Error System Specification](../04-error-system) | `DomainErrorType`, `DomainError.For<T>()`, `DomainError.ForContext()` |
+| [Error System Specification](../04-error-system) | `DomainErrorKind`, `DomainError.For<T>()`, `DomainError.ForContext()` |
 | [Value Object Specification](../02-value-object) | `ValueObject`, `SimpleValueObject<T>`, Union types |

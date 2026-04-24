@@ -63,7 +63,7 @@ This example divides the Domain layer and Application layer into two tracks, goi
 | Entity | `Entity<TId>` | OrderLine (child entity) |
 | Aggregate Root | `AggregateRoot<TId>` | Customer, Product, Order, Inventory, Tag |
 | Domain Event | `DomainEvent` | 19 types (Created, Updated, Confirmed, etc.) |
-| Domain Error | `DomainErrorType.Custom` | EmptyOrderLines, InvalidOrderStatusTransition, etc. |
+| Domain Error | `DomainErrorKind.Custom` | EmptyOrderLines, InvalidOrderStatusTransition, etc. |
 | Specification | `ExpressionSpecification<T>` | ProductNameSpec, CustomerEmailSpec, etc. (6 types) |
 | Domain Service | `IDomainService` | OrderCreditCheckService |
 | Repository | `IRepository<T, TId>` | 5 Repository interfaces |

@@ -173,15 +173,15 @@ protected Fin<TTarget> TransitionFrom<TSource, TTarget>(
 **InvalidTransition 에러 타입:**
 
 ```csharp
-// DomainErrorType.Transition.cs에 정의
-public sealed record InvalidTransition(string? FromState = null, string? ToState = null) : DomainErrorType;
+// DomainErrorKind.Transition.cs에 정의
+public sealed record InvalidTransition(string? FromState = null, string? ToState = null) : DomainErrorKind;
 ```
 
 전이 실패 시 생성되는 에러 JSON 구조 예시:
 
 ```json
 {
-  "ErrorCode": "DomainErrors.EmailVerificationState.InvalidTransition",
+  "ErrorCode": "Domain.EmailVerificationState.InvalidTransition",
   "ErrorCurrentValue": "Verified { Email = user@example.com, VerifiedAt = 2026-01-15 }",
   "Message": "Invalid transition from Verified to Verified"
 }
@@ -289,8 +289,8 @@ Aggregate는 전이 자체를 수행하지 않고, **가드 조건 검증 후 Un
 
 ```csharp
 // Error type definitions
-public sealed record AlreadyDeleted : DomainErrorType.Custom;
-public sealed record NoEmailToVerify : DomainErrorType.Custom;
+public sealed record AlreadyDeleted : DomainErrorKind.Custom;
+public sealed record NoEmailToVerify : DomainErrorKind.Custom;
 
 // Contact Aggregate의 VerifyEmail 메서드
 public Fin<Unit> VerifyEmail(DateTime verifiedAt)
@@ -510,6 +510,6 @@ public abstract partial record EmailVerificationState : UnionValueObject<EmailVe
 
 - [값 객체 (Value Object)](../05a-value-objects) - 값 객체 핵심 개념과 기반 클래스 선택
 - [값 객체: 열거형·검증·실전 패턴](../05b-value-objects-validation) - SmartEnum, Application Layer 검증 병합
-- [에러 시스템: 기초와 네이밍](../08a-error-system) - DomainError, DomainErrorType
+- [에러 시스템: 기초와 네이밍](../08a-error-system) - DomainError, DomainErrorKind
 - [에러 시스템: Domain/Application 에러](../08b-error-system-domain-app) - InvalidTransition 에러 타입
 - [단위 테스트 가이드](../testing/15a-unit-testing)

@@ -118,7 +118,7 @@ if (error is ManyErrors manyErrors)
     for (int i = 0; i < manyErrors.Errors.Count; i++)
     {
         var individualError = manyErrors.Errors[i];
-        if (individualError is ErrorCodeExpected errorCodeExpected)
+        if (individualError is ExpectedError errorCodeExpected)
         {
             Console.WriteLine($"     {i + 1}. 에러 코드: {errorCodeExpected.ErrorCode}");
             Console.WriteLine($"        현재 값: '{errorCodeExpected.ErrorCurrentValue}'");
@@ -235,7 +235,7 @@ public sealed class UserRegistration : ValueObject
 **A:** 검증 규칙들 간의 의존성을 확인하세요. 서로 독립적이라면 Apply를, 이전 결과가 다음 검증에 영향을 미친다면 Bind를 사용합니다.
 
 ### Q2: ManyErrors는 어떻게 처리하나요?
-**A:** ManyErrors 타입을 확인한 뒤 복수개의 에러를 순회하면서 각각을 처리합니다. ErrorCodeExpected 타입인지 확인하여 에러 코드와 현재 값을 표시하는 것이 좋습니다.
+**A:** ManyErrors 타입을 확인한 뒤 복수개의 에러를 순회하면서 각각을 처리합니다. ExpectedError 타입인지 확인하여 에러 코드와 현재 값을 표시하는 것이 좋습니다.
 
 ### Q3: 모든 검증이 실패하는 경우는 어떻게 처리하나요?
 **A:** ManyErrors를 통해 모든 실패를 수집하여 사용자에게 완전한 피드백을 제공합니다. 각 에러를 명확하게 구분하여 표시하면 사용자가 모든 문제점을 한 번에 파악하고 수정할 수 있습니다.

@@ -126,7 +126,7 @@ Three areas to distinguish when implementing SmartEnum.
 ```csharp
 public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 {
-    public sealed record Unsupported : DomainErrorType.Custom;
+    public sealed record Unsupported : DomainErrorKind.Custom;
 
     // Static instances
     public static readonly Currency KRW = new(nameof(KRW), "KRW", "Korean Won", "₩");
@@ -158,13 +158,13 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
     private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =>
         !string.IsNullOrWhiteSpace(currencyCode)
             ? currencyCode
-            : DomainError.For<Currency>(new DomainErrorType.Empty(), currencyCode,
+            : DomainError.For<Currency>(new DomainErrorKind.Empty(), currencyCode,
                 $"Currency code cannot be empty. Current value: '{currencyCode}'");
 
     private static Validation<Error, string> ValidateFormat(string currencyCode) =>
         currencyCode.Length == 3 && currencyCode.All(char.IsLetter)
             ? currencyCode.ToUpperInvariant()
-            : DomainError.For<Currency>(new DomainErrorType.WrongLength(), currencyCode,
+            : DomainError.For<Currency>(new DomainErrorKind.WrongLength(), currencyCode,
                 $"Currency code must be exactly 3 letters. Current value: '{currencyCode}'");
 
     // Business logic
@@ -181,7 +181,7 @@ In addition to SmartEnum, type-safe enumerations can be implemented by combining
 ```csharp
 public sealed class OrderStatus : SimpleValueObject<string>
 {
-    public sealed record InvalidValue : DomainErrorType.Custom;
+    public sealed record InvalidValue : DomainErrorKind.Custom;
 
     // Static instances
     public static readonly OrderStatus Pending = new("Pending");
@@ -338,7 +338,7 @@ Compares the functional differences between traditional enum and SmartEnum.
 **A**: It is suitable for enumerations that need domain logic like formatting, calculation, or validation, that need to prevent invalid value input at the type level, or where new properties or methods are expected to be added.
 
 ### Q3: How does SmartEnum comply with ValueObject rules?
-**A**: Implement the `IValueObject` interface and handle structured errors with the `DomainError.For<T>()` pattern. Custom error types are defined in the form `sealed record Unsupported : DomainErrorType.Custom`.
+**A**: Implement the `IValueObject` interface and handle structured errors with the `DomainError.For<T>()` pattern. Custom error types are defined in the form `sealed record Unsupported : DomainErrorKind.Custom`.
 
 ```csharp
 // ValueObject rule compliance example
@@ -346,7 +346,7 @@ private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =
     !string.IsNullOrWhiteSpace(currencyCode)
         ? currencyCode                    // Success: return value
         : DomainError.For<Currency>(      // Failure: use DomainError.For<T>()
-            new DomainErrorType.Empty(), currencyCode,
+            new DomainErrorKind.Empty(), currencyCode,
             $"Currency code cannot be empty. Current value: '{currencyCode}'");
 ```
 

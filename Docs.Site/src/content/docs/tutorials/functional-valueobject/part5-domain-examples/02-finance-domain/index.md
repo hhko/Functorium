@@ -105,9 +105,9 @@ ExchangeRate manages currency pairs (USD/KRW) and exchange rates. It provides co
 ```csharp
 public sealed class ExchangeRate : ValueObject
 {
-    public sealed record InvalidBaseCurrency : DomainErrorType.Custom;
-    public sealed record InvalidQuoteCurrency : DomainErrorType.Custom;
-    public sealed record SameCurrency : DomainErrorType.Custom;
+    public sealed record InvalidBaseCurrency : DomainErrorKind.Custom;
+    public sealed record InvalidQuoteCurrency : DomainErrorKind.Custom;
+    public sealed record SameCurrency : DomainErrorKind.Custom;
 
     public string BaseCurrency { get; }    // "USD"
     public string QuoteCurrency { get; }   // "KRW"

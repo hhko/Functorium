@@ -43,7 +43,7 @@ Cross-reference all code examples included in the release notes with the Uber fi
 grep "MethodName" .analysis-output/api-changes-build-current/all-api-changes.txt
 
 # Signature check
-grep -A 5 "ErrorCodeFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
+grep -A 5 "ErrorFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
 ```
 
 ### 2. Breaking Changes Confirmation
@@ -198,7 +198,7 @@ Phase 5: Validation Complete
 
 Verification Items Passed:
   API Accuracy (0 errors)
-    - ErrorCodeFactory
+    - ErrorFactory
     - OpenTelemetryRegistration
     - ArchitectureValidationEntryPoint
     - HostTestFixture
@@ -234,10 +234,10 @@ Phase 5: Validation Failed
 Issues Found:
 
 API Accuracy (2 errors):
-  ErrorCodeFactory.FromException (line 123)
+  ErrorFactory.FromException (line 123)
     Location: RELEASE-v1.2.0.md:123
     Issue: API not in the Uber file
-    Suggestion: Use ErrorCodeFactory.CreateFromException
+    Suggestion: Use ErrorFactory.CreateExceptional
 
   OpenTelemetryBuilder.Register (line 456)
     Location: RELEASE-v1.2.0.md:456

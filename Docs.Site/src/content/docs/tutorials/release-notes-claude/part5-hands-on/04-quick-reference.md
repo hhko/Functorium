@@ -138,7 +138,7 @@ Features described in the release notes must be traceable to the commits where t
 
 ```markdown
 <!-- Related commit: abc1234 -->
-### New Feature: ErrorCodeFactory
+### New Feature: ErrorFactory
 ```
 
 ## Key Output Files
@@ -243,7 +243,7 @@ Items to check before and after release note generation.
 **A**: Release notes **only document features whose implementation is complete.** Since Phase 2 builds with `dotnet publish` and then extracts APIs from the DLL, features whose code doesn't compile are not included in the Uber file. Features still under development must be documented in the next release.
 
 ### Q2: What specifically does the checklist item "All code examples verified against Uber file" check?
-**A**: It verifies that **class names, method names, and parameter types appearing in the release notes' code examples exactly match the API signatures in the Uber file.** For example, if a code example uses `ErrorCodeFactory.Create()`, the Uber file must contain that method with an identical signature.
+**A**: It verifies that **class names, method names, and parameter types appearing in the release notes' code examples exactly match the API signatures in the Uber file.** For example, if a code example uses `ErrorFactory.CreateExpected()`, the Uber file must contain that method with an identical signature.
 
 ### Q3: Is it safe to forcefully terminate dotnet processes in the full reset commands?
 **A**: Ideally, only dotnet processes related to release note script execution should be terminated, but if no other dotnet applications are running simultaneously, **`taskkill /F /IM dotnet.exe` (Windows) or `pkill -f dotnet` (macOS/Linux)** for full termination is not a problem. If other .NET services are running, check the PID of those processes and terminate selectively.

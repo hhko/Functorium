@@ -26,7 +26,7 @@ Phase 2에서 생성된 다음 파일들을 분석합니다.
 
 ```markdown
 # 분석 파일의 예시:
-6b5ef99 Add ErrorCodeFactory for structured error creation (#123)
+6b5ef99 Add ErrorFactory for structured error creation (#123)
 853c918 Rename IErrorHandler to IErrorDestructurer (#124)
 c5e604f Add OpenTelemetry integration support (#125)
 4ee28c2 Improve Serilog destructuring for LanguageExt errors (#126)
@@ -42,7 +42,7 @@ PR #106 설명:
 - 수정 이슈: #101 및 #102
 - 구현: 더 나은 오류 처리 및 검증
 
-이슈 #101: "ErrorCodeFactory doesn't support nested errors"
+이슈 #101: "ErrorFactory doesn't support nested errors"
 - 사용자 문제: 중첩 오류 생성 시 정보 손실
 - 불편점: "내부 오류 정보가 로그에 표시되지 않음"
 
@@ -108,10 +108,10 @@ BREAKING: Update authentication flow
 diff --git a/Src/Functorium/.api/Functorium.cs b/Src/Functorium/.api/Functorium.cs
 @@ -34,11 +34,11 @@ namespace Functorium.Abstractions.Errors
  {
--    public class ErrorCodeExceptionalDestructurer : IErrorDestructurer
-+    public class ErrorCodeExceptionalDestructurer : IErrorProcessor
+-    public class ExceptionalErrorDestructurer : IErrorDestructurer
++    public class ExceptionalErrorDestructurer : IErrorProcessor
      {
-         public ErrorCodeExceptionalDestructurer() { }
+         public ExceptionalErrorDestructurer() { }
 -        public bool CanHandle(Error error) { }
 +        public bool CanProcess(Error error) { }
      }
@@ -197,8 +197,8 @@ Phase 3의 분석 결과는 다음 파일들에 저장됩니다.
 
 ## 그룹 1: 함수형 오류 처리
 **관련 커밋:**
-- ErrorCodeFactory.Create 추가
-- ErrorCodeFactory.CreateFromException 추가
+- ErrorFactory.CreateExpected 추가
+- ErrorFactory.CreateExceptional 추가
 - ErrorsDestructuringPolicy 추가
 
 **사용자 가치:**
@@ -229,7 +229,7 @@ Phase 3: 커밋 분석 및 기능 추출 완료
   기능 그룹: 8개
 
 식별된 주요 기능:
-  1. 함수형 오류 처리 (ErrorCodeFactory)
+  1. 함수형 오류 처리 (ErrorFactory)
   2. OpenTelemetry 통합 (Observability)
   3. 아키텍처 검증 (ArchUnitNET)
   4. 테스트 픽스처 (Host, Quartz)
@@ -253,7 +253,7 @@ Phase 3: 커밋 분석 및 기능 추출 완료
 다음으로, Uber 파일로 모든 API 참조를 확인합니다.
 
 ```bash
-grep "ErrorCodeFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
+grep "ErrorFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
 ```
 
 마지막으로, Breaking Changes가 빠짐없이 포함되었는지 확인합니다. `api-changes-diff.txt`의 모든 삭제/변경 API가 문서화되어야 하고, 커밋 메시지 패턴(`!:`, `breaking`)으로 표시된 커밋도 포함되어야 합니다.

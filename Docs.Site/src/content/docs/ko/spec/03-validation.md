@@ -119,7 +119,7 @@ public readonly struct TypedValidation<TValueObject, T>
 | `ThenNotNull` | `ThenNotNull<TVO, T>(this TypedValidation<TVO, T?>) where T : class` | 참조 타입 null 검사 |
 | `ThenNotNull` | `ThenNotNull<TVO, T>(this TypedValidation<TVO, T?>) where T : struct` | nullable 값 타입 null 검사 |
 
-**DomainErrorType:** `Null()`
+**DomainErrorKind:** `Null()`
 
 ### Length (문자열 길이)
 
@@ -142,7 +142,7 @@ public readonly struct TypedValidation<TValueObject, T>
 | `ThenExactLength` | `ThenExactLength<TVO>(this TypedValidation<TVO, string>, int)` | 정확한 길이 |
 | `ThenNormalize` | `ThenNormalize<TVO>(this TypedValidation<TVO, string>, Func<string, string>)` | 문자열 변환 (정규화) |
 
-**DomainErrorType:** `Empty()`, `TooShort(minLength)`, `TooLong(maxLength)`, `WrongLength(length)`
+**DomainErrorKind:** `Empty()`, `TooShort(minLength)`, `TooLong(maxLength)`, `WrongLength(length)`
 
 ### Numeric (숫자)
 
@@ -168,7 +168,7 @@ public readonly struct TypedValidation<TValueObject, T>
 | `ThenAtMost` | `ThenAtMost<TVO, T>(this TypedValidation<TVO, T>, T max)` | 최대값 이하 검사 |
 | `ThenAtLeast` | `ThenAtLeast<TVO, T>(this TypedValidation<TVO, T>, T min)` | 최소값 이상 검사 |
 
-**DomainErrorType:** `Zero()`, `Negative()`, `NotPositive()`, `OutOfRange(min, max)`, `AboveMaximum(max)`, `BelowMinimum(min)`
+**DomainErrorKind:** `Zero()`, `Negative()`, `NotPositive()`, `OutOfRange(min, max)`, `AboveMaximum(max)`, `BelowMinimum(min)`
 
 ### Format (형식)
 
@@ -188,7 +188,7 @@ public readonly struct TypedValidation<TValueObject, T>
 | `ThenIsUpperCase` | `ThenIsUpperCase<TVO>(this TypedValidation<TVO, string>)` | 대문자 검사 |
 | `ThenIsLowerCase` | `ThenIsLowerCase<TVO>(this TypedValidation<TVO, string>)` | 소문자 검사 |
 
-**DomainErrorType:** `InvalidFormat(pattern)`, `NotUpperCase()`, `NotLowerCase()`
+**DomainErrorKind:** `InvalidFormat(pattern)`, `NotUpperCase()`, `NotLowerCase()`
 
 > `ThenMatches`의 `pattern` 파라미터는 `Regex` 타입입니다. 성능을 위해 `[GeneratedRegex]` 패턴 사용을 권장합니다.
 
@@ -216,7 +216,7 @@ public readonly struct TypedValidation<TValueObject, T>
 | `ThenAfter` | `ThenAfter<TVO>(this TypedValidation<TVO, DateTime>, DateTime)` | 기준 이후 검사 |
 | `ThenDateBetween` | `ThenDateBetween<TVO>(this TypedValidation<TVO, DateTime>, DateTime, DateTime)` | 날짜 범위 검사 |
 
-**DomainErrorType:** `DefaultDate()`, `NotInPast()`, `NotInFuture()`, `TooLate(boundary)`, `TooEarly(boundary)`, `OutOfRange(min, max)`
+**DomainErrorKind:** `DefaultDate()`, `NotInPast()`, `NotInFuture()`, `TooLate(boundary)`, `TooEarly(boundary)`, `OutOfRange(min, max)`
 
 ### Range (범위 쌍)
 
@@ -236,7 +236,7 @@ public readonly struct TypedValidation<TValueObject, T>
 
 반환 타입은 `TypedValidation<TVO, (TValue Min, TValue Max)>`입니다.
 
-**DomainErrorType:** `RangeInverted(min, max)`, `RangeEmpty(value)` (StrictRange 전용)
+**DomainErrorKind:** `RangeInverted(min, max)`, `RangeEmpty(value)` (StrictRange 전용)
 
 ### Collection (컬렉션)
 
@@ -252,7 +252,7 @@ public readonly struct TypedValidation<TValueObject, T>
 |--------|---------|------|
 | `ThenNotEmptyArray` | `ThenNotEmptyArray<TVO, TElement>(this TypedValidation<TVO, TElement[]>)` | 배열 비어있지 않은지 검사 |
 
-**DomainErrorType:** `Empty()`
+**DomainErrorKind:** `Empty()`
 
 ### Generic (사용자 정의)
 
@@ -260,20 +260,20 @@ public readonly struct TypedValidation<TValueObject, T>
 
 | 메서드 | 시그니처 | 설명 |
 |--------|---------|------|
-| `Must` | `Must<T>(T value, Func<T, bool> predicate, DomainErrorType errorType, string message) where T : notnull` | 사용자 정의 조건 검증 |
+| `Must` | `Must<T>(T value, Func<T, bool> predicate, DomainErrorKind errorType, string message) where T : notnull` | 사용자 정의 조건 검증 |
 
 체이닝:
 
 | 메서드 | 시그니처 | 설명 |
 |--------|---------|------|
-| `ThenMust` | `ThenMust<TVO, T>(this TypedValidation<TVO, T>, Func<T, bool>, DomainErrorType, string)` | 사용자 정의 조건 |
-| `ThenMust` | `ThenMust<TVO, T>(this TypedValidation<TVO, T>, Func<T, bool>, DomainErrorType, Func<T, string>)` | 메시지 팩토리 오버로드 |
+| `ThenMust` | `ThenMust<TVO, T>(this TypedValidation<TVO, T>, Func<T, bool>, DomainErrorKind, string)` | 사용자 정의 조건 |
+| `ThenMust` | `ThenMust<TVO, T>(this TypedValidation<TVO, T>, Func<T, bool>, DomainErrorKind, Func<T, string>)` | 메시지 팩토리 오버로드 |
 
 ```csharp
 ValidationRules<Discount>.Must(
     rate,
     r => r <= 100m,
-    new DomainErrorType.BusinessRule("MaxDiscount"),
+    new DomainErrorKind.BusinessRule("MaxDiscount"),
     $"Discount rate must not exceed 100%. Current: {rate}%");
 ```
 
@@ -580,5 +580,5 @@ this.MustBePairedRange(
 |------|------|
 | [값 객체: 열거형/검증/실전 패턴](../guides/domain/05b-value-objects-validation) | Apply 병합, 체이닝 패턴, SmartEnum Create 가이드 |
 | [값 객체 기반 클래스](../guides/domain/05a-value-objects) | `SimpleValueObject<T>`, `ValueObject`, Create 패턴 |
-| [에러 시스템 사양](../04-error-system) | `DomainErrorType`, `DomainError.For<T>()`, `DomainError.ForContext()` |
+| [에러 시스템 사양](../04-error-system) | `DomainErrorKind`, `DomainError.For<T>()`, `DomainError.ForContext()` |
 | [값 객체 사양](../02-value-object) | `ValueObject`, `SimpleValueObject<T>`, Union 타입 |

@@ -43,20 +43,20 @@ An architectural pattern that separates the responsibility of commands (writes) 
 A methodology for designing software centered around the domain model.
 
 ### DomainError
-A helper class that creates domain errors for value objects through the `DomainError.For<T>()` static method. Automatically generates error codes in the format `DomainErrors.{ValueObjectName}.{ErrorName}`.
+A helper class that creates domain errors for value objects through the `DomainError.For<T>()` static method. Automatically generates error codes in the format `Domain.{ValueObjectName}.{ErrorName}`.
 
 ```csharp
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 DomainError.For<Email>(new Empty(), value, "Email cannot be empty");
 DomainError.For<Password>(new TooShort(MinLength: 8), value, "Password too short");
 ```
 
-### DomainErrorType
+### DomainErrorKind
 The base record class for domain error types. Defines type-safe errors as a sealed record hierarchy. Built-in types: `Empty`, `Null`, `TooShort`, `TooLong`, `WrongLength`, `OutOfRange`, `Negative`, `NotPositive`, `InvalidFormat`, etc. Custom error types can be defined by deriving from the `Custom` record.
 
 ```csharp
 // Define a custom error type
-public sealed record Unsupported : DomainErrorType.Custom;
+public sealed record Unsupported : DomainErrorKind.Custom;
 ```
 
 ---

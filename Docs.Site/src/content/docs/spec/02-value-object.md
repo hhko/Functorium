@@ -388,7 +388,7 @@ public abstract record UnionValueObject<TSelf> : UnionValueObject
 
 #### Transition Failure Error
 
-On transition failure, returns `DomainError.For<TSelf>(new DomainErrorType.InvalidTransition(FromState, ToState), ...)`. `FromState` is the current case's type name, and **`ToState`** is the target case's type name.
+On transition failure, returns `DomainError.For<TSelf>(new DomainErrorKind.InvalidTransition(FromState, ToState), ...)`. `FromState` is the current case's type name, and **`ToState`** is the target case's type name.
 
 ### [UnionType] Attribute
 
@@ -468,5 +468,5 @@ OrderStatus.Pending? asPending = status.AsPending(); // non-null
 | [Value Object Validation Guide](../guides/domain/05b-value-objects-validation) | Enumeration patterns, Application validation, FluentValidation integration |
 | [Union Value Object Guide](../guides/domain/05c-union-value-objects) | Discriminated Union design, state transitions, source generator usage |
 | [Validation System Specification](../03-validation) | `TypedValidation`, `ContextualValidation`, `ValidationRules<T>` API |
-| [Error System Specification](../04-error-system) | `DomainErrorType.InvalidTransition`, error factory API |
+| [Error System Specification](../04-error-system) | `DomainErrorKind.InvalidTransition`, error factory API |
 | [Source Generators Specification](../10-source-generators) | `UnionTypeGenerator` detailed behavior, generated code format |

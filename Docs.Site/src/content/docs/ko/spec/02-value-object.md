@@ -388,7 +388,7 @@ public abstract record UnionValueObject<TSelf> : UnionValueObject
 
 #### 전이 실패 에러
 
-전이 실패 시 `DomainError.For<TSelf>(new DomainErrorType.InvalidTransition(FromState, ToState), ...)`를 반환합니다. `FromState`는 현재 케이스의 타입 이름, **`ToState`는** 대상 케이스의 타입 이름입니다.
+전이 실패 시 `DomainError.For<TSelf>(new DomainErrorKind.InvalidTransition(FromState, ToState), ...)`를 반환합니다. `FromState`는 현재 케이스의 타입 이름, **`ToState`는** 대상 케이스의 타입 이름입니다.
 
 ### [UnionType] 속성
 
@@ -468,5 +468,5 @@ OrderStatus.Pending? asPending = status.AsPending(); // non-null
 | [값 객체 검증 가이드](../guides/domain/05b-value-objects-validation) | 열거형 패턴, Application 검증, FluentValidation 통합 |
 | [Union 값 객체 가이드](../guides/domain/05c-union-value-objects) | Discriminated Union 설계, 상태 전이, 소스 생성기 사용법 |
 | [검증 시스템 사양](../03-validation) | `TypedValidation`, `ContextualValidation`, `ValidationRules<T>` API |
-| [에러 시스템 사양](../04-error-system) | `DomainErrorType.InvalidTransition`, 에러 팩토리 API |
+| [에러 시스템 사양](../04-error-system) | `DomainErrorKind.InvalidTransition`, 에러 팩토리 API |
 | [소스 생성기 사양](../10-source-generators) | `UnionTypeGenerator` 상세 동작, 생성 코드 형식 |

@@ -20,26 +20,26 @@ AdapterError.For<ProductRepository>(new NotFound(), id, "Not found");
 AdapterError.FromException<MyAdapter>(new ConnectionFailed("DB"), exception);
 
 // Test assertions
-error.ShouldBeAdapterError<ProductRepository>(new AdapterErrorType.NotFound());
-error.ShouldBeAdapterExceptionalError<UsecaseExceptionPipeline>(new AdapterErrorType.PipelineException());
+error.ShouldBeAdapterError<ProductRepository>(new AdapterErrorKind.NotFound());
+error.ShouldBeAdapterExceptionalError<UsecaseExceptionPipeline>(new AdapterErrorKind.PipelineException());
 
 // Generic assertions
-result.ShouldFailWithErrorCode("AdapterErrors.ProductRepository.NotFound");
-error.ShouldBeErrorCodeExceptional<InvalidOperationException>("AdapterErrors.DatabaseAdapter.ConnectionFailed");
+result.ShouldFailWithErrorCode("Adapter.ProductRepository.NotFound");
+error.ShouldBeExceptionalError<InvalidOperationException>("Adapter.DatabaseAdapter.ConnectionFailed");
 ```
 
 ### Key Procedures
 
 1. Adapter error: Select a standard error type or define a Custom sealed record
 2. Create errors with `AdapterError.For` or `AdapterError.FromException`
-3. If Custom error is needed, define a sealed record inheriting from `AdapterErrorType.Custom`
+3. If Custom error is needed, define a sealed record inheriting from `AdapterErrorKind.Custom`
 4. Write tests - Use layer-specific assertions or generic assertions
 
 ### Key Concepts
 
 | Layer | Factory | Error Code Prefix | When to Use |
 |--------|--------|-----------------|----------|
-| Adapter | `AdapterError` | `AdapterErrors.` | Pipeline, external services, data |
+| Adapter | `AdapterError` | `Adapter.` | Pipeline, external services, data |
 | Custom | Per layer | Depends on layer | When standard errors cannot express the situation |
 
 First we examine Adapter error creation patterns, then Custom error definitions, testing best practices, and layer-specific checklists.
@@ -54,7 +54,7 @@ Errors occurring in pipelines, external services, and data processing are create
 
 ```csharp
 using Functorium.Adapters.Errors;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 // Basic usage - direct return via implicit conversion
 return AdapterError.For<ProductRepository>(
@@ -74,7 +74,7 @@ return AdapterError.FromException<ExternalApiService>(
     exception);
 ```
 
-### Complete AdapterErrorType List
+### Complete AdapterErrorKind List
 
 The following table organizes Adapter error types by category.
 
@@ -118,7 +118,7 @@ The following table organizes Adapter error types by category.
 
 | Error Type | Description | Usage Example |
 |-----------|------|----------|
-| `Custom` | Adapter-specific error (abstract) | `sealed record RateLimited : AdapterErrorType.Custom;` -> `new RateLimited()` |
+| `Custom` | Adapter-specific error (abstract) | `sealed record RateLimited : AdapterErrorKind.Custom;` -> `new RateLimited()` |
 
 ### Repository Implementation Example
 
@@ -190,10 +190,10 @@ The `HandleHttpError` pattern that returns different error types based on HTTP s
 [GenerateObservablePort]
 public class ExternalPricingApiService : IExternalPricingService
 {
-    public sealed record OperationCancelled : AdapterErrorType.Custom;
-    public sealed record UnexpectedException : AdapterErrorType.Custom;
-    public sealed record RateLimited : AdapterErrorType.Custom;
-    public sealed record HttpError : AdapterErrorType.Custom;
+    public sealed record OperationCancelled : AdapterErrorKind.Custom;
+    public sealed record UnexpectedException : AdapterErrorKind.Custom;
+    public sealed record RateLimited : AdapterErrorKind.Custom;
+    public sealed record HttpError : AdapterErrorKind.Custom;
 
     private readonly HttpClient _httpClient;
 
@@ -320,13 +320,13 @@ public void ShouldBeAdapterError_WhenValidationFails()
 {
     // Arrange
     var error = AdapterError.For<UsecaseValidationPipeline>(
-        new AdapterErrorType.PipelineValidation("ProductName"),
+        new AdapterErrorKind.PipelineValidation("ProductName"),
         currentValue: "",
         message: "ProductName is required");
 
     // Act & Assert
     error.ShouldBeAdapterError<UsecaseValidationPipeline>(
-        new AdapterErrorType.PipelineValidation("ProductName"));
+        new AdapterErrorKind.PipelineValidation("ProductName"));
 }
 
 // Verification including current value
@@ -336,13 +336,13 @@ public void ShouldBeAdapterError_WithValue_WhenTimeout()
     // Arrange
     var url = "https://api.example.com/data";
     var error = AdapterError.For<HttpClientAdapter, string>(
-        new AdapterErrorType.Timeout(Duration: TimeSpan.FromSeconds(30)),
+        new AdapterErrorKind.Timeout(Duration: TimeSpan.FromSeconds(30)),
         currentValue: url,
         message: "Request timed out");
 
     // Act & Assert
     error.ShouldBeAdapterError<HttpClientAdapter, string>(
-        new AdapterErrorType.Timeout(Duration: TimeSpan.FromSeconds(30)),
+        new AdapterErrorKind.Timeout(Duration: TimeSpan.FromSeconds(30)),
         expectedCurrentValue: url);
 }
 
@@ -353,12 +353,12 @@ public void ShouldBeAdapterExceptionalError_WhenExceptionOccurs()
     // Arrange
     var exception = new InvalidOperationException("Something went wrong");
     var error = AdapterError.FromException<UsecaseExceptionPipeline>(
-        new AdapterErrorType.PipelineException(),
+        new AdapterErrorKind.PipelineException(),
         exception);
 
     // Act & Assert
     error.ShouldBeAdapterExceptionalError<UsecaseExceptionPipeline>(
-        new AdapterErrorType.PipelineException());
+        new AdapterErrorKind.PipelineException());
 }
 
 [Fact]
@@ -367,12 +367,12 @@ public void ShouldBeAdapterExceptionalError_WithExceptionType()
     // Arrange
     var exception = new TimeoutException("Connection timed out");
     var error = AdapterError.FromException<DatabaseAdapter>(
-        new AdapterErrorType.ConnectionFailed("database"),
+        new AdapterErrorKind.ConnectionFailed("database"),
         exception);
 
     // Act & Assert
     error.ShouldBeAdapterExceptionalError<DatabaseAdapter, TimeoutException>(
-        new AdapterErrorType.ConnectionFailed("database"));
+        new AdapterErrorKind.ConnectionFailed("database"));
 }
 ```
 
@@ -384,13 +384,13 @@ public void Fin_ShouldBeAdapterError_WhenServiceUnavailable()
 {
     // Arrange
     Fin<PaymentResult> fin = AdapterError.For<PaymentGatewayAdapter>(
-        new AdapterErrorType.ExternalServiceUnavailable("PaymentGateway"),
+        new AdapterErrorKind.ExternalServiceUnavailable("PaymentGateway"),
         currentValue: "https://payment.example.com",
         message: "Payment service unavailable");
 
     // Act & Assert
     fin.ShouldBeAdapterError<PaymentGatewayAdapter, PaymentResult>(
-        new AdapterErrorType.ExternalServiceUnavailable("PaymentGateway"));
+        new AdapterErrorKind.ExternalServiceUnavailable("PaymentGateway"));
 }
 
 [Fact]
@@ -398,12 +398,12 @@ public void Fin_ShouldBeAdapterExceptionalError()
 {
     // Arrange
     Fin<Unit> fin = AdapterError.FromException<UsecaseExceptionPipeline>(
-        new AdapterErrorType.PipelineException(),
+        new AdapterErrorKind.PipelineException(),
         new Exception("Unexpected error"));
 
     // Act & Assert
     fin.ShouldBeAdapterExceptionalError<UsecaseExceptionPipeline, Unit>(
-        new AdapterErrorType.PipelineException());
+        new AdapterErrorKind.PipelineException());
 }
 ```
 
@@ -416,13 +416,13 @@ public void Validation_ShouldHaveAdapterError()
     // Arrange
     Validation<Error, Unit> validation = Fail<Error, Unit>(
         AdapterError.For<CacheAdapter>(
-            new AdapterErrorType.ConnectionFailed("Redis"),
+            new AdapterErrorKind.ConnectionFailed("Redis"),
             currentValue: "localhost:6379",
             message: "Cannot connect to Redis"));
 
     // Act & Assert
     validation.ShouldHaveAdapterError<CacheAdapter, Unit>(
-        new AdapterErrorType.ConnectionFailed("Redis"));
+        new AdapterErrorKind.ConnectionFailed("Redis"));
 }
 
 [Fact]
@@ -431,13 +431,13 @@ public void Validation_ShouldHaveOnlyAdapterError()
     // Arrange
     Validation<Error, byte[]> validation = Fail<Error, byte[]>(
         AdapterError.For<MessageSerializer>(
-            new AdapterErrorType.Serialization("JSON"),
+            new AdapterErrorKind.Serialization("JSON"),
             currentValue: "invalid-object",
             message: "Failed to serialize object to JSON"));
 
     // Act & Assert
     validation.ShouldHaveOnlyAdapterError<MessageSerializer, byte[]>(
-        new AdapterErrorType.Serialization("JSON"));
+        new AdapterErrorKind.Serialization("JSON"));
 }
 
 [Fact]
@@ -445,12 +445,12 @@ public void Validation_ShouldHaveAdapterErrors()
 {
     // Arrange
     var error1 = AdapterError.For<UsecaseValidationPipeline>(
-        new AdapterErrorType.PipelineValidation("Name"),
+        new AdapterErrorKind.PipelineValidation("Name"),
         currentValue: "",
         message: "Name is required");
 
     var error2 = AdapterError.For<UsecaseValidationPipeline>(
-        new AdapterErrorType.PipelineValidation("Price"),
+        new AdapterErrorKind.PipelineValidation("Price"),
         currentValue: "-1",
         message: "Price must be positive");
 
@@ -458,8 +458,8 @@ public void Validation_ShouldHaveAdapterErrors()
 
     // Act & Assert
     validation.ShouldHaveAdapterErrors<UsecaseValidationPipeline, Unit>(
-        new AdapterErrorType.PipelineValidation("Name"),
-        new AdapterErrorType.PipelineValidation("Price"));
+        new AdapterErrorKind.PipelineValidation("Name"),
+        new AdapterErrorKind.PipelineValidation("Price"));
 }
 ```
 
@@ -479,9 +479,9 @@ Now that Adapter error creation and test patterns have been confirmed, let us le
 
 ```csharp
 // ✅ Good - clear and specific
-// public sealed record AlreadyShipped : DomainErrorType.Custom;
-// public sealed record PaymentDeclined : ApplicationErrorType.Custom;
-// public sealed record StockDepleted : DomainErrorType.Custom;
+// public sealed record AlreadyShipped : DomainErrorKind.Custom;
+// public sealed record PaymentDeclined : ApplicationErrorKind.Custom;
+// public sealed record StockDepleted : DomainErrorKind.Custom;
 new AlreadyShipped()     // Already shipped
 new PaymentDeclined()    // Payment declined
 new StockDepleted()      // Stock depleted
@@ -513,9 +513,9 @@ Frequently used Custom errors should be considered for promotion to standard err
 
 ```csharp
 // Add as standard type when frequently used patterns are discovered
-public sealed record Expired : DomainErrorType;
-public sealed record Suspended : ApplicationErrorType;
-public sealed record RateLimited : AdapterErrorType;
+public sealed record Expired : DomainErrorKind;
+public sealed record Suspended : ApplicationErrorKind;
+public sealed record RateLimited : AdapterErrorKind;
 ```
 
 Now that Custom error definitions and promotion criteria are understood, let us examine best practices for writing error tests effectively.
@@ -589,7 +589,7 @@ public void Create_ShouldFail_WhenEmailIsEmpty()
     var result = Email.Create(emptyEmail);
 
     // Assert
-    result.ShouldBeDomainError<Email, Email>(new DomainErrorType.Empty());
+    result.ShouldBeDomainError<Email, Email>(new DomainErrorKind.Empty());
 }
 ```
 
@@ -606,7 +606,7 @@ public void Create_ShouldFail_WhenEmailIsEmptyOrWhitespace(string? email)
     var result = Email.Create(email);
 
     // Assert
-    result.ShouldBeDomainError<Email, Email>(new DomainErrorType.Empty());
+    result.ShouldBeDomainError<Email, Email>(new DomainErrorKind.Empty());
 }
 
 [Theory]
@@ -619,7 +619,7 @@ public void Create_ShouldFail_WhenEmailFormatIsInvalid(string email)
     var result = Email.Create(email);
 
     // Assert
-    result.ShouldBeDomainError<Email, Email>(new DomainErrorType.InvalidFormat());
+    result.ShouldBeDomainError<Email, Email>(new DomainErrorKind.InvalidFormat());
 }
 ```
 
@@ -627,7 +627,7 @@ public void Create_ShouldFail_WhenEmailFormatIsInvalid(string email)
 
 ```csharp
 // Error type definition (nested in Order class):
-// public sealed record AlreadyShipped : DomainErrorType.Custom;
+// public sealed record AlreadyShipped : DomainErrorKind.Custom;
 
 [Fact]
 public void Cancel_ShouldFail_WhenOrderAlreadyShipped()
@@ -661,10 +661,10 @@ using Functorium.Testing.Assertions.Errors;
 | `error.ShouldHaveErrorCode(predicate)` | Predicate-based error code verification |
 | `error.ShouldBeExpected()` | Expected type verification |
 | `error.ShouldBeExceptional()` | Exceptional type verification |
-| `error.ShouldBeErrorCodeExpected("code", "value")` | `ErrorCodeExpected` type + code + value verification |
-| `error.ShouldBeErrorCodeExpected<T>("code", value)` | `ErrorCodeExpected<T>` type + code + value verification |
-| `error.ShouldBeErrorCodeExpected<T1, T2>("code", v1, v2)` | `ErrorCodeExpected<T1, T2>` verification |
-| `error.ShouldBeErrorCodeExpected<T1, T2, T3>("code", v1, v2, v3)` | `ErrorCodeExpected<T1, T2, T3>` verification |
+| `error.ShouldBeExpectedError("code", "value")` | `ExpectedError` type + code + value verification |
+| `error.ShouldBeExpectedError<T>("code", value)` | `ExpectedError<T>` type + code + value verification |
+| `error.ShouldBeExpectedError<T1, T2>("code", v1, v2)` | `ExpectedError<T1, T2>` verification |
+| `error.ShouldBeExpectedError<T1, T2, T3>("code", v1, v2, v3)` | `ExpectedError<T1, T2, T3>` verification |
 | `fin.ShouldSucceed()` | Success verification, return success value |
 | `fin.ShouldSucceedWith(value)` | Success + specific value verification |
 | `fin.ShouldFail()` | Failure verification |
@@ -685,7 +685,7 @@ public void Create_ShouldFail_WithExpectedErrorCode()
     var result = Email.Create("");
 
     // Assert -- verify error code regardless of layer
-    result.ShouldFailWithErrorCode("DomainErrors.Email.Empty");
+    result.ShouldFailWithErrorCode("Domain.Email.Empty");
 }
 
 [Fact]
@@ -696,22 +696,22 @@ public void Validate_ShouldContain_MultipleErrorCodes()
 
     // Assert
     result.ShouldContainErrorCodes(
-        "DomainErrors.Password.Empty",
-        "DomainErrors.Password.TooShort");
+        "Domain.Password.Empty",
+        "Domain.Password.TooShort");
 }
 ```
 
-#### ErrorCodeExceptionalAssertions -- Exception-Based Error Verification
+#### ExceptionalErrorAssertions -- Exception-Based Error Verification
 
 | Method | Description |
 |--------|------|
-| `error.ShouldBeErrorCodeExceptional("code")` | `ErrorCodeExceptional` type + error code verification |
-| `error.ShouldBeErrorCodeExceptional<TException>("code")` | Specific exception type wrapping verification |
+| `error.ShouldBeExceptionalError("code")` | `ExceptionalError` type + error code verification |
+| `error.ShouldBeExceptionalError<TException>("code")` | Specific exception type wrapping verification |
 | `error.ShouldWrapException<TException>("code", message?)` | Exception type + optional message verification |
-| `error.ShouldBeErrorCodeExceptional("code", exceptionAssertion)` | Execute exception assertion |
-| `fin.ShouldFailWithException("code")` | `Fin` failure + `ErrorCodeExceptional` verification |
+| `error.ShouldBeExceptionalError("code", exceptionAssertion)` | Execute exception assertion |
+| `fin.ShouldFailWithException("code")` | `Fin` failure + `ExceptionalError` verification |
 | `fin.ShouldFailWithException<T, TException>("code")` | `Fin` failure + specific exception type verification |
-| `validation.ShouldContainException("code")` | `Validation` failure + `ErrorCodeExceptional` inclusion verification |
+| `validation.ShouldContainException("code")` | `Validation` failure + `ExceptionalError` inclusion verification |
 | `validation.ShouldContainException<T, TException>("code")` | `Validation` failure + specific exception type inclusion verification |
 
 ```csharp
@@ -722,12 +722,12 @@ public void ShouldWrapException_WhenDatabaseFails()
     // Arrange
     var exception = new InvalidOperationException("DB connection lost");
     var error = AdapterError.FromException<DatabaseAdapter>(
-        new AdapterErrorType.ConnectionFailed("database"),
+        new AdapterErrorKind.ConnectionFailed("database"),
         exception);
 
     // Assert
-    error.ShouldBeErrorCodeExceptional<InvalidOperationException>(
-        "AdapterErrors.DatabaseAdapter.ConnectionFailed");
+    error.ShouldBeExceptionalError<InvalidOperationException>(
+        "Adapter.DatabaseAdapter.ConnectionFailed");
 }
 ```
 
@@ -749,7 +749,7 @@ public void Error_ShouldHave_ErrorCode_Property()
 
     // Assert -- concise access via extension properties
     error.HasErrorCode.ShouldBeTrue();
-    error.ErrorCode.ShouldBe("DomainErrors.Email.Empty");
+    error.ErrorCode.ShouldBe("Domain.Email.Empty");
 }
 ```
 
@@ -759,7 +759,7 @@ Now that test writing patterns are familiar, let us summarize the entire error s
 
 ## Summary by Layer + Checklist
 
-### Domain (DomainErrorType)
+### Domain (DomainErrorKind)
 
 ```
 Presence:    Empty, Null
@@ -771,10 +771,10 @@ Range:       RangeInverted, RangeEmpty
 Numeric:     Zero, Negative, NotPositive, OutOfRange, BelowMinimum, AboveMaximum
 Existence:   NotFound, AlreadyExists, Duplicate
 Comparison:  Mismatch
-Custom:      Custom (abstract -> sealed record MyError : DomainErrorType.Custom)
+Custom:      Custom (abstract -> sealed record MyError : DomainErrorKind.Custom)
 ```
 
-### Application (ApplicationErrorType)
+### Application (ApplicationErrorKind)
 
 ```
 Common:      Empty, Null, NotFound, AlreadyExists, Duplicate, InvalidState
@@ -782,7 +782,7 @@ Auth:        Unauthorized, Forbidden
 Validation:  ValidationFailed
 Business:    BusinessRuleViolated, ConcurrencyConflict, ResourceLocked,
              OperationCancelled, InsufficientPermission
-Custom:      Custom (abstract -> sealed record MyError : ApplicationErrorType.Custom)
+Custom:      Custom (abstract -> sealed record MyError : ApplicationErrorKind.Custom)
 ```
 
 ### Event (EventErrorType)
@@ -794,7 +794,7 @@ Validation:  InvalidEventType
 Custom:      Custom (abstract -> sealed record MyError : EventErrorType.Custom)
 ```
 
-### Adapter (AdapterErrorType)
+### Adapter (AdapterErrorKind)
 
 ```
 Common:      Empty, Null, NotFound, AlreadyExists, Duplicate, InvalidState,
@@ -802,7 +802,7 @@ Common:      Empty, Null, NotFound, AlreadyExists, Duplicate, InvalidState,
 Pipeline:    PipelineValidation, PipelineException
 External:    ExternalServiceUnavailable, ConnectionFailed, Timeout
 Data:        Serialization, Deserialization, DataCorruption
-Custom:      Custom (abstract -> sealed record MyError : AdapterErrorType.Custom)
+Custom:      Custom (abstract -> sealed record MyError : AdapterErrorKind.Custom)
 ```
 
 ### When to Use Each Layer
@@ -823,9 +823,9 @@ All error codes follow this format:
 
 | Layer | Prefix | Example |
 |--------|--------|------|
-| Domain | `DomainErrors` | `DomainErrors.Email.Empty` |
-| Application | `ApplicationErrors` | `ApplicationErrors.CreateProductCommand.NotFound` |
-| Adapter | `AdapterErrors` | `AdapterErrors.ProductRepository.NotFound` |
+| Domain | `Domain` | `Domain.Email.Empty` |
+| Application | `Application` | `Application.CreateProductCommand.NotFound` |
+| Adapter | `Adapter` | `Adapter.ProductRepository.NotFound` |
 
 ### Error Definition Checklist
 
@@ -864,12 +864,12 @@ All error codes follow this format:
 ## Troubleshooting
 
 ### Error code differs from expectation when using `FromException`
-**Cause:** `FromException` creates an `ErrorCodeExceptional` type, so `ShouldBeAdapterExceptionalError` must be used instead of `ShouldBeAdapterError`.
+**Cause:** `FromException` creates an `ExceptionalError` type, so `ShouldBeAdapterExceptionalError` must be used instead of `ShouldBeAdapterError`.
 **Resolution:** Verify exception-wrapping errors with `ShouldBeAdapterExceptionalError<TAdapter>(errorType)` or `ShouldBeAdapterExceptionalError<TAdapter, TException>(errorType)`.
 
 ### Custom error not recognized in layer-specific assertions
 **Cause:** The Custom error may be defined in the wrong location or may not inherit from the `Custom` of the corresponding layer.
-**Resolution:** Custom errors must inherit from the corresponding layer's `Custom` abstract record. Example: `public sealed record RateLimited : AdapterErrorType.Custom;`
+**Resolution:** Custom errors must inherit from the corresponding layer's `Custom` abstract record. Example: `public sealed record RateLimited : AdapterErrorKind.Custom;`
 
 ---
 

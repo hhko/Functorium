@@ -490,7 +490,7 @@ An object containing the full error detail information. In logging systems, the 
 ```json
 {
   "@error": {
-    "ErrorType": "ErrorCodeExpected",
+    "ErrorKind": "ExpectedError",
     "Code": "Order.NotFound",
     "Message": "Order not found.",
     "CurrentValue": "12345"
@@ -503,7 +503,7 @@ For Exceptional errors, exception information is included:
 ```json
 {
   "@error": {
-    "ErrorType": "ErrorCodeExceptional",
+    "ErrorKind": "ExceptionalError",
     "Code": "Database.ConnectionFailed",
     "Exception": {
       "Type": "System.TimeoutException",
@@ -514,16 +514,16 @@ For Exceptional errors, exception information is included:
 }
 ```
 
-**error.type vs @error.ErrorType:**
+**error.type vs @error.ErrorKind:**
 
 These two fields serve different purposes:
 
 | Field | Example value | Purpose |
 |------|---------|------|
 | `error.type` | "expected" | For filtering/querying (consistent values) |
-| `@error.ErrorType` | "ErrorCodeExpected" | For detailed analysis (actual class name) |
+| `@error.ErrorKind` | "ExpectedError" | For detailed analysis (actual class name) |
 
-`error.type` is always one of three values, making it suitable for queries and filtering. `@error.ErrorType` contains the actual error class name and is used for more detailed analysis.
+`error.type` is always one of three values, making it suitable for queries and filtering. `@error.ErrorKind` contains the actual error class name and is used for more detailed analysis.
 
 ---
 
@@ -1003,7 +1003,7 @@ fail: application usecase.event OnProductCreated.Handle ProductCreatedEvent 01J1
 fail: adapter event PublishTrackedEvents.PublishTrackedEvents responded failure in 0.0309 s with 1 events with exceptional:ApplicationErrors.DomainEventPublisher.PublishFailed {@error}
 ```
 
-> **Note:** The `error.code` for exceptions from the Handler is the exception type name (`InvalidOperationException`), while the Publisher records a wrapped error code (`ApplicationErrors.DomainEventPublisher.PublishFailed`).
+> **Note:** The `error.code` for exceptions from the Handler is the exception type name (`InvalidOperationException`), while the Publisher records a wrapped error code (`Application.DomainEventPublisher.PublishFailed`).
 
 **Adapter exception (`POST /api/products` with `[adapter-error]`):**
 
@@ -1195,7 +1195,7 @@ Functorium classifies errors into three types. Each type requires different resp
   "error.type": "expected",
   "error.code": "Order.InsufficientStock",
   "@error": {
-    "ErrorType": "ErrorCodeExpected",
+    "ErrorKind": "ExpectedError",
     "Code": "Order.InsufficientStock",
     "Message": "Insufficient stock.",
     "CurrentValue": "ProductId: prod-001, Requested: 10, Available: 3"
@@ -1230,7 +1230,7 @@ Functorium classifies errors into three types. Each type requires different resp
   "error.type": "exceptional",
   "error.code": "Database.ConnectionFailed",
   "@error": {
-    "ErrorType": "ErrorCodeExceptional",
+    "ErrorKind": "ExceptionalError",
     "Code": "Database.ConnectionFailed",
     "Exception": {
       "Type": "System.TimeoutException",
@@ -1266,15 +1266,15 @@ Functorium classifies errors into three types. Each type requires different resp
   "error.type": "aggregate",
   "error.code": "Validation.NameRequired",
   "@error": {
-    "ErrorType": "ManyErrors",
+    "ErrorKind": "ManyErrors",
     "Errors": [
       {
-        "ErrorType": "ErrorCodeExpected",
+        "ErrorKind": "ExpectedError",
         "Code": "Validation.NameRequired",
         "Message": "Name is required."
       },
       {
-        "ErrorType": "ErrorCodeExpected",
+        "ErrorKind": "ExpectedError",
         "Code": "Validation.EmailInvalid",
         "Message": "Invalid email."
       }

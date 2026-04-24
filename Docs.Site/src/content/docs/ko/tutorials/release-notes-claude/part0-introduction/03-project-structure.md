@@ -157,7 +157,7 @@ C# 스크립트 파일들은 각각 담당하는 Phase가 있습니다.
 
 namespace Functorium.Abstractions.Errors
 {
-    public static class ErrorCodeFactory
+    public static class ErrorFactory
     {
         public static Error Create(string errorCode, ...) { }
         public static Error CreateFromException(string errorCode, ...) { }

@@ -18,7 +18,7 @@ The following table shows the 1:1 mapping between design decisions and implement
 | Cross-Aggregate business rules | `IDomainService` | OrderCreditCheckService | Credit limit validation between Customer and Order |
 | Queryable domain specifications | `ExpressionSpecification<T>` | ProductNameUniqueSpec, CustomerEmailSpec | Expression Tree based EF Core SQL auto-translation |
 | Persistence abstraction | `IRepository<T, TId>` + custom methods | ICustomerRepository | Specification-based existence check (Exists) |
-| Domain events + domain errors | Nested `sealed record : DomainEvent` / `DomainErrorType.Custom` | Customer.CreatedEvent, Order.EmptyOrderLines | Events/errors cohesive within Aggregate at namespace level |
+| Domain events + domain errors | Nested `sealed record : DomainEvent` / `DomainErrorKind.Custom` | Customer.CreatedEvent, Order.EmptyOrderLines | Events/errors cohesive within Aggregate at namespace level |
 | Soft Delete + guard | `ISoftDeletableWithUser` + `DeletedAt.IsSome` guard | Product.Update() | Blocks changes to deleted Aggregates |
 
 ## Code Snippets by Pattern
@@ -168,7 +168,7 @@ public sealed class OrderStatus : SimpleValueObject<string>
 {
     #region Error Types
 
-    public sealed record InvalidValue : DomainErrorType.Custom;
+    public sealed record InvalidValue : DomainErrorKind.Custom;
 
     #endregion
 
@@ -434,7 +434,7 @@ public sealed class OrderCreditCheckService : IDomainService
 {
     #region Error Types
 
-    public sealed record CreditLimitExceeded : DomainErrorType.Custom;
+    public sealed record CreditLimitExceeded : DomainErrorKind.Custom;
 
     #endregion
 
@@ -532,15 +532,15 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditable
 {
     #region Error Types
 
-    public sealed record EmptyOrderLines : DomainErrorType.Custom;
-    public sealed record InvalidOrderStatusTransition : DomainErrorType.Custom;
+    public sealed record EmptyOrderLines : DomainErrorKind.Custom;
+    public sealed record InvalidOrderStatusTransition : DomainErrorKind.Custom;
 
     #endregion
     // ...
 }
 ```
 
-Events include before/after values (e.g., `OldPrice`, `NewPrice`) so event consumers can understand the changes. Error types inherit from `DomainErrorType.Custom`, and when creating errors with `DomainError.For<T>()`, the Aggregate type information is automatically included.
+Events include before/after values (e.g., `OldPrice`, `NewPrice`) so event consumers can understand the changes. Error types inherit from `DomainErrorKind.Custom`, and when creating errors with `DomainError.For<T>()`, the Aggregate type information is automatically included.
 
 ## Failable vs Idempotent Return Types
 

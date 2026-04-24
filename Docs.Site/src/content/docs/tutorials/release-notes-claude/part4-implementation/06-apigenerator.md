@@ -165,7 +165,7 @@ The generated API text is similar to actual C# code but has some characteristics
 ```csharp
 namespace Functorium.Abstractions.Errors
 {
-    public static class ErrorCodeFactory
+    public static class ErrorFactory
     {
         public static LanguageExt.Common.Error Create(string errorCode, string errorCurrentValue, string errorMessage) { }
         public static LanguageExt.Common.Error Create<T>(string errorCode, T errorCurrentValue, string errorMessage)

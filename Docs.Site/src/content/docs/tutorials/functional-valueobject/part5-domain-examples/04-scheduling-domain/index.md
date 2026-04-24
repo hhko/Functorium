@@ -41,7 +41,7 @@ DateRange manages start and end dates. It provides containment checks, overlap d
 ```csharp
 public sealed class DateRange : ValueObject
 {
-    public sealed record EndBeforeStart : DomainErrorType.Custom;
+    public sealed record EndBeforeStart : DomainErrorKind.Custom;
 
     public DateOnly Start { get; }
     public DateOnly End { get; }
@@ -85,7 +85,7 @@ TimeSlot represents a time period within a day. It provides time conflict detect
 ```csharp
 public sealed class TimeSlot : ValueObject
 {
-    public sealed record EndNotAfterStart : DomainErrorType.Custom;
+    public sealed record EndNotAfterStart : DomainErrorKind.Custom;
 
     public TimeOnly Start { get; }
     public TimeOnly End { get; }
@@ -146,7 +146,7 @@ public sealed class Duration : ComparableSimpleValueObject<int>
     private static Validation<Error, int> ValidateNotNegative(int minutes) =>
         minutes >= 0
             ? minutes
-            : DomainError.For<Duration, int>(new DomainErrorType.Negative(), minutes,
+            : DomainError.For<Duration, int>(new DomainErrorKind.Negative(), minutes,
                 $"Duration cannot be negative. Current value: '{minutes}'");
 
     public Duration Add(Duration other) => new(Value + other.Value);
@@ -191,7 +191,7 @@ public sealed class RecurrenceRule : ValueObject
     private static Validation<Error, int> ValidateDailyInterval(int interval) =>
         interval >= 1
             ? interval
-            : DomainError.For<RecurrenceRule, int>(new DomainErrorType.BelowMinimum(), interval,
+            : DomainError.For<RecurrenceRule, int>(new DomainErrorKind.BelowMinimum(), interval,
                 $"Interval must be at least 1. Current value: '{interval}'");
 
     public IEnumerable<DateOnly> GetOccurrences(DateOnly from, int count) { ... }

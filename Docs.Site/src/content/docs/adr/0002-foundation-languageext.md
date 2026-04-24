@@ -56,7 +56,7 @@ A functional library adopted at the framework level affects every layer from Dom
 - <span class="adr-good">Good</span>, because it provides a lightweight discriminated union with `Match` for pattern matching, and is simple to adopt.
 - <span class="adr-bad">Bad</span>, because it does not support LINQ composition, so multi-step business pipelines cannot be constructed declaratively.
 - <span class="adr-bad">Bad</span>, because there are no monadic operations like `Bind`/`Map`, requiring manual branching to connect each step's result to the next.
-- <span class="adr-bad">Bad</span>, because positional type parameters in the form `OneOf<T0, T1, T2>` cannot express a structural error classification system like `DomainErrorType`.
+- <span class="adr-bad">Bad</span>, because positional type parameters in the form `OneOf<T0, T1, T2>` cannot express a structural error classification system like `DomainErrorKind`.
 
 ### Custom Implementation
 

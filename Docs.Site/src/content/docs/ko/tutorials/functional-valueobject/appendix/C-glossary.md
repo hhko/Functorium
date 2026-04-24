@@ -43,20 +43,20 @@ result.Bind(value => NextOperation(value));
 도메인 모델을 중심으로 소프트웨어를 설계하는 방법론.
 
 ### DomainError
-`DomainError.For<T>()` 정적 메서드를 통해 값 객체의 도메인 오류를 생성하는 헬퍼 클래스. 에러 코드를 `DomainErrors.{ValueObjectName}.{ErrorName}` 형식으로 자동 생성.
+`DomainError.For<T>()` 정적 메서드를 통해 값 객체의 도메인 오류를 생성하는 헬퍼 클래스. 에러 코드를 `Domain.{ValueObjectName}.{ErrorName}` 형식으로 자동 생성.
 
 ```csharp
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 DomainError.For<Email>(new Empty(), value, "Email cannot be empty");
 DomainError.For<Password>(new TooShort(MinLength: 8), value, "Password too short");
 ```
 
-### DomainErrorType
+### DomainErrorKind
 도메인 에러 타입의 기본 record 클래스. sealed record 계층으로 타입 안전한 에러를 정의. 기본 제공 타입: `Empty`, `Null`, `TooShort`, `TooLong`, `WrongLength`, `OutOfRange`, `Negative`, `NotPositive`, `InvalidFormat` 등. `Custom` record를 파생하여 커스텀 에러 타입 정의 가능.
 
 ```csharp
 // 커스텀 에러 타입 정의
-public sealed record Unsupported : DomainErrorType.Custom;
+public sealed record Unsupported : DomainErrorKind.Custom;
 ```
 
 ---

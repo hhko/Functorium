@@ -27,7 +27,7 @@ date: 2026-03-20
 
 - **Match**: 모든 상태에 대한 함수를 인자로 받아 결과를 반환. 하나라도 빠지면 즉시 컴파일 에러.
 - **Switch**: Match와 동일하나 반환값 없이 부수 효과만 수행.
-- **상태 전이**: 각 상태 타입에 `TransitionTo()` 메서드를 정의하여 허용된 전이만 타입 수준에서 표현. Shipped에서 Draft로의 역전이 같은 비정상 전이는 `DomainErrorType.InvalidTransition`을 반환하며, 허용 목록에 없는 전이는 메서드 자체가 존재하지 않는다.
+- **상태 전이**: 각 상태 타입에 `TransitionTo()` 메서드를 정의하여 허용된 전이만 타입 수준에서 표현. Shipped에서 Draft로의 역전이 같은 비정상 전이는 `DomainErrorKind.InvalidTransition`을 반환하며, 허용 목록에 없는 전이는 메서드 자체가 존재하지 않는다.
 
 Value Object 기반이므로 불변성이 보장되고, 상태별 부가 데이터(예: Shipped 상태에 추적번호)를 타입 안전하게 첨부할 수 있으며, LINQ 등 컬렉션 연산과 자연스럽게 결합된다.
 

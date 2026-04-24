@@ -13,8 +13,8 @@ description: "4가지 IO 고급 패턴 코드 스니펫과 DI 등록 패턴"
 [GenerateObservablePort]
 public class ModelHealthCheckService : IModelHealthCheckService
 {
-    public sealed record HealthCheckFailed : AdapterErrorType.Custom;
-    public sealed record HealthCheckTimedOut : AdapterErrorType.Custom;
+    public sealed record HealthCheckFailed : AdapterErrorKind.Custom;
+    public sealed record HealthCheckTimedOut : AdapterErrorKind.Custom;
 
     public virtual FinT<IO, HealthCheckResult> CheckHealth(
         ModelDeploymentId deploymentId)
@@ -71,7 +71,7 @@ public class ModelHealthCheckService : IModelHealthCheckService
 [GenerateObservablePort]
 public class ModelMonitoringService : IModelMonitoringService
 {
-    public sealed record MonitoringFailed : AdapterErrorType.Custom;
+    public sealed record MonitoringFailed : AdapterErrorKind.Custom;
 
     private static readonly Schedule RetrySchedule =
         Schedule.exponential(TimeSpan.FromMilliseconds(100))
@@ -142,7 +142,7 @@ public class ModelMonitoringService : IModelMonitoringService
 [GenerateObservablePort]
 public class ParallelComplianceCheckService : IParallelComplianceCheckService
 {
-    public sealed record ComplianceCheckFailed : AdapterErrorType.Custom;
+    public sealed record ComplianceCheckFailed : AdapterErrorKind.Custom;
 
     private static readonly Seq<string> CriterionNames = Seq(
         "DataGovernance", "SecurityReview", "BiasAssessment",
@@ -213,7 +213,7 @@ public class ParallelComplianceCheckService : IParallelComplianceCheckService
 [GenerateObservablePort]
 public class ModelRegistryService : IModelRegistryService
 {
-    public sealed record RegistryLookupFailed : AdapterErrorType.Custom;
+    public sealed record RegistryLookupFailed : AdapterErrorKind.Custom;
 
     public virtual FinT<IO, ModelRegistryEntry> LookupModel(
         AIModelId modelId)

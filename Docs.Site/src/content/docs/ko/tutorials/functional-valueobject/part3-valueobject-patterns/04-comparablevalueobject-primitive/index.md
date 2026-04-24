@@ -162,7 +162,7 @@ bool overlaps = range1 <= range2;    // range1이 range2와 겹치는가?
 ```csharp
 public sealed class DateRange : ComparableValueObject
 {
-    public sealed record StartAfterEnd : DomainErrorType.Custom;
+    public sealed record StartAfterEnd : DomainErrorKind.Custom;
     public DateTime StartDate { get; }
     public DateTime EndDate { get; }
 

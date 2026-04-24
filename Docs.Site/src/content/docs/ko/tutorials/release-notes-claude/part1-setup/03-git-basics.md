@@ -62,7 +62,7 @@ git diff --stat
 
 **출력 예시 (--stat):**
 ```
-Src/Functorium/Abstractions/Errors/ErrorCodeFactory.cs | 50 +++++++++++
+Src/Functorium/Abstractions/Errors/ErrorFactory.cs | 50 +++++++++++
 Src/Functorium/Applications/Linq/FinTUtilites.cs      | 30 +++++++
 2 files changed, 80 insertions(+)
 ```
@@ -199,7 +199,7 @@ fix(build): NuGet 패키지 아이콘 경로 수정
 refactor(observability): Observability 추상화 및 구조 개선
 
 # Breaking Change
-feat!(api): ErrorCodeFactory.Create 메서드 시그니처 변경
+feat!(api): ErrorFactory.CreateExpected 메서드 시그니처 변경
 
 BREAKING CHANGE: errorMessage 매개변수가 필수로 변경되었습니다.
 ```

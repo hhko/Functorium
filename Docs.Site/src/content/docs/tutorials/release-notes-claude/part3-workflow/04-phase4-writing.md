@@ -77,7 +77,7 @@ Include commit SHAs as comments so all content in the release notes is traceable
 
 ### 4. Mandatory Value Communication
 
-**Feature documentation without a "Why this matters" section is considered incomplete.** The reason this rule exists is that what matters more than the existence of a feature is how it changes the developer's daily life. Simply writing "ErrorCodeFactory was added" leaves the developer unable to answer the question "so why is it important to me?"
+**Feature documentation without a "Why this matters" section is considered incomplete.** The reason this rule exists is that what matters more than the existence of a feature is how it changes the developer's daily life. Simply writing "ErrorFactory was added" leaves the developer unable to answer the question "so why is it important to me?"
 
 ## Value Communication Methods
 
@@ -95,7 +95,7 @@ Each feature must include **all** of the following four elements.
 ```markdown
 ### Functional Error Handling
 
-Provides structured error creation through ErrorCodeFactory.
+Provides structured error creation through ErrorFactory.
 
 [Code example]
 ```
@@ -107,7 +107,7 @@ The problem with this documentation is that the developer cannot know why they s
 ```markdown
 ### Functional Error Handling
 
-Provides structured error creation through ErrorCodeFactory.
+Provides structured error creation through ErrorFactory.
 
 [Code example]
 
@@ -154,10 +154,10 @@ When documenting APIs, always follow this order. First search the Uber file for 
 
 ```txt
 Step 1: Search for API in the Uber file
-grep -A 10 "ErrorCodeFactory" all-api-changes.txt
+grep -A 10 "ErrorFactory" all-api-changes.txt
 
 Step 2: Check details in the individual API file
-cat Src/Functorium/.api/Functorium.cs | grep -A 5 "ErrorCodeFactory"
+cat Src/Functorium/.api/Functorium.cs | grep -A 5 "ErrorFactory"
 
 Step 3: Extract complete API signature
 
@@ -174,8 +174,8 @@ public static Error CreateFromException(string errorCode, Exception exception)
 
 ```csharp
 // Correct usage examples:
-var error = ErrorCodeFactory.Create("VALIDATION_001", invalidValue, "Value is not valid");
-var errorFromEx = ErrorCodeFactory.CreateFromException("SYSTEM_001", exception);
+var error = ErrorFactory.CreateExpected("VALIDATION_001", invalidValue, "Value is not valid");
+var errorFromEx = ErrorFactory.CreateExceptional("SYSTEM_001", exception);
 ```
 
 ### Do Not Invent APIs
@@ -184,7 +184,7 @@ Creating methods or fluent chains that do not actually exist is the most common 
 
 ```csharp
 // Wrong: These methods are not in the Uber file
-ErrorCodeFactory.Create("error")
+ErrorFactory.CreateExpected("error")
     .WithDetails(details: "Additional info")     // Invented
     .WithInnerError(inner: innerError)           // Invented
     .Build();                                     // Invented
@@ -210,7 +210,7 @@ try
 catch (HttpRequestException ex)
 {
     // Create structured error from exception
-    var error = ErrorCodeFactory.CreateFromException("HTTP_001", ex);
+    var error = ErrorFactory.CreateExceptional("HTTP_001", ex);
 
     // Automatically logged in structured form to Serilog
     Log.Error("API request failed: {@Error}", error);
@@ -229,7 +229,7 @@ catch (HttpRequestException ex)
 ```csharp
 namespace Functorium.Abstractions.Errors
 {
-    public static class ErrorCodeFactory
+    public static class ErrorFactory
     {
         public static Error CreateFromException(string errorCode, Exception exception);
     }
@@ -351,10 +351,10 @@ Items to verify before document completion.
 ## FAQ
 
 ### Q1: Why is feature documentation without a "Why this matters" section considered incomplete?
-**A**: "ErrorCodeFactory was added" alone does not tell developers **why they should use** the feature. The release notes only provide practical help for update decisions when they also explain what problem it solves, what is better than the existing approach, and how much code is reduced.
+**A**: "ErrorFactory was added" alone does not tell developers **why they should use** the feature. The release notes only provide practical help for update decisions when they also explain what problem it solves, what is better than the existing approach, and how much code is reduced.
 
 ### Q2: What is the specific method for searching the Uber file when documenting APIs?
-**A**: Use the command `grep -A 10 "ErrorCodeFactory" all-api-changes.txt` to check API existence and exact signature. Parameter names, types, and return values must **exactly match** the Uber file. Be careful that the order is not swapped when there are multiple methods with similar names.
+**A**: Use the command `grep -A 10 "ErrorFactory" all-api-changes.txt` to check API existence and exact signature. Parameter names, types, and return values must **exactly match** the Uber file. Be careful that the order is not swapped when there are multiple methods with similar names.
 
 ### Q3: What is the difference between expressions to avoid ("provides a feature") and recommended expressions?
 **A**: Expressions to avoid only announce the feature's existence, while recommended expressions convey **specific benefits.** Instead of "supports", use "solves [problem] to achieve [result]"; instead of "has been added", use "simplifies [complex task] into [simple method]" -- specifying value that developers can tangibly appreciate.

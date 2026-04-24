@@ -174,7 +174,7 @@ cat .analysis-output/analysis-summary.md
 wc -l .analysis-output/api-changes-build-current/all-api-changes.txt
 
 # 주요 API 확인 (예시)
-grep -c "ErrorCodeFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
+grep -c "ErrorFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
 
 # API 파일 확인
 ls Src/*/.api/*.cs

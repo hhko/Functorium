@@ -2,7 +2,7 @@
 title: "ExtractApiChanges"
 ---
 
-What happens if the release notes say "ErrorCodeFactory class was added" but the class does not actually exist in the code? API accuracy determines the trustworthiness of release notes. ExtractApiChanges.cs fundamentally solves this problem. It extracts Public APIs **directly from compiled DLLs**, not source code, generating API information that is 100% consistent with the actual build output. The Uber file, which combines all assembly APIs into one, serves as the Single Source of Truth when Claude writes the release notes.
+What happens if the release notes say "ErrorFactory class was added" but the class does not actually exist in the code? API accuracy determines the trustworthiness of release notes. ExtractApiChanges.cs fundamentally solves this problem. It extracts Public APIs **directly from compiled DLLs**, not source code, generating API information that is 100% consistent with the actual build output. The Uber file, which combines all assembly APIs into one, serves as the Single Source of Truth when Claude writes the release notes.
 
 ## File Location and Usage
 
@@ -222,7 +222,7 @@ Src/
 
 namespace Functorium.Abstractions.Errors
 {
-    public static class ErrorCodeFactory
+    public static class ErrorFactory
     {
         public static LanguageExt.Common.Error Create(string errorCode, string errorCurrentValue, string errorMessage);
         public static LanguageExt.Common.Error Create<T>(string errorCode, T errorCurrentValue, string errorMessage) where T : notnull;
@@ -254,7 +254,7 @@ index abc1234..def5678 100644
 --- a/Src/Functorium/.api/Functorium.cs
 +++ b/Src/Functorium/.api/Functorium.cs
 @@ -10,6 +10,7 @@ namespace Functorium.Abstractions.Errors
-     public static class ErrorCodeFactory
+     public static class ErrorFactory
      {
          public static Error Create(string errorCode, string errorCurrentValue, string errorMessage);
 +        public static Error CreateFromException(string errorCode, Exception exception);

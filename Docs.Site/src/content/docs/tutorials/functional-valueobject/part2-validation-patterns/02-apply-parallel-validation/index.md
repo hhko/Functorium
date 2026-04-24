@@ -118,7 +118,7 @@ if (error is ManyErrors manyErrors)
     for (int i = 0; i < manyErrors.Errors.Count; i++)
     {
         var individualError = manyErrors.Errors[i];
-        if (individualError is ErrorCodeExpected errorCodeExpected)
+        if (individualError is ExpectedError errorCodeExpected)
         {
             Console.WriteLine($"     {i + 1}. Error code: {errorCodeExpected.ErrorCode}");
             Console.WriteLine($"        Current value: '{errorCodeExpected.ErrorCurrentValue}'");
@@ -235,7 +235,7 @@ The following table summarizes the pros and cons of Apply parallel validation.
 **A:** Check the dependencies between validation rules. If they are mutually independent, use Apply. If previous results affect the next validation, use Bind.
 
 ### Q2: How is ManyErrors handled?
-**A:** Check the ManyErrors type, then iterate through the multiple errors and handle each one. It is good practice to check whether each is an ErrorCodeExpected type and display the error code and current value.
+**A:** Check the ManyErrors type, then iterate through the multiple errors and handle each one. It is good practice to check whether each is an ExpectedError type and display the error code and current value.
 
 ### Q3: How do you handle the case where all validations fail?
 **A:** ManyErrors collects all failures and provides complete feedback to the user. By clearly distinguishing and displaying each error, the user can identify and fix all problems at once.

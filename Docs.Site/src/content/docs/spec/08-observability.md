@@ -54,18 +54,18 @@ The following table summarizes how `error.type` and `error.code` tag values are 
 
 #### Error Field Values (Logging Only)
 
-> `error.type` and `@error.ErrorType` use different value formats for different purposes.
+> `error.type` and `@error.ErrorKind` use different value formats for different purposes.
 
-| Error Type | `error.type` (for filtering) | `@error.ErrorType` (for detail) |
+| Error Type | `error.type` (for filtering) | `@error.ErrorKind` (for detail) |
 |------------|------------------------|----------------------------|
-| Expected Error | `"expected"` | `"ErrorCodeExpected"` |
-| Exceptional Error | `"exceptional"` | `"ErrorCodeExceptional"` |
+| Expected Error | `"expected"` | `"ExpectedError"` |
+| Exceptional Error | `"exceptional"` | `"ExceptionalError"` |
 | Aggregate Error | `"aggregate"` | `"ManyErrors"` |
 | LanguageExt Expected | `"expected"` | `"Expected"` |
 | LanguageExt Exceptional | `"exceptional"` | `"Exceptional"` |
 
 - **`error.type`**: Standardized value for log filtering/querying (consistent with Metrics/Tracing)
-- **`@error.ErrorType`**: Actual class name for detailed error type identification
+- **`@error.ErrorKind`**: Actual class name for detailed error type identification
 
 ### Field/Tag Naming Rules
 

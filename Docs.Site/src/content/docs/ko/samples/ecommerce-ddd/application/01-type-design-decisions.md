@@ -286,9 +286,9 @@ var priceLookup = pricesResult.ThrowIfFail().ToDictionary(p => p.Id, p => p.Pric
 
 ## 에러 타입 전략
 
-### ApplicationErrorType 계층 구조
+### ApplicationErrorKind 계층 구조
 
-`ApplicationErrorType`은 `sealed record` 계층으로 타입 안전한 에러를 정의합니다.
+`ApplicationErrorKind`은 `sealed record` 계층으로 타입 안전한 에러를 정의합니다.
 
 | 에러 타입 | 용도 | 사용 예 |
 |----------|------|--------|
@@ -301,7 +301,7 @@ var priceLookup = pricesResult.ThrowIfFail().ToDictionary(p => p.Id, p => p.Pric
 
 ### ApplicationError.For\<TUsecase\>() 팩토리
 
-에러 코드를 `ApplicationErrors.{UsecaseName}.{ErrorName}` 형식으로 자동 생성합니다.
+에러 코드를 `Application.{UsecaseName}.{ErrorName}` 형식으로 자동 생성합니다.
 
 ```csharp
 // 상품명 중복 에러
@@ -309,19 +309,19 @@ ApplicationError.For<CreateProductCommand>(
     new AlreadyExists(),
     request.Name,
     $"Product name already exists: '{request.Name}'")
-// → 에러 코드: "ApplicationErrors.CreateProductCommand.AlreadyExists"
+// → 에러 코드: "Application.CreateProductCommand.AlreadyExists"
 
 // 상품 미존재 에러
 ApplicationError.For<CreateOrderCommand>(
     new NotFound(),
     productId.ToString(),
     $"Product not found: '{productId}'")
-// → 에러 코드: "ApplicationErrors.CreateOrderCommand.NotFound"
+// → 에러 코드: "Application.CreateOrderCommand.NotFound"
 ```
 
 ### 도메인 에러 전파
 
-Domain Layer에서 발생한 `DomainErrorType` 에러(예: 신용 한도 초과)는 `FinT<IO, T>` 체인 내에서 자연스럽게 Application Layer로 전파됩니다. `FinT` 모나드가 실패를 자동으로 단락(short-circuit)하므로 별도의 에러 변환 코드가 필요하지 않습니다.
+Domain Layer에서 발생한 `DomainErrorKind` 에러(예: 신용 한도 초과)는 `FinT<IO, T>` 체인 내에서 자연스럽게 Application Layer로 전파됩니다. `FinT` 모나드가 실패를 자동으로 단락(short-circuit)하므로 별도의 에러 변환 코드가 필요하지 않습니다.
 
 ## FinT\<IO, T\> LINQ 모나드 트랜스포머
 

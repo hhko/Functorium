@@ -133,7 +133,7 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 >
 > **Soft Delete pattern**: For business deletion with domain events, use `Load → aggregate.Delete(...) → Update(aggregate)`. The `Delete(TId)`, `DeleteRange(ids)`, and `DeleteBy(spec)` methods are hard deletes for administrative and migration purposes — they do not emit domain events.
 >
-> **Concurrency**: `Update` returns `AdapterErrorType.ConcurrencyConflict` when the Aggregate was modified after load (distinguished from `NotFound`). See [Error System Specification](../04-error-system).
+> **Concurrency**: `Update` returns `AdapterErrorKind.ConcurrencyConflict` when the Aggregate was modified after load (distinguished from `NotFound`). See [Error System Specification](../04-error-system).
 
 ---
 
@@ -552,10 +552,10 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 
 | Method | Description |
 |--------|------|
-| `NotFoundError(id)` | Creates `AdapterErrorType.NotFound` error. Actual subclass name is included in the error code |
-| `PartialNotFoundError(requestedIds, foundAggregates)` | Creates `AdapterErrorType.PartialNotFound` error. Includes list of missing IDs |
-| `NotConfiguredError(message)` | Creates `AdapterErrorType.NotConfigured` error |
-| `NotSupportedError(currentValue, message)` | Creates `AdapterErrorType.NotSupported` error |
+| `NotFoundError(id)` | Creates `AdapterErrorKind.NotFound` error. Actual subclass name is included in the error code |
+| `PartialNotFoundError(requestedIds, foundAggregates)` | Creates `AdapterErrorKind.PartialNotFound` error. Includes list of missing IDs |
+| `NotConfiguredError(message)` | Creates `AdapterErrorKind.NotConfigured` error |
+| `NotSupportedError(currentValue, message)` | Creates `AdapterErrorKind.NotSupported` error |
 
 #### Update Strategy
 
@@ -898,6 +898,6 @@ public class ProductRepository : InMemoryRepositoryBase<Product, ProductId>, IPr
 | [Adapter Pipeline and DI Registration](../guides/adapter/14a-adapter-pipeline-di) | Observable Pipeline creation and DI registration guide |
 | [Adapter Testing](../guides/adapter/14b-adapter-testing) | Adapter unit/integration testing guide |
 | [Entity and Aggregate Specification](../01-entity-aggregate) | `AggregateRoot<TId>`, `IEntityId<TId>` API specification |
-| [Error System Specification](../04-error-system) | `AdapterErrorType` (NotFound, PartialNotFound, etc.) API specification |
+| [Error System Specification](../04-error-system) | `AdapterErrorKind` (NotFound, PartialNotFound, etc.) API specification |
 | [Observability Specification](../08-observability) | 3-Pillar field/tag specification, Meter definition rules |
 | [Source Generator Specification](../10-source-generators) | `ObservablePortGenerator` source generator detailed specification |

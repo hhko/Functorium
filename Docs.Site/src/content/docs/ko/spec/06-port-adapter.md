@@ -133,7 +133,7 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 >
 > **Soft Delete 패턴**: 도메인 이벤트가 동반되는 비즈니스 삭제는 `Load → aggregate.Delete(...) → Update(aggregate)` 경로를 사용하십시오. `Delete(TId)`·`DeleteRange(ids)`·`DeleteBy(spec)`은 관리·마이그레이션 목적의 hard delete로, **도메인 이벤트를 발행하지 않습니다**.
 >
-> **동시성**: `Update`는 로드 이후 Aggregate가 변경된 경우 `AdapterErrorType.ConcurrencyConflict`를 반환합니다(NotFound와 구분). [에러 시스템 사양](../04-error-system)을 참고하십시오.
+> **동시성**: `Update`는 로드 이후 Aggregate가 변경된 경우 `AdapterErrorKind.ConcurrencyConflict`를 반환합니다(NotFound와 구분). [에러 시스템 사양](../04-error-system)을 참고하십시오.
 
 ---
 
@@ -552,10 +552,10 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 
 | 메서드 | 설명 |
 |--------|------|
-| `NotFoundError(id)` | `AdapterErrorType.NotFound` 에러 생성. 실제 서브클래스 이름이 에러 코드에 포함 |
-| `PartialNotFoundError(requestedIds, foundAggregates)` | `AdapterErrorType.PartialNotFound` 에러 생성. 누락 ID 목록 포함 |
-| `NotConfiguredError(message)` | `AdapterErrorType.NotConfigured` 에러 생성 |
-| `NotSupportedError(currentValue, message)` | `AdapterErrorType.NotSupported` 에러 생성 |
+| `NotFoundError(id)` | `AdapterErrorKind.NotFound` 에러 생성. 실제 서브클래스 이름이 에러 코드에 포함 |
+| `PartialNotFoundError(requestedIds, foundAggregates)` | `AdapterErrorKind.PartialNotFound` 에러 생성. 누락 ID 목록 포함 |
+| `NotConfiguredError(message)` | `AdapterErrorKind.NotConfigured` 에러 생성 |
+| `NotSupportedError(currentValue, message)` | `AdapterErrorKind.NotSupported` 에러 생성 |
 
 #### 업데이트 전략
 
@@ -898,6 +898,6 @@ public class ProductRepository : InMemoryRepositoryBase<Product, ProductId>, IPr
 | [Adapter Pipeline과 DI 등록](../guides/adapter/14a-adapter-pipeline-di) | Observable Pipeline 생성과 DI 등록 가이드 |
 | [Adapter 테스트](../guides/adapter/14b-adapter-testing) | Adapter 단위/통합 테스트 가이드 |
 | [엔티티와 애그리거트 사양](../01-entity-aggregate) | `AggregateRoot<TId>`, `IEntityId<TId>` API 사양 |
-| [에러 시스템 사양](../04-error-system) | `AdapterErrorType` (NotFound, PartialNotFound 등) API 사양 |
+| [에러 시스템 사양](../04-error-system) | `AdapterErrorKind` (NotFound, PartialNotFound 등) API 사양 |
 | [관측 가능성 사양](../08-observability) | 3-Pillar 필드/태그 사양, Meter 정의 규칙 |
 | [소스 생성기 사양](../10-source-generators) | `ObservablePortGenerator` 소스 생성기 상세 사양 |

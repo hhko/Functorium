@@ -63,22 +63,22 @@ Src/Functorium.Adapters/
 ### 2. 레이어별 타입 안전 에러
 
 ```csharp
-// Domain — DomainErrorType sealed record 사용
-DomainError.For<Email>(new DomainErrorType.Empty(), value, "이메일은 비어있을 수 없습니다");
-// → 에러 코드: "DomainErrors.Email.Empty"
+// Domain — DomainErrorKind sealed record 사용
+DomainError.For<Email>(new DomainErrorKind.Empty(), value, "이메일은 비어있을 수 없습니다");
+// → 에러 코드: "Domain.Email.Empty"
 
-// Application — ApplicationErrorType sealed record 사용
-ApplicationError.For<CreateProductCommand>(new ApplicationErrorType.AlreadyExists(), id, "이미 존재합니다");
-// → 에러 코드: "ApplicationErrors.CreateProductCommand.AlreadyExists"
+// Application — ApplicationErrorKind sealed record 사용
+ApplicationError.For<CreateProductCommand>(new ApplicationErrorKind.AlreadyExists(), id, "이미 존재합니다");
+// → 에러 코드: "Application.CreateProductCommand.AlreadyExists"
 
-// Adapter — AdapterErrorType sealed record 사용
-AdapterError.For<ProductRepository>(new AdapterErrorType.NotFound(), id, "찾을 수 없습니다");
-// → 에러 코드: "AdapterErrors.ProductRepository.NotFound"
+// Adapter — AdapterErrorKind sealed record 사용
+AdapterError.For<ProductRepository>(new AdapterErrorKind.NotFound(), id, "찾을 수 없습니다");
+// → 에러 코드: "Adapter.ProductRepository.NotFound"
 ```
 
 에러 코드 형식: `{LayerPrefix}.{Context}.{ErrorName}`
 
-커스텀 에러 확장: `public sealed record InsufficientStock : DomainErrorType.Custom;`
+커스텀 에러 확장: `public sealed record InsufficientStock : DomainErrorKind.Custom;`
 
 ### 3. 파이프라인 Opt-in
 
@@ -106,7 +106,7 @@ services.RegisterOpenTelemetry(configuration, assembly)
 ### 5. 내부 구현 공유 패턴
 
 - `LayerErrorCore` — DomainError/ApplicationError/AdapterError의 공통 에러 생성 로직 (internal)
-- `ErrorCodeExpectedBase` — ErrorCodeExpected 4개 타입의 공통 override 기반 클래스 (internal, `sealed override ToString()`)
+- `ExpectedErrorBase` — ExpectedError 4개 타입의 공통 override 기반 클래스 (internal, `sealed override ToString()`)
 - `ErrorAssertionCore` — 3개 레이어 Assertion의 공통 검증 로직 (internal)
 
 ---
@@ -163,7 +163,7 @@ dotnet test --solution Docs.Site/src/content/docs/tutorials/<name>/<PascalName>.
 
 | 대상 | 규칙 | 예시 |
 |------|------|------|
-| ErrorType 카테고리 파일 | `{Layer}ErrorType.{Category}.cs` | `DomainErrorType.Presence.cs` |
+| ErrorKind 카테고리 파일 | `{Layer}ErrorKind.{Category}.cs` | `DomainErrorKind.Presence.cs` |
 | Helper 클래스 | `{Layer}Error.cs` | `DomainError.cs` |
 | Assertion 클래스 | `{Layer}ErrorAssertions.cs` | `DomainErrorAssertions.cs` |
 | Pipeline | `Usecase{Concern}Pipeline.cs` | `UsecaseLoggingPipeline.cs` |
@@ -172,7 +172,7 @@ dotnet test --solution Docs.Site/src/content/docs/tutorials/<name>/<PascalName>.
 
 ### 패턴
 
-- **ErrorType**: `abstract partial record` + 카테고리별 partial 파일로 분리
+- **ErrorKind**: `abstract partial record` + 카테고리별 partial 파일로 분리
 - **Helper 클래스**: `LayerErrorCore`에 위임하는 thin wrapper (`[AggressiveInlining]`)
 - **Assertion**: `ErrorAssertionCore`에 위임하는 thin wrapper
 - **Repository**: 추상 base 클래스 + `ToDomain`/`ToModel` abstract 메서드
@@ -184,7 +184,7 @@ dotnet test --solution Docs.Site/src/content/docs/tutorials/<name>/<PascalName>.
 
 - `throw` 사용 금지 — `Fin.Fail<T>(error)` 사용
 - 레이어 역방향 참조 금지 — Domains → Applications (단방향만)
-- `DomainError.For`에 다른 레이어 ErrorType 전달 금지 — 컴파일 타임 강제
+- `DomainError.For`에 다른 레이어 ErrorKind 전달 금지 — 컴파일 타임 강제
 - `new` 키워드로 Entity/ValueObject 직접 생성 금지 — 팩토리 메서드 사용
 - Pipeline에서 `UseAll()` 사용 금지 — 제거됨, 명시적 opt-in만
 - `.api/` 폴더 파일 수동 수정 금지 — 빌드 시 자동 생성되는 Public API Surface 파일. `dotnet build`가 자동 갱신하므로 직접 편집하지 않는다

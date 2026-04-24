@@ -77,7 +77,7 @@ grep "MethodName" .analysis-output/api-changes-build-current/all-api-changes.txt
 
 ### 4. 가치 전달 필수
 
-**"Why this matters" 섹션이 없는 기능 문서화는 불완전한** 것으로 간주됩니다. 이 규칙이 존재하는 이유는, 기능의 존재 자체보다 그 기능이 개발자의 일상에 어떤 변화를 가져오는지가 더 중요하기 때문입니다. 단순히 "ErrorCodeFactory를 추가했습니다"라고 쓰면 개발자는 "그래서 나한테 왜 중요하지?"라는 질문에 답을 찾지 못합니다.
+**"Why this matters" 섹션이 없는 기능 문서화는 불완전한** 것으로 간주됩니다. 이 규칙이 존재하는 이유는, 기능의 존재 자체보다 그 기능이 개발자의 일상에 어떤 변화를 가져오는지가 더 중요하기 때문입니다. 단순히 "ErrorFactory를 추가했습니다"라고 쓰면 개발자는 "그래서 나한테 왜 중요하지?"라는 질문에 답을 찾지 못합니다.
 
 ## 가치 전달 방법
 
@@ -95,7 +95,7 @@ grep "MethodName" .analysis-output/api-changes-build-current/all-api-changes.txt
 ```markdown
 ### 함수형 오류 처리
 
-ErrorCodeFactory를 통한 구조화된 오류 생성 기능을 제공합니다.
+ErrorFactory를 통한 구조화된 오류 생성 기능을 제공합니다.
 
 [코드 예제]
 ```
@@ -107,7 +107,7 @@ ErrorCodeFactory를 통한 구조화된 오류 생성 기능을 제공합니다.
 ```markdown
 ### 함수형 오류 처리
 
-ErrorCodeFactory를 통한 구조화된 오류 생성 기능을 제공합니다.
+ErrorFactory를 통한 구조화된 오류 생성 기능을 제공합니다.
 
 [코드 예제]
 
@@ -154,10 +154,10 @@ API를 문서화할 때는 반드시 다음 순서를 따릅니다. 먼저 Uber 
 
 ```txt
 1단계: Uber 파일에서 API 검색
-grep -A 10 "ErrorCodeFactory" all-api-changes.txt
+grep -A 10 "ErrorFactory" all-api-changes.txt
 
 2단계: 개별 API 파일에서 상세 확인
-cat Src/Functorium/.api/Functorium.cs | grep -A 5 "ErrorCodeFactory"
+cat Src/Functorium/.api/Functorium.cs | grep -A 5 "ErrorFactory"
 
 3단계: 완전한 API 시그니처 추출
 
@@ -174,8 +174,8 @@ public static Error CreateFromException(string errorCode, Exception exception)
 
 ```csharp
 // 올바른 사용 예시:
-var error = ErrorCodeFactory.Create("VALIDATION_001", invalidValue, "값이 유효하지 않습니다");
-var errorFromEx = ErrorCodeFactory.CreateFromException("SYSTEM_001", exception);
+var error = ErrorFactory.CreateExpected("VALIDATION_001", invalidValue, "값이 유효하지 않습니다");
+var errorFromEx = ErrorFactory.CreateExceptional("SYSTEM_001", exception);
 ```
 
 ### API를 발명하지 마세요
@@ -184,7 +184,7 @@ var errorFromEx = ErrorCodeFactory.CreateFromException("SYSTEM_001", exception);
 
 ```csharp
 // 잘못됨: 이 메서드들은 Uber 파일에 없음
-ErrorCodeFactory.Create("error")
+ErrorFactory.CreateExpected("error")
     .WithDetails(details: "추가 정보")      // 발명됨
     .WithInnerError(inner: innerError)     // 발명됨
     .Build();                               // 발명됨
@@ -210,7 +210,7 @@ try
 catch (HttpRequestException ex)
 {
     // 예외에서 구조화된 오류 생성
-    var error = ErrorCodeFactory.CreateFromException("HTTP_001", ex);
+    var error = ErrorFactory.CreateExceptional("HTTP_001", ex);
 
     // Serilog에 구조화된 형태로 자동 로깅
     Log.Error("API 요청 실패: {@Error}", error);
@@ -229,7 +229,7 @@ catch (HttpRequestException ex)
 ```csharp
 namespace Functorium.Abstractions.Errors
 {
-    public static class ErrorCodeFactory
+    public static class ErrorFactory
     {
         public static Error CreateFromException(string errorCode, Exception exception);
     }
@@ -351,10 +351,10 @@ Phase 4: 릴리스 노트 작성 완료
 ## FAQ
 
 ### Q1: "Why this matters" 섹션이 없는 기능 문서화가 왜 불완전한 것으로 간주되나요?
-**A**: "ErrorCodeFactory를 추가했습니다"만으로는 개발자가 그 기능을 **써야 할 이유를** 알 수 없기 때문입니다. 어떤 문제를 해결하는지, 기존 방식보다 나은 점이 무엇인지, 코드가 얼마나 줄어드는지를 함께 설명해야 릴리스 노트가 업데이트 결정에 실질적인 도움을 줍니다.
+**A**: "ErrorFactory를 추가했습니다"만으로는 개발자가 그 기능을 **써야 할 이유를** 알 수 없기 때문입니다. 어떤 문제를 해결하는지, 기존 방식보다 나은 점이 무엇인지, 코드가 얼마나 줄어드는지를 함께 설명해야 릴리스 노트가 업데이트 결정에 실질적인 도움을 줍니다.
 
 ### Q2: API를 문서화할 때 Uber 파일에서 검색하는 구체적인 방법은 무엇인가요?
-**A**: `grep -A 10 "ErrorCodeFactory" all-api-changes.txt` 명령으로 API 존재 여부와 정확한 시그니처를 확인합니다. 매개변수 이름, 타입, 반환값이 Uber 파일과 **정확히 일치해야** 합니다. 비슷한 이름의 메서드가 여러 개 있을 때 순서가 뒤바뀌지 않도록 주의해야 합니다.
+**A**: `grep -A 10 "ErrorFactory" all-api-changes.txt` 명령으로 API 존재 여부와 정확한 시그니처를 확인합니다. 매개변수 이름, 타입, 반환값이 Uber 파일과 **정확히 일치해야** 합니다. 비슷한 이름의 메서드가 여러 개 있을 때 순서가 뒤바뀌지 않도록 주의해야 합니다.
 
 ### Q3: 피해야 할 표현("기능을 제공합니다")과 권장 표현의 차이는 무엇인가요?
 **A**: 피해야 할 표현은 기능의 존재만 알리고, 권장 표현은 **구체적인 이점을** 전달합니다. "지원합니다" 대신 "[문제]를 해결하여 [결과]를 달성합니다", "추가되었습니다" 대신 "[복잡한 작업]을 [간단한 방법]으로 간소화합니다"처럼 개발자가 체감할 수 있는 가치를 명시합니다.

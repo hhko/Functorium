@@ -157,7 +157,7 @@ Each project folder contains a `.api` subfolder. This is where Public API defini
 
 namespace Functorium.Abstractions.Errors
 {
-    public static class ErrorCodeFactory
+    public static class ErrorFactory
     {
         public static Error Create(string errorCode, ...) { }
         public static Error CreateFromException(string errorCode, ...) { }

@@ -78,7 +78,7 @@ public sealed partial class ModelVersion : SimpleValueObject<string>
 ```csharp
 public sealed class EndpointUrl : SimpleValueObject<string>
 {
-    public sealed record InvalidUri : DomainErrorType.Custom;
+    public sealed record InvalidUri : DomainErrorKind.Custom;
 
     private EndpointUrl(string value) : base(value) { }
 
@@ -158,7 +158,7 @@ The `IsPassing` property embeds the domain rule ("70 or above passes") in the va
 ```csharp
 public sealed class RiskTier : SimpleValueObject<string>
 {
-    public sealed record InvalidValue : DomainErrorType.Custom;
+    public sealed record InvalidValue : DomainErrorKind.Custom;
 
     public static readonly RiskTier Minimal = new("Minimal");
     public static readonly RiskTier Limited = new("Limited");
@@ -367,9 +367,9 @@ The `RequiresComplianceAssessment` and `IsProhibited` domain properties of `Risk
 ```csharp
 public sealed class DeploymentEligibilityService : IDomainService
 {
-    public sealed record ProhibitedModel : DomainErrorType.Custom;
-    public sealed record ComplianceAssessmentRequired : DomainErrorType.Custom;
-    public sealed record OpenIncidentsExist : DomainErrorType.Custom;
+    public sealed record ProhibitedModel : DomainErrorKind.Custom;
+    public sealed record ComplianceAssessmentRequired : DomainErrorKind.Custom;
+    public sealed record OpenIncidentsExist : DomainErrorKind.Custom;
 
     public FinT<IO, Unit> ValidateEligibility(
         AIModel model,

@@ -81,7 +81,7 @@ This release focuses on error handling, observability, and test support.
 
 **Key Features**:
 
-- **Functional Error Handling**: Structured error creation through ErrorCodeFactory
+- **Functional Error Handling**: Structured error creation through ErrorFactory
 - **OpenTelemetry Integration**: Unified distributed tracing, metrics, and logging configuration
 - **Test Fixtures**: ASP.NET Core and Quartz integration test support
 ```
@@ -198,7 +198,7 @@ try
 }
 catch (HttpRequestException ex)
 {
-    var error = ErrorCodeFactory.CreateFromException("HTTP_001", ex);
+    var error = ErrorFactory.CreateExceptional("HTTP_001", ex);
     Log.Error("API request failed: {@Error}", error);
     return Fin<Response>.Fail(error);
 }
@@ -210,7 +210,7 @@ catch (HttpRequestException ex)
 - Eliminates try-catch boilerplate code
 - Consistent error code system shortens debugging time
 
-<!-- Related commit: abc1234 feat(errors): Add ErrorCodeFactory.CreateFromException -->
+<!-- Related commit: abc1234 feat(errors): Add ErrorFactory.CreateExceptional -->
 ````
 
 ---
@@ -267,7 +267,7 @@ Writing example.
 Functorium
 ├── Abstractions/
 │   ├── Errors/
-│   │   ├── ErrorCodeFactory
+│   │   ├── ErrorFactory
 │   │   └── ErrorsDestructuringPolicy
 │   └── Registrations/
 │       └── OpenTelemetryRegistration

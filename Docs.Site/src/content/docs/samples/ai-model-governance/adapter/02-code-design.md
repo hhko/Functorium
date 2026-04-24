@@ -13,8 +13,8 @@ Implements the 4 IO patterns selected in [Type Design Decisions](../01-type-desi
 [GenerateObservablePort]
 public class ModelHealthCheckService : IModelHealthCheckService
 {
-    public sealed record HealthCheckFailed : AdapterErrorType.Custom;
-    public sealed record HealthCheckTimedOut : AdapterErrorType.Custom;
+    public sealed record HealthCheckFailed : AdapterErrorKind.Custom;
+    public sealed record HealthCheckTimedOut : AdapterErrorKind.Custom;
 
     public virtual FinT<IO, HealthCheckResult> CheckHealth(
         ModelDeploymentId deploymentId)
@@ -71,7 +71,7 @@ Exponential backoff + jitter + max 3 retries pattern.
 [GenerateObservablePort]
 public class ModelMonitoringService : IModelMonitoringService
 {
-    public sealed record MonitoringFailed : AdapterErrorType.Custom;
+    public sealed record MonitoringFailed : AdapterErrorKind.Custom;
 
     private static readonly Schedule RetrySchedule =
         Schedule.exponential(TimeSpan.FromMilliseconds(100))
@@ -142,7 +142,7 @@ Pattern that Forks 5 independent checks in parallel and collects them with await
 [GenerateObservablePort]
 public class ParallelComplianceCheckService : IParallelComplianceCheckService
 {
-    public sealed record ComplianceCheckFailed : AdapterErrorType.Custom;
+    public sealed record ComplianceCheckFailed : AdapterErrorKind.Custom;
 
     private static readonly Seq<string> CriterionNames = Seq(
         "DataGovernance", "SecurityReview", "BiasAssessment",
@@ -213,7 +213,7 @@ Session Acquire -> Use -> Release resource lifecycle management pattern.
 [GenerateObservablePort]
 public class ModelRegistryService : IModelRegistryService
 {
-    public sealed record RegistryLookupFailed : AdapterErrorType.Custom;
+    public sealed record RegistryLookupFailed : AdapterErrorKind.Custom;
 
     public virtual FinT<IO, ModelRegistryEntry> LookupModel(
         AIModelId modelId)

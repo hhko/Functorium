@@ -174,7 +174,7 @@ public abstract partial record EmailVerificationState : UnionValueObject<EmailVe
 }
 ```
 
-On transition failure, `TransitionFrom` automatically generates `DomainError.For<EmailVerificationState>(new DomainErrorType.InvalidTransition(FromState: "Verified", ToState: "Verified"), ...)`. Users only need to focus on case definitions and success transition logic.
+On transition failure, `TransitionFrom` automatically generates `DomainError.For<EmailVerificationState>(new DomainErrorKind.InvalidTransition(FromState: "Verified", ToState: "Verified"), ...)`. Users only need to focus on case definitions and success transition logic.
 
 ## Aggregate Root Design
 
@@ -384,7 +384,7 @@ public sealed class ContactEmailCheckService : IDomainService
     public ContactEmailCheckService(IContactRepository repository)
         => _repository = repository;
 
-    public sealed record EmailAlreadyInUse : DomainErrorType.Custom;
+    public sealed record EmailAlreadyInUse : DomainErrorKind.Custom;
 
     public FinT<IO, Unit> ValidateEmailUnique(
         EmailAddress email,

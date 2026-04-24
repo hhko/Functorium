@@ -45,13 +45,13 @@ Comparing: origin/release/1.0 -> HEAD
 
 ## Change Summary
 
- Src/Functorium/Abstractions/Errors/ErrorCodeFactory.cs | 45 +++++
+ Src/Functorium/Abstractions/Errors/ErrorFactory.cs | 45 +++++
  Src/Functorium/Applications/ElapsedTimeCalculator.cs   | 32 +++
  37 files changed, 1542 insertions(+), 89 deletions(-)
 
 ## All Commits
 
-6b5ef99 feat(errors): Add ErrorCodeFactory
+6b5ef99 feat(errors): Add ErrorFactory
 853c918 feat(logging): Add Serilog integration
 c5e604f fix(build): Fix NuGet package icon path
 d4eacc6 docs: Update README
@@ -65,7 +65,7 @@ d4eacc6 docs: Update README
 
 ### Feature Commits
 
-6b5ef99 feat(errors): Add ErrorCodeFactory
+6b5ef99 feat(errors): Add ErrorFactory
 853c918 feat(logging): Add Serilog integration
 
 ### Bug Fixes
@@ -130,7 +130,7 @@ Uber API 파일은 `.analysis-output/api-changes-build-current/all-api-changes.t
 
 namespace Functorium.Abstractions.Errors
 {
-    public static class ErrorCodeFactory
+    public static class ErrorFactory
     {
         public static LanguageExt.Common.Error Create(
             string errorCode,
@@ -180,7 +180,7 @@ index abc1234..def5678 100644
 --- a/Src/Functorium/.api/Functorium.cs
 +++ b/Src/Functorium/.api/Functorium.cs
 @@ -10,6 +10,10 @@ namespace Functorium.Abstractions.Errors
-     public static class ErrorCodeFactory
+     public static class ErrorFactory
      {
          public static Error Create(string errorCode, string errorCurrentValue, string errorMessage) { }
 +        public static Error Create<T>(string errorCode, T errorCurrentValue, string errorMessage)
@@ -231,7 +231,7 @@ Phase 작업 파일은 `.analysis-output/work/` 디렉터리에 생성됩니다.
 - IErrorHandler → IErrorDestructurer 이름 변경
 
 ## Feature Commits (높은 우선순위)
-- [6b5ef99] feat(errors): Add ErrorCodeFactory
+- [6b5ef99] feat(errors): Add ErrorFactory
 - [853c918] feat(logging): Add Serilog integration
 
 ## Feature Commits (중간 우선순위)
@@ -248,8 +248,8 @@ Phase 작업 파일은 `.analysis-output/work/` 디렉터리에 생성됩니다.
 
 ## 그룹 1: 함수형 오류 처리
 **관련 커밋:**
-- ErrorCodeFactory.Create 추가
-- ErrorCodeFactory.CreateFromException 추가
+- ErrorFactory.CreateExpected 추가
+- ErrorFactory.CreateExceptional 추가
 
 **사용자 가치:**
 구조화된 오류 생성 및 Serilog 통합
@@ -285,8 +285,8 @@ Phase 작업 파일은 `.analysis-output/work/` 디렉터리에 생성됩니다.
 ### API 검증
 | API | 상태 | Uber 파일 라인 |
 |-----|------|---------------|
-| ErrorCodeFactory.Create | 검증됨 | 75-77 |
-| ErrorCodeFactory.CreateFromException | 검증됨 | 78-79 |
+| ErrorFactory.CreateExpected | 검증됨 | 75-77 |
+| ErrorFactory.CreateExceptional | 검증됨 | 78-79 |
 | OpenTelemetryRegistration.RegisterObservability | 검증됨 | 93-95 |
 ```
 
@@ -341,7 +341,7 @@ Phase 1은 환경만 검증하므로 파일을 생성하지 않습니다. Phase 
 **A**: **Uber 파일(`all-api-changes.txt`)은** 현재 브랜치의 전체 Public API를 담고 있는 스냅샷이고, **API Diff 파일(`api-changes-diff.txt`)은** 이전 버전과 현재 버전 사이에 추가/삭제/변경된 API만 보여주는 차이 정보입니다. Uber 파일은 API 정확성 검증에, Diff 파일은 Breaking Change 감지에 사용됩니다.
 
 ### Q4: `phase3-feature-groups.md`에서 기능 그룹화는 어떤 기준으로 이루어지나요?
-**A**: Phase 3에서 Claude가 커밋 메시지의 스코프(`feat(errors)`, `feat(logging)`)와 변경된 파일 경로를 분석하여, **동일한 사용자 가치를 제공하는 커밋들을** 하나의 기능 그룹으로 묶습니다. 예를 들어 `ErrorCodeFactory.Create`과 `ErrorCodeFactory.CreateFromException` 관련 커밋은 "함수형 오류 처리" 그룹으로 합쳐집니다.
+**A**: Phase 3에서 Claude가 커밋 메시지의 스코프(`feat(errors)`, `feat(logging)`)와 변경된 파일 경로를 분석하여, **동일한 사용자 가치를 제공하는 커밋들을** 하나의 기능 그룹으로 묶습니다. 예를 들어 `ErrorFactory.CreateExpected`과 `ErrorFactory.CreateExceptional` 관련 커밋은 "함수형 오류 처리" 그룹으로 합쳐집니다.
 
 ## 다음 단계
 

@@ -100,9 +100,9 @@ public sealed class ProductName : SimpleValueObject<string>
     // Validation rule chain: Null → Empty → MaxLength → Normalize
     public static Validation<Error, string> Validate(string? value) =>
         ValidationRules<ProductName>
-            .NotNull(value)           // On failure: "DomainErrors.ProductName.Null"
-            .ThenNotEmpty()           // On failure: "DomainErrors.ProductName.Empty"
-            .ThenMaxLength(MaxLength) // On failure: "DomainErrors.ProductName.TooLong"
+            .NotNull(value)           // On failure: "Domain.ProductName.Null"
+            .ThenNotEmpty()           // On failure: "Domain.ProductName.Empty"
+            .ThenMaxLength(MaxLength) // On failure: "Domain.ProductName.TooLong"
             .ThenNormalize(v => v.Trim());
 
     // For ORM restoration (skips validation)
@@ -115,9 +115,9 @@ You can trace which business rule each validation step enforces:
 
 | Business Rule | Code | Error on Violation |
 |---|---|---|
-| No nulls | `.NotNull(value)` | `DomainErrors.ProductName.Null` |
-| No empty strings | `.ThenNotEmpty()` | `DomainErrors.ProductName.Empty` |
-| 100 characters max | `.ThenMaxLength(MaxLength)` | `DomainErrors.ProductName.TooLong` |
+| No nulls | `.NotNull(value)` | `Domain.ProductName.Null` |
+| No empty strings | `.ThenNotEmpty()` | `Domain.ProductName.Empty` |
+| 100 characters max | `.ThenMaxLength(MaxLength)` | `Domain.ProductName.TooLong` |
 | Trim whitespace | `.ThenNormalize(v => v.Trim())` | (always succeeds) |
 
 ### Money — "Price must be positive"
@@ -137,7 +137,7 @@ public sealed class Money : ComparableSimpleValueObject<decimal>
         CreateFromValidation(Validate(value), v => new Money(v));
 
     public static Validation<Error, decimal> Validate(decimal value) =>
-        ValidationRules<Money>.Positive(value);  // On failure: "DomainErrors.Money.NotPositive"
+        ValidationRules<Money>.Positive(value);  // On failure: "Domain.Money.NotPositive"
 
     public static Money CreateFromValidated(decimal value) => new(value);
     public static implicit operator decimal(Money money) => money.Value;
@@ -147,7 +147,7 @@ public sealed class Money : ComparableSimpleValueObject<decimal>
 `Money.Create(-500m)` fails. In naive code, `-500` would have been saved directly to the database.
 
 <Aside type="note" title="Automatic error code generation">
-When `ValidationRules<ProductName>.NotNull()` fails, the error code `"DomainErrors.ProductName.Null"` is automatically generated.
+When `ValidationRules<ProductName>.NotNull()` fails, the error code `"Domain.ProductName.Null"` is automatically generated.
 Since the type name is embedded in the error code, separate error code definitions are unnecessary.
 </Aside>
 
@@ -284,8 +284,8 @@ public sealed class CreateProductCommand
 ```
 
 **Core flow — which business rule each step enforces:**
-1. `ProductName.Create(request.Name)` — Validates **"Product name must not be empty"**. On failure: `DomainErrors.ProductName.Empty`
-2. `Money.Create(request.Price)` — Validates **"Price must be positive"**. On failure: `DomainErrors.Money.NotPositive`
+1. `ProductName.Create(request.Name)` — Validates **"Product name must not be empty"**. On failure: `Domain.ProductName.Empty`
+2. `Money.Create(request.Price)` — Validates **"Price must be positive"**. On failure: `Domain.Money.NotPositive`
 3. `Product.Create(name, price)` — Creates Aggregate only from validated VOs + publishes `CreatedEvent`
 4. `UsecaseTransactionPipeline` automatically handles SaveChanges + event publishing
 

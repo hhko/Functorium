@@ -151,15 +151,15 @@ The following table shows the complete mapping between DDD building blocks and F
 | Domain Event | `IDomainEvent`, `DomainEvent` | `Functorium.Domains.Events` |
 | Domain Service | `IDomainService` | `Functorium.Domains.Services` |
 | Specification | `Specification<T>` | `Functorium.Domains.Specifications` |
-| Domain Error | `DomainError`, `DomainErrorType` | `Functorium.Domains.Errors` |
+| Domain Error | `DomainError`, `DomainErrorKind` | `Functorium.Domains.Errors` |
 | Command | `ICommandRequest<T>`, `ICommandUsecase<T,R>` | `Functorium.Applications.Usecases` |
 | Query | `IQueryRequest<T>`, `IQueryUsecase<T,R>` | `Functorium.Applications.Usecases` |
 | Event Handler | `IDomainEventHandler<T>` | `Functorium.Applications.Events` |
-| Application Error | `ApplicationError`, `ApplicationErrorType` | `Functorium.Applications.Errors` |
+| Application Error | `ApplicationError`, `ApplicationErrorKind` | `Functorium.Applications.Errors` |
 | Port | `IObservablePort` | `Functorium.Abstractions.Observabilities` |
 | Repository | `IRepository<TAggregate, TId>` | `Functorium.Domains.Repositories` |
 | Adapter | `[GenerateObservablePort]` | Adapter layer project |
-| Adapter Error | `AdapterError`, `AdapterErrorType` | `Functorium.Adapters.Errors` |
+| Adapter Error | `AdapterError`, `AdapterErrorKind` | `Functorium.Adapters.Errors` |
 | Validation | `ValidationRules<T>`, `TypedValidation<T,V>` | `Functorium.Domains.ValueObjects.Validations` |
 | Result Type | `Fin<T>`, `Validation<Error, T>`, `FinResponse<T>` | LanguageExt / Functorium |
 
@@ -359,13 +359,13 @@ IHasDomainEvents (read-only event query)
 Error (LanguageExt)
 │
 ├── DomainError
-│   └── DomainErrorType (Presence, Length, Format, DateTime, Numeric, Range, Existence, Transition, Custom)
+│   └── DomainErrorKind (Presence, Length, Format, DateTime, Numeric, Range, Existence, Transition, Custom)
 │
 ├── ApplicationError
-│   └── ApplicationErrorType (Common, Authorization, Validation, Business Rules, Custom)
+│   └── ApplicationErrorKind (Common, Authorization, Validation, Business Rules, Custom)
 │
 └── AdapterError
-    └── AdapterErrorType (Common, Pipeline, External Service, Data, Custom)
+    └── AdapterErrorKind (Common, Pipeline, External Service, Data, Custom)
 ```
 
 ### Specification Hierarchy
@@ -749,7 +749,7 @@ invalid.IfFail(e => Console.WriteLine(e.Code));  // DomainErrors.Email.InvalidFo
 
 ```csharp
 using Functorium.Testing.Assertions.Errors;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 [Fact]
 public void Create_ShouldFail_WhenEmailIsEmpty()

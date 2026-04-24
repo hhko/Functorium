@@ -170,7 +170,7 @@ The key point in the following code is that `Create()` and `Validate()` are sepa
 ```csharp
 using Functorium.Domains.ValueObjects;
 using Functorium.Domains.ValueObjects.Validations.Typed;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 public sealed class Email : SimpleValueObject<string>
 {
@@ -508,9 +508,9 @@ using Functorium.Domains.ValueObjects.Validations.Contextual;
 
 ### Validation Category Summary
 
-The validation classes (DomainErrorType, ValidationRules, TypedValidationExtensions) follow a consistent category structure:
+The validation classes (DomainErrorKind, ValidationRules, TypedValidationExtensions) follow a consistent category structure:
 
-| DomainErrorType | ValidationRules | TypedValidationExtensions |
+| DomainErrorKind | ValidationRules | TypedValidationExtensions |
 |-----------------|-----------------|---------------------------|
 | Presence | Presence | Presence |
 | Length | Length | Length |
@@ -522,9 +522,9 @@ The validation classes (DomainErrorType, ValidationRules, TypedValidationExtensi
 | Custom | Custom | Generic |
 | - | Collection | Collection |
 
-#### Methods and ErrorType by Category
+#### Methods and ErrorKind by Category
 
-| Category | Method | ErrorType | Description |
+| Category | Method | ErrorKind | Description |
 |------|--------|-----------|------|
 | **Presence** | `NotNull` | `Null` | Null validation |
 | **Length** | `NotEmpty`, `MinLength`, `MaxLength`, `ExactLength` | `Empty`, `TooShort`, `TooLong`, `WrongLength` | String/collection length validation |
@@ -548,7 +548,7 @@ ValidationRules<User>.NotNull(value)                // Not null (reference type)
 ValidationRules<User>.NotNull(nullableValue)        // Not null (nullable value type)
 ```
 
-| Method | ErrorType | Error Message |
+| Method | ErrorKind | Error Message |
 |--------|-----------|------------|
 | `NotNull` | `Null` | `{Type} cannot be null.` |
 
@@ -561,7 +561,7 @@ ValidationRules<Email>.MaxLength(value, 100)        // Maximum length
 ValidationRules<Email>.ExactLength(value, 10)       // Exact length
 ```
 
-| Method | ErrorType | Error Message |
+| Method | ErrorKind | Error Message |
 |--------|-----------|------------|
 | `NotEmpty` | `Empty` | `{Type} cannot be empty. Current value: '{v}'` |
 | `MinLength` | `TooShort(n)` | `{Type} must be at least {n} characters. Current length: {len}` |
@@ -577,7 +577,7 @@ ValidationRules<Code>.IsUpperCase(value)            // Uppercase validation
 ValidationRules<Code>.IsLowerCase(value)            // Lowercase validation
 ```
 
-| Method | ErrorType | Error Message |
+| Method | ErrorKind | Error Message |
 |--------|-----------|------------|
 | `Matches` | `InvalidFormat(pattern)` | `Invalid {Type} format. Current value: '{v}'` |
 | `IsUpperCase` | `NotUpperCase` | `{Type} must be uppercase. Current value: '{v}'` |
@@ -596,7 +596,7 @@ ValidationRules<Age>.AtMost(value, 150)             // <= max
 ValidationRules<Age>.AtLeast(value, 0)              // >= min
 ```
 
-| Method | ErrorType | Error Message |
+| Method | ErrorKind | Error Message |
 |--------|-----------|------------|
 | `Positive` | `NotPositive` | `{Type} must be positive. Current value: '{v}'` |
 | `NonNegative` | `Negative` | `{Type} cannot be negative. Current value: '{v}'` |
@@ -611,7 +611,7 @@ ValidationRules<Age>.AtLeast(value, 0)              // >= min
 ValidationRules<BinaryData>.NotEmptyArray(value)    // Array is not null and length > 0
 ```
 
-| Method | ErrorType | Error Message |
+| Method | ErrorKind | Error Message |
 |--------|-----------|------------|
 | `NotEmptyArray` | `Empty` | `{Type} array cannot be empty or null. Current length: '{len}'` |
 
@@ -622,7 +622,7 @@ ValidationRules<PriceRange>.ValidRange(minValue, maxValue)        // Validates m
 ValidationRules<DateRange>.ValidStrictRange(minValue, maxValue)   // Validates min < max, returns (min, max) tuple
 ```
 
-| Method | ErrorType | Error Message |
+| Method | ErrorKind | Error Message |
 |--------|-----------|------------|
 | `ValidRange` | `RangeInverted(min, max)` | `{Type} range is invalid. Minimum ({min}) cannot exceed maximum ({max}).` |
 | `ValidStrictRange` | `RangeInverted(min, max)` | `{Type} range is invalid. Minimum ({min}) cannot exceed maximum ({max}).` |
@@ -639,7 +639,7 @@ ValidationRules<StartDate>.After(value, boundary)   // > boundary
 ValidationRules<EventDate>.DateBetween(value, min, max)  // min <= value <= max
 ```
 
-| Method | ErrorType | Error Message |
+| Method | ErrorKind | Error Message |
 |--------|-----------|------------|
 | `NotDefault` | `DefaultDate` | `{Type} date cannot be default. Current value: '{v}'` |
 | `InPast` | `NotInPast` | `{Type} must be in the past. Current value: '{v}'` |
@@ -651,7 +651,7 @@ ValidationRules<EventDate>.DateBetween(value, min, max)  // min <= value <= max
 #### Custom Validation Methods
 
 ```csharp
-// Error type definition: public sealed record Unsupported : DomainErrorType.Custom;
+// Error type definition: public sealed record Unsupported : DomainErrorKind.Custom;
 ValidationRules<Currency>.Must(
     value,
     v => SupportedCurrencies.Contains(v),
@@ -733,7 +733,7 @@ Chaining methods for `TypedValidation<TValueObject, T>` returned by `ValidationR
 | `ThenMust(predicate, errorType, messageFactory)` | Custom condition (message factory function) |
 
 ```csharp
-// Error type definition: public sealed record Unsupported : DomainErrorType.Custom;
+// Error type definition: public sealed record Unsupported : DomainErrorKind.Custom;
 // Using message factory function
 .ThenMust(
     v => SupportedCurrencies.Contains(v),
@@ -914,7 +914,7 @@ The following table compares the three validation approaches. The key difference
 | **Namespace** | `Validations.Typed` | `Validations.Typed` | `Validations.Contextual` |
 | **Recommended Layer** | Domain | Application | Presentation |
 | **Recommended For** | Value Object | Reusable validation | One-off validation, prototyping |
-| **Error Code** | `DomainErrors.Price.NotPositive` | `DomainErrors.ProductValidation.NotPositive` | `DomainErrors.Price.NotPositive` |
+| **Error Code** | `Domain.Price.NotPositive` | `Domain.ProductValidation.NotPositive` | `Domain.Price.NotPositive` |
 
 **Selection Guide:**
 
@@ -1006,7 +1006,7 @@ Rarely, a validation method may return a different type than its input. For exam
 // string → Validation<Error, int> (input: string, output: int)
 public sealed class Age : ComparableSimpleValueObject<int>
 {
-    public sealed record InvalidFormat : DomainErrorType.Custom;
+    public sealed record InvalidFormat : DomainErrorKind.Custom;
 
     // Receives a string, converts to integer, then validates
     public static Validation<Error, int> Validate(string value) =>
@@ -1061,19 +1061,19 @@ Functorium uses **result types instead of exceptions** to handle errors. Validat
 
 > **For details, see the [Error System Guide](../08a-error-system).**
 
-### DomainErrorType Overview
+### DomainErrorKind Overview
 
-**Location**: `Functorium.Domains.Errors.DomainErrorType`
+**Location**: `Functorium.Domains.Errors.DomainErrorKind`
 
 Provides type-safe error definitions through a sealed record hierarchy.
 
 ```csharp
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 ```
 
 #### Category Structure
 
-| Category | Description | Representative ErrorType |
+| Category | Description | Representative ErrorKind |
 |------|------|---------------|
 | Presence | Value existence validation | `Empty`, `Null` |
 | Length | Length validation | `TooShort`, `TooLong`, `WrongLength` |
@@ -1088,33 +1088,33 @@ using static Functorium.Domains.Errors.DomainErrorType;
 
 **Location**: `Functorium.Domains.Errors.DomainError`
 
-Creates errors for custom business rule validation failures not covered by `ValidationRules<T>`. Automatically generates error codes in the format `DomainErrors.{TypeName}.{ErrorName}`.
+Creates errors for custom business rule validation failures not covered by `ValidationRules<T>`. Automatically generates error codes in the format `Domain.{TypeName}.{ErrorName}`.
 
 #### Method Signatures
 
 ```csharp
 // Single value (string)
 public static Error For<TContext>(
-    DomainErrorType errorType,
+    DomainErrorKind errorType,
     string currentValue,
     string message);
 
 // Single value (generic)
 public static Error For<TContext, TValue>(
-    DomainErrorType errorType,
+    DomainErrorKind errorType,
     TValue currentValue,
     string message);
 
 // Two values
 public static Error For<TContext, TValue1, TValue2>(
-    DomainErrorType errorType,
+    DomainErrorKind errorType,
     TValue1 value1,
     TValue2 value2,
     string message);
 
 // Three values
 public static Error For<TContext, TValue1, TValue2, TValue3>(
-    DomainErrorType errorType,
+    DomainErrorKind errorType,
     TValue1 value1,
     TValue2 value2,
     TValue3 value3,
@@ -1126,7 +1126,7 @@ public static Error For<TContext, TValue1, TValue2, TValue3>(
 | Parameter | Description |
 |----------|------|
 | `TContext` | Error context type (Value Object or IValidationContext). The `{TypeName}` part of the error code |
-| `errorType` | `DomainErrorType` instance. The `{ErrorName}` part of the error code |
+| `errorType` | `DomainErrorKind` instance. The `{ErrorName}` part of the error code |
 | `currentValue` | The current value that failed validation. Included in debugging and error messages |
 | `message` | Error message to display to users/developers |
 
@@ -1136,66 +1136,66 @@ Each overload internally creates a different Error type:
 
 | Overload | Internal Type | Value Fields |
 |----------|----------|---------|
-| `For<TContext>` | `ErrorCodeExpected` | `ErrorCurrentValue: string` |
-| `For<TContext, TValue>` | `ErrorCodeExpected<TValue>` | `ErrorCurrentValue: TValue` |
-| `For<TContext, T1, T2>` | `ErrorCodeExpected<T1, T2>` | `ErrorCurrentValue1: T1`, `ErrorCurrentValue2: T2` |
-| `For<TContext, T1, T2, T3>` | `ErrorCodeExpected<T1, T2, T3>` | `ErrorCurrentValue1: T1`, `ErrorCurrentValue2: T2`, `ErrorCurrentValue3: T3` |
+| `For<TContext>` | `ExpectedError` | `ErrorCurrentValue: string` |
+| `For<TContext, TValue>` | `ExpectedError<TValue>` | `ErrorCurrentValue: TValue` |
+| `For<TContext, T1, T2>` | `ExpectedError<T1, T2>` | `ErrorCurrentValue1: T1`, `ErrorCurrentValue2: T2` |
+| `For<TContext, T1, T2, T3>` | `ExpectedError<T1, T2, T3>` | `ErrorCurrentValue1: T1`, `ErrorCurrentValue2: T2`, `ErrorCurrentValue3: T3` |
 
-**Single value (string) -> `ErrorCodeExpected`**
+**Single value (string) -> `ExpectedError`**
 
 ```csharp
 var error = DomainError.For<Email>(new Empty(), "", "Email cannot be empty");
 
 // Type verification
-error.ShouldBeOfType<ErrorCodeExpected>();
-var typed = (ErrorCodeExpected)error;
-typed.ErrorCode.ShouldBe("DomainErrors.Email.Empty");
+error.ShouldBeOfType<ExpectedError>();
+var typed = (ExpectedError)error;
+typed.ErrorCode.ShouldBe("Domain.Email.Empty");
 typed.ErrorCurrentValue.ShouldBe("");
 typed.Message.ShouldBe("Email cannot be empty");
 ```
 
 ```json
 {
-  "ErrorCode": "DomainErrors.Email.Empty",
+  "ErrorCode": "Domain.Email.Empty",
   "ErrorCurrentValue": "",
   "Message": "Email cannot be empty"
 }
 ```
 
-**Single value (generic) -> `ErrorCodeExpected<TValue>`**
+**Single value (generic) -> `ExpectedError<TValue>`**
 
 ```csharp
 var error = DomainError.For<Age, int>(new Negative(), -5, "Age cannot be negative");
 
 // Type verification
-error.ShouldBeOfType<ErrorCodeExpected<int>>();
-var typed = (ErrorCodeExpected<int>)error;
-typed.ErrorCode.ShouldBe("DomainErrors.Age.Negative");
+error.ShouldBeOfType<ExpectedError<int>>();
+var typed = (ExpectedError<int>)error;
+typed.ErrorCode.ShouldBe("Domain.Age.Negative");
 typed.ErrorCurrentValue.ShouldBe(-5);  // int type preserved
 typed.Message.ShouldBe("Age cannot be negative");
 ```
 
 ```json
 {
-  "ErrorCode": "DomainErrors.Age.Negative",
+  "ErrorCode": "Domain.Age.Negative",
   "ErrorCurrentValue": -5,
   "Message": "Age cannot be negative"
 }
 ```
 
-**Two values -> `ErrorCodeExpected<T1, T2>`**
+**Two values -> `ExpectedError<T1, T2>`**
 
 ```csharp
-// Error type definition: public sealed record InvalidRange : DomainErrorType.Custom;
+// Error type definition: public sealed record InvalidRange : DomainErrorKind.Custom;
 var startDate = new DateTime(2024, 12, 31);
 var endDate = new DateTime(2024, 1, 1);
 var error = DomainError.For<DateRange, DateTime, DateTime>(
     new InvalidRange(), startDate, endDate, "Start must be before end");
 
 // Type verification
-error.ShouldBeOfType<ErrorCodeExpected<DateTime, DateTime>>();
-var typed = (ErrorCodeExpected<DateTime, DateTime>)error;
-typed.ErrorCode.ShouldBe("DomainErrors.DateRange.InvalidRange");
+error.ShouldBeOfType<ExpectedError<DateTime, DateTime>>();
+var typed = (ExpectedError<DateTime, DateTime>)error;
+typed.ErrorCode.ShouldBe("Domain.DateRange.InvalidRange");
 typed.ErrorCurrentValue1.ShouldBe(startDate);  // DateTime type preserved
 typed.ErrorCurrentValue2.ShouldBe(endDate);    // DateTime type preserved
 typed.Message.ShouldBe("Start must be before end");
@@ -1203,24 +1203,24 @@ typed.Message.ShouldBe("Start must be before end");
 
 ```json
 {
-  "ErrorCode": "DomainErrors.DateRange.InvalidRange",
+  "ErrorCode": "Domain.DateRange.InvalidRange",
   "ErrorCurrentValue1": "2024-12-31T00:00:00",
   "ErrorCurrentValue2": "2024-01-01T00:00:00",
   "Message": "Start must be before end"
 }
 ```
 
-**Three values -> `ErrorCodeExpected<T1, T2, T3>`**
+**Three values -> `ExpectedError<T1, T2, T3>`**
 
 ```csharp
-// Error type definition: public sealed record InvalidTriangle : DomainErrorType.Custom;
+// Error type definition: public sealed record InvalidTriangle : DomainErrorKind.Custom;
 var error = DomainError.For<Triangle, double, double, double>(
     new InvalidTriangle(), 1.0, 2.0, 10.0, "Invalid triangle sides");
 
 // Type verification
-error.ShouldBeOfType<ErrorCodeExpected<double, double, double>>();
-var typed = (ErrorCodeExpected<double, double, double>)error;
-typed.ErrorCode.ShouldBe("DomainErrors.Triangle.InvalidTriangle");
+error.ShouldBeOfType<ExpectedError<double, double, double>>();
+var typed = (ExpectedError<double, double, double>)error;
+typed.ErrorCode.ShouldBe("Domain.Triangle.InvalidTriangle");
 typed.ErrorCurrentValue1.ShouldBe(1.0);   // double type preserved
 typed.ErrorCurrentValue2.ShouldBe(2.0);   // double type preserved
 typed.ErrorCurrentValue3.ShouldBe(10.0);  // double type preserved
@@ -1229,7 +1229,7 @@ typed.Message.ShouldBe("Invalid triangle sides");
 
 ```json
 {
-  "ErrorCode": "DomainErrors.Triangle.InvalidTriangle",
+  "ErrorCode": "Domain.Triangle.InvalidTriangle",
   "ErrorCurrentValue1": 1.0,
   "ErrorCurrentValue2": 2.0,
   "ErrorCurrentValue3": 10.0,
@@ -1237,7 +1237,7 @@ typed.Message.ShouldBe("Invalid triangle sides");
 }
 ```
 
-**Tuple value example -> `ErrorCodeExpected<(T1, T2)>`**
+**Tuple value example -> `ExpectedError<(T1, T2)>`**
 
 ```csharp
 var range = (Min: 100m, Max: 50m);
@@ -1247,16 +1247,16 @@ var error = DomainError.For<PriceRange, (decimal Min, decimal Max)>(
     "Price range is invalid. Minimum cannot exceed maximum.");
 
 // Type verification
-error.ShouldBeOfType<ErrorCodeExpected<(decimal Min, decimal Max)>>();
-var typed = (ErrorCodeExpected<(decimal Min, decimal Max)>)error;
-typed.ErrorCode.ShouldBe("DomainErrors.PriceRange.RangeInverted");
+error.ShouldBeOfType<ExpectedError<(decimal Min, decimal Max)>>();
+var typed = (ExpectedError<(decimal Min, decimal Max)>)error;
+typed.ErrorCode.ShouldBe("Domain.PriceRange.RangeInverted");
 typed.ErrorCurrentValue.ShouldBe((100m, 50m));  // Tuple type preserved
 typed.Message.ShouldBe("Price range is invalid. Minimum cannot exceed maximum.");
 ```
 
 ```json
 {
-  "ErrorCode": "DomainErrors.PriceRange.RangeInverted",
+  "ErrorCode": "Domain.PriceRange.RangeInverted",
   "ErrorCurrentValue": {
     "Item1": 100.0,
     "Item2": 50.0

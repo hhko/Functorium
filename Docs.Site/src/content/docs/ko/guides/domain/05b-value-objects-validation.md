@@ -84,7 +84,7 @@ using Functorium.Domains.ValueObjects;
 
 public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 {
-    public sealed record Unsupported : DomainErrorType.Custom;
+    public sealed record Unsupported : DomainErrorKind.Custom;
 
     public static readonly Currency KRW = new(nameof(KRW), "KRW", "한국 원화", "₩");
     public static readonly Currency USD = new(nameof(USD), "USD", "미국 달러", "$");
@@ -243,7 +243,7 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
 using Functorium.Domains.ValueObjects;
 using Functorium.Domains.ValueObjects.Validations;
 using Functorium.Domains.ValueObjects.Validations.Typed;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 public sealed class Money : ValueObject
 {

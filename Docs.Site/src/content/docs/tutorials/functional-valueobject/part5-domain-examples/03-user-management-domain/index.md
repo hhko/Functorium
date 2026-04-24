@@ -75,7 +75,7 @@ public sealed class Email : SimpleValueObject<string>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<Email>(new DomainErrorType.Empty(), value,
+            : DomainError.For<Email>(new DomainErrorKind.Empty(), value,
                 $"Email address cannot be empty. Current value: '{value}'");
 
     public static implicit operator string(Email email) => email.Value;
@@ -91,7 +91,7 @@ Password validates password strength and stores hashed values. Plain text is nev
 ```csharp
 public sealed class Password : IEquatable<Password>
 {
-    public sealed record InsufficientComplexity : DomainErrorType.Custom;
+    public sealed record InsufficientComplexity : DomainErrorKind.Custom;
 
     public const int MinLength = 8;
     public const int MaxLength = 128;
@@ -118,7 +118,7 @@ public sealed class Password : IEquatable<Password>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<Password>(new DomainErrorType.Empty(), value,
+            : DomainError.For<Password>(new DomainErrorKind.Empty(), value,
                 $"Password cannot be empty. Current value: '{value}'");
 
     public bool Verify(string plainText) => Value == HashPassword(plainText);
@@ -159,7 +159,7 @@ public sealed class PhoneNumber : ValueObject
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<PhoneNumber>(new DomainErrorType.Empty(), value,
+            : DomainError.For<PhoneNumber>(new DomainErrorKind.Empty(), value,
                 $"Phone number cannot be empty. Current value: '{value}'");
 
     public string Masked => $"+{CountryCode} ***-****-{NationalNumber[^4..]}";
@@ -181,7 +181,7 @@ Username validates username rules and blocks reserved words.
 ```csharp
 public sealed class Username : SimpleValueObject<string>
 {
-    public sealed record Reserved : DomainErrorType.Custom;
+    public sealed record Reserved : DomainErrorKind.Custom;
 
     public const int MinLength = 3;
     public const int MaxLength = 30;

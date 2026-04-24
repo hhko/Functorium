@@ -300,7 +300,7 @@ public class Order : AggregateRoot<OrderId>
         return order;
     }
 
-    public sealed record InvalidStatus : DomainErrorType.Custom;
+    public sealed record InvalidStatus : DomainErrorKind.Custom;
 
     public Fin<Unit> Ship(Address address)
     {

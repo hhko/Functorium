@@ -368,13 +368,13 @@ Event count: 0 (no events)
 
 All `string` fields in the naive `Contact` class have been replaced with constrained types, and `bool IsEmailVerified` has evolved into a union-based state machine. One of the 10 scenarios (scenario 7) is prevented at compile time, and the remaining rejection scenarios (8-10) are blocked at runtime with structurally defined error types and `Fin<T>` returns. 118 unit tests (`DesigningWithTypes.Tests.Unit/`) continuously verify these guarantees.
 
-Each rejection scenario structurally identifies the cause of failure through `sealed record` error types. `DomainError.For<TDomain>()` automatically generates error codes in the `DomainErrors.{TypeName}.{ErrorName}` format, enabling pattern matching on errors without string comparison.
+Each rejection scenario structurally identifies the cause of failure through `sealed record` error types. `DomainError.For<TDomain>()` automatically generates error codes in the `Domain.{TypeName}.{ErrorName}` format, enabling pattern matching on errors without string comparison.
 
 | Scenario | Error Type | Definition Location | Error Code |
 |----------|----------|----------|----------|
-| 8. Re-verify verified email | `InvalidTransition(FromState, ToState)` | `DomainErrorType` (built-in) | `DomainErrors.EmailVerificationState.InvalidTransition` |
-| 9. Modify deleted contact | `AlreadyDeleted` | `Contact` (custom within Aggregate) | `DomainErrors.Contact.AlreadyDeleted` |
-| 10. Register duplicate email | `EmailAlreadyInUse` | `ContactEmailCheckService` (custom within service) | `DomainErrors.ContactEmailCheckService.EmailAlreadyInUse` |
+| 8. Re-verify verified email | `InvalidTransition(FromState, ToState)` | `DomainErrorKind` (built-in) | `Domain.EmailVerificationState.InvalidTransition` |
+| 9. Modify deleted contact | `AlreadyDeleted` | `Contact` (custom within Aggregate) | `Domain.Contact.AlreadyDeleted` |
+| 10. Register duplicate email | `EmailAlreadyInUse` | `ContactEmailCheckService` (custom within service) | `Domain.ContactEmailCheckService.EmailAlreadyInUse` |
 
 ### Final Domain Model Structure
 
@@ -509,7 +509,7 @@ Functorium's functional types provide "how to delegate rule verification to the 
 | Algebraic Data Types | `UnionValueObject` + `[UnionType]` | `Match` guarantees compile-time exhaustiveness instead of `if/else` branching |
 | Type-Safe State Transitions | `TransitionFrom<TSource, TTarget>` | Data separation per state removes impossible transitions from the type instead of using `bool` flags |
 | Railway-Oriented Error Handling | `Fin<T>`, `Validation<Error, T>` | Failures expressed as return types instead of exceptions, forcing callers to handle failures |
-| Structural Error Types | `DomainErrorType` + `DomainError.For<T>()` | `sealed record` error types identify failure causes instead of string messages, with automatic error code generation |
+| Structural Error Types | `DomainErrorKind` + `DomainError.For<T>()` | `sealed record` error types identify failure causes instead of string messages, with automatic error code generation |
 | Immutable Values | `SimpleValueObject<T>`, `ValueObject` | Factory + immutable objects prevent state corruption at the source instead of using setters |
 
 ### Value of the Combination

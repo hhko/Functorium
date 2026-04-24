@@ -457,7 +457,7 @@ FluentValidation과 VO.Validate의 역할 분담이 핵심입니다. FluentValid
 
 ### 7. ApplicationError.For&lt;T&gt;() 에러 생성
 
-`ApplicationError.For<T>()`는 에러에 출처 타입을 자동으로 포함합니다. `ApplicationErrorType`의 하위 레코드로 에러 분류를 표현합니다.
+`ApplicationError.For<T>()`는 에러에 출처 타입을 자동으로 포함합니다. `ApplicationErrorKind`의 하위 레코드로 에러 분류를 표현합니다.
 
 ```csharp
 // 이미 존재하는 리소스

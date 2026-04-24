@@ -118,7 +118,7 @@ The key point to note in the following code is that the `DeductStock()` method r
 
 ```csharp
 // Inventory Aggregate invariant: stock cannot be negative
-// Error type definition: public sealed record InsufficientStock : DomainErrorType.Custom;
+// Error type definition: public sealed record InsufficientStock : DomainErrorKind.Custom;
 public Fin<Unit> DeductStock(Quantity quantity)
 {
     if (quantity > StockQuantity)
@@ -583,7 +583,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 {
     #region Error Types
 
-    public sealed record InsufficientStock : DomainErrorType.Custom;
+    public sealed record InsufficientStock : DomainErrorKind.Custom;
 
     #endregion
 
@@ -746,7 +746,7 @@ Request -> Handler -> UoW.SaveChanges()
 
 ```csharp
 // EfCoreUnitOfWork: Converts concurrency exception to AdapterError, returns without retry
-// Error type definition: public sealed record ConcurrencyConflict : AdapterErrorType.Custom;
+// Error type definition: public sealed record ConcurrencyConflict : AdapterErrorKind.Custom;
 public virtual FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default)
 {
     return IO.liftAsync(async () =>

@@ -457,7 +457,7 @@ The role separation between FluentValidation and VO.Validate is key. FluentValid
 
 ### 7. ApplicationError.For&lt;T&gt;() Error Creation
 
-`ApplicationError.For<T>()` automatically includes the source type in the error. Error classification is expressed through `ApplicationErrorType` sub-records.
+`ApplicationError.For<T>()` automatically includes the source type in the error. Error classification is expressed through `ApplicationErrorKind` sub-records.
 
 ```csharp
 // Already existing resource

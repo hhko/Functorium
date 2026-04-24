@@ -21,7 +21,7 @@ This is the **API specification document** defining the public types, interfaces
 |------|------|
 | [Entity and Aggregate](./01-entity-aggregate) | `Entity<TId>`, `AggregateRoot<TId>`, EntityId, mixin interfaces |
 | [Value Object](./02-value-object) | `ValueObject`, `SimpleValueObject<T>`, Union types, equality/comparison |
-| [Error System](./04-error-system) | `DomainErrorType`, `ApplicationErrorType`, `AdapterErrorType`, factory API |
+| [Error System](./04-error-system) | `DomainErrorKind`, `ApplicationErrorKind`, `AdapterErrorKind`, factory API |
 
 ### Application Layer
 

@@ -208,7 +208,7 @@ Domain Layer
 ├── Entity           (Entity<TId>, AggregateRoot<TId>)
 ├── Domain Event     (IDomainEvent, DomainEvent)
 ├── Domain Service   (IDomainService)         <- here
-├── Domain Error     (DomainError, DomainErrorType)
+├── Domain Error     (DomainError, DomainErrorKind)
 └── Repository       (IRepository<TAggregate, TId>)
 ```
 
@@ -244,14 +244,14 @@ Suitable for small-scale scenarios where the Usecase can load cross data.
 ```csharp
 using Functorium.Domains.Errors;
 using Functorium.Domains.Services;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 using static LanguageExt.Prelude;
 
 namespace {Project}.Domain.Services;
 
 public sealed class {ServiceName} : IDomainService
 {
-    public sealed record {ErrorName} : DomainErrorType.Custom;
+    public sealed record {ErrorName} : DomainErrorKind.Custom;
 
     public Fin<Unit> {MethodName}({AggregateA} a, {AggregateB data} b)
     {
@@ -276,14 +276,14 @@ using Functorium.Domains.Errors;
 using Functorium.Domains.Services;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Orders;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 using static LanguageExt.Prelude;
 
 namespace LayeredArch.Domain.Services;
 
 public sealed class OrderCreditCheckService : IDomainService
 {
-    public sealed record CreditLimitExceeded : DomainErrorType.Custom;
+    public sealed record CreditLimitExceeded : DomainErrorKind.Custom;
 
     /// <summary>
     /// Validates whether the order amount is within the customer's credit limit.
@@ -325,7 +325,7 @@ public sealed class OrderCreditCheckService : IDomainService
 
 - `sealed class` -- no inheritance intended
 - Returns `Fin<Unit>` -- success (`unit`) or `DomainError`
-- `DomainError.For<OrderCreditCheckService>` -- auto-generates error code (`DomainErrors.OrderCreditCheckService.CreditLimitExceeded`)
+- `DomainError.For<OrderCreditCheckService>` -- auto-generates error code (`Domain.OrderCreditCheckService.CreditLimitExceeded`)
 - `Money` comparison uses `ComparableSimpleValueObject<decimal>` operators (`>`, `<`, `>=`, `<=`)
 - Uses `Seq<T>.Fold` -- used instead of `Sum()` (to avoid ambiguity between LanguageExt and System.Linq)
 
@@ -338,7 +338,7 @@ Suitable for large-scale scenarios where the Usecase cannot easily load cross da
 ```csharp
 using Functorium.Domains.Errors;
 using Functorium.Domains.Services;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 using static LanguageExt.Prelude;
 
 namespace {Project}.Domain.Services;
@@ -350,7 +350,7 @@ public sealed class {ServiceName} : IDomainService
     public {ServiceName}(I{Aggregate}Repository repository)
         => _repository = repository;
 
-    public sealed record {ErrorName} : DomainErrorType.Custom;
+    public sealed record {ErrorName} : DomainErrorKind.Custom;
 
     public FinT<IO, Unit> {MethodName}({Parameters})
     {
@@ -383,7 +383,7 @@ public sealed class ContactEmailCheckService : IDomainService
     public ContactEmailCheckService(IContactRepository repository)
         => _repository = repository;
 
-    public sealed record EmailAlreadyInUse : DomainErrorType.Custom;
+    public sealed record EmailAlreadyInUse : DomainErrorKind.Custom;
 
     /// <summary>
     /// Validates that the email address is not used by another Contact.
@@ -897,7 +897,7 @@ This applies only to the Pure pattern. The Pure pattern has no state and no cons
 
 ### Q6. How are errors returned from a Domain Service?
 
-Use the `DomainError.For<{ServiceName}>(new {ErrorType}(), currentValue, message)` pattern. Error codes are auto-generated in the format `DomainErrors.{ServiceName}.{ErrorType}`. Both patterns are identical.
+Use the `DomainError.For<{ServiceName}>(new {ErrorKind}(), currentValue, message)` pattern. Error codes are auto-generated in the format `Domain.{ServiceName}.{ErrorKind}`. Both patterns are identical.
 
 ### Q7. If logic is within a single Aggregate but the method is too complex, can it be separated into a Domain Service?
 

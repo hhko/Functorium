@@ -150,7 +150,7 @@ public class CriteriaApiService : ICriteriaApiService
     public string RequestCategory => "ExternalApi";
 
     #region Error Types
-    public sealed record ResponseNull : AdapterErrorType.Custom;
+    public sealed record ResponseNull : AdapterErrorKind.Custom;
     #endregion
 
     public virtual FinT<IO, ICriteriaApiService.Response> GetEquipHistoriesAsync(
@@ -347,8 +347,8 @@ catch (HttpRequestException ex)
 ##### FinT<IO, T>와 AdapterError 연계
 
 ```csharp
-// AdapterErrorType 사용 패턴
-using static Functorium.Adapters.Errors.AdapterErrorType;
+// AdapterErrorKind 사용 패턴
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 // NotFound - 리소스를 찾을 수 없음
 AdapterError.For<ProductRepository>(
@@ -369,7 +369,7 @@ AdapterError.For<CriteriaApiService>(
     "API connection failed");
 
 // Custom - 사용자 정의 에러 타입
-// Error type definition: public sealed record ReservationFailed : AdapterErrorType.Custom;
+// Error type definition: public sealed record ReservationFailed : AdapterErrorKind.Custom;
 AdapterError.For<InventoryRepository>(
     new ReservationFailed(),
     orderId.ToString(),
@@ -659,7 +659,7 @@ using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 [GenerateObservablePort]
 public class EfCoreProductRepository
@@ -770,8 +770,8 @@ public class EfCoreUnitOfWork : IUnitOfWork
     public string RequestCategory => "UnitOfWork";
 
     #region Error Types
-    public sealed record ConcurrencyConflict : AdapterErrorType.Custom;
-    public sealed record DatabaseUpdateFailed : AdapterErrorType.Custom;
+    public sealed record ConcurrencyConflict : AdapterErrorKind.Custom;
+    public sealed record DatabaseUpdateFailed : AdapterErrorKind.Custom;
     #endregion
 
     public EfCoreUnitOfWork(LayeredArchDbContext dbContext) => _dbContext = dbContext;
@@ -878,7 +878,7 @@ External API Adapter는 HTTP 클라이언트를 통한 외부 시스템 호출�
 
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 [GenerateObservablePort]
 public class ExternalPricingApiService : IExternalPricingService
@@ -888,10 +888,10 @@ public class ExternalPricingApiService : IExternalPricingService
     public string RequestCategory => "ExternalApi";       // 2. 요청 카테고리
 
     #region Error Types
-    public sealed record OperationCancelled : AdapterErrorType.Custom;
-    public sealed record UnexpectedException : AdapterErrorType.Custom;
-    public sealed record RateLimited : AdapterErrorType.Custom;
-    public sealed record HttpError : AdapterErrorType.Custom;
+    public sealed record OperationCancelled : AdapterErrorKind.Custom;
+    public sealed record UnexpectedException : AdapterErrorKind.Custom;
+    public sealed record RateLimited : AdapterErrorKind.Custom;
+    public sealed record HttpError : AdapterErrorKind.Custom;
     #endregion
 
     public ExternalPricingApiService(HttpClient httpClient)  // 3. 생성자 주입
@@ -948,7 +948,7 @@ public class ExternalPricingApiService : IExternalPricingService
             catch (TaskCanceledException ex)              // 10. 타임아웃
             {
                 return AdapterError.FromException<ExternalPricingApiService>(
-                    new AdapterErrorType.Timeout(TimeSpan.FromSeconds(30)),
+                    new AdapterErrorKind.Timeout(TimeSpan.FromSeconds(30)),
                     ex);
             }
             catch (Exception ex)                          // 11. 기타 예외
@@ -990,9 +990,9 @@ public class ExternalPricingApiService : IExternalPricingService
 
 > **참조**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Infrastructure/ExternalApis/ExternalPricingApiService.cs`
 
-**HTTP 상태 코드 → AdapterErrorType 매핑 참조**:
+**HTTP 상태 코드 → AdapterErrorKind 매핑 참조**:
 
-| HTTP 상태 코드 | AdapterErrorType | 설명 |
+| HTTP 상태 코드 | AdapterErrorKind | 설명 |
 |---------------|------------------|------|
 | 404 | `new NotFound()` | 리소스 없음 |
 | 401 | `new Unauthorized()` | 인증 실패 |
@@ -1001,9 +1001,9 @@ public class ExternalPricingApiService : IExternalPricingService
 | 503 | `new ExternalServiceUnavailable(name)` | 서비스 불가 |
 | 기타 | `new HttpError()` | 일반 HTTP 에러 |
 
-**예외 → AdapterErrorType 매핑 참조**:
+**예외 → AdapterErrorKind 매핑 참조**:
 
-| 예외 타입 | AdapterErrorType | 설명 |
+| 예외 타입 | AdapterErrorKind | 설명 |
 |----------|------------------|------|
 | `HttpRequestException` | `new ConnectionFailed(name)` | 연결 실패 |
 | `TaskCanceledException` (사용자) | `new OperationCancelled()` | 요청 취소 |

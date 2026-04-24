@@ -318,7 +318,7 @@ public interface ISoftDeletableWithUser : ISoftDeletable
 public sealed class Product : AggregateRoot<ProductId>, ISoftDeletableWithUser
 {
     // --- Error Type ---
-    public sealed record AlreadyDeleted : DomainErrorType.Custom;
+    public sealed record AlreadyDeleted : DomainErrorKind.Custom;
 
     // --- Domain Events ---
     public sealed record DeletedEvent(ProductId ProductId, string DeletedBy) : DomainEvent;
@@ -476,7 +476,7 @@ Inventory의 `DeductStock` 예시로 동시성 문제를 설명합니다:
 [GenerateEntityId]
 public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurrencyAware
 {
-    public sealed record InsufficientStock : DomainErrorType.Custom;
+    public sealed record InsufficientStock : DomainErrorKind.Custom;
 
     // Value Object 속성
     public Quantity StockQuantity { get; private set; }
@@ -635,13 +635,13 @@ Value Object 속성, Entity 참조, 도메인 이벤트를 모두 포함하는 �
 using Functorium.Domains.Entities;
 using Functorium.Domains.Events;
 using Functorium.Domains.Errors;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 using static LanguageExt.Prelude;
 
 // OrderStatus: SimpleValueObject<string> 기반 Smart Enum + 상태 전이 규칙
 public sealed class OrderStatus : SimpleValueObject<string>
 {
-    public sealed record InvalidValue : DomainErrorType.Custom;
+    public sealed record InvalidValue : DomainErrorKind.Custom;
 
     public static readonly OrderStatus Pending = new("Pending");
     public static readonly OrderStatus Confirmed = new("Confirmed");
@@ -683,7 +683,7 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
 {
     #region Error Types
 
-    public sealed record InvalidOrderStatusTransition : DomainErrorType.Custom;
+    public sealed record InvalidOrderStatusTransition : DomainErrorKind.Custom;
 
     #endregion
 

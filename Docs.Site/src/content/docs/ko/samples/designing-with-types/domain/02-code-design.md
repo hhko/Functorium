@@ -174,7 +174,7 @@ public abstract partial record EmailVerificationState : UnionValueObject<EmailVe
 }
 ```
 
-`TransitionFrom`은 전이 실패 시 자동으로 `DomainError.For<EmailVerificationState>(new DomainErrorType.InvalidTransition(FromState: "Verified", ToState: "Verified"), ...)`를 생성합니다. 사용자는 케이스 정의와 성공 전이 로직에만 집중하면 됩니다.
+`TransitionFrom`은 전이 실패 시 자동으로 `DomainError.For<EmailVerificationState>(new DomainErrorKind.InvalidTransition(FromState: "Verified", ToState: "Verified"), ...)`를 생성합니다. 사용자는 케이스 정의와 성공 전이 로직에만 집중하면 됩니다.
 
 ## Aggregate Root 설계
 
@@ -384,7 +384,7 @@ public sealed class ContactEmailCheckService : IDomainService
     public ContactEmailCheckService(IContactRepository repository)
         => _repository = repository;
 
-    public sealed record EmailAlreadyInUse : DomainErrorType.Custom;
+    public sealed record EmailAlreadyInUse : DomainErrorKind.Custom;
 
     public FinT<IO, Unit> ValidateEmailUnique(
         EmailAddress email,

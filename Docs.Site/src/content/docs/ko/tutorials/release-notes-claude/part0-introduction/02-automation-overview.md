@@ -133,7 +133,7 @@ dotnet ExtractApiChanges.cs
 ```csharp
 namespace Functorium.Abstractions.Errors
 {
-    public static class ErrorCodeFactory
+    public static class ErrorFactory
     {
         public static Error Create(string errorCode, string errorCurrentValue, string errorMessage) { }
         public static Error CreateFromException(string errorCode, Exception exception) { }

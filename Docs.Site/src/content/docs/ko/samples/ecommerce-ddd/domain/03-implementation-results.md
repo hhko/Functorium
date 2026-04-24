@@ -556,7 +556,7 @@ public void ValidateCreditLimitWithExistingOrders_ReturnsFail_WhenTotalExceedsLi
 
 도메인 에러는 각 Aggregate 또는 Domain Service 내부에 중첩 레코드로 정의됩니다. 중앙 ErrorCode enum 대신 타입별 sealed record를 사용하는 이유는, 에러의 출처와 분류를 타입 시스템으로 보장하고 `DomainError.For<T>()`가 에러 코드를 자동 생성하기 때문입니다.
 
-각 거부 시나리오는 `sealed record` 에러 타입을 통해 실패 원인을 구조적으로 식별합니다. `DomainError.For<TDomain>()`이 에러 코드를 `DomainErrors.{타입명}.{에러명}` 형식으로 자동 생성하므로, 문자열 비교 없이 에러를 패턴 매칭할 수 있습니다.
+각 거부 시나리오는 `sealed record` 에러 타입을 통해 실패 원인을 구조적으로 식별합니다. `DomainError.For<TDomain>()`이 에러 코드를 `Domain.{타입명}.{에러명}` 형식으로 자동 생성하므로, 문자열 비교 없이 에러를 패턴 매칭할 수 있습니다.
 
 | Aggregate/서비스 | 에러 타입 | 발생 조건 | 반환 타입 |
 |-----------------|----------|----------|----------|
@@ -610,8 +610,8 @@ Functorium의 함수형 타입은 "어떻게 컴파일러에게 규칙 검증을
 |-----|------|------|
 | `Fin<T>` | `Order.Create`, `DeductStock`, `ValidateCreditLimit` 등 | 예외 대신 반환 타입으로 실패를 표현, 호출자가 실패 처리를 강제받음 |
 | `Option<T>` | `DeletedAt`, `DeletedBy`, `UpdatedAt` | null 대신 타입 안전한 선택적 값 표현, 삭제 상태의 유무를 `IsSome`/`IsNone`으로 명확히 구분 |
-| `DomainErrorType.Custom` | `EmptyOrderLines`, `InsufficientStock`, `CreditLimitExceeded` 등 | 문자열 메시지 대신 `sealed record`로 실패 원인을 구조적으로 식별, 에러 코드 자동 생성 |
-| `DomainError.For<T>()` | 모든 에러 생성 | `DomainErrors.{타입명}.{에러명}` 형식의 에러 코드 자동 생성, 패턴 매칭으로 정확한 분기 처리 |
+| `DomainErrorKind.Custom` | `EmptyOrderLines`, `InsufficientStock`, `CreditLimitExceeded` 등 | 문자열 메시지 대신 `sealed record`로 실패 원인을 구조적으로 식별, 에러 코드 자동 생성 |
+| `DomainError.For<T>()` | 모든 에러 생성 | `Domain.{타입명}.{에러명}` 형식의 에러 코드 자동 생성, 패턴 매칭으로 정확한 분기 처리 |
 | Value Object 팩토리 | `Money.Create`, `Quantity.Create`, `OrderStatus.Create` | 생성 시점에 검증 완료, 이후 도메인 로직에서 유효성 재확인 불필요 |
 | `CreateFromValidated` | 모든 Aggregate의 ORM 복원 | 검증과 이벤트 발행 생략, 이미 영속화된 데이터를 신뢰하여 도메인 생성과 ORM 복원을 분리 |
 

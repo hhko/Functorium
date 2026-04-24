@@ -195,7 +195,7 @@ public class Order : AggregateRoot<OrderId>
     #region Error Types
 
     // State transition violation error type
-    public sealed record InvalidOrderStatusTransition : DomainErrorType.Custom;
+    public sealed record InvalidOrderStatusTransition : DomainErrorKind.Custom;
 
     #endregion
 
@@ -536,7 +536,7 @@ public class Product : Entity<ProductId>
 {
     #region Error Types
 
-    public sealed record SellingPriceBelowCost : DomainErrorType.Custom;
+    public sealed record SellingPriceBelowCost : DomainErrorKind.Custom;
 
     #endregion
 
@@ -568,7 +568,7 @@ public class Subscription : Entity<SubscriptionId>
 {
     #region Error Types
 
-    public sealed record StartAfterEnd : DomainErrorType.Custom;
+    public sealed record StartAfterEnd : DomainErrorKind.Custom;
 
     #endregion
 
@@ -627,7 +627,7 @@ The key point in the following code is the pattern of returning `DomainError` on
 
 ```csharp
 // Inventory: Stock deduction (invariant: stock >= 0)
-// Error type definition: public sealed record InsufficientStock : DomainErrorType.Custom;
+// Error type definition: public sealed record InsufficientStock : DomainErrorKind.Custom;
 public Fin<Unit> DeductStock(Quantity quantity)
 {
     if (quantity > StockQuantity)
@@ -768,7 +768,7 @@ When a child Entity has domain invariants, `Create()` returns `Fin<T>`:
 [GenerateEntityId]
 public sealed class OrderLine : Entity<OrderLineId>
 {
-    public sealed record InvalidQuantity : DomainErrorType.Custom;
+    public sealed record InvalidQuantity : DomainErrorKind.Custom;
 
     public ProductId ProductId { get; private set; }
     public Quantity Quantity { get; private set; }
@@ -894,7 +894,7 @@ public class Order : AggregateRoot<OrderId>
 {
     #region Error Types
 
-    public sealed record InvalidStatus : DomainErrorType.Custom;
+    public sealed record InvalidStatus : DomainErrorKind.Custom;
 
     #endregion
 

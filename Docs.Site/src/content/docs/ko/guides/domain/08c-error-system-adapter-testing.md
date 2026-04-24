@@ -20,26 +20,26 @@ AdapterError.For<ProductRepository>(new NotFound(), id, "찾을 수 없습니다
 AdapterError.FromException<MyAdapter>(new ConnectionFailed("DB"), exception);
 
 // 테스트 어설션
-error.ShouldBeAdapterError<ProductRepository>(new AdapterErrorType.NotFound());
-error.ShouldBeAdapterExceptionalError<UsecaseExceptionPipeline>(new AdapterErrorType.PipelineException());
+error.ShouldBeAdapterError<ProductRepository>(new AdapterErrorKind.NotFound());
+error.ShouldBeAdapterExceptionalError<UsecaseExceptionPipeline>(new AdapterErrorKind.PipelineException());
 
 // 범용 어설션
-result.ShouldFailWithErrorCode("AdapterErrors.ProductRepository.NotFound");
-error.ShouldBeErrorCodeExceptional<InvalidOperationException>("AdapterErrors.DatabaseAdapter.ConnectionFailed");
+result.ShouldFailWithErrorCode("Adapter.ProductRepository.NotFound");
+error.ShouldBeExceptionalError<InvalidOperationException>("Adapter.DatabaseAdapter.ConnectionFailed");
 ```
 
 ### 주요 절차
 
 1. Adapter 에러: 표준 에러 타입 선택 또는 Custom sealed record 정의
 2. `AdapterError.For` 또는 `AdapterError.FromException`으로 에러 생성
-3. Custom 에러가 필요하면 `AdapterErrorType.Custom`을 상속한 sealed record 정의
+3. Custom 에러가 필요하면 `AdapterErrorKind.Custom`을 상속한 sealed record 정의
 4. 테스트 작성 - 레이어별 어설션 또는 범용 어설션 사용
 
 ### 주요 개념
 
 | 레이어 | 팩토리 | 에러 코드 접두사 | 사용 시점 |
 |--------|--------|-----------------|----------|
-| Adapter | `AdapterError` | `AdapterErrors.` | 파이프라인, 외부 서비스, 데이터 |
+| Adapter | `AdapterError` | `Adapter.` | 파이프라인, 외부 서비스, 데이터 |
 | Custom | 각 레이어별 | 레이어에 따름 | 표준 에러로 표현 불가능한 경우 |
 
 먼저 Adapter 에러의 생성 패턴을 살펴본 뒤, Custom 에러 정의, 테스트 모범 사례, 레이어별 체크리스트 순서로 진행합니다.
@@ -54,7 +54,7 @@ error.ShouldBeErrorCodeExceptional<InvalidOperationException>("AdapterErrors.Dat
 
 ```csharp
 using Functorium.Adapters.Errors;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 // 기본 사용법 - 암시적 변환으로 직접 반환
 return AdapterError.For<ProductRepository>(
@@ -74,7 +74,7 @@ return AdapterError.FromException<ExternalApiService>(
     exception);
 ```
 
-### AdapterErrorType 전체 목록
+### AdapterErrorKind 전체 목록
 
 아래 표는 Adapter 에러 타입을 범주별로 정리한 것입니다.
 
@@ -118,7 +118,7 @@ return AdapterError.FromException<ExternalApiService>(
 
 | 에러 타입 | 설명 | 사용 예시 |
 |-----------|------|----------|
-| `Custom` | 어댑터 특화 에러 (abstract) | `sealed record RateLimited : AdapterErrorType.Custom;` → `new RateLimited()` |
+| `Custom` | 어댑터 특화 에러 (abstract) | `sealed record RateLimited : AdapterErrorKind.Custom;` → `new RateLimited()` |
 
 ### Repository 구현 예시
 
@@ -190,10 +190,10 @@ HTTP 상태 코드별로 다른 에러 타입을 반환하는 `HandleHttpError` 
 [GenerateObservablePort]
 public class ExternalPricingApiService : IExternalPricingService
 {
-    public sealed record OperationCancelled : AdapterErrorType.Custom;
-    public sealed record UnexpectedException : AdapterErrorType.Custom;
-    public sealed record RateLimited : AdapterErrorType.Custom;
-    public sealed record HttpError : AdapterErrorType.Custom;
+    public sealed record OperationCancelled : AdapterErrorKind.Custom;
+    public sealed record UnexpectedException : AdapterErrorKind.Custom;
+    public sealed record RateLimited : AdapterErrorKind.Custom;
+    public sealed record HttpError : AdapterErrorKind.Custom;
 
     private readonly HttpClient _httpClient;
 
@@ -320,13 +320,13 @@ public void ShouldBeAdapterError_WhenValidationFails()
 {
     // Arrange
     var error = AdapterError.For<UsecaseValidationPipeline>(
-        new AdapterErrorType.PipelineValidation("ProductName"),
+        new AdapterErrorKind.PipelineValidation("ProductName"),
         currentValue: "",
         message: "ProductName is required");
 
     // Act & Assert
     error.ShouldBeAdapterError<UsecaseValidationPipeline>(
-        new AdapterErrorType.PipelineValidation("ProductName"));
+        new AdapterErrorKind.PipelineValidation("ProductName"));
 }
 
 // 현재 값 포함 검증
@@ -336,13 +336,13 @@ public void ShouldBeAdapterError_WithValue_WhenTimeout()
     // Arrange
     var url = "https://api.example.com/data";
     var error = AdapterError.For<HttpClientAdapter, string>(
-        new AdapterErrorType.Timeout(Duration: TimeSpan.FromSeconds(30)),
+        new AdapterErrorKind.Timeout(Duration: TimeSpan.FromSeconds(30)),
         currentValue: url,
         message: "Request timed out");
 
     // Act & Assert
     error.ShouldBeAdapterError<HttpClientAdapter, string>(
-        new AdapterErrorType.Timeout(Duration: TimeSpan.FromSeconds(30)),
+        new AdapterErrorKind.Timeout(Duration: TimeSpan.FromSeconds(30)),
         expectedCurrentValue: url);
 }
 
@@ -353,12 +353,12 @@ public void ShouldBeAdapterExceptionalError_WhenExceptionOccurs()
     // Arrange
     var exception = new InvalidOperationException("Something went wrong");
     var error = AdapterError.FromException<UsecaseExceptionPipeline>(
-        new AdapterErrorType.PipelineException(),
+        new AdapterErrorKind.PipelineException(),
         exception);
 
     // Act & Assert
     error.ShouldBeAdapterExceptionalError<UsecaseExceptionPipeline>(
-        new AdapterErrorType.PipelineException());
+        new AdapterErrorKind.PipelineException());
 }
 
 [Fact]
@@ -367,12 +367,12 @@ public void ShouldBeAdapterExceptionalError_WithExceptionType()
     // Arrange
     var exception = new TimeoutException("Connection timed out");
     var error = AdapterError.FromException<DatabaseAdapter>(
-        new AdapterErrorType.ConnectionFailed("database"),
+        new AdapterErrorKind.ConnectionFailed("database"),
         exception);
 
     // Act & Assert
     error.ShouldBeAdapterExceptionalError<DatabaseAdapter, TimeoutException>(
-        new AdapterErrorType.ConnectionFailed("database"));
+        new AdapterErrorKind.ConnectionFailed("database"));
 }
 ```
 
@@ -384,13 +384,13 @@ public void Fin_ShouldBeAdapterError_WhenServiceUnavailable()
 {
     // Arrange
     Fin<PaymentResult> fin = AdapterError.For<PaymentGatewayAdapter>(
-        new AdapterErrorType.ExternalServiceUnavailable("PaymentGateway"),
+        new AdapterErrorKind.ExternalServiceUnavailable("PaymentGateway"),
         currentValue: "https://payment.example.com",
         message: "Payment service unavailable");
 
     // Act & Assert
     fin.ShouldBeAdapterError<PaymentGatewayAdapter, PaymentResult>(
-        new AdapterErrorType.ExternalServiceUnavailable("PaymentGateway"));
+        new AdapterErrorKind.ExternalServiceUnavailable("PaymentGateway"));
 }
 
 [Fact]
@@ -398,12 +398,12 @@ public void Fin_ShouldBeAdapterExceptionalError()
 {
     // Arrange
     Fin<Unit> fin = AdapterError.FromException<UsecaseExceptionPipeline>(
-        new AdapterErrorType.PipelineException(),
+        new AdapterErrorKind.PipelineException(),
         new Exception("Unexpected error"));
 
     // Act & Assert
     fin.ShouldBeAdapterExceptionalError<UsecaseExceptionPipeline, Unit>(
-        new AdapterErrorType.PipelineException());
+        new AdapterErrorKind.PipelineException());
 }
 ```
 
@@ -416,13 +416,13 @@ public void Validation_ShouldHaveAdapterError()
     // Arrange
     Validation<Error, Unit> validation = Fail<Error, Unit>(
         AdapterError.For<CacheAdapter>(
-            new AdapterErrorType.ConnectionFailed("Redis"),
+            new AdapterErrorKind.ConnectionFailed("Redis"),
             currentValue: "localhost:6379",
             message: "Cannot connect to Redis"));
 
     // Act & Assert
     validation.ShouldHaveAdapterError<CacheAdapter, Unit>(
-        new AdapterErrorType.ConnectionFailed("Redis"));
+        new AdapterErrorKind.ConnectionFailed("Redis"));
 }
 
 [Fact]
@@ -431,13 +431,13 @@ public void Validation_ShouldHaveOnlyAdapterError()
     // Arrange
     Validation<Error, byte[]> validation = Fail<Error, byte[]>(
         AdapterError.For<MessageSerializer>(
-            new AdapterErrorType.Serialization("JSON"),
+            new AdapterErrorKind.Serialization("JSON"),
             currentValue: "invalid-object",
             message: "Failed to serialize object to JSON"));
 
     // Act & Assert
     validation.ShouldHaveOnlyAdapterError<MessageSerializer, byte[]>(
-        new AdapterErrorType.Serialization("JSON"));
+        new AdapterErrorKind.Serialization("JSON"));
 }
 
 [Fact]
@@ -445,12 +445,12 @@ public void Validation_ShouldHaveAdapterErrors()
 {
     // Arrange
     var error1 = AdapterError.For<UsecaseValidationPipeline>(
-        new AdapterErrorType.PipelineValidation("Name"),
+        new AdapterErrorKind.PipelineValidation("Name"),
         currentValue: "",
         message: "Name is required");
 
     var error2 = AdapterError.For<UsecaseValidationPipeline>(
-        new AdapterErrorType.PipelineValidation("Price"),
+        new AdapterErrorKind.PipelineValidation("Price"),
         currentValue: "-1",
         message: "Price must be positive");
 
@@ -458,8 +458,8 @@ public void Validation_ShouldHaveAdapterErrors()
 
     // Act & Assert
     validation.ShouldHaveAdapterErrors<UsecaseValidationPipeline, Unit>(
-        new AdapterErrorType.PipelineValidation("Name"),
-        new AdapterErrorType.PipelineValidation("Price"));
+        new AdapterErrorKind.PipelineValidation("Name"),
+        new AdapterErrorKind.PipelineValidation("Price"));
 }
 ```
 
@@ -479,9 +479,9 @@ Adapter 에러의 생성과 테스트 패턴을 확인했으니, 이제 표준 �
 
 ```csharp
 // ✅ Good - 명확하고 구체적
-// public sealed record AlreadyShipped : DomainErrorType.Custom;
-// public sealed record PaymentDeclined : ApplicationErrorType.Custom;
-// public sealed record StockDepleted : DomainErrorType.Custom;
+// public sealed record AlreadyShipped : DomainErrorKind.Custom;
+// public sealed record PaymentDeclined : ApplicationErrorKind.Custom;
+// public sealed record StockDepleted : DomainErrorKind.Custom;
 new AlreadyShipped()     // 이미 배송됨
 new PaymentDeclined()    // 결제 거부됨
 new StockDepleted()      // 재고 소진
@@ -513,9 +513,9 @@ new StockDepleted()      // 재고 소진
 
 ```csharp
 // 자주 사용되는 패턴 발견 시 표준 타입으로 추가
-public sealed record Expired : DomainErrorType;
-public sealed record Suspended : ApplicationErrorType;
-public sealed record RateLimited : AdapterErrorType;
+public sealed record Expired : DomainErrorKind;
+public sealed record Suspended : ApplicationErrorKind;
+public sealed record RateLimited : AdapterErrorKind;
 ```
 
 Custom 에러의 정의와 승격 기준을 이해했다면, 이제 에러 테스트를 효과적으로 작성하는 모범 사례를 살펴봅니다.
@@ -589,7 +589,7 @@ public void Create_ShouldFail_WhenEmailIsEmpty()
     var result = Email.Create(emptyEmail);
 
     // Assert
-    result.ShouldBeDomainError<Email, Email>(new DomainErrorType.Empty());
+    result.ShouldBeDomainError<Email, Email>(new DomainErrorKind.Empty());
 }
 ```
 
@@ -606,7 +606,7 @@ public void Create_ShouldFail_WhenEmailIsEmptyOrWhitespace(string? email)
     var result = Email.Create(email);
 
     // Assert
-    result.ShouldBeDomainError<Email, Email>(new DomainErrorType.Empty());
+    result.ShouldBeDomainError<Email, Email>(new DomainErrorKind.Empty());
 }
 
 [Theory]
@@ -619,7 +619,7 @@ public void Create_ShouldFail_WhenEmailFormatIsInvalid(string email)
     var result = Email.Create(email);
 
     // Assert
-    result.ShouldBeDomainError<Email, Email>(new DomainErrorType.InvalidFormat());
+    result.ShouldBeDomainError<Email, Email>(new DomainErrorKind.InvalidFormat());
 }
 ```
 
@@ -627,7 +627,7 @@ public void Create_ShouldFail_WhenEmailFormatIsInvalid(string email)
 
 ```csharp
 // Error type definition (nested in Order class):
-// public sealed record AlreadyShipped : DomainErrorType.Custom;
+// public sealed record AlreadyShipped : DomainErrorKind.Custom;
 
 [Fact]
 public void Cancel_ShouldFail_WhenOrderAlreadyShipped()
@@ -661,10 +661,10 @@ using Functorium.Testing.Assertions.Errors;
 | `error.ShouldHaveErrorCode(predicate)` | predicate 기반 에러 코드 검증 |
 | `error.ShouldBeExpected()` | Expected 타입 검증 |
 | `error.ShouldBeExceptional()` | Exceptional 타입 검증 |
-| `error.ShouldBeErrorCodeExpected("code", "value")` | `ErrorCodeExpected` 타입 + 코드 + 값 검증 |
-| `error.ShouldBeErrorCodeExpected<T>("code", value)` | `ErrorCodeExpected<T>` 타입 + 코드 + 값 검증 |
-| `error.ShouldBeErrorCodeExpected<T1, T2>("code", v1, v2)` | `ErrorCodeExpected<T1, T2>` 검증 |
-| `error.ShouldBeErrorCodeExpected<T1, T2, T3>("code", v1, v2, v3)` | `ErrorCodeExpected<T1, T2, T3>` 검증 |
+| `error.ShouldBeExpectedError("code", "value")` | `ExpectedError` 타입 + 코드 + 값 검증 |
+| `error.ShouldBeExpectedError<T>("code", value)` | `ExpectedError<T>` 타입 + 코드 + 값 검증 |
+| `error.ShouldBeExpectedError<T1, T2>("code", v1, v2)` | `ExpectedError<T1, T2>` 검증 |
+| `error.ShouldBeExpectedError<T1, T2, T3>("code", v1, v2, v3)` | `ExpectedError<T1, T2, T3>` 검증 |
 | `fin.ShouldSucceed()` | 성공 검증, 성공 값 반환 |
 | `fin.ShouldSucceedWith(value)` | 성공 + 특정 값 검증 |
 | `fin.ShouldFail()` | 실패 검증 |
@@ -685,7 +685,7 @@ public void Create_ShouldFail_WithExpectedErrorCode()
     var result = Email.Create("");
 
     // Assert — 레이어 무관하게 에러 코드만 검증
-    result.ShouldFailWithErrorCode("DomainErrors.Email.Empty");
+    result.ShouldFailWithErrorCode("Domain.Email.Empty");
 }
 
 [Fact]
@@ -696,22 +696,22 @@ public void Validate_ShouldContain_MultipleErrorCodes()
 
     // Assert
     result.ShouldContainErrorCodes(
-        "DomainErrors.Password.Empty",
-        "DomainErrors.Password.TooShort");
+        "Domain.Password.Empty",
+        "Domain.Password.TooShort");
 }
 ```
 
-#### ErrorCodeExceptionalAssertions — 예외 기반 에러 검증
+#### ExceptionalErrorAssertions — 예외 기반 에러 검증
 
 | 메서드 | 설명 |
 |--------|------|
-| `error.ShouldBeErrorCodeExceptional("code")` | `ErrorCodeExceptional` 타입 + 에러 코드 검증 |
-| `error.ShouldBeErrorCodeExceptional<TException>("code")` | 특정 예외 타입 래핑 검증 |
+| `error.ShouldBeExceptionalError("code")` | `ExceptionalError` 타입 + 에러 코드 검증 |
+| `error.ShouldBeExceptionalError<TException>("code")` | 특정 예외 타입 래핑 검증 |
 | `error.ShouldWrapException<TException>("code", message?)` | 예외 타입 + 선택적 메시지 검증 |
-| `error.ShouldBeErrorCodeExceptional("code", exceptionAssertion)` | 예외 assertion 실행 |
-| `fin.ShouldFailWithException("code")` | `Fin` 실패 + `ErrorCodeExceptional` 검증 |
+| `error.ShouldBeExceptionalError("code", exceptionAssertion)` | 예외 assertion 실행 |
+| `fin.ShouldFailWithException("code")` | `Fin` 실패 + `ExceptionalError` 검증 |
 | `fin.ShouldFailWithException<T, TException>("code")` | `Fin` 실패 + 특정 예외 타입 검증 |
-| `validation.ShouldContainException("code")` | `Validation` 실패 + `ErrorCodeExceptional` 포함 검증 |
+| `validation.ShouldContainException("code")` | `Validation` 실패 + `ExceptionalError` 포함 검증 |
 | `validation.ShouldContainException<T, TException>("code")` | `Validation` 실패 + 특정 예외 타입 포함 검증 |
 
 ```csharp
@@ -722,12 +722,12 @@ public void ShouldWrapException_WhenDatabaseFails()
     // Arrange
     var exception = new InvalidOperationException("DB connection lost");
     var error = AdapterError.FromException<DatabaseAdapter>(
-        new AdapterErrorType.ConnectionFailed("database"),
+        new AdapterErrorKind.ConnectionFailed("database"),
         exception);
 
     // Assert
-    error.ShouldBeErrorCodeExceptional<InvalidOperationException>(
-        "AdapterErrors.DatabaseAdapter.ConnectionFailed");
+    error.ShouldBeExceptionalError<InvalidOperationException>(
+        "Adapter.DatabaseAdapter.ConnectionFailed");
 }
 ```
 
@@ -749,7 +749,7 @@ public void Error_ShouldHave_ErrorCode_Property()
 
     // Assert — 확장 속성으로 간결하게 접근
     error.HasErrorCode.ShouldBeTrue();
-    error.ErrorCode.ShouldBe("DomainErrors.Email.Empty");
+    error.ErrorCode.ShouldBe("Domain.Email.Empty");
 }
 ```
 
@@ -759,7 +759,7 @@ public void Error_ShouldHave_ErrorCode_Property()
 
 ## 레이어별 요약 + 체크리스트
 
-### Domain (DomainErrorType)
+### Domain (DomainErrorKind)
 
 ```
 값 존재:     Empty, Null
@@ -771,10 +771,10 @@ public void Error_ShouldHave_ErrorCode_Property()
 숫자 범위:   Zero, Negative, NotPositive, OutOfRange, BelowMinimum, AboveMaximum
 존재 여부:   NotFound, AlreadyExists, Duplicate
 비교:        Mismatch
-커스텀:      Custom (abstract → sealed record MyError : DomainErrorType.Custom)
+커스텀:      Custom (abstract → sealed record MyError : DomainErrorKind.Custom)
 ```
 
-### Application (ApplicationErrorType)
+### Application (ApplicationErrorKind)
 
 ```
 공통:        Empty, Null, NotFound, AlreadyExists, Duplicate, InvalidState
@@ -782,7 +782,7 @@ public void Error_ShouldHave_ErrorCode_Property()
 검증:        ValidationFailed
 비즈니스:    BusinessRuleViolated, ConcurrencyConflict, ResourceLocked,
              OperationCancelled, InsufficientPermission
-커스텀:      Custom (abstract → sealed record MyError : ApplicationErrorType.Custom)
+커스텀:      Custom (abstract → sealed record MyError : ApplicationErrorKind.Custom)
 ```
 
 ### Event (EventErrorType)
@@ -794,7 +794,7 @@ public void Error_ShouldHave_ErrorCode_Property()
 커스텀:      Custom (abstract → sealed record MyError : EventErrorType.Custom)
 ```
 
-### Adapter (AdapterErrorType)
+### Adapter (AdapterErrorKind)
 
 ```
 공통:        Empty, Null, NotFound, AlreadyExists, Duplicate, InvalidState,
@@ -802,7 +802,7 @@ public void Error_ShouldHave_ErrorCode_Property()
 파이프라인:  PipelineValidation, PipelineException
 외부서비스:  ExternalServiceUnavailable, ConnectionFailed, Timeout
 데이터:      Serialization, Deserialization, DataCorruption
-커스텀:      Custom (abstract → sealed record MyError : AdapterErrorType.Custom)
+커스텀:      Custom (abstract → sealed record MyError : AdapterErrorKind.Custom)
 ```
 
 ### 레이어별 사용 시점
@@ -823,9 +823,9 @@ public void Error_ShouldHave_ErrorCode_Property()
 
 | 레이어 | 접두사 | 예시 |
 |--------|--------|------|
-| Domain | `DomainErrors` | `DomainErrors.Email.Empty` |
-| Application | `ApplicationErrors` | `ApplicationErrors.CreateProductCommand.NotFound` |
-| Adapter | `AdapterErrors` | `AdapterErrors.ProductRepository.NotFound` |
+| Domain | `Domain` | `Domain.Email.Empty` |
+| Application | `Application` | `Application.CreateProductCommand.NotFound` |
+| Adapter | `Adapter` | `Adapter.ProductRepository.NotFound` |
 
 ### 에러 정의 체크리스트
 
@@ -864,12 +864,12 @@ public void Error_ShouldHave_ErrorCode_Property()
 ## 트러블슈팅
 
 ### `FromException` 사용 시 에러 코드가 기대와 다름
-**원인:** `FromException`은 `ErrorCodeExceptional` 타입을 생성하므로 `ShouldBeAdapterError` 대신 `ShouldBeAdapterExceptionalError`를 사용해야 합니다.
+**원인:** `FromException`은 `ExceptionalError` 타입을 생성하므로 `ShouldBeAdapterError` 대신 `ShouldBeAdapterExceptionalError`를 사용해야 합니다.
 **해결:** 예외 래핑 에러는 `ShouldBeAdapterExceptionalError<TAdapter>(errorType)` 또는 `ShouldBeAdapterExceptionalError<TAdapter, TException>(errorType)`으로 검증하세요.
 
 ### Custom 에러가 레이어별 어설션에서 인식되지 않음
 **원인:** Custom 에러의 정의 위치가 잘못되었거나, 해당 레이어의 `Custom`을 상속하지 않았을 수 있습니다.
-**해결:** Custom 에러는 반드시 해당 레이어의 `Custom` abstract record를 상속해야 합니다. 예: `public sealed record RateLimited : AdapterErrorType.Custom;`
+**해결:** Custom 에러는 반드시 해당 레이어의 `Custom` abstract record를 상속해야 합니다. 예: `public sealed record RateLimited : AdapterErrorKind.Custom;`
 
 ---
 
