@@ -48,6 +48,50 @@ All error codes follow this pattern:
 | Application | `ApplicationErrors` | `ApplicationErrors.CreateProductCommand.AlreadyExists` |
 | Adapter | `AdapterErrors` | `AdapterErrors.ProductRepository.NotFound` |
 
+### Relationship Diagram (1.0.0-alpha.4 Target State)
+
+The diagram below shows the flow from the user code entry point (layer factory), through internal error record creation, to the observability layer. It reflects the **upcoming 1.0.0-alpha.4 naming** (ErrorType -> ErrorKind, ErrorCodeFactory -> ErrorFactory, etc.) and the shortened prefix values ("Domain" / "Application" / "Adapter").
+
+```
+[Public API -- User Code Path]
+
+  DomainError.For<Email>(new DomainErrorKind.Empty(), value, msg)
+      |                        |
+      | (static factory)       | (classification = Kind)
+      |                        +--> ErrorKind (abstract base)
+      |                                |
+      |                                v
+      |                             *ErrorKind (per-layer derivation)
+      |                                |
+      |                                v
+      |                             Empty/Null/Custom/... (nested)
+      v
+  IHasErrorCode { string ErrorCode }   <-- implemented by all errors
+
+                   | (internal delegation)
+                   v
+
+[Internal Implementation -- InternalsVisibleTo: Adapters, Testing]
+
+  LayerErrorCore.Create<Email>(ErrorCodePrefixes.Domain, kind, ...)
+      |                                 |
+      |                                 | (3 internal constants)
+      |                                 +--> "Domain" / "Application" / "Adapter"
+      v
+  ErrorFactory.CreateExpected(prefix, typeName, kind.Name, msg)
+      | (exception path)
+      +--> ErrorFactory.CreateExceptional(exception, ...)
+      v
+  ExpectedError / ExceptionalError : LanguageExt.Error
+      * ErrorCode : string     <-- "Domain.Email.Empty"
+      * NumericCode : int      <-- -1000 (default)
+      v
+  Serilog Destructurer
+      --> ErrorLogFieldNames.{Kind, NumericCode, Message, Inner, ...}
+```
+
+> **Note**: The type signatures and property descriptions in the rest of this document reflect the current (1.0.0-alpha.3) code. The diagram above is a roadmap preview of the target state after the comprehensive redesign; the names it uses (`ErrorKind`, `ErrorFactory`, `ExpectedError`, shortened prefixes, etc.) take effect in 1.0.0-alpha.4. See the release notes for full change details.
+
 ---
 
 ## Error Code System

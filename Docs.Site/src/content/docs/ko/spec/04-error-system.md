@@ -48,6 +48,50 @@ Functorium의 에러 시스템은 **레이어별 sealed record 계층**(`DomainE
 | Application | `ApplicationErrors` | `ApplicationErrors.CreateProductCommand.AlreadyExists` |
 | Adapter | `AdapterErrors` | `AdapterErrors.ProductRepository.NotFound` |
 
+### 관계도 (1.0.0-alpha.4 목표 상태)
+
+다음 다이어그램은 사용자 코드의 진입점(레이어 팩토리)부터 내부 에러 레코드 생성, 관측성 계층까지의 흐름을 한눈에 보여줍니다. **1.0.0-alpha.4에서 적용 예정**인 이름 체계(ErrorType → ErrorKind, ErrorCodeFactory → ErrorFactory 등)와 단축된 prefix("Domain" / "Application" / "Adapter")를 기준으로 작성했습니다.
+
+```
+[Public API -- User Code Path]
+
+  DomainError.For<Email>(new DomainErrorKind.Empty(), value, msg)
+      |                        |
+      | (static factory)       | (classification = Kind)
+      |                        +--> ErrorKind (abstract base)
+      |                                |
+      |                                v
+      |                             *ErrorKind (per-layer derivation)
+      |                                |
+      |                                v
+      |                             Empty/Null/Custom/... (nested)
+      v
+  IHasErrorCode { string ErrorCode }   <-- implemented by all errors
+
+                   | (internal delegation)
+                   v
+
+[Internal Implementation -- InternalsVisibleTo: Adapters, Testing]
+
+  LayerErrorCore.Create<Email>(ErrorCodePrefixes.Domain, kind, ...)
+      |                                 |
+      |                                 | (3 internal constants)
+      |                                 +--> "Domain" / "Application" / "Adapter"
+      v
+  ErrorFactory.CreateExpected(prefix, typeName, kind.Name, msg)
+      | (exception path)
+      +--> ErrorFactory.CreateExceptional(exception, ...)
+      v
+  ExpectedError / ExceptionalError : LanguageExt.Error
+      * ErrorCode : string     <-- "Domain.Email.Empty"
+      * NumericCode : int      <-- -1000 (default)
+      v
+  Serilog Destructurer
+      --> ErrorLogFieldNames.{Kind, NumericCode, Message, Inner, ...}
+```
+
+> **참고**: 이 문서의 본문 타입 시그니처·속성 설명은 현재(1.0.0-alpha.3) 코드 기준입니다. 위 관계도는 전면 개정 후 목표 상태를 미리 보여주는 로드맵 다이어그램이며, 본문과 일치하지 않는 이름(`ErrorKind`, `ErrorFactory`, `ExpectedError`, 단축된 prefix 등)은 1.0.0-alpha.4에서 반영됩니다. 자세한 변경 사항은 릴리스 노트를 참조하세요.
+
 ---
 
 ## 에러 코드 체계
