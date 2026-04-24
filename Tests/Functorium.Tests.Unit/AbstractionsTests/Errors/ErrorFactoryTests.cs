@@ -3,10 +3,10 @@ using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 namespace Functorium.Tests.Unit.AbstractionsTests.Errors;
 
 [Trait(nameof(UnitTest), UnitTest.Functorium_Abstractions)]
-public class ErrorCodeFactoryTests
+public class ErrorFactoryTests
 {
     [Fact]
-    public void Create_ReturnsErrorCodeExpected_WhenStringValueProvided()
+    public void CreateExpected_ReturnsErrorCodeExpected_WhenStringValueProvided()
     {
         // Arrange
         var errorCode = "User.NotFound";
@@ -14,7 +14,7 @@ public class ErrorCodeFactoryTests
         var errorMessage = "User not found";
 
         // Act
-        var actual = ErrorCodeFactory.Create(errorCode, errorCurrentValue, errorMessage);
+        var actual = ErrorFactory.CreateExpected(errorCode, errorCurrentValue, errorMessage);
 
         // Assert
         actual.ShouldBeOfType<ErrorCodeExpected>();
@@ -24,7 +24,7 @@ public class ErrorCodeFactoryTests
     }
 
     [Fact]
-    public void Create_ReturnsErrorCodeExpectedGeneric_WhenGenericValueProvided()
+    public void CreateExpected_ReturnsErrorCodeExpectedGeneric_WhenGenericValueProvided()
     {
         // Arrange
         var errorCode = "Temperature.OutOfRange";
@@ -32,7 +32,7 @@ public class ErrorCodeFactoryTests
         var errorMessage = "Temperature is out of range";
 
         // Act
-        var actual = ErrorCodeFactory.Create(errorCode, errorCurrentValue, errorMessage);
+        var actual = ErrorFactory.CreateExpected(errorCode, errorCurrentValue, errorMessage);
 
         // Assert
         actual.ShouldBeOfType<ErrorCodeExpected<int>>();
@@ -41,7 +41,7 @@ public class ErrorCodeFactoryTests
     }
 
     [Fact]
-    public void Create_ReturnsErrorCodeExpectedT1T2_WhenTwoValuesProvided()
+    public void CreateExpected_ReturnsErrorCodeExpectedT1T2_WhenTwoValuesProvided()
     {
         // Arrange
         var errorCode = "Range.Invalid";
@@ -50,7 +50,7 @@ public class ErrorCodeFactoryTests
         var errorMessage = "Min cannot be greater than max";
 
         // Act
-        var actual = ErrorCodeFactory.Create(errorCode, min, max, errorMessage);
+        var actual = ErrorFactory.CreateExpected(errorCode, min, max, errorMessage);
 
         // Assert
         actual.ShouldBeOfType<ErrorCodeExpected<int, int>>();
@@ -59,7 +59,7 @@ public class ErrorCodeFactoryTests
     }
 
     [Fact]
-    public void Create_ReturnsErrorCodeExpectedT1T2T3_WhenThreeValuesProvided()
+    public void CreateExpected_ReturnsErrorCodeExpectedT1T2T3_WhenThreeValuesProvided()
     {
         // Arrange
         var errorCode = "Date.Invalid";
@@ -69,7 +69,7 @@ public class ErrorCodeFactoryTests
         var errorMessage = "Invalid date components";
 
         // Act
-        var actual = ErrorCodeFactory.Create(errorCode, year, month, day, errorMessage);
+        var actual = ErrorFactory.CreateExpected(errorCode, year, month, day, errorMessage);
 
         // Assert
         actual.ShouldBeOfType<ErrorCodeExpected<int, int, int>>();
@@ -78,14 +78,14 @@ public class ErrorCodeFactoryTests
     }
 
     [Fact]
-    public void CreateFromException_ReturnsErrorCodeExceptional_WhenExceptionProvided()
+    public void CreateExceptional_ReturnsErrorCodeExceptional_WhenExceptionProvided()
     {
         // Arrange
         var errorCode = "Database.ConnectionFailed";
         var exception = new InvalidOperationException("Connection failed");
 
         // Act
-        var actual = ErrorCodeFactory.CreateFromException(errorCode, exception);
+        var actual = ErrorFactory.CreateExceptional(errorCode, exception);
 
         // Assert
         actual.ShouldBeOfType<ErrorCodeExceptional>();

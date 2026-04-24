@@ -17,7 +17,7 @@ public class ErrorDestructuringTests
     public Task Destructure_ReturnsExpectedJson_WhenErrorCodeExpected()
     {
         // Arrange
-        Error error = ErrorCodeFactory.Create(
+        Error error = ErrorFactory.CreateExpected(
             errorCode: "Domain.User.NotFound",
             errorCurrentValue: "user123",
             errorMessage: "사용자를 찾을 수 없습니다");
@@ -34,7 +34,7 @@ public class ErrorDestructuringTests
     public Task Destructure_ReturnsExpectedJson_WhenErrorCodeExpectedT()
     {
         // Arrange
-        Error error = ErrorCodeFactory.Create(
+        Error error = ErrorFactory.CreateExpected(
             errorCode: "Domain.Sensor.TemperatureOutOfRange",
             errorCurrentValue: 150,
             errorMessage: "온도 범위 초과");
@@ -51,7 +51,7 @@ public class ErrorDestructuringTests
     public Task Destructure_ReturnsExpectedJson_WhenErrorCodeExpectedT1T2()
     {
         // Arrange
-        Error error = ErrorCodeFactory.Create(
+        Error error = ErrorFactory.CreateExpected(
             errorCode: "Domain.Range.InvalidBounds",
             errorCurrentValue1: 100,
             errorCurrentValue2: 50,
@@ -69,7 +69,7 @@ public class ErrorDestructuringTests
     public Task Destructure_ReturnsExpectedJson_WhenErrorCodeExpectedT1T2T3()
     {
         // Arrange
-        Error error = ErrorCodeFactory.Create(
+        Error error = ErrorFactory.CreateExpected(
             errorCode: "Domain.Schedule.InvalidDate",
             errorCurrentValue1: 2025,
             errorCurrentValue2: 13,
@@ -89,7 +89,7 @@ public class ErrorDestructuringTests
     {
         // Arrange
         var exception = new InvalidOperationException("Connection failed");
-        Error error = ErrorCodeFactory.CreateFromException(
+        Error error = ErrorFactory.CreateExceptional(
             errorCode: "Application.Database.ConnectionFailed",
             exception: exception);
 
@@ -111,7 +111,7 @@ public class ErrorDestructuringTests
         // Arrange
         var innerException = new ArgumentNullException("connectionString", "Connection string cannot be null");
         var exception = new InvalidOperationException("Database connection failed", innerException);
-        Error error = ErrorCodeFactory.CreateFromException(
+        Error error = ErrorFactory.CreateExceptional(
             errorCode: "Application.Database.ConnectionFailedWithInner",
             exception: exception);
 
@@ -134,7 +134,7 @@ public class ErrorDestructuringTests
         var rootCause = new TimeoutException("Network timeout after 30 seconds");
         var middleException = new IOException("Failed to read from socket", rootCause);
         var outerException = new InvalidOperationException("Database query execution failed", middleException);
-        Error error = ErrorCodeFactory.CreateFromException(
+        Error error = ErrorFactory.CreateExceptional(
             errorCode: "Application.Database.QueryExecutionFailed",
             exception: outerException);
 
@@ -154,9 +154,9 @@ public class ErrorDestructuringTests
     public Task Destructure_ReturnsExpectedJson_WhenManyErrors()
     {
         // Arrange
-        var error1 = ErrorCodeFactory.Create(
+        var error1 = ErrorFactory.CreateExpected(
             "Application.User.NameRequired", "name", "이름은 필수입니다");
-        var error2 = ErrorCodeFactory.Create(
+        var error2 = ErrorFactory.CreateExpected(
             "Application.User.DescriptionTooLong", "description", "설명이 너무 깁니다");
 
         Error error = Error.Many(error1, error2);
@@ -174,7 +174,7 @@ public class ErrorDestructuringTests
     {
         // Arrange
         var tupleValue = (Id: 42, Name: "user123");
-        Error error = ErrorCodeFactory.Create(
+        Error error = ErrorFactory.CreateExpected(
             errorCode: "Domain.User.InvalidData",
             errorCurrentValue: tupleValue,
             errorMessage: "사용자 데이터가 유효하지 않습니다");
@@ -192,7 +192,7 @@ public class ErrorDestructuringTests
     {
         // Arrange
         var recordValue = new Point(X: 100, Y: 200);
-        Error error = ErrorCodeFactory.Create(
+        Error error = ErrorFactory.CreateExpected(
             errorCode: "Domain.Geometry.InvalidPoint",
             errorCurrentValue: recordValue,
             errorMessage: "좌표가 유효하지 않습니다");
@@ -211,7 +211,7 @@ public class ErrorDestructuringTests
         // Arrange
         var point = new Point(X: 50, Y: 75);
         var range = (Min: 0, Max: 100);
-        Error error = ErrorCodeFactory.Create(
+        Error error = ErrorFactory.CreateExpected(
             errorCode: "Domain.Geometry.PointOutOfRange",
             errorCurrentValue1: point,
             errorCurrentValue2: range,
@@ -229,7 +229,7 @@ public class ErrorDestructuringTests
     public void TryDestructure_ReturnsTrue_WhenErrorCodeExpected()
     {
         // Arrange
-        Error error = ErrorCodeFactory.Create("Code", "value", "message");
+        Error error = ErrorFactory.CreateExpected("Code", "value", "message");
 
         // Act
         var actual = _sut.TryDestructure(error, _factory, out _);

@@ -17,7 +17,7 @@ public sealed class FailExceptionalCommand
         public ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken ct)
         {
             var exception = new InvalidOperationException("데이터베이스 연결이 끊어졌습니다");
-            var error = ErrorCodeFactory.CreateFromException(
+            var error = ErrorFactory.CreateExceptional(
                 errorCode: "Database.ConnectionFailed",
                 exception: exception);
 

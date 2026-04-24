@@ -12,14 +12,14 @@ internal static class LayerErrorCore
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error Create<TContext>(
         string prefix, ErrorType errorType, string currentValue, string message) =>
-        ErrorCodeFactory.Create(
+        ErrorFactory.CreateExpected(
             $"{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}", currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error Create<TContext, TValue>(
         string prefix, ErrorType errorType, TValue currentValue, string message)
         where TValue : notnull =>
-        ErrorCodeFactory.Create(
+        ErrorFactory.CreateExpected(
             $"{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}", currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -27,7 +27,7 @@ internal static class LayerErrorCore
         string prefix, ErrorType errorType, T1 value1, T2 value2, string message)
         where T1 : notnull
         where T2 : notnull =>
-        ErrorCodeFactory.Create(
+        ErrorFactory.CreateExpected(
             $"{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}", value1, value2, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -36,31 +36,31 @@ internal static class LayerErrorCore
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        ErrorCodeFactory.Create(
+        ErrorFactory.CreateExpected(
             $"{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}", value1, value2, value3, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error Create(
         string prefix, Type contextType, ErrorType errorType, string currentValue, string message) =>
-        ErrorCodeFactory.Create(
+        ErrorFactory.CreateExpected(
             $"{prefix}.{contextType.Name}.{errorType.ErrorName}", currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error ForContext(
         string prefix, string contextName, ErrorType errorType, string currentValue, string message) =>
-        ErrorCodeFactory.Create(
+        ErrorFactory.CreateExpected(
             $"{prefix}.{contextName}.{errorType.ErrorName}", currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error ForContext<TValue>(
         string prefix, string contextName, ErrorType errorType, TValue currentValue, string message)
         where TValue : notnull =>
-        ErrorCodeFactory.Create(
+        ErrorFactory.CreateExpected(
             $"{prefix}.{contextName}.{errorType.ErrorName}", currentValue, message);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error FromException<TContext>(
         string prefix, ErrorType errorType, Exception exception) =>
-        ErrorCodeFactory.CreateFromException(
+        ErrorFactory.CreateExceptional(
             $"{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}", exception);
 }

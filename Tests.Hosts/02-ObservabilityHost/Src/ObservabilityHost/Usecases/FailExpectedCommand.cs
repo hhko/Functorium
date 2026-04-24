@@ -16,7 +16,7 @@ public sealed class FailExpectedCommand
     {
         public ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken ct)
         {
-            var error = ErrorCodeFactory.Create(
+            var error = ErrorFactory.CreateExpected(
                 errorCode: "Order.NotFound",
                 errorCurrentValue: request.OrderId,
                 errorMessage: "주문을 찾을 수 없습니다");

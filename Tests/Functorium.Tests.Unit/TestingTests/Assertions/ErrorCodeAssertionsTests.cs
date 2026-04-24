@@ -16,7 +16,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldHaveErrorCode_ReturnsIHasErrorCode_WhenErrorImplementsInterface()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act
         var result = error.ShouldHaveErrorCode();
@@ -44,7 +44,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldBeExpected_ReturnsSuccess_WhenErrorIsExpected()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "value", "Expected error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "value", "Expected error");
 
         // Act & Assert (should not throw)
         error.ShouldBeExpected();
@@ -54,7 +54,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldBeExpected_ThrowsException_WhenErrorIsExceptional()
     {
         // Arrange
-        var error = ErrorCodeFactory.CreateFromException(TestErrorCode, new InvalidOperationException("Test"));
+        var error = ErrorFactory.CreateExceptional(TestErrorCode, new InvalidOperationException("Test"));
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() => error.ShouldBeExpected());
@@ -64,7 +64,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldBeExceptional_ReturnsSuccess_WhenErrorIsExceptional()
     {
         // Arrange
-        var error = ErrorCodeFactory.CreateFromException(TestErrorCode, new InvalidOperationException("Test"));
+        var error = ErrorFactory.CreateExceptional(TestErrorCode, new InvalidOperationException("Test"));
 
         // Act & Assert (should not throw)
         error.ShouldBeExceptional();
@@ -74,7 +74,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldBeExceptional_ThrowsException_WhenErrorIsExpected()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "value", "Expected error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "value", "Expected error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() => error.ShouldBeExceptional());
@@ -88,7 +88,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldHaveErrorCode_WithString_ReturnsSuccess_WhenCodeMatches()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act & Assert (should not throw)
         error.ShouldHaveErrorCode(TestErrorCode);
@@ -98,7 +98,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldHaveErrorCode_WithString_ThrowsException_WhenCodeDoesNotMatch()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -113,7 +113,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldHaveErrorCodeStartingWith_ReturnsSuccess_WhenCodeStartsWithPrefix()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act & Assert (should not throw)
         error.ShouldHaveErrorCodeStartingWith("TestErrors.Example");
@@ -123,7 +123,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldHaveErrorCodeStartingWith_ThrowsException_WhenCodeDoesNotStartWithPrefix()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -138,7 +138,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldHaveErrorCode_WithPredicate_ReturnsSuccess_WhenPredicateMatches()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act & Assert (should not throw)
         error.ShouldHaveErrorCode(code => code.Contains("Example"));
@@ -148,7 +148,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldHaveErrorCode_WithPredicate_ThrowsException_WhenPredicateDoesNotMatch()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -163,7 +163,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldBeErrorCodeExpected_ReturnsSuccess_WhenCodeAndValueMatch()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "test-value", "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "test-value", "Test error");
 
         // Act & Assert (should not throw)
         error.ShouldBeErrorCodeExpected(TestErrorCode, "test-value");
@@ -173,7 +173,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldBeErrorCodeExpected_ThrowsException_WhenValueDoesNotMatch()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "test-value", "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "test-value", "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -188,7 +188,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldBeErrorCodeExpected_Generic_ReturnsSuccess_WhenCodeAndValueMatch()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, 42, "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, 42, "Test error");
 
         // Act & Assert (should not throw)
         error.ShouldBeErrorCodeExpected(TestErrorCode, 42);
@@ -198,7 +198,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldBeErrorCodeExpected_Generic_ThrowsException_WhenValueDoesNotMatch()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, 42, "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, 42, "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -209,7 +209,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldBeErrorCodeExpected_WithPredicate_ReturnsSuccess_WhenPredicateMatches()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, 42, "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, 42, "Test error");
 
         // Act & Assert (should not throw)
         error.ShouldBeErrorCodeExpected<int>(TestErrorCode, value => value > 0);
@@ -219,7 +219,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldBeErrorCodeExpected_WithPredicate_ThrowsException_WhenPredicateDoesNotMatch()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, 42, "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, 42, "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -234,7 +234,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldBeErrorCodeExpected_TwoValues_ReturnsSuccess_WhenAllValuesMatch()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "first", 42, "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "first", 42, "Test error");
 
         // Act & Assert (should not throw)
         error.ShouldBeErrorCodeExpected(TestErrorCode, "first", 42);
@@ -244,7 +244,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldBeErrorCodeExpected_TwoValues_ThrowsException_WhenSecondValueDoesNotMatch()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "first", 42, "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "first", 42, "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -259,7 +259,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldBeErrorCodeExpected_ThreeValues_ReturnsSuccess_WhenAllValuesMatch()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "first", 42, 3.14, "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "first", 42, 3.14, "Test error");
 
         // Act & Assert (should not throw)
         error.ShouldBeErrorCodeExpected(TestErrorCode, "first", 42, 3.14);
@@ -269,7 +269,7 @@ public class ErrorCodeAssertionsTests
     public void ShouldBeErrorCodeExpected_ThreeValues_ThrowsException_WhenThirdValueDoesNotMatch()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "first", 42, 3.14, "Test error");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "first", 42, 3.14, "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -297,7 +297,7 @@ public class ErrorCodeAssertionsTests
     public void Fin_ShouldSucceed_ThrowsException_WhenFinFails()
     {
         // Arrange
-        Fin<int> fin = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        Fin<int> fin = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() => fin.ShouldSucceed());
@@ -341,7 +341,7 @@ public class ErrorCodeAssertionsTests
     public void Fin_ShouldFail_ReturnsSuccess_WhenFinFails()
     {
         // Arrange
-        Fin<int> fin = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        Fin<int> fin = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act & Assert (should not throw)
         fin.ShouldFail();
@@ -361,7 +361,7 @@ public class ErrorCodeAssertionsTests
     public void Fin_ShouldFail_WithAction_ExecutesAssertion()
     {
         // Arrange
-        Fin<int> fin = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        Fin<int> fin = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
         var assertionExecuted = false;
 
         // Act
@@ -379,7 +379,7 @@ public class ErrorCodeAssertionsTests
     public void Fin_ShouldFailWithErrorCode_ReturnsSuccess_WhenErrorCodeMatches()
     {
         // Arrange
-        Fin<int> fin = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        Fin<int> fin = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act & Assert (should not throw)
         fin.ShouldFailWithErrorCode(TestErrorCode);
@@ -389,7 +389,7 @@ public class ErrorCodeAssertionsTests
     public void Fin_ShouldFailWithErrorCode_ThrowsException_WhenErrorCodeDoesNotMatch()
     {
         // Arrange
-        Fin<int> fin = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        Fin<int> fin = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -417,7 +417,7 @@ public class ErrorCodeAssertionsTests
     public void Validation_ShouldBeValid_ThrowsException_WhenValidationFails()
     {
         // Arrange
-        Validation<Error, int> validation = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        Validation<Error, int> validation = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() => validation.ShouldBeValid());
@@ -431,7 +431,7 @@ public class ErrorCodeAssertionsTests
     public void Validation_ShouldBeInvalid_ExecutesAssertion_WhenValidationFails()
     {
         // Arrange
-        Validation<Error, int> validation = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        Validation<Error, int> validation = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
         var assertionExecuted = false;
 
         // Act
@@ -464,7 +464,7 @@ public class ErrorCodeAssertionsTests
     public void Validation_ShouldContainErrorCode_ReturnsSuccess_WhenErrorCodeExists()
     {
         // Arrange
-        Validation<Error, int> validation = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        Validation<Error, int> validation = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act & Assert (should not throw)
         validation.ShouldContainErrorCode(TestErrorCode);
@@ -474,7 +474,7 @@ public class ErrorCodeAssertionsTests
     public void Validation_ShouldContainErrorCode_ThrowsException_WhenErrorCodeDoesNotExist()
     {
         // Arrange
-        Validation<Error, int> validation = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        Validation<Error, int> validation = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -489,7 +489,7 @@ public class ErrorCodeAssertionsTests
     public void Validation_ShouldContainOnlyErrorCode_ReturnsSuccess_WhenOnlyOneErrorExists()
     {
         // Arrange
-        Validation<Error, int> validation = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        Validation<Error, int> validation = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act & Assert (should not throw)
         validation.ShouldContainOnlyErrorCode(TestErrorCode);
@@ -499,8 +499,8 @@ public class ErrorCodeAssertionsTests
     public void Validation_ShouldContainOnlyErrorCode_ThrowsException_WhenMultipleErrorsExist()
     {
         // Arrange
-        var error1 = ErrorCodeFactory.Create(TestErrorCode, "value1", "Test error 1");
-        var error2 = ErrorCodeFactory.Create("SecondErrorCode", "value2", "Test error 2");
+        var error1 = ErrorFactory.CreateExpected(TestErrorCode, "value1", "Test error 1");
+        var error2 = ErrorFactory.CreateExpected("SecondErrorCode", "value2", "Test error 2");
         Validation<Error, int> validation1 = error1;
         Validation<Error, int> validation2 = error2;
         var combined = (validation1, validation2).Apply((a, b) => a + b).As();
@@ -518,8 +518,8 @@ public class ErrorCodeAssertionsTests
     public void Validation_ShouldContainErrorCodes_ReturnsSuccess_WhenAllErrorCodesExist()
     {
         // Arrange
-        var error1 = ErrorCodeFactory.Create(TestErrorCode, "value1", "Test error 1");
-        var error2 = ErrorCodeFactory.Create("SecondErrorCode", "value2", "Test error 2");
+        var error1 = ErrorFactory.CreateExpected(TestErrorCode, "value1", "Test error 1");
+        var error2 = ErrorFactory.CreateExpected("SecondErrorCode", "value2", "Test error 2");
         Validation<Error, int> validation1 = error1;
         Validation<Error, int> validation2 = error2;
         var combined = (validation1, validation2).Apply((a, b) => a + b).As();
@@ -532,7 +532,7 @@ public class ErrorCodeAssertionsTests
     public void Validation_ShouldContainErrorCodes_ThrowsException_WhenErrorCodeIsMissing()
     {
         // Arrange
-        Validation<Error, int> validation = ErrorCodeFactory.Create(TestErrorCode, "value", "Test error");
+        Validation<Error, int> validation = ErrorFactory.CreateExpected(TestErrorCode, "value", "Test error");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>

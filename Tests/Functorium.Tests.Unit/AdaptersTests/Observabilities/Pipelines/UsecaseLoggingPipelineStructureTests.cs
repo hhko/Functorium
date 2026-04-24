@@ -145,7 +145,7 @@ public sealed class UsecaseLoggingPipelineStructureTests
         var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger);
         var request = new TestCommandRequest("TestName");
 
-        var error = ErrorCodeFactory.Create(
+        var error = ErrorFactory.CreateExpected(
             errorCode: "User.NotFound",
             errorCurrentValue: "user123",
             errorMessage: "사용자를 찾을 수 없습니다");
@@ -172,7 +172,7 @@ public sealed class UsecaseLoggingPipelineStructureTests
         var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger);
         var request = new TestCommandRequest("TestName");
 
-        var error = ErrorCodeFactory.Create(
+        var error = ErrorFactory.CreateExpected(
             errorCode: "Order.NotFound",
             errorCurrentValue: Guid.Parse("44444444-4444-4444-4444-444444444444"),
             errorMessage: "주문을 찾을 수 없습니다");
@@ -202,7 +202,7 @@ public sealed class UsecaseLoggingPipelineStructureTests
         var request = new TestCommandRequest("TestName");
 
         var exception = new InvalidOperationException("데이터베이스 연결 실패");
-        var error = ErrorCodeFactory.CreateFromException(
+        var error = ErrorFactory.CreateExceptional(
             errorCode: "Database.ConnectionFailed",
             exception: exception);
         var errorResponse = TestResponse.CreateFail(error);
@@ -230,7 +230,7 @@ public sealed class UsecaseLoggingPipelineStructureTests
 
         var innerException = new TimeoutException("연결 시간 초과");
         var outerException = new InvalidOperationException("작업 실패", innerException);
-        var error = ErrorCodeFactory.CreateFromException(
+        var error = ErrorFactory.CreateExceptional(
             errorCode: "Operation.Failed",
             exception: outerException);
         var errorResponse = TestResponse.CreateFail(error);
@@ -258,11 +258,11 @@ public sealed class UsecaseLoggingPipelineStructureTests
         var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger);
         var request = new TestCommandRequest("TestName");
 
-        var error1 = ErrorCodeFactory.Create(
+        var error1 = ErrorFactory.CreateExpected(
             errorCode: "Validation.NameRequired",
             errorCurrentValue: "",
             errorMessage: "이름은 필수입니다");
-        var error2 = ErrorCodeFactory.Create(
+        var error2 = ErrorFactory.CreateExpected(
             errorCode: "Validation.EmailInvalid",
             errorCurrentValue: "invalid-email",
             errorMessage: "유효하지 않은 이메일입니다");

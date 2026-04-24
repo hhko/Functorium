@@ -175,7 +175,7 @@ public sealed class TestErrorCommand
         /// 비즈니스 규칙 위반 (Expected Error)
         /// </summary>
         public static Error BusinessRuleViolation(string message) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.CreateExpected(
                 errorCode: $"{ErrorCodePrefix}.{nameof(BusinessRuleViolation)}",
                 errorCurrentValue: message,
                 errorMessage: $"Business rule violated: {message}");
@@ -184,7 +184,7 @@ public sealed class TestErrorCommand
         /// 검증 실패 (Expected Error)
         /// </summary>
         public static Error ValidationFailed(string message) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.CreateExpected(
                 errorCode: $"{ErrorCodePrefix}.{nameof(ValidationFailed)}",
                 errorCurrentValue: message,
                 errorMessage: $"Validation failed: {message}");
@@ -193,7 +193,7 @@ public sealed class TestErrorCommand
         /// 시스템 에러 (Exceptional Error)
         /// </summary>
         public static Error SystemFailure(Exception exception) =>
-            ErrorCodeFactory.CreateFromException(
+            ErrorFactory.CreateExceptional(
                 errorCode: $"{ErrorCodePrefix}.{nameof(SystemFailure)}",
                 exception: exception);
 
@@ -201,7 +201,7 @@ public sealed class TestErrorCommand
         /// 지원되지 않는 시나리오 (Expected Error)
         /// </summary>
         public static Error UnsupportedScenario(ErrorScenario scenario) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.CreateExpected(
                 errorCode: $"{ErrorCodePrefix}.{nameof(UnsupportedScenario)}",
                 errorCurrentValue: scenario.ToString(),
                 errorMessage: $"Unsupported scenario: {scenario}");
@@ -210,7 +210,7 @@ public sealed class TestErrorCommand
         /// 제네릭 에러 (Expected Error with Generic Type)
         /// </summary>
         public static Error GenericError(string message, int errorCode) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.CreateExpected(
                 errorCode: $"{ErrorCodePrefix}.{nameof(GenericError)}",
                 errorCurrentValue: (message, errorCode),
                 errorMessage: $"Generic error occurred: {message} (code: {errorCode})");

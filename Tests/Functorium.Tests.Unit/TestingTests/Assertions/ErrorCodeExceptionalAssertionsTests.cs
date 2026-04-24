@@ -17,7 +17,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
-        var error = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        var error = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert (should not throw)
         error.ShouldBeErrorCodeExceptional(TestErrorCode);
@@ -27,7 +27,7 @@ public class ErrorCodeExceptionalAssertionsTests
     public void ShouldBeErrorCodeExceptional_ThrowsException_WhenErrorIsNotExceptional()
     {
         // Arrange
-        var error = ErrorCodeFactory.Create(TestErrorCode, "value", "Not exceptional");
+        var error = ErrorFactory.CreateExpected(TestErrorCode, "value", "Not exceptional");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -39,7 +39,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
-        var error = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        var error = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -55,7 +55,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
-        var error = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        var error = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert (should not throw)
         error.ShouldBeErrorCodeExceptional<InvalidOperationException>(TestErrorCode);
@@ -66,7 +66,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
-        var error = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        var error = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -82,7 +82,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception message");
-        var error = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        var error = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert (should not throw)
         error.ShouldWrapException<InvalidOperationException>(TestErrorCode, "Test exception message");
@@ -93,7 +93,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
-        var error = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        var error = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert (should not throw)
         error.ShouldWrapException<InvalidOperationException>(TestErrorCode);
@@ -104,7 +104,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Actual message");
-        var error = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        var error = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -120,7 +120,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
-        var error = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        var error = ErrorFactory.CreateExceptional(TestErrorCode, exception);
         var assertionExecuted = false;
 
         // Act
@@ -143,7 +143,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
-        Fin<int> fin = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        Fin<int> fin = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert (should not throw)
         fin.ShouldFailWithException(TestErrorCode);
@@ -165,7 +165,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
-        Fin<int> fin = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        Fin<int> fin = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -181,7 +181,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
-        Fin<int> fin = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        Fin<int> fin = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert (should not throw)
         fin.ShouldFailWithException<int, InvalidOperationException>(TestErrorCode);
@@ -192,7 +192,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
-        Fin<int> fin = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        Fin<int> fin = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -208,7 +208,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception message");
-        Fin<int> fin = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        Fin<int> fin = ErrorFactory.CreateExceptional(TestErrorCode, exception);
         var assertionExecuted = false;
 
         // Act
@@ -231,7 +231,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
-        Validation<Error, int> validation = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        Validation<Error, int> validation = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert (should not throw)
         validation.ShouldContainException(TestErrorCode);
@@ -253,7 +253,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
-        Validation<Error, int> validation = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        Validation<Error, int> validation = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -264,7 +264,7 @@ public class ErrorCodeExceptionalAssertionsTests
     public void Validation_ShouldContainException_ThrowsException_WhenErrorIsNotExceptional()
     {
         // Arrange
-        Validation<Error, int> validation = ErrorCodeFactory.Create(TestErrorCode, "value", "Not exceptional");
+        Validation<Error, int> validation = ErrorFactory.CreateExpected(TestErrorCode, "value", "Not exceptional");
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -280,7 +280,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
-        Validation<Error, int> validation = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        Validation<Error, int> validation = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert (should not throw)
         validation.ShouldContainException<int, InvalidOperationException>(TestErrorCode);
@@ -291,7 +291,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
-        Validation<Error, int> validation = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        Validation<Error, int> validation = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
@@ -307,7 +307,7 @@ public class ErrorCodeExceptionalAssertionsTests
     {
         // Arrange
         var exception = new InvalidOperationException("Test exception");
-        Validation<Error, int> validation = ErrorCodeFactory.CreateFromException(TestErrorCode, exception);
+        Validation<Error, int> validation = ErrorFactory.CreateExceptional(TestErrorCode, exception);
 
         // Act & Assert (should not throw)
         validation.ShouldContainOnlyException(TestErrorCode);
@@ -317,8 +317,8 @@ public class ErrorCodeExceptionalAssertionsTests
     public void Validation_ShouldContainOnlyException_ThrowsException_WhenMultipleErrorsExist()
     {
         // Arrange
-        var error1 = ErrorCodeFactory.CreateFromException(TestErrorCode, new InvalidOperationException("Ex 1"));
-        var error2 = ErrorCodeFactory.CreateFromException("SecondErrorCode", new ArgumentException("Ex 2"));
+        var error1 = ErrorFactory.CreateExceptional(TestErrorCode, new InvalidOperationException("Ex 1"));
+        var error2 = ErrorFactory.CreateExceptional("SecondErrorCode", new ArgumentException("Ex 2"));
         Validation<Error, int> validation1 = error1;
         Validation<Error, int> validation2 = error2;
         var combined = (validation1, validation2).Apply((a, b) => a + b).As();

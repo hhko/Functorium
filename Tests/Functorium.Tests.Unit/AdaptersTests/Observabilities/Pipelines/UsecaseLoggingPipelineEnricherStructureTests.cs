@@ -91,7 +91,7 @@ public sealed class UsecaseLoggingPipelineEnricherStructureTests
         var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger);
         var request = new TestCommandRequest("TestName");
 
-        var error = ErrorCodeFactory.Create(
+        var error = ErrorFactory.CreateExpected(
             errorCode: "Order.NotFound",
             errorCurrentValue: "order-999",
             errorMessage: "주문을 찾을 수 없습니다");
