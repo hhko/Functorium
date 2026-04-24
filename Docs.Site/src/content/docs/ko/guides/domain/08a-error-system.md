@@ -631,10 +631,6 @@ Error error = ErrorCodeFactory.Create(
 // Exceptional 에러
 Error error = ErrorCodeFactory.CreateFromException(
     "ApplicationErrors.Database.ConnectionFailed", exception);
-
-// 에러 코드 포맷
-string code = ErrorCodeFactory.Format("DomainErrors", "User", "NotFound");
-// 결과: "DomainErrors.User.NotFound"
 ```
 
 ### Serilog 구조화

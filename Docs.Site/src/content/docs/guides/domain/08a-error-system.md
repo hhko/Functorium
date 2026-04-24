@@ -631,10 +631,6 @@ Error error = ErrorCodeFactory.Create(
 // Exceptional error
 Error error = ErrorCodeFactory.CreateFromException(
     "ApplicationErrors.Database.ConnectionFailed", exception);
-
-// Error code format
-string code = ErrorCodeFactory.Format("DomainErrors", "User", "NotFound");
-// Result: "DomainErrors.User.NotFound"
 ```
 
 ### Serilog Destructuring

@@ -58,8 +58,4 @@ public static class ErrorCodeFactory
         new ErrorCodeExceptional(
             errorCode,
             exception);
-
-    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string Format(params string[] parts) =>
-        string.Join('.', parts);
 }

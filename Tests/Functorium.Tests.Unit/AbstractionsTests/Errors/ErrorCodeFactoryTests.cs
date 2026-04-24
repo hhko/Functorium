@@ -93,43 +93,4 @@ public class ErrorCodeFactoryTests
         actual.IsExceptional.ShouldBeTrue();
         actual.IsExpected.ShouldBeFalse();
     }
-
-    [Fact]
-    public void Format_ReturnsJoinedString_WhenMultiplePartsProvided()
-    {
-        // Arrange
-        var parts = new[] { "Domain", "User", "NotFound" };
-
-        // Act
-        var actual = ErrorCodeFactory.Format(parts);
-
-        // Assert
-        actual.ShouldBe("Domain.User.NotFound");
-    }
-
-    [Fact]
-    public void Format_ReturnsSinglePart_WhenOnePartProvided()
-    {
-        // Arrange
-        var parts = new[] { "Error" };
-
-        // Act
-        var actual = ErrorCodeFactory.Format(parts);
-
-        // Assert
-        actual.ShouldBe("Error");
-    }
-
-    [Fact]
-    public void Format_ReturnsEmptyString_WhenNoPartsProvided()
-    {
-        // Arrange
-        var parts = System.Array.Empty<string>();
-
-        // Act
-        var actual = ErrorCodeFactory.Format(parts);
-
-        // Assert
-        actual.ShouldBe(string.Empty);
-    }
 }
