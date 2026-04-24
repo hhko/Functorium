@@ -34,10 +34,17 @@ Entity의 계약을 정의하는 인터페이스입니다.
 ```csharp
 public interface IEntity
 {
-    const string CreateMethodName = "Create";
-    const string CreateFromValidatedMethodName = "CreateFromValidated";
+    public static class ArchTestContract
+    {
+        public const string CreateMethodName = "Create";
+        public const string CreateFromValidatedMethodName = "CreateFromValidated";
+    }
 }
 ```
+
+### ArchTestContract 상수
+
+아키텍처 테스트(ArchUnitNET) 스위트가 모든 Entity/AggregateRoot 구현체에 대해 enforce하는 네이밍 계약입니다. 프로덕션 로직은 참조하지 않습니다.
 
 | 상수 | 값 | 설명 |
 |------|----|------|

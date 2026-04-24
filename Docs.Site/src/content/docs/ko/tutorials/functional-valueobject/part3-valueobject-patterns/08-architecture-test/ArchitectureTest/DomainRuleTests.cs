@@ -28,15 +28,15 @@ public class DomainRuleTests : ArchitectureTestBase
                     .RequireSealed()
                     .RequireAllPrivateConstructors()
                     .RequireImmutable()  // 불변성 검증 추가
-                    .RequireMethod(IValueObject.CreateMethodName, method => method
+                    .RequireMethod(IValueObject.ArchTestContract.CreateMethodName, method => method
                         .RequireVisibility(Visibility.Public)
                         .RequireStatic()
                         .RequireReturnType(typeof(Fin<>)))
-                    .RequireMethod(IValueObject.CreateFromValidatedMethodName, method => method
+                    .RequireMethod(IValueObject.ArchTestContract.CreateFromValidatedMethodName, method => method
                         .RequireVisibility(Visibility.Public)
                         .RequireStatic()
                         .RequireReturnTypeOfDeclaringClass())
-                    .RequireMethod(IValueObject.ValidateMethodName, method => method
+                    .RequireMethod(IValueObject.ArchTestContract.ValidateMethodName, method => method
                         .RequireVisibility(Visibility.Public)
                         .RequireStatic()
                         .RequireReturnType(typeof(Validation<,>)))
@@ -44,7 +44,7 @@ public class DomainRuleTests : ArchitectureTestBase
 
                 // 값 객체 중첩 클래스
                 @class
-                    .RequireNestedClassIfExists(IValueObject.DomainErrorsNestedClassName, domainErrors =>
+                    .RequireNestedClassIfExists(IValueObject.ArchTestContract.NestedErrorsClassName, domainErrors =>
                     {
                         domainErrors
                             .RequireInternal()

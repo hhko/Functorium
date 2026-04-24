@@ -82,8 +82,9 @@ Functorium은 Entity 구현을 위한 기반 클래스 계층을 제공합니다
 ```
 IEntity<TId> (인터페이스)
 +-- TId Id
-+-- CreateMethodName 상수
-`-- CreateFromValidatedMethodName 상수
+`-- ArchTestContract (중첩 정적 클래스)
+    +-- CreateMethodName 상수
+    `-- CreateFromValidatedMethodName 상수
     |
     `-- Entity<TId> (추상 클래스)
         +-- Id 속성 (protected init)

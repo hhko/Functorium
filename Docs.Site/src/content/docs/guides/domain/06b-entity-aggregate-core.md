@@ -82,8 +82,9 @@ Functorium provides a base class hierarchy for Entity implementation.
 ```
 IEntity<TId> (interface)
 +-- TId Id
-+-- CreateMethodName constant
-`-- CreateFromValidatedMethodName constant
+`-- ArchTestContract (nested static class)
+    +-- CreateMethodName constant
+    `-- CreateFromValidatedMethodName constant
     |
     `-- Entity<TId> (abstract class)
         +-- Id property (protected init)

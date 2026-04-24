@@ -60,21 +60,26 @@ A marker interface indicating a Value Object. Used by source generators and arch
 ```csharp
 public interface IValueObject
 {
-    const string CreateMethodName = "Create";
-    const string CreateFromValidatedMethodName = "CreateFromValidated";
-    const string ValidateMethodName = "Validate";
-    const string DomainErrorsNestedClassName = "DomainErrors";
+    public static class ArchTestContract
+    {
+        public const string CreateMethodName = "Create";
+        public const string CreateFromValidatedMethodName = "CreateFromValidated";
+        public const string ValidateMethodName = "Validate";
+        public const string NestedErrorsClassName = "DomainErrors";
+    }
 }
 ```
 
-### Constants
+### ArchTestContract Constants
+
+Naming contract that architecture test suites (ArchUnitNET) enforce on every ValueObject implementation. Not referenced by production logic.
 
 | Constant | Value | Purpose |
 |------|----|------|
 | `CreateMethodName` | `"Create"` | Factory method name convention |
 | `CreateFromValidatedMethodName` | `"CreateFromValidated"` | Factory method name convention for pre-validated values |
 | `ValidateMethodName` | `"Validate"` | Validation-only method name convention |
-| `DomainErrorsNestedClassName` | `"DomainErrors"` | Nested error class name convention |
+| `NestedErrorsClassName` | `"DomainErrors"` | Nested error class name convention (scheduled to change to `"Domain"` in 1.0.0-alpha.4) |
 
 ---
 

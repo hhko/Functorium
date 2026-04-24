@@ -176,15 +176,15 @@ public void ValueObject_ShouldSatisfy_Rules()
                 .RequireSealed()
                 .RequireAllPrivateConstructors()
                 .RequireImmutable()
-                .RequireMethod(IValueObject.CreateMethodName, method => method
+                .RequireMethod(IValueObject.ArchTestContract.CreateMethodName, method => method
                     .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnType(typeof(Fin<>)))
-                .RequireMethod(IValueObject.CreateFromValidatedMethodName, method => method
+                .RequireMethod(IValueObject.ArchTestContract.CreateFromValidatedMethodName, method => method
                     .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnTypeOfDeclaringClass())
-                .RequireMethod(IValueObject.ValidateMethodName, method => method
+                .RequireMethod(IValueObject.ArchTestContract.ValidateMethodName, method => method
                     .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnType(typeof(Validation<,>)))
@@ -192,7 +192,7 @@ public void ValueObject_ShouldSatisfy_Rules()
 
             // DomainErrors 중첩 클래스 규칙 검증
             @class
-                .RequireNestedClassIfExists(IValueObject.DomainErrorsNestedClassName, domainErrors =>
+                .RequireNestedClassIfExists(IValueObject.ArchTestContract.NestedErrorsClassName, domainErrors =>
                 {
                     domainErrors
                         .RequireInternal()

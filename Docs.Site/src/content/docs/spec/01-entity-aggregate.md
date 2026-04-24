@@ -34,10 +34,17 @@ Interfaces defining the Entity contract.
 ```csharp
 public interface IEntity
 {
-    const string CreateMethodName = "Create";
-    const string CreateFromValidatedMethodName = "CreateFromValidated";
+    public static class ArchTestContract
+    {
+        public const string CreateMethodName = "Create";
+        public const string CreateFromValidatedMethodName = "CreateFromValidated";
+    }
 }
 ```
+
+### ArchTestContract Constants
+
+Naming contract that architecture test suites (ArchUnitNET) enforce on every Entity/AggregateRoot implementation. Not referenced by production logic.
 
 | Constant | Value | Description |
 |------|----|------|

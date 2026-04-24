@@ -56,11 +56,11 @@ public abstract class DomainArchitectureTestSuite
             .And().AreAssignableTo(typeof(AggregateRoot<>))
             .And().AreNotAbstract()
             .ValidateAllClasses(Architecture, @class => @class
-                .RequireMethod(IEntity.CreateMethodName, m => m
+                .RequireMethod(IEntity.ArchTestContract.CreateMethodName, m => m
                     .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnTypeOfDeclaringClass())
-                .RequireMethod(IEntity.CreateFromValidatedMethodName, m => m
+                .RequireMethod(IEntity.ArchTestContract.CreateFromValidatedMethodName, m => m
                     .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnTypeOfDeclaringClass()),
@@ -140,11 +140,11 @@ public abstract class DomainArchitectureTestSuite
             .And().AreNotAbstract()
             .And().AreNotAssignableTo(typeof(AggregateRoot<>))
             .ValidateAllClasses(Architecture, @class => @class
-                .RequireMethod(IEntity.CreateMethodName, m => m
+                .RequireMethod(IEntity.ArchTestContract.CreateMethodName, m => m
                     .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnTypeOfDeclaringClass())
-                .RequireMethod(IEntity.CreateFromValidatedMethodName, m => m
+                .RequireMethod(IEntity.ArchTestContract.CreateFromValidatedMethodName, m => m
                     .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnTypeOfDeclaringClass()),
@@ -229,7 +229,7 @@ public abstract class DomainArchitectureTestSuite
 
         query
             .ValidateAllClasses(Architecture, @class => @class
-                .RequireMethod(IValueObject.CreateMethodName, m => m
+                .RequireMethod(IValueObject.ArchTestContract.CreateMethodName, m => m
                     .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnType(typeof(Fin<>))),
@@ -255,7 +255,7 @@ public abstract class DomainArchitectureTestSuite
 
         query
             .ValidateAllClasses(Architecture, @class => @class
-                .RequireMethod(IValueObject.ValidateMethodName, m => m
+                .RequireMethod(IValueObject.ArchTestContract.ValidateMethodName, m => m
                     .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnType(typeof(Validation<,>))),

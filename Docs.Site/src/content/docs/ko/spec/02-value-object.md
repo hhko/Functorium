@@ -60,21 +60,26 @@ IUnionValueObject : IValueObject (marker interface)
 ```csharp
 public interface IValueObject
 {
-    const string CreateMethodName = "Create";
-    const string CreateFromValidatedMethodName = "CreateFromValidated";
-    const string ValidateMethodName = "Validate";
-    const string DomainErrorsNestedClassName = "DomainErrors";
+    public static class ArchTestContract
+    {
+        public const string CreateMethodName = "Create";
+        public const string CreateFromValidatedMethodName = "CreateFromValidated";
+        public const string ValidateMethodName = "Validate";
+        public const string NestedErrorsClassName = "DomainErrors";
+    }
 }
 ```
 
-### 상수
+### ArchTestContract 상수
+
+아키텍처 테스트(ArchUnitNET) 스위트가 모든 ValueObject 구현체에 대해 enforce하는 네이밍 계약입니다. 프로덕션 로직은 참조하지 않습니다.
 
 | 상수 | 값 | 용도 |
 |------|----|------|
 | `CreateMethodName` | `"Create"` | 팩토리 메서드 이름 규약 |
 | `CreateFromValidatedMethodName` | `"CreateFromValidated"` | 사전 검증된 값의 팩토리 메서드 이름 규약 |
 | `ValidateMethodName` | `"Validate"` | 검증 전용 메서드 이름 규약 |
-| `DomainErrorsNestedClassName` | `"DomainErrors"` | 중첩 에러 클래스 이름 규약 |
+| `NestedErrorsClassName` | `"DomainErrors"` | 중첩 에러 클래스 이름 규약 (1.0.0-alpha.4에서 `"Domain"`으로 변경 예정) |
 
 ---
 

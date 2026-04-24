@@ -317,8 +317,9 @@ AbstractValueObject (abstract class)
 ```
 IEntity<TId> (interface)
 ├── TId Id - Entity identifier
-├── CreateMethodName constant
-└── CreateFromValidatedMethodName constant
+└── ArchTestContract (nested static class)
+    ├── CreateMethodName constant
+    └── CreateFromValidatedMethodName constant
     │
     └── Entity<TId> (abstract class)
         ├── Id property (protected init)

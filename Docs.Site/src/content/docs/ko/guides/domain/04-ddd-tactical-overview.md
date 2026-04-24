@@ -317,8 +317,9 @@ AbstractValueObject (추상 클래스)
 ```
 IEntity<TId> (인터페이스)
 ├── TId Id - Entity 식별자
-├── CreateMethodName 상수
-└── CreateFromValidatedMethodName 상수
+└── ArchTestContract (중첩 정적 클래스)
+    ├── CreateMethodName 상수
+    └── CreateFromValidatedMethodName 상수
     │
     └── Entity<TId> (추상 클래스)
         ├── Id 속성 (protected init)
