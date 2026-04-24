@@ -513,7 +513,8 @@ Src/Functorium/Abstractions/Errors/
 ├── ExceptionalError.cs           # Exceptional error type
 ├── ErrorFactory.cs               # ExpectedError/Exceptional instance creation
 ├── ErrorLogFieldNames.cs            # Serilog structured field name constants
-├── ErrorKind.cs                      # Error prefix constants (DomainErrorsPrefix, etc.)
+├── ErrorCodePrefixes.cs               # Internal prefix constants (Domain, Application, Adapter)
+├── ErrorKind.cs                       # Abstract record base (virtual Name property)
 ├── IHasErrorCode.cs                  # Error code access interface
 └── LayerErrorCore.cs                 # Per-layer factory common error code generation logic
 

@@ -513,7 +513,8 @@ Src/Functorium/Abstractions/Errors/
 ├── ExceptionalError.cs           # Exceptional 에러 타입
 ├── ErrorFactory.cs               # ExpectedError/Exceptional 인스턴스 생성
 ├── ErrorLogFieldNames.cs            # Serilog 구조화 필드명 상수
-├── ErrorKind.cs                      # 에러 접두사 상수 (DomainErrorsPrefix 등)
+├── ErrorCodePrefixes.cs               # 내부 접두사 상수 (Domain, Application, Adapter)
+├── ErrorKind.cs                       # 추상 기반 record (virtual Name 프로퍼티)
 ├── IHasErrorCode.cs                  # 에러 코드 접근 인터페이스
 └── LayerErrorCore.cs                 # 레이어별 팩토리 공통 에러 코드 생성 로직
 
