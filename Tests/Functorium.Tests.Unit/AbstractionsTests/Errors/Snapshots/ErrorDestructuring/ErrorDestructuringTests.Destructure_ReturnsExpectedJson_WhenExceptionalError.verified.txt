@@ -1,11 +1,11 @@
 ﻿{
   ErrorCode: Application.Database.ConnectionFailed,
-  ErrorCodeId: -2146233079,
-  ErrorType: ExceptionalError,
   ExceptionDetails: {
     HResult: {Scrubbed},
     Message: Connection failed,
     Type: InvalidOperationException
   },
-  Message: Connection failed
+  Kind: ExceptionalError,
+  Message: Connection failed,
+  NumericCode: -2146233079
 }

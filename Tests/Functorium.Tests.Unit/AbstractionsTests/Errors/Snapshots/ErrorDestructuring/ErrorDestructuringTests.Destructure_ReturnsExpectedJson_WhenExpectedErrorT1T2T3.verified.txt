@@ -1,9 +1,9 @@
 ﻿{
   ErrorCode: Domain.Schedule.InvalidDate,
-  ErrorCodeId: -1000,
   ErrorCurrentValue1: 2025,
   ErrorCurrentValue2: 13,
   ErrorCurrentValue3: 32,
-  ErrorType: ExpectedError`3,
-  Message: 유효하지 않은 날짜입니다
+  Kind: ExpectedError`3,
+  Message: 유효하지 않은 날짜입니다,
+  NumericCode: -1000
 }

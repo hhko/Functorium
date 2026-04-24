@@ -8,9 +8,9 @@ internal record ExpectedError(
     string ErrorCode,
     string ErrorCurrentValue,
     string ErrorMessage,
-    int ErrorCodeId = -1000,
+    int NumericCode = -1000,
     Option<Error> Inner = default)
-    : ExpectedErrorBase(ErrorCode, ErrorMessage, ErrorCodeId, Inner)
+    : ExpectedErrorBase(ErrorCode, ErrorMessage, NumericCode, Inner)
 {
     [Pure]
     [DataMember]
@@ -23,9 +23,9 @@ internal record ExpectedError<T>(
     string ErrorCode,
     T ErrorCurrentValue,
     string ErrorMessage,
-    int ErrorCodeId = -1000,
+    int NumericCode = -1000,
     Option<Error> Inner = default)
-    : ExpectedErrorBase(ErrorCode, ErrorMessage, ErrorCodeId, Inner)
+    : ExpectedErrorBase(ErrorCode, ErrorMessage, NumericCode, Inner)
         where T : notnull
 {
     [Pure]
@@ -40,9 +40,9 @@ internal record ExpectedError<T1, T2>(
     T1 ErrorCurrentValue1,
     T2 ErrorCurrentValue2,
     string ErrorMessage,
-    int ErrorCodeId = -1000,
+    int NumericCode = -1000,
     Option<Error> Inner = default)
-    : ExpectedErrorBase(ErrorCode, ErrorMessage, ErrorCodeId, Inner)
+    : ExpectedErrorBase(ErrorCode, ErrorMessage, NumericCode, Inner)
         where T1 : notnull
         where T2 : notnull
 {
@@ -64,9 +64,9 @@ internal record ExpectedError<T1, T2, T3>(
     T2 ErrorCurrentValue2,
     T3 ErrorCurrentValue3,
     string ErrorMessage,
-    int ErrorCodeId = -1000,
+    int NumericCode = -1000,
     Option<Error> Inner = default)
-    : ExpectedErrorBase(ErrorCode, ErrorMessage, ErrorCodeId, Inner)
+    : ExpectedErrorBase(ErrorCode, ErrorMessage, NumericCode, Inner)
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull

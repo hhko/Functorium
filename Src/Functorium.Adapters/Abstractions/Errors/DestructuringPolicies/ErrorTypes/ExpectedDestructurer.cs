@@ -14,17 +14,17 @@ public class ExpectedDestructurer : IErrorDestructurer
         Expected e = (Expected)error;
         List<LogEventProperty> props =
         [
-            new(ErrorCodeFieldNames.ErrorType, new ScalarValue(e.GetType().Name)),
+            new(ErrorLogFieldNames.Kind, new ScalarValue(e.GetType().Name)),
             // ErrorCode
-            new(ErrorCodeFieldNames.ErrorCodeId, new ScalarValue(e.Code)),
+            new(ErrorLogFieldNames.NumericCode, new ScalarValue(e.Code)),
             // ErrorCurrentValue
-            new(ErrorCodeFieldNames.Message, new ScalarValue(e.Message))
+            new(ErrorLogFieldNames.Message, new ScalarValue(e.Message))
         ];
 
         // InnerError
         e.Inner.IfSome(inner =>
         {
-            props.Add(new(ErrorCodeFieldNames.InnerError, ErrorsDestructuringPolicy.DestructureError(inner, factory)));
+            props.Add(new(ErrorLogFieldNames.InnerError, ErrorsDestructuringPolicy.DestructureError(inner, factory)));
         });
 
         return new StructureValue(props);

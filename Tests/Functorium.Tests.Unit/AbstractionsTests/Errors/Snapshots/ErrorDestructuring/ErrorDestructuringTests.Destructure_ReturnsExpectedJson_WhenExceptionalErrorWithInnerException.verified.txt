@@ -1,7 +1,5 @@
 ﻿{
   ErrorCode: Application.Database.ConnectionFailedWithInner,
-  ErrorCodeId: -2146233079,
-  ErrorType: ExceptionalError,
   ExceptionDetails: {
     HResult: {Scrubbed},
     InnerException: {
@@ -12,5 +10,7 @@
     Message: Database connection failed,
     Type: InvalidOperationException
   },
-  Message: Database connection failed
+  Kind: ExceptionalError,
+  Message: Database connection failed,
+  NumericCode: -2146233079
 }

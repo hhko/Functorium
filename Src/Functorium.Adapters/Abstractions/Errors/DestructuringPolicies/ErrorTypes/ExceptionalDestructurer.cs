@@ -15,9 +15,9 @@ public class ExceptionalDestructurer : IErrorDestructurer
 
         List<LogEventProperty> props =
         [
-            new(ErrorCodeFieldNames.ErrorType, new ScalarValue(e.GetType().Name)),
+            new(ErrorLogFieldNames.Kind, new ScalarValue(e.GetType().Name)),
             // ErrorCode
-            new(ErrorCodeFieldNames.ErrorCodeId, new ScalarValue(e.Code))
+            new(ErrorLogFieldNames.NumericCode, new ScalarValue(e.Code))
             // ErrorCurrentValue
             // Message
         ];
@@ -25,7 +25,7 @@ public class ExceptionalDestructurer : IErrorDestructurer
         // ExceptionDetails
         e.Exception.IfSome(ex =>
         {
-            props.Add(new(ErrorCodeFieldNames.ExceptionDetails, factory.CreatePropertyValue(ex, true)));
+            props.Add(new(ErrorLogFieldNames.ExceptionDetails, factory.CreatePropertyValue(ex, true)));
         });
 
         return new StructureValue(props);

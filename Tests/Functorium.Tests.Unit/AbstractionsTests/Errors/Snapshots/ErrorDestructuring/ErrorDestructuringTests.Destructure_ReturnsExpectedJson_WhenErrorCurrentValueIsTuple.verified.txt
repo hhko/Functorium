@@ -1,10 +1,10 @@
 ﻿{
   ErrorCode: Domain.User.InvalidData,
-  ErrorCodeId: -1000,
   ErrorCurrentValue: {
     Item1: 42,
     Item2: user123
   },
-  ErrorType: ExpectedError`1,
-  Message: 사용자 데이터가 유효하지 않습니다
+  Kind: ExpectedError`1,
+  Message: 사용자 데이터가 유효하지 않습니다,
+  NumericCode: -1000
 }

@@ -18,21 +18,21 @@ public class ExpectedErrorTDestructurer : IErrorDestructurer
         Type type = error.GetType();
         List<LogEventProperty> props =
         [
-            new(ErrorCodeFieldNames.ErrorType, new ScalarValue(type.Name)),
-            new(ErrorCodeFieldNames.ErrorCodeId, new ScalarValue(error.Code))
+            new(ErrorLogFieldNames.Kind, new ScalarValue(type.Name)),
+            new(ErrorLogFieldNames.NumericCode, new ScalarValue(error.Code))
         ];
 
-        string errorCode = type.GetProperty(ErrorCodeFieldNames.ErrorCode)?.GetValue(error)?.ToString()
-                           ?? ErrorCodeFieldNames.UnknownErrorCode;
+        string errorCode = type.GetProperty(ErrorLogFieldNames.ErrorCode)?.GetValue(error)?.ToString()
+                           ?? ErrorLogFieldNames.UnknownErrorCode;
 
-        string message = type.GetProperty(ErrorCodeFieldNames.Message)?.GetValue(error)?.ToString()
-                         ?? ErrorCodeFieldNames.UnknownErrorMessage;
+        string message = type.GetProperty(ErrorLogFieldNames.Message)?.GetValue(error)?.ToString()
+                         ?? ErrorLogFieldNames.UnknownErrorMessage;
 
-        props.Add(new(ErrorCodeFieldNames.ErrorCode, new ScalarValue(errorCode)));
-        props.Add(new(ErrorCodeFieldNames.Message, new ScalarValue(message)));
+        props.Add(new(ErrorLogFieldNames.ErrorCode, new ScalarValue(errorCode)));
+        props.Add(new(ErrorLogFieldNames.Message, new ScalarValue(message)));
 
         foreach (PropertyInfo prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                                 .Where(p => p.Name.StartsWith(ErrorCodeFieldNames.ErrorCurrentValue)))
+                                 .Where(p => p.Name.StartsWith(ErrorLogFieldNames.ErrorCurrentValue)))
         {
             object? value = prop.GetValue(error);
             if (value is not null)

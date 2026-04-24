@@ -7,7 +7,7 @@ namespace Functorium.Adapters.Abstractions.Errors.DestructuringPolicies;
 // ---                  | ---               | ---                   | ---                   | ---
 // ErrorType            | O                 | O                     | O                     | O
 // ErrorCode            | O                 | O                     | O                     | X
-// ErrorCodeId          | O                 | O                     | O                     | O
+// NumericCode          | O                 | O                     | O                     | O
 // ErrorCurrentValue    | O                 | O                     | X                     | X
 // Message              | O                 | O                     | O                     | X
 // Count                | x                 | x                     | X                     | O
@@ -21,7 +21,7 @@ namespace Functorium.Adapters.Abstractions.Errors.DestructuringPolicies;
 //    "Error": {
 //        "ErrorType": "ExpectedError",         <- string 에러 타입
 //        "ErrorCode": "<에러 코드>",
-//        "ErrorCodeId": <에러 Id>
+//        "NumericCode": <에러 Id>
 //        "ErrorCurrentValue": "<현재 값>"
 //        "Message": "<에러 메시지>",
 //    },
@@ -33,7 +33,7 @@ namespace Functorium.Adapters.Abstractions.Errors.DestructuringPolicies;
 //    "Error": {
 //        "ErrorType": "ExpectedError`1",       <- <T> 에러 타입
 //        "ErrorCode": "<에러 코드>",
-//        "ErrorCodeId": <에러 Id>
+//        "NumericCode": <에러 Id>
 //        "ErrorCurrentValue": {
 //            "X": 2025,
 //            "Y": 2026,
@@ -49,7 +49,7 @@ namespace Functorium.Adapters.Abstractions.Errors.DestructuringPolicies;
 //    "Error": {
 //        "ErrorType": "ExpectedError`2",       <- <T1, T2> 에러 타입
 //        "ErrorCode": "<에러 코드>",
-//        "ErrorCodeId": <에러 Id>
+//        "NumericCode": <에러 Id>
 //        "ErrorCurrentValue1": {
 //            "X": 2025,
 //            "Y": 2026,
@@ -69,13 +69,13 @@ namespace Functorium.Adapters.Abstractions.Errors.DestructuringPolicies;
 //"Properties": {
 //    "Error": {
 //        "ErrorType": "ManyErrors",                <- 에러 타입
-//        "ErrorCodeId": -2000000006,               <- -2000000006: ManyErrors 고유 Id
+//        "NumericCode": -2000000006,               <- -2000000006: ManyErrors 고유 Id
 //        "Count": 2,                               <- 에러 건수
 //        "Errors": [
 //            {
 //                "ErrorType": "ExpectedError",
 //                "ErrorCode": "<에러 코드>",
-//                "ErrorCodeId": <에러 Id>,
+//                "NumericCode": <에러 Id>,
 //                "ErrorCurrentValue": {
 //                    "X": 2025,
 //                    "Y": 2026,
@@ -93,7 +93,7 @@ namespace Functorium.Adapters.Abstractions.Errors.DestructuringPolicies;
 //"Properties": {
 //    "Error": {
 //        "ErrorType": "ExceptionalError",                  <- 예외 타입
-//        "ErrorCodeId": -2147352558,                           <- Exception의 HResult
+//        "NumericCode": -2147352558,                           <- Exception의 HResult
 //        "Message": "Attempted to divide by zero.",            <- Exception의 Message
 //        "ExceptionDetails": {
 //            "TargetSite": "Int32 Divide(Int32, Int32)",

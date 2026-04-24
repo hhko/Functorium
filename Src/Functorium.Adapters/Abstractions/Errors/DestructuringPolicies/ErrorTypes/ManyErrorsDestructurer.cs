@@ -19,14 +19,14 @@ public class ManyErrorsDestructurer : IErrorDestructurer
 
         return new StructureValue(
         [
-            new LogEventProperty(ErrorCodeFieldNames.ErrorType, new ScalarValue(e.GetType().Name)),
+            new LogEventProperty(ErrorLogFieldNames.Kind, new ScalarValue(e.GetType().Name)),
             // ErrorCode
-            new LogEventProperty(ErrorCodeFieldNames.ErrorCodeId, new ScalarValue(e.Code)),
+            new LogEventProperty(ErrorLogFieldNames.NumericCode, new ScalarValue(e.Code)),
             // ErrorCurrentValue
             // Message
 
-            new LogEventProperty(ErrorCodeFieldNames.Count, new ScalarValue(e.Count)),
-            new LogEventProperty(ErrorCodeFieldNames.Errors, new SequenceValue(nested))
+            new LogEventProperty(ErrorLogFieldNames.Count, new ScalarValue(e.Count)),
+            new LogEventProperty(ErrorLogFieldNames.Errors, new SequenceValue(nested))
         ]);
     }
 }

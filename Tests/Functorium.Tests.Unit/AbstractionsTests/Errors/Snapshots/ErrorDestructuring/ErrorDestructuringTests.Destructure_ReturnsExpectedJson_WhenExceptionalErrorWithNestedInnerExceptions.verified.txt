@@ -1,7 +1,5 @@
 ﻿{
   ErrorCode: Application.Database.QueryExecutionFailed,
-  ErrorCodeId: -2146233079,
-  ErrorType: ExceptionalError,
   ExceptionDetails: {
     HResult: {Scrubbed},
     InnerException: {
@@ -17,5 +15,7 @@
     Message: Database query execution failed,
     Type: InvalidOperationException
   },
-  Message: Database query execution failed
+  Kind: ExceptionalError,
+  Message: Database query execution failed,
+  NumericCode: -2146233079
 }

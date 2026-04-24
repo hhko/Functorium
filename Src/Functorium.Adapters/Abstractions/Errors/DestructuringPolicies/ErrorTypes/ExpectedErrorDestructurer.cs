@@ -15,11 +15,11 @@ public class ExpectedErrorDestructurer : IErrorDestructurer
 
         List<LogEventProperty> props =
         [
-            new(ErrorCodeFieldNames.ErrorType, new ScalarValue(e.GetType().Name)),
-            new(ErrorCodeFieldNames.ErrorCode, new ScalarValue(e.ErrorCode)),
-            new(ErrorCodeFieldNames.ErrorCodeId, new ScalarValue(e.Code)),
-            new(ErrorCodeFieldNames.ErrorCurrentValue, new ScalarValue(e.ErrorCurrentValue)),
-            new(ErrorCodeFieldNames.Message, new ScalarValue(e.Message))
+            new(ErrorLogFieldNames.Kind, new ScalarValue(e.GetType().Name)),
+            new(ErrorLogFieldNames.ErrorCode, new ScalarValue(e.ErrorCode)),
+            new(ErrorLogFieldNames.NumericCode, new ScalarValue(e.Code)),
+            new(ErrorLogFieldNames.ErrorCurrentValue, new ScalarValue(e.ErrorCurrentValue)),
+            new(ErrorLogFieldNames.Message, new ScalarValue(e.Message))
         ];
 
         return new StructureValue(props);

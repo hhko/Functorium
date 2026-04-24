@@ -10,7 +10,7 @@ namespace Functorium.Abstractions.Errors;
 internal abstract record ExpectedErrorBase(
     string ErrorCode,
     string ErrorMessage,
-    int ErrorCodeId = -1000,
+    int NumericCode = -1000,
     Option<Error> Inner = default) : Error, IHasErrorCode
 {
     [Pure]
@@ -26,7 +26,7 @@ internal abstract record ExpectedErrorBase(
     [Pure]
     [DataMember]
     public override int Code { get; } =
-        ErrorCodeId;
+        NumericCode;
 
     [Pure]
     [IgnoreDataMember]
