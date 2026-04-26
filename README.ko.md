@@ -29,7 +29,7 @@ Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다
 | **도메인 안전성** | Value Object 계층 (6 타입 + Union), Entity/AggregateRoot, Specification Pattern, 구조화된 에러 코드 |
 | **함수형 합성** | `Fin<T>`/`FinT<IO,T>` Discriminated Union, LINQ 합성, Bind/Apply 검증, CQRS 경로별 최적화 |
 | **IO 고급 기능** | Timeout, Retry(지수 백오프), Fork(병렬 실행), Bracket(리소스 생명주기 관리) |
-| **자동화** | 5개 Source Generator, Usecase Pipeline (Observability + Validation 내장), 아키텍처 규칙 테스트 |
+| **자동화** | 6개 Source Generator, Usecase Pipeline (Observability + Validation 내장), 아키텍처 규칙 테스트 |
 | **관측성** | 3-Pillar 자동 계측, ctx.* 비즈니스 컨텍스트 전파, 에러 자동 분류 (expected/exceptional/aggregate) |
 
 ### 30초 만에 보는 변화 — 텍스트에서 코드로
@@ -152,7 +152,7 @@ public sealed partial class Email : SimpleValueObject<string>
    - 타입 시스템: `Cancel()` 호출부의 컴파일 타임 시그니처 강제
 
 > **개발자는 `Order.Cancel()` 내부의 `Fin<Unit>` 파이프라인을 열지 않습니다.**
-> 텍스트 요구사항만 수정하세요. 상태 전이 규칙·Union 추가·이벤트 확장·테스트 재생성은 AI가 담당하고, 아키텍처 무결성은 [21개 이상의 규칙 테스트가](#게이트-1-아키텍처-규칙-테스트--구조적-무결성) 보장합니다.
+> 텍스트 요구사항만 수정하세요. 상태 전이 규칙·Union 추가·이벤트 확장·테스트 재생성은 AI가 담당하고, 아키텍처 무결성은 [25개 규칙 테스트가](#게이트-1-아키텍처-규칙-테스트--구조적-무결성) 보장합니다.
 
 | 역할 | 담당 | 이 시나리오에서 |
 |------|------|----------------|
@@ -312,16 +312,26 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     where TAggregate : AggregateRoot<TId>
     where TId : struct, IEntityId<TId>
 {
+    // Write: 단건
     FinT<IO, TAggregate> Create(TAggregate aggregate);
-    FinT<IO, TAggregate> GetById(TId id);
     FinT<IO, TAggregate> Update(TAggregate aggregate);
-    FinT<IO, int> Delete(TId id);
+    FinT<IO, int>        Delete(TId id);                  // ⚠️ Hard delete (도메인 이벤트 없음)
 
-    // 벌크 연산
-    FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates);
+    // Write: 벌크 — 영향 받은 행 수
+    FinT<IO, int> CreateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, int> UpdateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);    // ⚠️ Hard delete
+
+    // Read
+    FinT<IO, TAggregate>      GetById(TId id);
     FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
-    FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
-    FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
+
+    // Specification (Evans selectSatisfying 패턴)
+    FinT<IO, bool>               Exists(Specification<TAggregate> spec);
+    FinT<IO, int>                Count(Specification<TAggregate> spec);
+    FinT<IO, Seq<TAggregate>>    FindAllSatisfying(Specification<TAggregate> spec);
+    FinT<IO, Option<TAggregate>> FindFirstSatisfying(Specification<TAggregate> spec);
+    FinT<IO, int>                DeleteBy(Specification<TAggregate> spec);  // ⚠️ Hard delete
 }
 ```
 
@@ -345,6 +355,7 @@ public interface IQueryUsecase<in TQuery, TSuccess>
 // Query: IQueryPort — Aggregate 재구성 없이 DTO 직접 프로젝션, Dapper로 경량 SQL 매핑
 public interface IQueryPort<TEntity, TDto> : IQueryPort
 {
+    // 페이지네이션 + 스트리밍
     FinT<IO, PagedResult<TDto>> Search(
         Specification<TEntity> spec, PageRequest page, SortExpression sort);
 
@@ -354,6 +365,10 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
     IAsyncEnumerable<TDto> Stream(
         Specification<TEntity> spec, SortExpression sort,
         CancellationToken cancellationToken = default);
+
+    // Read-side 집계 헬퍼 (리포팅·대시보드)
+    FinT<IO, bool> Exists(Specification<TEntity> spec);
+    FinT<IO, int>  Count(Specification<TEntity> spec);
 }
 ```
 
@@ -450,7 +465,7 @@ dotnet add package Functorium.Testing
 
 - **Domain Layer** — 순수 비즈니스 로직. Entity, AggregateRoot, Value Object, Specification, DomainError, Domain Event, Repository 포트(IRepository), IObservablePort. 외부 의존성 없이 순수 함수 기반으로 비즈니스 규칙을 표현합니다.
 - **Application Layer** — 유스케이스 조립. CQRS(ICommandRequest, IQueryRequest), FinResponse, IQueryPort(읽기 전용 DTO 프로젝션), FluentValidation 확장, FinT LINQ 합성, Domain Event 발행, IUnitOfWork. 도메인 로직과 인프라를 연결하고 사이드 이펙트의 경계를 관리합니다.
-- **Adapter Layer** — 인프라 구현. OpenTelemetry 구성, Usecase Pipeline (Observability + Validation 내장, CtxEnricher 포함), Observable 도메인 이벤트 발행, 구조화된 로거, DapperQueryAdapterBase, AdapterError, 5개 Source Generator([GenerateObservablePort], [GenerateEntityId], CtxEnricher, DomainEventCtxEnricher, [UnionType]). 도메인에 의존하지만, 도메인은 인프라에 의존하지 않습니다.
+- **Adapter Layer** — 인프라 구현. OpenTelemetry 구성, Usecase Pipeline (Observability + Validation 내장, CtxEnricher 포함), Observable 도메인 이벤트 발행, 구조화된 로거, DapperQueryAdapterBase, AdapterError, 6개 Source Generator([GenerateObservablePort], [GenerateEntityId], [GenerateSetters], CtxEnricher, DomainEventCtxEnricher, [UnionType]). 도메인에 의존하지만, 도메인은 인프라에 의존하지 않습니다.
 
 ## Observability
 
@@ -568,16 +583,12 @@ public void DomainLayer_ShouldNotDependOn_ApplicationLayer()
 }
 ```
 
-Functorium.Testing은 6개 TestSuite 베이스 클래스를 제공합니다 — 상속만 하면 **21개 이상의 아키텍처 규칙이** 자동 적용됩니다:
+Functorium.Testing은 2개 TestSuite 베이스 클래스를 제공합니다 — 상속만 하면 **Domain·Application 레이어에 걸친 25개 아키텍처 규칙이** 자동 적용됩니다:
 
 | TestSuite | 검증 대상 |
 |-----------|----------|
-| `DomainArchitectureTestSuite` | sealed class, private 생성자, `Fin<T>` 반환 등 |
-| `ApplicationArchitectureTestSuite` | Command/Query Usecase 구조 |
-| `AdapterArchitectureTestSuite` | virtual 메서드, Observable Port |
-| `CqrsArchitectureTestSuite` | Command/Query 분리 |
-| `DtoArchitectureTestSuite` | sealed record |
-| `PortInterfaceArchitectureTestSuite` | Port 인터페이스 규칙 |
+| `DomainArchitectureTestSuite` | Aggregate Root + 자식 Entity + Value Object + Domain Event 불변식 — sealed class, private 생성자, `Fin<T>` / `Validation<Error, T>` 반환, `[GenerateEntityId]` 적용, 네임스페이스 배치 등 |
+| `ApplicationArchitectureTestSuite` | Command/Query Usecase + Port + DTO 구조 — `ICommandUsecase` / `IQueryUsecase` 형태, `FinResponse<T>` 반환 계약, sealed record DTO, 레이어 의존성 방향 |
 
 ### 게이트 2: 도메인 모델 단위 테스트 — 비즈니스 규칙 검증
 

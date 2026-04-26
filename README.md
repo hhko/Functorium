@@ -29,7 +29,7 @@ Mediator, LanguageExt, FluentValidation, and OpenTelemetry are each excellent. B
 | **Domain Safety** | Value Object hierarchy (6 types + Union), Entity/AggregateRoot, Specification Pattern, structured error codes |
 | **Functional Composition** | `Fin<T>`/`FinT<IO,T>` Discriminated Union, LINQ composition, Bind/Apply validation, CQRS path-optimized |
 | **Advanced IO** | Timeout, Retry (exponential backoff), Fork (parallel execution), Bracket (resource lifecycle management) |
-| **Automation** | 5 Source Generators, Usecase Pipeline (Observability + Validation built-in), architecture rule tests |
+| **Automation** | 6 Source Generators, Usecase Pipeline (Observability + Validation built-in), architecture rule tests |
 | **Observability** | 3-Pillar automatic instrumentation, ctx.* business context propagation, automatic error classification (expected/exceptional/aggregate) |
 
 ### See the Change in 30 Seconds — From Text to Code
@@ -152,7 +152,7 @@ This is how AI generates exception-free, safe code structures automatically.
    - Type system: enforce the new `Cancel()` signature at every call site at compile time
 
 > **Developers never open the `Fin<Unit>` pipeline inside `Order.Cancel()`.**
-> Just edit the text requirement. AI rebuilds state-transition rules, Unions, events, and tests; architectural integrity is guaranteed by [21+ rule tests](#gate-1-architecture-rule-tests--structural-integrity).
+> Just edit the text requirement. AI rebuilds state-transition rules, Unions, events, and tests; architectural integrity is guaranteed by [25 rule tests](#gate-1-architecture-rule-tests--structural-integrity).
 
 | Role | Responsibility | In this scenario |
 |------|---------------|------------------|
@@ -312,16 +312,26 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     where TAggregate : AggregateRoot<TId>
     where TId : struct, IEntityId<TId>
 {
+    // Write: Single
     FinT<IO, TAggregate> Create(TAggregate aggregate);
-    FinT<IO, TAggregate> GetById(TId id);
     FinT<IO, TAggregate> Update(TAggregate aggregate);
-    FinT<IO, int> Delete(TId id);
+    FinT<IO, int>        Delete(TId id);                  // ⚠️ Hard delete (no domain events)
 
-    // Bulk operations
-    FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates);
+    // Write: Batch — affected-row count
+    FinT<IO, int> CreateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, int> UpdateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);    // ⚠️ Hard delete
+
+    // Read
+    FinT<IO, TAggregate>      GetById(TId id);
     FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
-    FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
-    FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
+
+    // Specification (Evans selectSatisfying pattern)
+    FinT<IO, bool>               Exists(Specification<TAggregate> spec);
+    FinT<IO, int>                Count(Specification<TAggregate> spec);
+    FinT<IO, Seq<TAggregate>>    FindAllSatisfying(Specification<TAggregate> spec);
+    FinT<IO, Option<TAggregate>> FindFirstSatisfying(Specification<TAggregate> spec);
+    FinT<IO, int>                DeleteBy(Specification<TAggregate> spec);  // ⚠️ Hard delete
 }
 ```
 
@@ -345,6 +355,7 @@ public interface IQueryUsecase<in TQuery, TSuccess>
 // Query: IQueryPort — Direct DTO projection without Aggregate reconstruction, lightweight SQL mapping via Dapper
 public interface IQueryPort<TEntity, TDto> : IQueryPort
 {
+    // Pagination + streaming
     FinT<IO, PagedResult<TDto>> Search(
         Specification<TEntity> spec, PageRequest page, SortExpression sort);
 
@@ -354,6 +365,10 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
     IAsyncEnumerable<TDto> Stream(
         Specification<TEntity> spec, SortExpression sort,
         CancellationToken cancellationToken = default);
+
+    // Read-side aggregate helpers (reporting, dashboard)
+    FinT<IO, bool> Exists(Specification<TEntity> spec);
+    FinT<IO, int>  Count(Specification<TEntity> spec);
 }
 ```
 
@@ -450,7 +465,7 @@ The system is composed of three layers. The domain depends on nothing external, 
 
 - **Domain Layer** — Pure business logic. Entity, AggregateRoot, Value Object, Specification, DomainError, Domain Event, Repository port (IRepository), IObservablePort. Expresses business rules through pure functions without external dependencies.
 - **Application Layer** — Usecase orchestration. CQRS (ICommandRequest, IQueryRequest), FinResponse, IQueryPort (read-only DTO projection), FluentValidation extensions, FinT LINQ composition, Domain Event publishing, IUnitOfWork. Connects domain logic with infrastructure and manages side effect boundaries.
-- **Adapter Layer** — Infrastructure implementation. OpenTelemetry configuration, Usecase Pipeline (Observability + Validation built-in, including CtxEnricher), Observable domain event publishing, structured loggers, DapperQueryAdapterBase, AdapterError, 5 Source Generators ([GenerateObservablePort], [GenerateEntityId], CtxEnricher, DomainEventCtxEnricher, [UnionType]). Depends on domain, but domain does not depend on infrastructure.
+- **Adapter Layer** — Infrastructure implementation. OpenTelemetry configuration, Usecase Pipeline (Observability + Validation built-in, including CtxEnricher), Observable domain event publishing, structured loggers, DapperQueryAdapterBase, AdapterError, 6 Source Generators ([GenerateObservablePort], [GenerateEntityId], [GenerateSetters], CtxEnricher, DomainEventCtxEnricher, [UnionType]). Depends on domain, but domain does not depend on infrastructure.
 
 ## Observability
 
@@ -568,16 +583,12 @@ public void DomainLayer_ShouldNotDependOn_ApplicationLayer()
 }
 ```
 
-Functorium.Testing provides 6 TestSuite base classes — just inherit and **21+ architecture rules** are automatically applied:
+Functorium.Testing provides 2 TestSuite base classes — just inherit and **25 architecture rules** are automatically applied across the Domain and Application layers:
 
 | TestSuite | Verification Target |
 |-----------|----------|
-| `DomainArchitectureTestSuite` | sealed class, private constructors, `Fin<T>` return types, etc. |
-| `ApplicationArchitectureTestSuite` | Command/Query Usecase structure |
-| `AdapterArchitectureTestSuite` | virtual methods, Observable Port |
-| `CqrsArchitectureTestSuite` | Command/Query separation |
-| `DtoArchitectureTestSuite` | sealed record |
-| `PortInterfaceArchitectureTestSuite` | Port interface rules |
+| `DomainArchitectureTestSuite` | Aggregate Root + child Entity + Value Object + Domain Event invariants — sealed class, private constructors, `Fin<T>` / `Validation<Error, T>` return types, `[GenerateEntityId]` presence, namespace placement, etc. |
+| `ApplicationArchitectureTestSuite` | Command/Query Usecase + Port + DTO structure — `ICommandUsecase` / `IQueryUsecase` shape, `FinResponse<T>` return contract, sealed record DTOs, layer dependency direction |
 
 ### Gate 2: Domain Model Unit Tests — Business Rule Verification
 
