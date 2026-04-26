@@ -491,7 +491,7 @@ Here we visualize how the "24h post-delivery cancellation" policy from the [requ
   "ctx.cancellation_reason": "ChangeOfMind",
   "ctx.hours_since_delivery": 25,
   "error.type": "expected",
-  "error.codes": ["Domain.Order.InvalidOrderStatusTransition"],
+  "error.code": "Domain.Order.InvalidOrderStatusTransition",
   "error.message": "Cancel window (24h) exceeded for ChangeOfMind",
   "elapsed_ms": 7,
   "status": "Failed"
@@ -528,7 +528,7 @@ The three pillars (Logs, Metrics, Traces) shown above are emitted **automaticall
 | Traditional exception model (OOP) | Functorium `Fin` model |
 |---|---|
 | `throw new InvalidOperationException(...)` | `Fin.Fail<Unit>(DomainError.For<Order>(...))` |
-| Only a stack trace on failure | Expected: error-code array (signal) / Exceptional: stack trace preserved / Aggregate: list of compound failures |
+| Only a stack trace on failure | Expected: structured error code (signal) / Exceptional: stack trace preserved / Aggregate: list of compound failures |
 | Risk of broken process flow | Type-safe failure value — flow is preserved |
 | Manual log re-assembly required | `request_id` / `trace_id` auto-propagated |
 | Business errors and system failures mixed | `error.type ∈ {expected, exceptional, aggregate}` — dashboard-filterable |

@@ -491,7 +491,7 @@ Application 레이어(EventId 1001–1004)와 Adapter 레이어(EventId 2001–2
   "ctx.cancellation_reason": "ChangeOfMind",
   "ctx.hours_since_delivery": 25,
   "error.type": "expected",
-  "error.codes": ["Domain.Order.InvalidOrderStatusTransition"],
+  "error.code": "Domain.Order.InvalidOrderStatusTransition",
   "error.message": "Cancel window (24h) exceeded for ChangeOfMind",
   "elapsed_ms": 7,
   "status": "Failed"
@@ -528,7 +528,7 @@ sequenceDiagram
 | 전통 예외 모델 (OOP) | Functorium `Fin` 모델 |
 |---|---|
 | `throw new InvalidOperationException(...)` | `Fin.Fail<Unit>(DomainError.For<Order>(...))` |
-| 실패 시 스택 트레이스만 남음 | Expected: 에러 코드 배열(시그널) / Exceptional: 스택 트레이스 보존 / Aggregate: 복합 실패 목록 |
+| 실패 시 스택 트레이스만 남음 | Expected: 구조화된 에러 코드(시그널) / Exceptional: 스택 트레이스 보존 / Aggregate: 복합 실패 목록 |
 | 프로세스 흐름 단절 위험 | 타입 안전한 실패 값 — 흐름 유지 |
 | 로그 수동 재조립 필요 | `request_id`·`trace_id` 자동 전파 |
 | 비즈니스 에러·시스템 장애 혼재 | `error.type ∈ {expected, exceptional, aggregate}` 자동 분류로 대시보드 필터 가능 |
