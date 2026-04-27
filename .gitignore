@@ -437,7 +437,11 @@ tmpclaude-*-cwd
 
 # Release-Notes
 .release-notes/scripts/.analysis-output/
+.release-notes/scripts/.analysis-output-*-archive/
 .release-notes/.work/
+
+# Claude Code transient artifacts
+.claude/scheduled_tasks.lock
 
 # Coverage
 .coverage/reports/
