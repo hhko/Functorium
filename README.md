@@ -7,12 +7,15 @@
 > **Functorium** is named from **`functor + dominium`** with a touch of **`fun`**.
 > **dominium** is Latin for "dominion, ownership" — Domain is not just a scope, but **the problem space we own and govern**.
 >
-> Functorium is an **AI Native .NET framework** where AI agents directly guide domain design and generate code.
-> The result compiles into production code with functional architecture + DDD + Observability built in.
+> Functorium is an **AI Native .NET framework** where AI agents directly guide domain design and generate code. The output compiles directly into production code with functional architecture + DDD + Observability built in.
 
-**6 specialist AI agents** guide a 7-step workflow from requirements analysis to testing. At each step, design documents and compilable C# code are generated simultaneously. No need to manually make hundreds of architecture decisions.
+**6 specialist AI agents** guide a 7-step workflow from requirements analysis to testing. At each step, design documents and compilable C# code are generated simultaneously, so there is no need to make hundreds of architecture decisions by hand.
 
-Functorium is designed for .NET teams practicing enterprise DDD, teams seeking to bridge the language gap between development and operations, and architects systematically adopting functional DDD architecture.
+> **Who is this document for?**
+>
+> Not for product managers or junior developers who only hand off domain rules. This is an in-depth guide for **application architects** who must directly review and govern the integrity of AI-generated artifacts and set the boundaries and architecture of the system.
+>
+> AI auto-synthesizes the pipeline. But **defining what should be synthesized** and **judging whether the synthesized result can be trusted** remain human responsibilities. That is why this document goes the full distance, all the way down to the inner mechanics of monads, CQRS, and Observable Port.
 
 ## Problems to Solve
 
@@ -22,7 +25,7 @@ Functorium is designed for .NET teams practicing enterprise DDD, teams seeking t
 
 These are not simply process problems — they are **problems of design philosophy and structure**.
 
-Mediator, LanguageExt, FluentValidation, and OpenTelemetry are each excellent. But integrating them into a coherent DDD architecture requires hundreds of decisions about error propagation, pipeline ordering, observability boundaries, and type constraints. Functorium makes these decisions once, consistently — and **AI agents automatically apply these decisions to your project.**
+Mediator, LanguageExt, FluentValidation, and OpenTelemetry are each excellent. But integrating them into a coherent DDD architecture requires hundreds of decisions about error propagation, pipeline ordering, observability boundaries, and type constraints. Functorium makes all these decisions in one place — and **AI agents automatically apply them to your project.**
 
 | Value | Features |
 |-------|----------|
@@ -109,7 +112,7 @@ public sealed partial class Email : SimpleValueObject<string>
 
 </details>
 
-This is how AI generates exception-free, safe code structures automatically.
+This is how AI auto-synthesizes exception-free, safe code structures.
 
 ### Humans Define Rules, AI Builds Implementation, Observability Translates Back
 
@@ -121,7 +124,11 @@ This is how AI generates exception-free, safe code structures automatically.
 
 > **"Can I debug AI-written monad code at 2 AM?"**
 >
-> The framework's **automatic error classification + structured context logs + dashboards** — built into every Command/Query — translate code state into human language.
+> The framework's **automatic error classification + structured context logs + dashboards** — built into every Command/Query — translate the AI-generated pipeline's internal state into diagnostics a human can read instantly.
+
+> **AI writing the code does not exempt humans from understanding it.**
+>
+> AI writes the code, but reviewing the integrity of the result and tuning it to business requirements ultimately falls to the **human architect.** That is why the monad, CQRS, and Observable Port internals this document goes on to explain are **not a burden you must shoulder — they are the weapons you need in hand to govern the AI**.
 
 ### When Requirements Change — Humans Update Text, AI Rebuilds the Implementation
 
@@ -238,6 +245,12 @@ test-engineer           : Unit/integration/architecture rule tests
 ## AI-Generated Code: Functional Architecture in Detail
 
 Building on the Email implementation above, let's explore additional framework patterns. For CQRS Command/Query usecase implementation examples, see the [CQRS Repository Tutorial](./Docs.Site/src/content/docs/tutorials/cqrs-repository/index.md).
+
+> **From here on, this is governance material.**
+>
+> Going through Domain Model → CQRS → Observability in order, this section covers the internal mechanics an architect must hold in hand to **govern, modify, and extend** AI-generated code. It fills in, in one pass, the vocabulary needed to judge **on what basis to trust** AI artifacts at each layer.
+>
+> If you are a casual user, skip ahead to [Getting Started](#getting-started) — package install alone is enough to run your first code. This section is for those who carry responsibility for the system.
 
 <details>
 <summary><strong>Domain Model in Detail</strong> — Value Object, Entity, AggregateRoot, DomainError, Domain Event</summary>
@@ -536,7 +549,7 @@ sequenceDiagram
   Note over OT: All three pillars share the same trace_id/request_id<br/>→ one filter correlates Logs, Metrics, and Traces
 ```
 
-The three pillars (Logs, Metrics, Traces) shown above are emitted **automatically** by Source Generators and the Usecase Pipeline — developers write no logging or metric code by hand.
+The three pillars (Logs, Metrics, Traces) shown above are emitted **automatically** by Source Generators and the Usecase Pipeline — developers write zero logging or metric code by hand.
 
 **Traditional exception model vs. Functorium `Fin` model**:
 
