@@ -2,6 +2,8 @@
 
 **[English](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.4/.release-notes/v1/v1.0.0-alpha.4/RELEASE-v1.0.0-alpha.4.md)** | **한국어**
 
+**발표 자료**: [PDF](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.4/.release-notes/v1/v1.0.0-alpha.4/RELEASE-v1.0.0-alpha.4-KR.pdf) | [PPTX](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.4/.release-notes/v1/v1.0.0-alpha.4/RELEASE-v1.0.0-alpha.4-KR.pptx) | [MP4](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.4/.release-notes/v1/v1.0.0-alpha.4/RELEASE-v1.0.0-alpha.4-KR.mp4) | [M4A](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.4/.release-notes/v1/v1.0.0-alpha.4/RELEASE-v1.0.0-alpha.4-KR.m4a)
+
 ## 개요
 
 Functorium v1.0.0-alpha.4는 **에러 시스템 재설계 릴리스입니다.** alpha.1~alpha.3을 거치며 누적된 네이밍 중복 — `ErrorCode*`로 시작하는 6개 심볼과 `*ErrorType`으로 끝나는 5개 심볼 — 을 해소하기 위해 에러 타입 계층 전체를 일관성 있게 리네이밍했습니다. 이번 릴리스 이후 에러 시스템의 모든 역할이 고유한 이름을 갖습니다: 팩토리는 `Error`, 분류 record는 `Kind`, 코드 prefix는 짧은 레이어명만 사용합니다.
