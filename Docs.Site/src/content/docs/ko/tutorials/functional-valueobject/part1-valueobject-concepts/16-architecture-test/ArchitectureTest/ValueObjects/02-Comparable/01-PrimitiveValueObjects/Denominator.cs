@@ -11,7 +11,7 @@ namespace ArchitectureTest.ValueObjects.Comparable.PrimitiveValueObjects;
 /// </summary>
 public sealed class Denominator : ComparableSimpleValueObject<int>
 {
-    public sealed record Zero : DomainErrorType.Custom;
+    public sealed record Zero : DomainErrorKind.Custom;
     /// <summary>
     /// Denominator 인스턴스를 생성하는 private 생성자
     /// 직접 인스턴스 생성 방지

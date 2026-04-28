@@ -61,7 +61,7 @@ public sealed class City : SimpleValueObject<string>
         /// <param name="value">실패한 도시명 값</param>
         /// <returns>구조화된 에러 정보</returns>
         public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(City)}.{nameof(Empty)}",
                 errorCurrentValue: value,
                 errorMessage: $"City name cannot be empty. Current value: '{value}'");

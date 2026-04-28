@@ -14,7 +14,7 @@ public sealed class Currency
     : SmartEnum<Currency, string>
     , IValueObject
 {
-    public sealed record Unsupported : DomainErrorType.Custom;
+    public sealed record Unsupported : DomainErrorKind.Custom;
     public static readonly Currency KRW = new(nameof(KRW), "KRW", "한국 원화", "₩");
     public static readonly Currency USD = new(nameof(USD), "USD", "미국 달러", "$");
     public static readonly Currency EUR = new(nameof(EUR), "EUR", "유로", "€");

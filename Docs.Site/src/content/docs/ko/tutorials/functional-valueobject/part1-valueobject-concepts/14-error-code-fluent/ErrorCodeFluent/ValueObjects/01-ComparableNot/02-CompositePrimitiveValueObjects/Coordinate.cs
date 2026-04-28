@@ -32,13 +32,13 @@ public sealed class Coordinate : ValueObject
 
     private static Validation<Error, int> ValidateX(int x) =>
         x < 0 || x > 1000
-            ? DomainError.For<Coordinate, int>(new DomainErrorType.OutOfRange("0", "1000"), x,
+            ? DomainError.For<Coordinate, int>(new DomainErrorKind.OutOfRange("0", "1000"), x,
                 $"X coordinate must be between 0 and 1000. Current value: '{x}'")
             : x;
 
     private static Validation<Error, int> ValidateY(int y) =>
         y < 0 || y > 1000
-            ? DomainError.For<Coordinate, int>(new DomainErrorType.OutOfRange("0", "1000"), y,
+            ? DomainError.For<Coordinate, int>(new DomainErrorKind.OutOfRange("0", "1000"), y,
                 $"Y coordinate must be between 0 and 1000. Current value: '{y}'")
             : y;
 

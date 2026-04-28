@@ -33,7 +33,7 @@ public static class DomainErrorAssertions
     /// <param name="expectedErrorType">기대하는 에러 타입</param>
     public static void ShouldBeDomainError<TDomain, T>(
         this Fin<T> fin,
-        DomainErrorType expectedErrorType)
+        DomainErrorKind expectedErrorType)
     {
         fin.IsFail.ShouldBeTrue("Fin should have failed");
 
@@ -63,7 +63,7 @@ public static class DomainErrorAssertions
     /// <param name="expectedCurrentValue">기대하는 현재 값</param>
     public static void ShouldBeDomainError<TDomain, T, TValue>(
         this Fin<T> fin,
-        DomainErrorType expectedErrorType,
+        DomainErrorKind expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull
     {
@@ -93,7 +93,7 @@ public static class DomainErrorAssertions
     /// <param name="expectedErrorType">기대하는 에러 타입</param>
     public static void ShouldHaveDomainError<TDomain, T>(
         this Validation<Error, T> validation,
-        DomainErrorType expectedErrorType)
+        DomainErrorKind expectedErrorType)
     {
         validation.IsFail.ShouldBeTrue("Validation should have failed");
 
@@ -118,7 +118,7 @@ public static class DomainErrorAssertions
     /// <param name="expectedCurrentValue">기대하는 현재 값</param>
     public static void ShouldHaveDomainError<TDomain, T, TValue>(
         this Validation<Error, T> validation,
-        DomainErrorType expectedErrorType,
+        DomainErrorKind expectedErrorType,
         TValue expectedCurrentValue)
         where TValue : notnull
     {
@@ -143,7 +143,7 @@ public static class DomainErrorAssertions
     /// <param name="expectedErrorType">기대하는 에러 타입</param>
     public static void ShouldHaveOnlyDomainError<TDomain, T>(
         this Validation<Error, T> validation,
-        DomainErrorType expectedErrorType)
+        DomainErrorKind expectedErrorType)
     {
         validation.IsFail.ShouldBeTrue("Validation should have failed");
 
@@ -172,7 +172,7 @@ public static class DomainErrorAssertions
     /// <param name="expectedErrorTypes">기대하는 에러 타입들</param>
     public static void ShouldHaveDomainErrors<TDomain, T>(
         this Validation<Error, T> validation,
-        params DomainErrorType[] expectedErrorTypes)
+        params DomainErrorKind[] expectedErrorTypes)
     {
         validation.IsFail.ShouldBeTrue("Validation should have failed");
 

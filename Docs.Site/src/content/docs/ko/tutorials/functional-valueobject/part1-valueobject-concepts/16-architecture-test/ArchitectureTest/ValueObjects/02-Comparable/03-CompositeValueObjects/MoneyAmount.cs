@@ -43,7 +43,7 @@ public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
     public static Validation<Error, decimal> Validate(decimal value) =>
         value >= 0 && value <= 999999.99m
             ? value
-            : DomainError.For<MoneyAmount, decimal>(new DomainErrorType.OutOfRange(), value,
+            : DomainError.For<MoneyAmount, decimal>(new DomainErrorKind.OutOfRange(), value,
                 $"Money amount must be between 0 and 999999.99. Current value: '{value}'");
 
     /// <summary>

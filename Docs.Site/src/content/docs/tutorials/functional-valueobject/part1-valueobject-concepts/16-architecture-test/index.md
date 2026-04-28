@@ -2,10 +2,6 @@
 title: "Architecture Tests"
 ---
 
-:::note[Naming convention note]
-This tutorial walks through a **self-contained mini-framework** that uses the pre-1.0.0-alpha.4 names (e.g., `DomainErrors.X.Y`, `ErrorCodeFactory`, `DomainErrorType`). The Functorium production framework now uses shorter names — see the [Error System Spec](/spec/04-error-system/) for the full rename map. The patterns and design rationale shown here are unchanged; only the identifiers differ.
-:::
-
 ## Overview
 
 As you create multiple value objects, design rules start to gradually break down -- such as a Create method being private or forgetting to add sealed. C#'s generic constraints and interfaces alone cannot enforce these rules at compile time. In this chapter, we cover how to use ArchUnitNET to automatically verify the structural rules of value objects through runtime tests.

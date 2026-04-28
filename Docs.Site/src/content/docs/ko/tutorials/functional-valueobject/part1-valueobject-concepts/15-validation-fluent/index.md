@@ -2,10 +2,6 @@
 title: "Validate Fluent API"
 ---
 
-:::note[명명 규칙 안내]
-이 튜토리얼은 v1.0.0-alpha.4 이전 명명(예: `DomainErrors.X.Y`, `ErrorCodeFactory`, `DomainErrorType`)을 사용하는 **자체 mini-framework**를 단계별로 설명합니다. Functorium 프로덕션 프레임워크는 더 짧은 이름을 사용하며 전체 매핑은 [에러 시스템 사양](/ko/spec/04-error-system/)을 참조하세요. 여기서 다루는 패턴과 설계 의도는 동일하며 식별자만 다릅니다.
-:::
-
 ## 개요
 
 `DomainError.For<T>()`로 에러 생성은 간결해졌지만, 여러 검증 규칙을 적용할 때 삼항 연산자가 중첩되고 타입을 반복 지정해야 하는 불편함이 남아 있지 않았나요? 이 장에서는 `Validate<T>` Fluent API를 도입하여 검증 코드를 선형적인 체이닝으로 작성하고, 코드량을 약 70% 줄이는 패턴을 다룹니다.
@@ -29,9 +25,9 @@ title: "Validate Fluent API"
 // 이전 방식: 중첩된 삼항 연산자
 public static Validation<Error, string> Validate(string currencyCode) =>
     string.IsNullOrWhiteSpace(currencyCode)
-        ? DomainError.For<Currency>(new DomainErrorType.Empty(), currencyCode ?? "", "...")
+        ? DomainError.For<Currency>(new DomainErrorKind.Empty(), currencyCode ?? "", "...")
         : currencyCode.Length != 3
-            ? DomainError.For<Currency>(new DomainErrorType.WrongLength(3), currencyCode, "...")
+            ? DomainError.For<Currency>(new DomainErrorKind.WrongLength(3), currencyCode, "...")
             : currencyCode.ToUpperInvariant();
 ```
 
@@ -61,7 +57,7 @@ Validate<MoneyAmount>.AtMost(value, 999999.99m)  // 최대값 검증
 Validate<MoneyAmount>.AtLeast(value, 0)          // 최소값 검증
 
 // 커스텀 검증 메서드
-Validate<Denominator>.Must(value, v => v != 0, new Zero(), "message")  // sealed record Zero : DomainErrorType.Custom;
+Validate<Denominator>.Must(value, v => v != 0, new Zero(), "message")  // sealed record Zero : DomainErrorKind.Custom;
 ```
 
 ### TypedValidation&lt;TValueObject, T&gt; 래퍼
@@ -122,7 +118,7 @@ public static Validation<Error, string> Validate(string value) =>
 
 // ThenMust: 조건부 검증 (실패할 수 있음)
 .ThenMust(v => SupportedCurrencies.Contains(v),
-    new Unsupported(),  // sealed record Unsupported : DomainErrorType.Custom;
+    new Unsupported(),  // sealed record Unsupported : DomainErrorKind.Custom;
     v => $"Currency '{v}' is not supported")
 ```
 
@@ -157,13 +153,13 @@ public sealed class PostalCode : SimpleValueObject<string>
 
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         string.IsNullOrWhiteSpace(value)
-            ? DomainError.For<PostalCode>(new DomainErrorType.Empty(), value ?? "",
+            ? DomainError.For<PostalCode>(new DomainErrorKind.Empty(), value ?? "",
                 $"Postal code cannot be empty. Current value: '{value}'")
             : value;
 
     private static Validation<Error, string> ValidateFormat(string value) =>
         value.Length != 5 || !value.All(char.IsDigit)
-            ? DomainError.For<PostalCode>(new DomainErrorType.WrongLength(5), value,
+            ? DomainError.For<PostalCode>(new DomainErrorKind.WrongLength(5), value,
                 $"Postal code must be exactly 5 digits. Current value: '{value}'")
             : value;
 }
@@ -326,7 +322,7 @@ public static class Validate<TValueObject>
 
     // 커스텀 검증
     public static TypedValidation<TValueObject, T> Must<T>(
-        T value, Func<T, bool> predicate, DomainErrorType errorType, string message);
+        T value, Func<T, bool> predicate, DomainErrorKind errorType, string message);
 }
 ```
 
@@ -354,9 +350,9 @@ public static class TypedValidationExtensions
 
     // 커스텀 체이닝
     public static TypedValidation<TVO, T> ThenMust<TVO, T>(this TypedValidation<TVO, T> v,
-        Func<T, bool> predicate, DomainErrorType errorType, string message);
+        Func<T, bool> predicate, DomainErrorKind errorType, string message);
     public static TypedValidation<TVO, T> ThenMust<TVO, T>(this TypedValidation<TVO, T> v,
-        Func<T, bool> predicate, DomainErrorType errorType, Func<T, string> messageFactory);
+        Func<T, bool> predicate, DomainErrorKind errorType, Func<T, string> messageFactory);
 }
 ```
 
@@ -388,7 +384,7 @@ public sealed class Currency
     , IValueObject
 {
     // 커스텀 에러 타입 정의
-    public sealed record Unsupported : DomainErrorType.Custom;
+    public sealed record Unsupported : DomainErrorKind.Custom;
 
     public static readonly Currency KRW = new(nameof(KRW), "KRW", "한국 원화", "₩");
     public static readonly Currency USD = new(nameof(USD), "USD", "미국 달러", "$");
@@ -408,7 +404,7 @@ public sealed class Currency
             .ThenExactLength(3)
             .ThenMust(
                 v => SupportedCodes.Contains(v),
-                new Unsupported(),  // sealed record Unsupported : DomainErrorType.Custom;
+                new Unsupported(),  // sealed record Unsupported : DomainErrorKind.Custom;
                 v => $"Currency '{v}' is not supported");
 }
 ```
@@ -516,7 +512,7 @@ public static Validation<Error, string> Validate(string value) =>
         .ThenExactLength(5);
 
 // DomainError.For<T>() 사용 - 복잡한 비즈니스 로직
-// sealed record MinExceedsMax : DomainErrorType.Custom;
+// sealed record MinExceedsMax : DomainErrorKind.Custom;
 private static Validation<Error, (Price Min, Price Max)> ValidatePriceRange(Price min, Price max) =>
     (decimal)min.Amount > (decimal)max.Amount
         ? DomainError.For<PriceRange>(new MinExceedsMax(),

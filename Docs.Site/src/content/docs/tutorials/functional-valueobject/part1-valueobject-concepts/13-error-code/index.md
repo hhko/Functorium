@@ -2,10 +2,6 @@
 title: "Structured Error Codes"
 ---
 
-:::note[Naming convention note]
-This tutorial walks through a **self-contained mini-framework** that uses the pre-1.0.0-alpha.4 names (e.g., `DomainErrors.X.Y`, `ErrorCodeFactory`, `DomainErrorType`). The Functorium production framework now uses shorter names — see the [Error System Spec](/spec/04-error-system/) for the full rename map. The patterns and design rationale shown here are unchanged; only the identifiers differ.
-:::
-
 ## Overview
 
 Can you determine from the error message `Error.New("Invalid denominator value: 0")` alone which domain, what reason, and which value caused the problem? By managing structured error codes in the format `"DomainErrors.ClassName.Reason"` together with the value at the time of failure, debugging and monitoring efficiency are greatly improved.
@@ -37,7 +33,7 @@ Comparing error creation between the existing approach and the structured approa
 var error = Error.New("Invalid denominator value: 0");
 
 // Improved approach (structured) - systematic error management
-var error = ErrorCodeFactory.Create(
+var error = ErrorFactory.Create(
     errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
     errorCurrentValue: 0,
     errorMessage: $"Denominator cannot be zero. Current value: '0'");
@@ -49,15 +45,15 @@ Through generic overloads such as `Create<T>` and `Create<T1, T2>`, type informa
 
 ```csharp
 // Managing various types of error information in a type-safe manner
-var stringError = ErrorCodeFactory.Create(
+var stringError = ErrorFactory.Create(
     errorCode: $"{nameof(DomainErrors)}.{nameof(Name)}.{nameof(TooShort)}",
     errorCurrentValue: "i@name",
     errorMessage: $"Name is too short. Current value: 'i@name'");
-var intError = ErrorCodeFactory.Create(
+var intError = ErrorFactory.Create(
     errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(Invalid)}",
     errorCurrentValue: 150,
     errorMessage: $"Age is out of range. Current value: '150'");
-var multiValueError = ErrorCodeFactory.Create(
+var multiValueError = ErrorFactory.Create(
     errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(OutOfRange)}",
     errorCurrentValue1: 1500,
     errorCurrentValue2: 2000,
@@ -76,7 +72,7 @@ public sealed class Denominator : SimpleValueObject<int>
     internal static class DomainErrors
     {
         public static Error Zero(int value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
                 errorCurrentValue: value,
                 errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
@@ -156,7 +152,7 @@ Out-of-range Y coordinate: ErrorCode: DomainErrors.Coordinate.YOutOfRange, Error
 ```
 
 ### Key Implementation Points
-1. **ErrorCodeFactory generic overloads**: Type-safe management of various types of error information through `Create<T>` and `Create<T1, T2>` methods
+1. **ErrorFactory generic overloads**: Type-safe management of various types of error information through `Create<T>` and `Create<T1, T2>` methods
 2. **Internal DomainErrors class pattern**: Defining `internal static class DomainErrors` inside the value object for highly cohesive error management
 3. **Specific error reason naming**: Naming conventions that exactly match validation conditions, such as `Empty`, `NotThreeLetters`, `NotFiveDigits`, `MinExceedsMax`
 4. **LanguageExt compatibility**: Inheriting from the existing `Error` type to ensure full compatibility with the ecosystem
@@ -171,9 +167,9 @@ ErrorCode/                                  # Main project
 ├── Framework/                              # Error handling framework
 │   ├── Abstractions/
 │   │   └── Errors/
-│   │       ├── ErrorCodeFactory.cs         # Error creation factory
-│   │       ├── ErrorCodeExpected.cs        # Structured error types
-│   │       └── ErrorCodeExceptional.cs     # Exception-based errors
+│   │       ├── ErrorFactory.cs         # Error creation factory
+│   │       ├── ExpectedError.cs        # Structured error types
+│   │       └── ExceptionalError.cs     # Exception-based errors
 │   └── Layers/
 │       └── Domains/
 │           ├── ValueObject.cs              # Base value object class
@@ -204,30 +200,30 @@ ErrorCode/                                  # Main project
 
 ### Core Code
 
-#### ErrorCodeFactory -- Error Creation Factory
+#### ErrorFactory -- Error Creation Factory
 ```csharp
-public static class ErrorCodeFactory
+public static class ErrorFactory
 {
     // Basic error creation
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error Create(string errorCode, string errorCurrentValue, string errorMessage) =>
-        new ErrorCodeExpected(errorCode, errorCurrentValue, errorMessage);
+        new ExpectedError(errorCode, errorCurrentValue, errorMessage);
 
     // Generic single-value error creation
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error Create<T>(string errorCode, T errorCurrentValue, string errorMessage) where T : notnull =>
-        new ErrorCodeExpected<T>(errorCode, errorCurrentValue, errorMessage);
+        new ExpectedError<T>(errorCode, errorCurrentValue, errorMessage);
 
     // Generic multi-value error creation
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error Create<T1, T2>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, string errorMessage)
         where T1 : notnull where T2 : notnull =>
-        new ErrorCodeExpected<T1, T2>(errorCode, errorCurrentValue1, errorCurrentValue2, errorMessage);
+        new ExpectedError<T1, T2>(errorCode, errorCurrentValue1, errorCurrentValue2, errorMessage);
 
     // Exception-based error creation
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error CreateFromException(string errorCode, Exception exception) =>
-        new ErrorCodeExceptional(errorCode, exception);
+        new ExceptionalError(errorCode, exception);
 
     // Error code formatting
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -254,7 +250,7 @@ public sealed class Denominator : SimpleValueObject<int>, IComparable<Denominato
     internal static class DomainErrors
     {
         public static Error Zero(int value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
                 errorCurrentValue: value,
                 errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
@@ -292,19 +288,19 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
     internal static class DomainErrors
     {
         public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Empty)}",
                 errorCurrentValue: value,
                 errorMessage: $"Currency code cannot be empty. Current value: '{value}'");
 
         public static Error NotThreeLetters(string value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
                 errorCurrentValue: value,
                 errorMessage: $"Currency code must be exactly 3 letters. Current value: '{value}'");
 
         public static Error Unsupported(string value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Unsupported)}",
                 errorCurrentValue: value,
                 errorMessage: $"Currency code is not supported. Current value: '{value}'");
@@ -345,7 +341,7 @@ public sealed class PriceRange : ComparableValueObject
     internal static class DomainErrors
     {
         public static Error MinExceedsMax(Price minPrice, Price maxPrice) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(PriceRange)}.{nameof(MinExceedsMax)}",
                 errorCurrentValue: $"MinPrice: {minPrice}, MaxPrice: {maxPrice}",
                 errorMessage: $"Minimum price cannot exceed maximum price. Min: '{minPrice}', Max: '{maxPrice}'");
@@ -357,9 +353,9 @@ public sealed class PriceRange : ComparableValueObject
 
 ### Comparison Table
 
-The following table summarizes the differences between the existing Error.New approach and the ErrorCodeFactory approach.
+The following table summarizes the differences between the existing Error.New approach and the ErrorFactory approach.
 
-| Aspect | Previous Approach (Error.New) | Current Approach (ErrorCodeFactory) |
+| Aspect | Previous Approach (Error.New) | Current Approach (ErrorFactory) |
 |------|----------------------|------------------------------|
 | **Error code structure** | Simple string messages | `DomainErrors.ClassName.Reason` format |
 | **Value information management** | Hardcoded in message | Type-safe separate fields |
@@ -403,10 +399,10 @@ Error method names must exactly match the validation condition. Just by looking 
 **A**: Placing the value object and error definitions in the same file increases cohesion. When modifying a value object, related errors can be checked together, and when creating a new value object, error definitions are naturally written alongside it.
 
 ### Q3: How is compatibility with LanguageExt guaranteed?
-**A**: `ErrorCodeExpected`, `ErrorCodeExpected<T>`, etc. are all implemented by inheriting from LanguageExt's `Error` class. They are fully compatible with functional operators such as `Match`, `Map`, and `Bind`, so the new error handling system can be introduced without modifying existing code.
+**A**: `ExpectedError`, `ExpectedError<T>`, etc. are all implemented by inheriting from LanguageExt's `Error` class. They are fully compatible with functional operators such as `Match`, `Map`, and `Bind`, so the new error handling system can be introduced without modifying existing code.
 
 ---
 
-The error code structure is in place, but calling `ErrorCodeFactory.Create` directly each time makes the code verbose. In the next chapter, we introduce `DomainError` helpers and `DomainErrorType` to make error creation concise.
+The error code structure is in place, but calling `ErrorFactory.Create` directly each time makes the code verbose. In the next chapter, we introduce `DomainError` helpers and `DomainErrorKind` to make error creation concise.
 
 → [Chapter 14: DomainError Helper](../14-Error-Code-Fluent/)

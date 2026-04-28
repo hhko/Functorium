@@ -88,7 +88,7 @@ public sealed class Coordinate : ValueObject
         /// <param name="value">실패한 X 좌표 값</param>
         /// <returns>구조화된 에러 정보</returns>
         public static Error XOutOfRange(int value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(XOutOfRange)}",
                 errorCurrentValue: value,
                 errorMessage: $"X coordinate must be between 0 and 1000. Current value: '{value}'");
@@ -99,7 +99,7 @@ public sealed class Coordinate : ValueObject
         /// <param name="value">실패한 Y 좌표 값</param>
         /// <returns>구조화된 에러 정보</returns>
         public static Error YOutOfRange(int value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(YOutOfRange)}",
                 errorCurrentValue: value,
                 errorMessage: $"Y coordinate must be between 0 and 1000. Current value: '{value}'");

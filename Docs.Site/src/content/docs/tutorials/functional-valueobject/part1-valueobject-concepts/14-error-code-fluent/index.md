@@ -2,20 +2,16 @@
 title: "DomainError Helper"
 ---
 
-:::note[Naming convention note]
-This tutorial walks through a **self-contained mini-framework** that uses the pre-1.0.0-alpha.4 names (e.g., `DomainErrors.X.Y`, `ErrorCodeFactory`, `DomainErrorType`). The Functorium production framework now uses shorter names — see the [Error System Spec](/spec/04-error-system/) for the full rename map. The patterns and design rationale shown here are unchanged; only the identifiers differ.
-:::
-
 ## Overview
 
-Wasn't it cumbersome to repeatedly define `DomainErrors` nested classes for each value object and manually assemble error codes with `ErrorCodeFactory.Create()`? In this chapter, we cover a pattern that replaces error creation with a single line `DomainError.For<T>()` to reduce code volume by approximately 60%, and guarantees type-safe error codes through `DomainErrorType` records.
+Wasn't it cumbersome to repeatedly define `DomainErrors` nested classes for each value object and manually assemble error codes with `ErrorFactory.Create()`? In this chapter, we cover a pattern that replaces error creation with a single line `DomainError.For<T>()` to reduce code volume by approximately 60%, and guarantees type-safe error codes through `DomainErrorKind` records.
 
 ## Learning Objectives
 
 Upon completing this chapter, you will be able to:
 
 1. Create errors concisely using the `DomainError.For<T>()` method
-2. Prevent typos and inconsistencies at compile time using `DomainErrorType` records
+2. Prevent typos and inconsistencies at compile time using `DomainErrorKind` records
 3. Define errors inline without `DomainErrors` nested classes
 4. Choose the appropriate type-specific overload (`For<T>()`, `For<T, TValue>()`, `For<T, T1, T2>()`) for the situation
 
@@ -23,58 +19,58 @@ Upon completing this chapter, you will be able to:
 
 In the previous `13-Error-Code` project, we introduced a structured error code system, but boilerplate remained in defining `DomainErrors` nested classes for each value object. The same pattern of `internal static class DomainErrors` had to be repeatedly defined in every value object, and error codes had to be manually assembled in the format `$"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}"`. Moreover, developers could use different names for the same concept such as `"Empty"`, `"IsEmpty"`, `"EmptyValue"`, making it easy to break consistency.
 
-**The DomainError helper and DomainErrorType records** resolve these problems with type-safe error types and automatic error code generation.
+**The DomainError helper and DomainErrorKind records** resolve these problems with type-safe error types and automatic error code generation.
 
 ## Core Concepts
 
-### DomainErrorType Record
+### DomainErrorKind Record
 
-`DomainErrorType` is an abstract record that defines standardized error types. Using types instead of strings guarantees compile-time safety. Standard errors use predefined types, and domain-specific errors are explicitly defined by inheriting from `DomainErrorType.Custom`.
+`DomainErrorKind` is an abstract record that defines standardized error types. Using types instead of strings guarantees compile-time safety. Standard errors use predefined types, and domain-specific errors are explicitly defined by inheriting from `DomainErrorKind.Custom`.
 
 ```csharp
 // Standard error types (type-safe)
-new DomainErrorType.Empty()           // Empty value
-new DomainErrorType.Null()            // Null value
-new DomainErrorType.TooShort(8)       // Below minimum length
-new DomainErrorType.TooLong(100)      // Exceeds maximum length
-new DomainErrorType.WrongLength(5)    // Exact length mismatch
-new DomainErrorType.InvalidFormat()   // Format error
-new DomainErrorType.Negative()        // Negative value
-new DomainErrorType.NotPositive()     // Non-positive value
-new DomainErrorType.OutOfRange("0", "1000")  // Out of range
-new DomainErrorType.BelowMinimum("0")        // Below minimum
-new DomainErrorType.AboveMaximum("100")      // Above maximum
-new DomainErrorType.NotFound()        // Not found
-new DomainErrorType.AlreadyExists()   // Already exists
-new DomainErrorType.NotUpperCase()    // Not uppercase
-new DomainErrorType.NotLowerCase()    // Not lowercase
-new DomainErrorType.Duplicate()       // Duplicate
-new DomainErrorType.Mismatch()        // Mismatch
+new DomainErrorKind.Empty()           // Empty value
+new DomainErrorKind.Null()            // Null value
+new DomainErrorKind.TooShort(8)       // Below minimum length
+new DomainErrorKind.TooLong(100)      // Exceeds maximum length
+new DomainErrorKind.WrongLength(5)    // Exact length mismatch
+new DomainErrorKind.InvalidFormat()   // Format error
+new DomainErrorKind.Negative()        // Negative value
+new DomainErrorKind.NotPositive()     // Non-positive value
+new DomainErrorKind.OutOfRange("0", "1000")  // Out of range
+new DomainErrorKind.BelowMinimum("0")        // Below minimum
+new DomainErrorKind.AboveMaximum("100")      // Above maximum
+new DomainErrorKind.NotFound()        // Not found
+new DomainErrorKind.AlreadyExists()   // Already exists
+new DomainErrorKind.NotUpperCase()    // Not uppercase
+new DomainErrorKind.NotLowerCase()    // Not lowercase
+new DomainErrorKind.Duplicate()       // Duplicate
+new DomainErrorKind.Mismatch()        // Mismatch
 
 // Custom errors (for non-standard cases) - sealed record derived definition
-// public sealed record Unsupported : DomainErrorType.Custom;
+// public sealed record Unsupported : DomainErrorKind.Custom;
 new Unsupported()    // Domain-specific error
 ```
 
 ### DomainError Helper
 
-The DomainError helper combines `typeof(T).Name` and `DomainErrorType` to automatically generate error codes in the format `DomainErrors.{ValueObjectName}.{ErrorType}`.
+The DomainError helper combines `typeof(T).Name` and `DomainErrorKind` to automatically generate error codes in the format `DomainErrors.{ValueObjectName}.{ErrorType}`.
 
 ```csharp
 // DomainError helper usage
 
 // 1. String value validation
-DomainError.For<Currency>(new DomainErrorType.Empty(), currencyCode ?? "",
+DomainError.For<Currency>(new DomainErrorKind.Empty(), currencyCode ?? "",
     $"Currency code cannot be empty. Current value: '{currencyCode}'")
 // Generated error code: "DomainErrors.Currency.Empty"
 
-// 2. Generic value validation (custom error: sealed record Zero : DomainErrorType.Custom;)
+// 2. Generic value validation (custom error: sealed record Zero : DomainErrorKind.Custom;)
 DomainError.For<Denominator, int>(new Zero(), value,
     $"Denominator cannot be zero. Current value: '{value}'")
 // Generated error code: "DomainErrors.Denominator.Zero"
 
 // 3. Range validation
-DomainError.For<Coordinate, int>(new DomainErrorType.OutOfRange("0", "1000"), x,
+DomainError.For<Coordinate, int>(new DomainErrorKind.OutOfRange("0", "1000"), x,
     $"X coordinate must be between 0 and 1000. Current value: '{x}'")
 // Generated error code: "DomainErrors.Coordinate.OutOfRange"
 ```
@@ -84,7 +80,7 @@ DomainError.For<Coordinate, int>(new DomainErrorType.OutOfRange("0", "1000"), x,
 Using the DomainError helper, errors can be created directly at the point of validation failure, making a separate `DomainErrors` nested class unnecessary. Since validation and error definition are located together, code cohesion is improved.
 
 ```csharp
-// Inline error definition example (custom error: sealed record Zero : DomainErrorType.Custom;)
+// Inline error definition example (custom error: sealed record Zero : DomainErrorKind.Custom;)
 public static Validation<Error, int> Validate(int value) =>
     value == 0
         ? DomainError.For<Denominator, int>(new Zero(), value,
@@ -117,7 +113,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
     internal static class DomainErrors
     {
         public static Error Zero(int value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
                 errorCurrentValue: value,
                 errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
@@ -125,7 +121,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
 }
 ```
 
-### After (DomainError + DomainErrorType - 15 lines)
+### After (DomainError + DomainErrorKind - 15 lines)
 ```csharp
 public sealed class Denominator : ComparableSimpleValueObject<int>
 {
@@ -138,7 +134,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
         new Denominator(validatedValue);
 
     // Custom error type definition
-    public sealed record Zero : DomainErrorType.Custom;
+    public sealed record Zero : DomainErrorKind.Custom;
 
     public static Validation<Error, int> Validate(int value) =>
         value == 0
@@ -221,7 +217,7 @@ Out-of-range Y coordinate: [DomainErrors.Coordinate.OutOfRange] Y coordinate mus
 
 ### Key Implementation Points
 
-Standard errors use predefined types like `new DomainErrorType.Empty()`, and domain-specific errors that are difficult to express with standard types are defined as derived `sealed record` types. Since `DomainError.For<T>()` automatically generates error codes from type information, errors can be defined inline directly within validation logic. It is fully compatible with existing `Validation<Error, T>` and `Fin<T>` types.
+Standard errors use predefined types like `new DomainErrorKind.Empty()`, and domain-specific errors that are difficult to express with standard types are defined as derived `sealed record` types. Since `DomainError.For<T>()` automatically generates error codes from type information, errors can be defined inline directly within validation logic. It is fully compatible with existing `Validation<Error, T>` and `Fin<T>` types.
 
 ## Project Description
 
@@ -256,57 +252,57 @@ Standard errors use predefined types like `new DomainErrorType.Empty()`, and dom
 └── ErrorCodeFluent.Tests.Unit/            # Unit tests
     ├── Using.cs                           # Global using definitions
     ├── DenominatorTests.cs                # Denominator type-safe tests
-    └── ErrorCodeFactoryTests.cs           # DomainError + Assertion comprehensive tests
+    └── ErrorFactoryTests.cs           # DomainError + Assertion comprehensive tests
 ```
 
 ### Core Code
 
-#### DomainErrorType (Provided by Functorium Framework)
+#### DomainErrorKind (Provided by Functorium Framework)
 ```csharp
 /// <summary>
 /// Abstract record defining domain error types
 /// Used for type-safe error code generation
 /// </summary>
-public abstract record DomainErrorType
+public abstract record DomainErrorKind
 {
     // Value existence validation
-    public sealed record Empty : DomainErrorType;
-    public sealed record Null : DomainErrorType;
+    public sealed record Empty : DomainErrorKind;
+    public sealed record Null : DomainErrorKind;
 
     // String length validation
-    public sealed record TooShort(int Minimum = 0) : DomainErrorType;
-    public sealed record TooLong(int Maximum = 0) : DomainErrorType;
-    public sealed record WrongLength(int Expected = 0) : DomainErrorType;
+    public sealed record TooShort(int Minimum = 0) : DomainErrorKind;
+    public sealed record TooLong(int Maximum = 0) : DomainErrorKind;
+    public sealed record WrongLength(int Expected = 0) : DomainErrorKind;
 
     // Format validation
-    public sealed record InvalidFormat : DomainErrorType;
+    public sealed record InvalidFormat : DomainErrorKind;
 
     // Numeric range validation
-    public sealed record Negative : DomainErrorType;
-    public sealed record NotPositive : DomainErrorType;
-    public sealed record OutOfRange(string? Minimum = null, string? Maximum = null) : DomainErrorType;
-    public sealed record BelowMinimum(string? Minimum = null) : DomainErrorType;
-    public sealed record AboveMaximum(string? Maximum = null) : DomainErrorType;
+    public sealed record Negative : DomainErrorKind;
+    public sealed record NotPositive : DomainErrorKind;
+    public sealed record OutOfRange(string? Minimum = null, string? Maximum = null) : DomainErrorKind;
+    public sealed record BelowMinimum(string? Minimum = null) : DomainErrorKind;
+    public sealed record AboveMaximum(string? Maximum = null) : DomainErrorKind;
 
     // Existence validation
-    public sealed record NotFound : DomainErrorType;
-    public sealed record AlreadyExists : DomainErrorType;
+    public sealed record NotFound : DomainErrorKind;
+    public sealed record AlreadyExists : DomainErrorKind;
 
     // Case validation
-    public sealed record NotUpperCase : DomainErrorType;
-    public sealed record NotLowerCase : DomainErrorType;
+    public sealed record NotUpperCase : DomainErrorKind;
+    public sealed record NotLowerCase : DomainErrorKind;
 
     // Business rule validation
-    public sealed record Duplicate : DomainErrorType;
-    public sealed record Mismatch : DomainErrorType;
+    public sealed record Duplicate : DomainErrorKind;
+    public sealed record Mismatch : DomainErrorKind;
 
     // Custom errors (domain-specific) - abstract record, derive to use
-    public abstract record Custom : DomainErrorType;
+    public abstract record Custom : DomainErrorKind;
 }
 
 // Custom error definition example (defined as nested record inside value object)
-// public sealed record Unsupported : DomainErrorType.Custom;
-// public sealed record Zero : DomainErrorType.Custom;
+// public sealed record Unsupported : DomainErrorKind.Custom;
+// public sealed record Zero : DomainErrorKind.Custom;
 ```
 
 #### DomainError Helper (Provided by Functorium Framework)
@@ -321,9 +317,9 @@ public static class DomainError
     /// Create a domain error for a string value
     /// </summary>
     public static Error For<TValueObject>(
-        DomainErrorType errorType, string currentValue, string message)
+        DomainErrorKind errorType, string currentValue, string message)
         where TValueObject : class =>
-        ErrorCodeFactory.Create(
+        ErrorFactory.Create(
             errorCode: $"DomainErrors.{typeof(TValueObject).Name}.{GetErrorName(errorType)}",
             errorCurrentValue: currentValue,
             errorMessage: message);
@@ -332,15 +328,15 @@ public static class DomainError
     /// Create a domain error for a generic value
     /// </summary>
     public static Error For<TValueObject, TValue>(
-        DomainErrorType errorType, TValue currentValue, string message)
+        DomainErrorKind errorType, TValue currentValue, string message)
         where TValueObject : class
         where TValue : notnull =>
-        ErrorCodeFactory.Create(
+        ErrorFactory.Create(
             errorCode: $"DomainErrors.{typeof(TValueObject).Name}.{GetErrorName(errorType)}",
             errorCurrentValue: currentValue,
             errorMessage: message);
 
-    private static string GetErrorName(DomainErrorType errorType) =>
+    private static string GetErrorName(DomainErrorKind errorType) =>
         errorType.GetType().Name;
 }
 ```
@@ -350,7 +346,7 @@ public static class DomainError
 public sealed class Denominator : ComparableSimpleValueObject<int>
 {
     // Custom error type definition
-    public sealed record Zero : DomainErrorType.Custom;
+    public sealed record Zero : DomainErrorKind.Custom;
 
     private Denominator(int value) : base(value) { }
 
@@ -375,7 +371,7 @@ public sealed class Currency
     , IValueObject
 {
     // Custom error type definition
-    public sealed record Unsupported : DomainErrorType.Custom;
+    public sealed record Unsupported : DomainErrorKind.Custom;
 
     public static readonly Currency KRW = new(nameof(KRW), "KRW", "Korean Won", "₩");
     public static readonly Currency USD = new(nameof(USD), "USD", "US Dollar", "$");
@@ -393,13 +389,13 @@ public sealed class Currency
 
     private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =>
         string.IsNullOrWhiteSpace(currencyCode)
-            ? DomainError.For<Currency>(new DomainErrorType.Empty(), currencyCode ?? "",
+            ? DomainError.For<Currency>(new DomainErrorKind.Empty(), currencyCode ?? "",
                 $"Currency code cannot be empty. Current value: '{currencyCode}'")
             : currencyCode;
 
     private static Validation<Error, string> ValidateFormat(string currencyCode) =>
         currencyCode.Length != 3 || !currencyCode.All(char.IsLetter)
-            ? DomainError.For<Currency>(new DomainErrorType.WrongLength(3), currencyCode,
+            ? DomainError.For<Currency>(new DomainErrorKind.WrongLength(3), currencyCode,
                 $"Currency code must be exactly 3 letters. Current value: '{currencyCode}'")
             : currencyCode.ToUpperInvariant();
 
@@ -436,13 +432,13 @@ public sealed class PostalCode : SimpleValueObject<string>
 
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         string.IsNullOrWhiteSpace(value)
-            ? DomainError.For<PostalCode>(new DomainErrorType.Empty(), value ?? "",
+            ? DomainError.For<PostalCode>(new DomainErrorKind.Empty(), value ?? "",
                 $"Postal code cannot be empty. Current value: '{value}'")
             : value;
 
     private static Validation<Error, string> ValidateFormat(string value) =>
         value.Length != 5 || !value.All(char.IsDigit)
-            ? DomainError.For<PostalCode>(new DomainErrorType.WrongLength(5), value,
+            ? DomainError.For<PostalCode>(new DomainErrorKind.WrongLength(5), value,
                 $"Postal code must be exactly 5 digits. Current value: '{value}'")
             : value;
 }
@@ -471,13 +467,13 @@ public sealed class Coordinate : ValueObject
 
     private static Validation<Error, int> ValidateX(int x) =>
         x < 0 || x > 1000
-            ? DomainError.For<Coordinate, int>(new DomainErrorType.OutOfRange("0", "1000"), x,
+            ? DomainError.For<Coordinate, int>(new DomainErrorKind.OutOfRange("0", "1000"), x,
                 $"X coordinate must be between 0 and 1000. Current value: '{x}'")
             : x;
 
     private static Validation<Error, int> ValidateY(int y) =>
         y < 0 || y > 1000
-            ? DomainError.For<Coordinate, int>(new DomainErrorType.OutOfRange("0", "1000"), y,
+            ? DomainError.For<Coordinate, int>(new DomainErrorKind.OutOfRange("0", "1000"), y,
                 $"Y coordinate must be between 0 and 1000. Current value: '{y}'")
             : y;
 
@@ -496,29 +492,29 @@ public sealed class Coordinate : ValueObject
 Comparing the differences between the previous approach and the DomainError helper approach.
 
 ### Comparison Table
-| Aspect | Previous Approach (DomainErrors Nested Class) | Current Approach (DomainError + DomainErrorType) |
+| Aspect | Previous Approach (DomainErrors Nested Class) | Current Approach (DomainError + DomainErrorKind) |
 |------|--------------------------------------|-------------------------------------------|
 | **Error definition location** | Separate nested class | Inline within validation logic |
-| **Error code generation** | Manual assembly (using nameof) | Automatic generation (type info + DomainErrorType) |
+| **Error code generation** | Manual assembly (using nameof) | Automatic generation (type info + DomainErrorKind) |
 | **Error name safety** | String-based (typos possible) | Type-based (compile-time check) |
 | **Code volume** | ~40 lines | ~15 lines |
 | **Consistency** | Different names per developer possible | Enforced through standard error types |
 
-### DomainErrorType Selection Guide
+### DomainErrorKind Selection Guide
 
-Choose the appropriate DomainErrorType based on the validation condition.
+Choose the appropriate DomainErrorKind based on the validation condition.
 
-| Validation Condition | DomainErrorType | Generated Error Code |
+| Validation Condition | DomainErrorKind | Generated Error Code |
 |-----------|-----------------|-------------------|
-| Empty value | `new DomainErrorType.Empty()` | `DomainErrors.{Type}.Empty` |
-| Null value | `new DomainErrorType.Null()` | `DomainErrors.{Type}.Null` |
-| Below minimum length | `new DomainErrorType.TooShort(8)` | `DomainErrors.{Type}.TooShort` |
-| Exact length mismatch | `new DomainErrorType.WrongLength(5)` | `DomainErrors.{Type}.WrongLength` |
-| Format error | `new DomainErrorType.InvalidFormat()` | `DomainErrors.{Type}.InvalidFormat` |
-| Negative value | `new DomainErrorType.Negative()` | `DomainErrors.{Type}.Negative` |
-| Out of range | `new DomainErrorType.OutOfRange("0", "100")` | `DomainErrors.{Type}.OutOfRange` |
-| Not found | `new DomainErrorType.NotFound()` | `DomainErrors.{Type}.NotFound` |
-| Domain-specific | `new Zero()` (`sealed record Zero : DomainErrorType.Custom;`) | `DomainErrors.{Type}.Zero` |
+| Empty value | `new DomainErrorKind.Empty()` | `DomainErrors.{Type}.Empty` |
+| Null value | `new DomainErrorKind.Null()` | `DomainErrors.{Type}.Null` |
+| Below minimum length | `new DomainErrorKind.TooShort(8)` | `DomainErrors.{Type}.TooShort` |
+| Exact length mismatch | `new DomainErrorKind.WrongLength(5)` | `DomainErrors.{Type}.WrongLength` |
+| Format error | `new DomainErrorKind.InvalidFormat()` | `DomainErrors.{Type}.InvalidFormat` |
+| Negative value | `new DomainErrorKind.Negative()` | `DomainErrors.{Type}.Negative` |
+| Out of range | `new DomainErrorKind.OutOfRange("0", "100")` | `DomainErrors.{Type}.OutOfRange` |
+| Not found | `new DomainErrorKind.NotFound()` | `DomainErrors.{Type}.NotFound` |
+| Domain-specific | `new Zero()` (`sealed record Zero : DomainErrorKind.Custom;`) | `DomainErrors.{Type}.Zero` |
 
 ### Pros and Cons
 | Pros | Cons |
@@ -533,17 +529,17 @@ Choose the appropriate DomainErrorType based on the validation condition.
 
 ### Q1: When should Custom be used?
 
-Use standard types when a standard DomainErrorType can express the error, and define derived `sealed record` types only for domain-specific errors.
+Use standard types when a standard DomainErrorKind can express the error, and define derived `sealed record` types only for domain-specific errors.
 
 ```csharp
 // Can be expressed with standard type -> use standard type
-DomainError.For<Currency>(new DomainErrorType.Empty(), value, "...");          // Use Empty
-DomainError.For<Password>(new DomainErrorType.TooShort(8), value, "...");      // Use TooShort
+DomainError.For<Currency>(new DomainErrorKind.Empty(), value, "...");          // Use Empty
+DomainError.For<Password>(new DomainErrorKind.TooShort(8), value, "...");      // Use TooShort
 
 // Domain-specific error -> define derived sealed record then use
-// public sealed record Zero : DomainErrorType.Custom;
-// public sealed record Unsupported : DomainErrorType.Custom;
-// public sealed record StartAfterEnd : DomainErrorType.Custom;
+// public sealed record Zero : DomainErrorKind.Custom;
+// public sealed record Unsupported : DomainErrorKind.Custom;
+// public sealed record StartAfterEnd : DomainErrorKind.Custom;
 DomainError.For<Denominator, int>(new Zero(), value, "...");
 DomainError.For<Currency>(new Unsupported(), value, "...");
 DomainError.For<DateRange>(new StartAfterEnd(), start, "...");
@@ -555,19 +551,19 @@ Choose based on the type of value to store when validation fails.
 
 1. **String value** -> `DomainError.For<T>(errorType, stringValue, message)`
    ```csharp
-   DomainError.For<Currency>(new DomainErrorType.Empty(), currencyCode ?? "", "...")
+   DomainError.For<Currency>(new DomainErrorKind.Empty(), currencyCode ?? "", "...")
    ```
 
 2. **Generic value (int, decimal, etc.)** -> `DomainError.For<T, TValue>(errorType, value, message)`
    ```csharp
-   // sealed record Zero : DomainErrorType.Custom;
+   // sealed record Zero : DomainErrorKind.Custom;
    DomainError.For<Denominator, int>(new Zero(), value, "...")
-   DomainError.For<MoneyAmount, decimal>(new DomainErrorType.OutOfRange(), amount, "...")
+   DomainError.For<MoneyAmount, decimal>(new DomainErrorKind.OutOfRange(), amount, "...")
    ```
 
 3. **Two values** -> `DomainError.For<T, T1, T2>(errorType, v1, v2, message)`
    ```csharp
-   // sealed record StartAfterEnd : DomainErrorType.Custom;
+   // sealed record StartAfterEnd : DomainErrorKind.Custom;
    DomainError.For<DateRange, DateTime, DateTime>(new StartAfterEnd(), start, end, "...")
    ```
 
@@ -616,7 +612,7 @@ result.ShouldBeDomainError<Denominator, int, int>(
 
 // 3. Standard error type verification
 var streetResult = Street.Create("");
-streetResult.ShouldBeDomainError<Street, string>(new DomainErrorType.Empty());
+streetResult.ShouldBeDomainError<Street, string>(new DomainErrorKind.Empty());
 
 var currencyResult = Currency.Create("XYZ");
 currencyResult.ShouldBeDomainError<Currency, string>(new Unsupported());
@@ -631,13 +627,13 @@ validation.ShouldHaveDomainError<Denominator, int>(new Zero());
 
 // 2. Verify exactly one error exists
 Validation<Error, string> postalValidation = PostalCode.Validate("");
-postalValidation.ShouldHaveOnlyDomainError<PostalCode, string>(new DomainErrorType.Empty());
+postalValidation.ShouldHaveOnlyDomainError<PostalCode, string>(new DomainErrorKind.Empty());
 
 // 3. Multiple error verification (when using Apply pattern)
 var combined = (validation1, validation2).Apply((a, b) => a + b).As();
 combined.ShouldHaveDomainErrors<PostalCode, string>(
-    new DomainErrorType.Empty(),
-    new DomainErrorType.WrongLength(5));
+    new DomainErrorKind.Empty(),
+    new DomainErrorKind.WrongLength(5));
 
 // 4. Verify including current value
 validation.ShouldHaveDomainError<Denominator, int, int>(

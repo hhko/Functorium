@@ -61,7 +61,7 @@ public sealed class BinaryData : SimpleValueObject<byte[]>
         /// <param name="value">실패한 바이너리 데이터 값</param>
         /// <returns>구조화된 에러 정보</returns>
         public static Error Empty(byte[]? value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(BinaryData)}.{nameof(Empty)}",
                 errorCurrentValue: value?.Length.ToString() ?? "null",
                 errorMessage: $"Binary data cannot be empty or null. Current value: '{value?.Length.ToString() ?? "null"}'");

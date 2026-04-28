@@ -3,7 +3,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using LanguageExt;
 using LanguageExt.Common;
-using static Framework.Layers.Domains.DomainErrorType;
+using static Framework.Layers.Domains.DomainErrorKind;
 
 namespace Framework.Layers.Domains.Validations;
 

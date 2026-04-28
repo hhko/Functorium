@@ -11,7 +11,7 @@ using ErrorCodeFluent.ValueObjects.Comparable.PrimitiveValueObjects;
 [Trait("Concept-14-Error-Code-Fluent", "DenominatorTests")]
 public class DenominatorTests
 {
-    private sealed record Zero : DomainErrorType.Custom;
+    private sealed record Zero : DomainErrorKind.Custom;
     #region 실패 케이스 - 타입 안전 Assertion 사용
 
     /// <summary>

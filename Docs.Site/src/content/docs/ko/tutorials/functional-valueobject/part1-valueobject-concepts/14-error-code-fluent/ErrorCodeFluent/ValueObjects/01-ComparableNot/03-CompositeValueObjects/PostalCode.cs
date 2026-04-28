@@ -23,13 +23,13 @@ public sealed class PostalCode : SimpleValueObject<string>
 
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         string.IsNullOrWhiteSpace(value)
-            ? DomainError.For<PostalCode>(new DomainErrorType.Empty(), value ?? "",
+            ? DomainError.For<PostalCode>(new DomainErrorKind.Empty(), value ?? "",
                 $"Postal code cannot be empty. Current value: '{value}'")
             : value;
 
     private static Validation<Error, string> ValidateFormat(string value) =>
         value.Length != 5 || !value.All(char.IsDigit)
-            ? DomainError.For<PostalCode>(new DomainErrorType.WrongLength(5), value,
+            ? DomainError.For<PostalCode>(new DomainErrorKind.WrongLength(5), value,
                 $"Postal code must be exactly 5 digits. Current value: '{value}'")
             : value;
 }

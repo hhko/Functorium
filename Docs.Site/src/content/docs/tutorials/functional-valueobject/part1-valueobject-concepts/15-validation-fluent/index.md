@@ -2,10 +2,6 @@
 title: "Validate Fluent API"
 ---
 
-:::note[Naming convention note]
-This tutorial walks through a **self-contained mini-framework** that uses the pre-1.0.0-alpha.4 names (e.g., `DomainErrors.X.Y`, `ErrorCodeFactory`, `DomainErrorType`). The Functorium production framework now uses shorter names — see the [Error System Spec](/spec/04-error-system/) for the full rename map. The patterns and design rationale shown here are unchanged; only the identifiers differ.
-:::
-
 ## Overview
 
 Error creation became concise with `DomainError.For<T>()`, but when applying multiple validation rules, didn't you find it inconvenient that ternary operators nest and types must be repeatedly specified? In this chapter, we introduce the `Validate<T>` Fluent API to write validation code as linear chaining and cover a pattern that reduces code volume by approximately 70%.
@@ -29,9 +25,9 @@ When applying multiple validation rules, nested ternary operators reduce readabi
 // Previous approach: Nested ternary operators
 public static Validation<Error, string> Validate(string currencyCode) =>
     string.IsNullOrWhiteSpace(currencyCode)
-        ? DomainError.For<Currency>(new DomainErrorType.Empty(), currencyCode ?? "", "...")
+        ? DomainError.For<Currency>(new DomainErrorKind.Empty(), currencyCode ?? "", "...")
         : currencyCode.Length != 3
-            ? DomainError.For<Currency>(new DomainErrorType.WrongLength(3), currencyCode, "...")
+            ? DomainError.For<Currency>(new DomainErrorKind.WrongLength(3), currencyCode, "...")
             : currencyCode.ToUpperInvariant();
 ```
 
@@ -61,7 +57,7 @@ Validate<MoneyAmount>.AtMost(value, 999999.99m)  // Maximum value check
 Validate<MoneyAmount>.AtLeast(value, 0)          // Minimum value check
 
 // Custom validation methods
-Validate<Denominator>.Must(value, v => v != 0, new Zero(), "message")  // sealed record Zero : DomainErrorType.Custom;
+Validate<Denominator>.Must(value, v => v != 0, new Zero(), "message")  // sealed record Zero : DomainErrorKind.Custom;
 ```
 
 ### The TypedValidation&lt;TValueObject, T&gt; Wrapper
@@ -122,7 +118,7 @@ The `TypedValidationExtensions` class provides linear chaining methods for `Type
 
 // ThenMust: Conditional validation (can fail)
 .ThenMust(v => SupportedCurrencies.Contains(v),
-    new Unsupported(),  // sealed record Unsupported : DomainErrorType.Custom;
+    new Unsupported(),  // sealed record Unsupported : DomainErrorKind.Custom;
     v => $"Currency '{v}' is not supported")
 ```
 
@@ -157,13 +153,13 @@ public sealed class PostalCode : SimpleValueObject<string>
 
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         string.IsNullOrWhiteSpace(value)
-            ? DomainError.For<PostalCode>(new DomainErrorType.Empty(), value ?? "",
+            ? DomainError.For<PostalCode>(new DomainErrorKind.Empty(), value ?? "",
                 $"Postal code cannot be empty. Current value: '{value}'")
             : value;
 
     private static Validation<Error, string> ValidateFormat(string value) =>
         value.Length != 5 || !value.All(char.IsDigit)
-            ? DomainError.For<PostalCode>(new DomainErrorType.WrongLength(5), value,
+            ? DomainError.For<PostalCode>(new DomainErrorKind.WrongLength(5), value,
                 $"Postal code must be exactly 5 digits. Current value: '{value}'")
             : value;
 }
@@ -326,7 +322,7 @@ public static class Validate<TValueObject>
 
     // Custom validation
     public static TypedValidation<TValueObject, T> Must<T>(
-        T value, Func<T, bool> predicate, DomainErrorType errorType, string message);
+        T value, Func<T, bool> predicate, DomainErrorKind errorType, string message);
 }
 ```
 
@@ -354,9 +350,9 @@ public static class TypedValidationExtensions
 
     // Custom chaining
     public static TypedValidation<TVO, T> ThenMust<TVO, T>(this TypedValidation<TVO, T> v,
-        Func<T, bool> predicate, DomainErrorType errorType, string message);
+        Func<T, bool> predicate, DomainErrorKind errorType, string message);
     public static TypedValidation<TVO, T> ThenMust<TVO, T>(this TypedValidation<TVO, T> v,
-        Func<T, bool> predicate, DomainErrorType errorType, Func<T, string> messageFactory);
+        Func<T, bool> predicate, DomainErrorKind errorType, Func<T, string> messageFactory);
 }
 ```
 
@@ -388,7 +384,7 @@ public sealed class Currency
     , IValueObject
 {
     // Custom error type definition
-    public sealed record Unsupported : DomainErrorType.Custom;
+    public sealed record Unsupported : DomainErrorKind.Custom;
 
     public static readonly Currency KRW = new(nameof(KRW), "KRW", "Korean Won", "₩");
     public static readonly Currency USD = new(nameof(USD), "USD", "US Dollar", "$");
@@ -408,7 +404,7 @@ public sealed class Currency
             .ThenExactLength(3)
             .ThenMust(
                 v => SupportedCodes.Contains(v),
-                new Unsupported(),  // sealed record Unsupported : DomainErrorType.Custom;
+                new Unsupported(),  // sealed record Unsupported : DomainErrorKind.Custom;
                 v => $"Currency '{v}' is not supported");
 }
 ```
@@ -516,7 +512,7 @@ public static Validation<Error, string> Validate(string value) =>
         .ThenExactLength(5);
 
 // Use DomainError.For<T>() - complex business logic
-// sealed record MinExceedsMax : DomainErrorType.Custom;
+// sealed record MinExceedsMax : DomainErrorKind.Custom;
 private static Validation<Error, (Price Min, Price Max)> ValidatePriceRange(Price min, Price max) =>
     (decimal)min.Amount > (decimal)max.Amount
         ? DomainError.For<PriceRange>(new MinExceedsMax(),

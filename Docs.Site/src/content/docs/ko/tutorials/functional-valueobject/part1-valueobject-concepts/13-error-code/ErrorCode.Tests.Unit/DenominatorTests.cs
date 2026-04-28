@@ -29,8 +29,8 @@ public class DenominatorTests
         actual.IfFail(error =>
         {
             error.Count.ShouldBe(1);
-            error.ShouldBeOfType<ErrorCodeExpected>();
-            var errorCodeExpected = error as ErrorCodeExpected;
+            error.ShouldBeOfType<ExpectedError>();
+            var errorCodeExpected = error as ExpectedError;
             errorCodeExpected!.ErrorCode.ShouldBe(expectedErrorCode);
             errorCodeExpected.ErrorCurrentValue.ShouldBe("0");
         });

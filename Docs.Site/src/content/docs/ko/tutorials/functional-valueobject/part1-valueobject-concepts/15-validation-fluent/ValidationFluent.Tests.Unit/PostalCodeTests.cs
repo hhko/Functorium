@@ -29,7 +29,7 @@ public class PostalCodeTests
         var actual = PostalCode.Create(value);
 
         // Assert - 타입 안전 Assertion
-        actual.ShouldBeDomainError<PostalCode, PostalCode>(new DomainErrorType.Empty());
+        actual.ShouldBeDomainError<PostalCode, PostalCode>(new DomainErrorKind.Empty());
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ public class PostalCodeTests
         var actual = PostalCode.Create(value);
 
         // Assert
-        actual.ShouldBeDomainError<PostalCode, PostalCode>(new DomainErrorType.WrongLength(5));
+        actual.ShouldBeDomainError<PostalCode, PostalCode>(new DomainErrorKind.WrongLength(5));
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public class PostalCodeTests
         var actual = PostalCode.Create(value);
 
         // Assert
-        actual.ShouldBeDomainError<PostalCode, PostalCode>(new DomainErrorType.InvalidFormat());
+        actual.ShouldBeDomainError<PostalCode, PostalCode>(new DomainErrorKind.InvalidFormat());
     }
 
     /// <summary>
@@ -82,7 +82,7 @@ public class PostalCodeTests
         Validation<Error, string> validation = PostalCode.Validate(value);
 
         // Assert - Validation 결과에 대한 타입 안전 검증
-        validation.ShouldHaveDomainError<PostalCode, string>(new DomainErrorType.Empty());
+        validation.ShouldHaveDomainError<PostalCode, string>(new DomainErrorKind.Empty());
     }
 
     #endregion

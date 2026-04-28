@@ -2,20 +2,16 @@
 title: "DomainError 헬퍼"
 ---
 
-:::note[명명 규칙 안내]
-이 튜토리얼은 v1.0.0-alpha.4 이전 명명(예: `DomainErrors.X.Y`, `ErrorCodeFactory`, `DomainErrorType`)을 사용하는 **자체 mini-framework**를 단계별로 설명합니다. Functorium 프로덕션 프레임워크는 더 짧은 이름을 사용하며 전체 매핑은 [에러 시스템 사양](/ko/spec/04-error-system/)을 참조하세요. 여기서 다루는 패턴과 설계 의도는 동일하며 식별자만 다릅니다.
-:::
-
 ## 개요
 
-값 객체마다 `DomainErrors` 중첩 클래스를 반복 정의하고, `ErrorCodeFactory.Create()`로 에러 코드를 수동 조합하는 작업이 번거롭지 않았나요? 이 장에서는 `DomainError.For<T>()` 한 줄로 에러 생성을 대체하여 코드량을 약 60% 줄이고, `DomainErrorType` 레코드로 타입 안전한 에러 코드를 보장하는 패턴을 다룹니다.
+값 객체마다 `DomainErrors` 중첩 클래스를 반복 정의하고, `ErrorFactory.Create()`로 에러 코드를 수동 조합하는 작업이 번거롭지 않았나요? 이 장에서는 `DomainError.For<T>()` 한 줄로 에러 생성을 대체하여 코드량을 약 60% 줄이고, `DomainErrorKind` 레코드로 타입 안전한 에러 코드를 보장하는 패턴을 다룹니다.
 
 ## 학습 목표
 
 이 장을 완료하면 다음을 할 수 있습니다.
 
 1. `DomainError.For<T>()` 메서드를 사용하여 간결하게 에러를 생성할 수 있습니다
-2. `DomainErrorType` 레코드로 오타와 불일치를 컴파일 타임에 방지할 수 있습니다
+2. `DomainErrorKind` 레코드로 오타와 불일치를 컴파일 타임에 방지할 수 있습니다
 3. `DomainErrors` 중첩 클래스 없이 인라인으로 에러를 정의할 수 있습니다
 4. 타입별 오버로딩(`For<T>()`, `For<T, TValue>()`, `For<T, T1, T2>()`)을 상황에 맞게 선택할 수 있습니다
 
@@ -23,58 +19,58 @@ title: "DomainError 헬퍼"
 
 이전 `13-Error-Code` 프로젝트에서 구조화된 에러 코드 시스템을 도입했지만, 각 값 객체마다 `DomainErrors` 중첩 클래스를 정의해야 하는 보일러플레이트가 남아 있었습니다. 모든 값 객체에서 동일한 패턴의 `internal static class DomainErrors`를 반복 정의해야 했고, `$"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}"` 형태로 에러 코드를 수동 조합해야 했습니다. 게다가 `"Empty"`, `"IsEmpty"`, `"EmptyValue"`처럼 동일한 개념에 대해 개발자마다 다른 이름을 사용할 수 있어 일관성이 깨지기 쉬웠습니다.
 
-**DomainError 헬퍼와 DomainErrorType 레코드는** 타입 안전한 에러 유형과 자동 에러 코드 생성으로 이 문제들을 해결합니다.
+**DomainError 헬퍼와 DomainErrorKind 레코드는** 타입 안전한 에러 유형과 자동 에러 코드 생성으로 이 문제들을 해결합니다.
 
 ## 핵심 개념
 
-### DomainErrorType 레코드
+### DomainErrorKind 레코드
 
-`DomainErrorType`은 표준화된 에러 유형을 정의하는 추상 레코드입니다. 문자열 대신 타입을 사용하여 컴파일 타임 안전성을 보장합니다. 표준 에러는 미리 정의된 타입을 사용하고, 도메인 특화 에러는 `DomainErrorType.Custom`을 상속하여 명시적으로 정의합니다.
+`DomainErrorKind`은 표준화된 에러 유형을 정의하는 추상 레코드입니다. 문자열 대신 타입을 사용하여 컴파일 타임 안전성을 보장합니다. 표준 에러는 미리 정의된 타입을 사용하고, 도메인 특화 에러는 `DomainErrorKind.Custom`을 상속하여 명시적으로 정의합니다.
 
 ```csharp
 // 표준 에러 타입들 (타입 안전)
-new DomainErrorType.Empty()           // 빈 값
-new DomainErrorType.Null()            // null 값
-new DomainErrorType.TooShort(8)       // 최소 길이 미달
-new DomainErrorType.TooLong(100)      // 최대 길이 초과
-new DomainErrorType.WrongLength(5)    // 정확한 길이 불일치
-new DomainErrorType.InvalidFormat()   // 형식 오류
-new DomainErrorType.Negative()        // 음수 값
-new DomainErrorType.NotPositive()     // 양수가 아닌 값
-new DomainErrorType.OutOfRange("0", "1000")  // 범위 초과
-new DomainErrorType.BelowMinimum("0")        // 최솟값 미달
-new DomainErrorType.AboveMaximum("100")      // 최댓값 초과
-new DomainErrorType.NotFound()        // 찾을 수 없음
-new DomainErrorType.AlreadyExists()   // 이미 존재
-new DomainErrorType.NotUpperCase()    // 대문자 아님
-new DomainErrorType.NotLowerCase()    // 소문자 아님
-new DomainErrorType.Duplicate()       // 중복
-new DomainErrorType.Mismatch()        // 불일치
+new DomainErrorKind.Empty()           // 빈 값
+new DomainErrorKind.Null()            // null 값
+new DomainErrorKind.TooShort(8)       // 최소 길이 미달
+new DomainErrorKind.TooLong(100)      // 최대 길이 초과
+new DomainErrorKind.WrongLength(5)    // 정확한 길이 불일치
+new DomainErrorKind.InvalidFormat()   // 형식 오류
+new DomainErrorKind.Negative()        // 음수 값
+new DomainErrorKind.NotPositive()     // 양수가 아닌 값
+new DomainErrorKind.OutOfRange("0", "1000")  // 범위 초과
+new DomainErrorKind.BelowMinimum("0")        // 최솟값 미달
+new DomainErrorKind.AboveMaximum("100")      // 최댓값 초과
+new DomainErrorKind.NotFound()        // 찾을 수 없음
+new DomainErrorKind.AlreadyExists()   // 이미 존재
+new DomainErrorKind.NotUpperCase()    // 대문자 아님
+new DomainErrorKind.NotLowerCase()    // 소문자 아님
+new DomainErrorKind.Duplicate()       // 중복
+new DomainErrorKind.Mismatch()        // 불일치
 
 // 커스텀 에러 (비표준 케이스용) - sealed record 파생 정의
-// public sealed record Unsupported : DomainErrorType.Custom;
+// public sealed record Unsupported : DomainErrorKind.Custom;
 new Unsupported()    // 도메인 특화 에러
 ```
 
 ### DomainError 헬퍼
 
-DomainError 헬퍼는 `typeof(T).Name`과 `DomainErrorType`을 조합하여 `DomainErrors.{ValueObjectName}.{ErrorType}` 형식의 에러 코드를 자동으로 생성합니다.
+DomainError 헬퍼는 `typeof(T).Name`과 `DomainErrorKind`을 조합하여 `DomainErrors.{ValueObjectName}.{ErrorType}` 형식의 에러 코드를 자동으로 생성합니다.
 
 ```csharp
 // DomainError 헬퍼 사용법
 
 // 1. 문자열 값 검증 시
-DomainError.For<Currency>(new DomainErrorType.Empty(), currencyCode ?? "",
+DomainError.For<Currency>(new DomainErrorKind.Empty(), currencyCode ?? "",
     $"Currency code cannot be empty. Current value: '{currencyCode}'")
 // 생성되는 에러 코드: "DomainErrors.Currency.Empty"
 
-// 2. 제네릭 값 검증 시 (커스텀 에러: sealed record Zero : DomainErrorType.Custom;)
+// 2. 제네릭 값 검증 시 (커스텀 에러: sealed record Zero : DomainErrorKind.Custom;)
 DomainError.For<Denominator, int>(new Zero(), value,
     $"Denominator cannot be zero. Current value: '{value}'")
 // 생성되는 에러 코드: "DomainErrors.Denominator.Zero"
 
 // 3. 범위 검증 시
-DomainError.For<Coordinate, int>(new DomainErrorType.OutOfRange("0", "1000"), x,
+DomainError.For<Coordinate, int>(new DomainErrorKind.OutOfRange("0", "1000"), x,
     $"X coordinate must be between 0 and 1000. Current value: '{x}'")
 // 생성되는 에러 코드: "DomainErrors.Coordinate.OutOfRange"
 ```
@@ -84,7 +80,7 @@ DomainError.For<Coordinate, int>(new DomainErrorType.OutOfRange("0", "1000"), x,
 DomainError 헬퍼를 사용하면 검증 실패 시점에서 바로 에러를 생성할 수 있어, 별도의 `DomainErrors` 중첩 클래스가 불필요합니다. 검증과 에러 정의가 한 곳에 위치하므로 코드 응집도가 높아집니다.
 
 ```csharp
-// 인라인 에러 정의 예시 (커스텀 에러: sealed record Zero : DomainErrorType.Custom;)
+// 인라인 에러 정의 예시 (커스텀 에러: sealed record Zero : DomainErrorKind.Custom;)
 public static Validation<Error, int> Validate(int value) =>
     value == 0
         ? DomainError.For<Denominator, int>(new Zero(), value,
@@ -117,7 +113,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
     internal static class DomainErrors
     {
         public static Error Zero(int value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
                 errorCurrentValue: value,
                 errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
@@ -125,7 +121,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
 }
 ```
 
-### After (DomainError + DomainErrorType - 15줄)
+### After (DomainError + DomainErrorKind - 15줄)
 ```csharp
 public sealed class Denominator : ComparableSimpleValueObject<int>
 {
@@ -138,7 +134,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
         new Denominator(validatedValue);
 
     // 커스텀 에러 타입 정의
-    public sealed record Zero : DomainErrorType.Custom;
+    public sealed record Zero : DomainErrorKind.Custom;
 
     public static Validation<Error, int> Validate(int value) =>
         value == 0
@@ -221,7 +217,7 @@ null 바이너리 데이터: [DomainErrors.BinaryData.Empty] Binary data cannot 
 
 ### 핵심 구현 포인트
 
-표준 에러는 `new DomainErrorType.Empty()` 등 미리 정의된 타입을 사용하고, 표준 에러로 표현하기 어려운 도메인 특화 에러는 `sealed record` 파생 정의 후 사용합니다. `DomainError.For<T>()`가 타입 정보에서 에러 코드를 자동 생성하므로, 검증 로직 내에서 직접 에러를 인라인 정의할 수 있습니다. 기존 `Validation<Error, T>`, `Fin<T>` 타입과 완벽 호환됩니다.
+표준 에러는 `new DomainErrorKind.Empty()` 등 미리 정의된 타입을 사용하고, 표준 에러로 표현하기 어려운 도메인 특화 에러는 `sealed record` 파생 정의 후 사용합니다. `DomainError.For<T>()`가 타입 정보에서 에러 코드를 자동 생성하므로, 검증 로직 내에서 직접 에러를 인라인 정의할 수 있습니다. 기존 `Validation<Error, T>`, `Fin<T>` 타입과 완벽 호환됩니다.
 
 ## 프로젝트 설명
 
@@ -256,57 +252,57 @@ null 바이너리 데이터: [DomainErrors.BinaryData.Empty] Binary data cannot 
 └── ErrorCodeFluent.Tests.Unit/            # 단위 테스트
     ├── Using.cs                           # 전역 using 정의
     ├── DenominatorTests.cs                # Denominator 타입 안전 테스트
-    └── ErrorCodeFactoryTests.cs           # DomainError + Assertion 종합 테스트
+    └── ErrorFactoryTests.cs           # DomainError + Assertion 종합 테스트
 ```
 
 ### 핵심 코드
 
-#### DomainErrorType (Functorium 프레임워크 제공)
+#### DomainErrorKind (Functorium 프레임워크 제공)
 ```csharp
 /// <summary>
 /// 도메인 에러 유형을 정의하는 추상 레코드
 /// 타입 안전한 에러 코드 생성을 위해 사용
 /// </summary>
-public abstract record DomainErrorType
+public abstract record DomainErrorKind
 {
     // 값 존재 검증
-    public sealed record Empty : DomainErrorType;
-    public sealed record Null : DomainErrorType;
+    public sealed record Empty : DomainErrorKind;
+    public sealed record Null : DomainErrorKind;
 
     // 문자열 길이 검증
-    public sealed record TooShort(int Minimum = 0) : DomainErrorType;
-    public sealed record TooLong(int Maximum = 0) : DomainErrorType;
-    public sealed record WrongLength(int Expected = 0) : DomainErrorType;
+    public sealed record TooShort(int Minimum = 0) : DomainErrorKind;
+    public sealed record TooLong(int Maximum = 0) : DomainErrorKind;
+    public sealed record WrongLength(int Expected = 0) : DomainErrorKind;
 
     // 형식 검증
-    public sealed record InvalidFormat : DomainErrorType;
+    public sealed record InvalidFormat : DomainErrorKind;
 
     // 숫자 범위 검증
-    public sealed record Negative : DomainErrorType;
-    public sealed record NotPositive : DomainErrorType;
-    public sealed record OutOfRange(string? Minimum = null, string? Maximum = null) : DomainErrorType;
-    public sealed record BelowMinimum(string? Minimum = null) : DomainErrorType;
-    public sealed record AboveMaximum(string? Maximum = null) : DomainErrorType;
+    public sealed record Negative : DomainErrorKind;
+    public sealed record NotPositive : DomainErrorKind;
+    public sealed record OutOfRange(string? Minimum = null, string? Maximum = null) : DomainErrorKind;
+    public sealed record BelowMinimum(string? Minimum = null) : DomainErrorKind;
+    public sealed record AboveMaximum(string? Maximum = null) : DomainErrorKind;
 
     // 존재 여부 검증
-    public sealed record NotFound : DomainErrorType;
-    public sealed record AlreadyExists : DomainErrorType;
+    public sealed record NotFound : DomainErrorKind;
+    public sealed record AlreadyExists : DomainErrorKind;
 
     // 대소문자 검증
-    public sealed record NotUpperCase : DomainErrorType;
-    public sealed record NotLowerCase : DomainErrorType;
+    public sealed record NotUpperCase : DomainErrorKind;
+    public sealed record NotLowerCase : DomainErrorKind;
 
     // 비즈니스 규칙 검증
-    public sealed record Duplicate : DomainErrorType;
-    public sealed record Mismatch : DomainErrorType;
+    public sealed record Duplicate : DomainErrorKind;
+    public sealed record Mismatch : DomainErrorKind;
 
     // 커스텀 에러 (도메인 특화) - abstract record, 파생하여 사용
-    public abstract record Custom : DomainErrorType;
+    public abstract record Custom : DomainErrorKind;
 }
 
 // 커스텀 에러 정의 예시 (값 객체 내부에 nested record로 정의)
-// public sealed record Unsupported : DomainErrorType.Custom;
-// public sealed record Zero : DomainErrorType.Custom;
+// public sealed record Unsupported : DomainErrorKind.Custom;
+// public sealed record Zero : DomainErrorKind.Custom;
 ```
 
 #### DomainError 헬퍼 (Functorium 프레임워크 제공)
@@ -321,9 +317,9 @@ public static class DomainError
     /// 문자열 값에 대한 도메인 에러 생성
     /// </summary>
     public static Error For<TValueObject>(
-        DomainErrorType errorType, string currentValue, string message)
+        DomainErrorKind errorType, string currentValue, string message)
         where TValueObject : class =>
-        ErrorCodeFactory.Create(
+        ErrorFactory.Create(
             errorCode: $"DomainErrors.{typeof(TValueObject).Name}.{GetErrorName(errorType)}",
             errorCurrentValue: currentValue,
             errorMessage: message);
@@ -332,15 +328,15 @@ public static class DomainError
     /// 제네릭 값에 대한 도메인 에러 생성
     /// </summary>
     public static Error For<TValueObject, TValue>(
-        DomainErrorType errorType, TValue currentValue, string message)
+        DomainErrorKind errorType, TValue currentValue, string message)
         where TValueObject : class
         where TValue : notnull =>
-        ErrorCodeFactory.Create(
+        ErrorFactory.Create(
             errorCode: $"DomainErrors.{typeof(TValueObject).Name}.{GetErrorName(errorType)}",
             errorCurrentValue: currentValue,
             errorMessage: message);
 
-    private static string GetErrorName(DomainErrorType errorType) =>
+    private static string GetErrorName(DomainErrorKind errorType) =>
         errorType.GetType().Name;
 }
 ```
@@ -350,7 +346,7 @@ public static class DomainError
 public sealed class Denominator : ComparableSimpleValueObject<int>
 {
     // 커스텀 에러 타입 정의
-    public sealed record Zero : DomainErrorType.Custom;
+    public sealed record Zero : DomainErrorKind.Custom;
 
     private Denominator(int value) : base(value) { }
 
@@ -375,7 +371,7 @@ public sealed class Currency
     , IValueObject
 {
     // 커스텀 에러 타입 정의
-    public sealed record Unsupported : DomainErrorType.Custom;
+    public sealed record Unsupported : DomainErrorKind.Custom;
 
     public static readonly Currency KRW = new(nameof(KRW), "KRW", "한국 원화", "₩");
     public static readonly Currency USD = new(nameof(USD), "USD", "미국 달러", "$");
@@ -393,13 +389,13 @@ public sealed class Currency
 
     private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =>
         string.IsNullOrWhiteSpace(currencyCode)
-            ? DomainError.For<Currency>(new DomainErrorType.Empty(), currencyCode ?? "",
+            ? DomainError.For<Currency>(new DomainErrorKind.Empty(), currencyCode ?? "",
                 $"Currency code cannot be empty. Current value: '{currencyCode}'")
             : currencyCode;
 
     private static Validation<Error, string> ValidateFormat(string currencyCode) =>
         currencyCode.Length != 3 || !currencyCode.All(char.IsLetter)
-            ? DomainError.For<Currency>(new DomainErrorType.WrongLength(3), currencyCode,
+            ? DomainError.For<Currency>(new DomainErrorKind.WrongLength(3), currencyCode,
                 $"Currency code must be exactly 3 letters. Current value: '{currencyCode}'")
             : currencyCode.ToUpperInvariant();
 
@@ -436,13 +432,13 @@ public sealed class PostalCode : SimpleValueObject<string>
 
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         string.IsNullOrWhiteSpace(value)
-            ? DomainError.For<PostalCode>(new DomainErrorType.Empty(), value ?? "",
+            ? DomainError.For<PostalCode>(new DomainErrorKind.Empty(), value ?? "",
                 $"Postal code cannot be empty. Current value: '{value}'")
             : value;
 
     private static Validation<Error, string> ValidateFormat(string value) =>
         value.Length != 5 || !value.All(char.IsDigit)
-            ? DomainError.For<PostalCode>(new DomainErrorType.WrongLength(5), value,
+            ? DomainError.For<PostalCode>(new DomainErrorKind.WrongLength(5), value,
                 $"Postal code must be exactly 5 digits. Current value: '{value}'")
             : value;
 }
@@ -471,13 +467,13 @@ public sealed class Coordinate : ValueObject
 
     private static Validation<Error, int> ValidateX(int x) =>
         x < 0 || x > 1000
-            ? DomainError.For<Coordinate, int>(new DomainErrorType.OutOfRange("0", "1000"), x,
+            ? DomainError.For<Coordinate, int>(new DomainErrorKind.OutOfRange("0", "1000"), x,
                 $"X coordinate must be between 0 and 1000. Current value: '{x}'")
             : x;
 
     private static Validation<Error, int> ValidateY(int y) =>
         y < 0 || y > 1000
-            ? DomainError.For<Coordinate, int>(new DomainErrorType.OutOfRange("0", "1000"), y,
+            ? DomainError.For<Coordinate, int>(new DomainErrorKind.OutOfRange("0", "1000"), y,
                 $"Y coordinate must be between 0 and 1000. Current value: '{y}'")
             : y;
 
@@ -496,29 +492,29 @@ public sealed class Coordinate : ValueObject
 이전 방식과 DomainError 헬퍼 방식의 차이를 비교합니다.
 
 ### 비교 표
-| 구분 | 이전 방식 (DomainErrors 중첩 클래스) | 현재 방식 (DomainError + DomainErrorType) |
+| 구분 | 이전 방식 (DomainErrors 중첩 클래스) | 현재 방식 (DomainError + DomainErrorKind) |
 |------|--------------------------------------|-------------------------------------------|
 | **에러 정의 위치** | 별도 중첩 클래스 | 검증 로직 내 인라인 |
-| **에러 코드 생성** | 수동 조합 (nameof 사용) | 자동 생성 (타입 정보 + DomainErrorType) |
+| **에러 코드 생성** | 수동 조합 (nameof 사용) | 자동 생성 (타입 정보 + DomainErrorKind) |
 | **에러 이름 안전성** | 문자열 기반 (오타 가능) | 타입 기반 (컴파일 타임 체크) |
 | **코드량** | 약 40줄 | 약 15줄 |
 | **일관성** | 개발자마다 다른 이름 가능 | 표준 에러 타입으로 강제 |
 
-### DomainErrorType 선택 가이드
+### DomainErrorKind 선택 가이드
 
-검증 조건에 따라 적절한 DomainErrorType을 선택합니다.
+검증 조건에 따라 적절한 DomainErrorKind을 선택합니다.
 
-| 검증 조건 | DomainErrorType | 생성되는 에러 코드 |
+| 검증 조건 | DomainErrorKind | 생성되는 에러 코드 |
 |-----------|-----------------|-------------------|
-| 빈 값 | `new DomainErrorType.Empty()` | `DomainErrors.{Type}.Empty` |
-| null 값 | `new DomainErrorType.Null()` | `DomainErrors.{Type}.Null` |
-| 최소 길이 미달 | `new DomainErrorType.TooShort(8)` | `DomainErrors.{Type}.TooShort` |
-| 정확한 길이 불일치 | `new DomainErrorType.WrongLength(5)` | `DomainErrors.{Type}.WrongLength` |
-| 형식 오류 | `new DomainErrorType.InvalidFormat()` | `DomainErrors.{Type}.InvalidFormat` |
-| 음수 값 | `new DomainErrorType.Negative()` | `DomainErrors.{Type}.Negative` |
-| 범위 초과 | `new DomainErrorType.OutOfRange("0", "100")` | `DomainErrors.{Type}.OutOfRange` |
-| 찾을 수 없음 | `new DomainErrorType.NotFound()` | `DomainErrors.{Type}.NotFound` |
-| 도메인 특화 | `new Zero()` (`sealed record Zero : DomainErrorType.Custom;`) | `DomainErrors.{Type}.Zero` |
+| 빈 값 | `new DomainErrorKind.Empty()` | `DomainErrors.{Type}.Empty` |
+| null 값 | `new DomainErrorKind.Null()` | `DomainErrors.{Type}.Null` |
+| 최소 길이 미달 | `new DomainErrorKind.TooShort(8)` | `DomainErrors.{Type}.TooShort` |
+| 정확한 길이 불일치 | `new DomainErrorKind.WrongLength(5)` | `DomainErrors.{Type}.WrongLength` |
+| 형식 오류 | `new DomainErrorKind.InvalidFormat()` | `DomainErrors.{Type}.InvalidFormat` |
+| 음수 값 | `new DomainErrorKind.Negative()` | `DomainErrors.{Type}.Negative` |
+| 범위 초과 | `new DomainErrorKind.OutOfRange("0", "100")` | `DomainErrors.{Type}.OutOfRange` |
+| 찾을 수 없음 | `new DomainErrorKind.NotFound()` | `DomainErrors.{Type}.NotFound` |
+| 도메인 특화 | `new Zero()` (`sealed record Zero : DomainErrorKind.Custom;`) | `DomainErrors.{Type}.Zero` |
 
 ### 장단점 표
 | 장점 | 단점 |
@@ -533,17 +529,17 @@ public sealed class Coordinate : ValueObject
 
 ### Q1: 언제 Custom을 사용해야 하나요?
 
-표준 DomainErrorType으로 표현할 수 있으면 표준 타입을 사용하고, 도메인 특화 에러만 `sealed record`를 파생 정의합니다.
+표준 DomainErrorKind으로 표현할 수 있으면 표준 타입을 사용하고, 도메인 특화 에러만 `sealed record`를 파생 정의합니다.
 
 ```csharp
 // 표준 타입으로 표현 가능 → 표준 타입 사용
-DomainError.For<Currency>(new DomainErrorType.Empty(), value, "...");          // Empty 사용
-DomainError.For<Password>(new DomainErrorType.TooShort(8), value, "...");      // TooShort 사용
+DomainError.For<Currency>(new DomainErrorKind.Empty(), value, "...");          // Empty 사용
+DomainError.For<Password>(new DomainErrorKind.TooShort(8), value, "...");      // TooShort 사용
 
 // 도메인 특화 에러 → sealed record 파생 정의 후 사용
-// public sealed record Zero : DomainErrorType.Custom;
-// public sealed record Unsupported : DomainErrorType.Custom;
-// public sealed record StartAfterEnd : DomainErrorType.Custom;
+// public sealed record Zero : DomainErrorKind.Custom;
+// public sealed record Unsupported : DomainErrorKind.Custom;
+// public sealed record StartAfterEnd : DomainErrorKind.Custom;
 DomainError.For<Denominator, int>(new Zero(), value, "...");
 DomainError.For<Currency>(new Unsupported(), value, "...");
 DomainError.For<DateRange>(new StartAfterEnd(), start, "...");
@@ -555,19 +551,19 @@ DomainError.For<DateRange>(new StartAfterEnd(), start, "...");
 
 1. **문자열 값** → `DomainError.For<T>(errorType, stringValue, message)`
    ```csharp
-   DomainError.For<Currency>(new DomainErrorType.Empty(), currencyCode ?? "", "...")
+   DomainError.For<Currency>(new DomainErrorKind.Empty(), currencyCode ?? "", "...")
    ```
 
 2. **제네릭 값 (int, decimal 등)** → `DomainError.For<T, TValue>(errorType, value, message)`
    ```csharp
-   // sealed record Zero : DomainErrorType.Custom;
+   // sealed record Zero : DomainErrorKind.Custom;
    DomainError.For<Denominator, int>(new Zero(), value, "...")
-   DomainError.For<MoneyAmount, decimal>(new DomainErrorType.OutOfRange(), amount, "...")
+   DomainError.For<MoneyAmount, decimal>(new DomainErrorKind.OutOfRange(), amount, "...")
    ```
 
 3. **두 개의 값** → `DomainError.For<T, T1, T2>(errorType, v1, v2, message)`
    ```csharp
-   // sealed record StartAfterEnd : DomainErrorType.Custom;
+   // sealed record StartAfterEnd : DomainErrorKind.Custom;
    DomainError.For<DateRange, DateTime, DateTime>(new StartAfterEnd(), start, end, "...")
    ```
 
@@ -616,7 +612,7 @@ result.ShouldBeDomainError<Denominator, int, int>(
 
 // 3. 표준 에러 타입 검증
 var streetResult = Street.Create("");
-streetResult.ShouldBeDomainError<Street, string>(new DomainErrorType.Empty());
+streetResult.ShouldBeDomainError<Street, string>(new DomainErrorKind.Empty());
 
 var currencyResult = Currency.Create("XYZ");
 currencyResult.ShouldBeDomainError<Currency, string>(new Unsupported());
@@ -631,13 +627,13 @@ validation.ShouldHaveDomainError<Denominator, int>(new Zero());
 
 // 2. 정확히 하나의 에러만 있는지 검증
 Validation<Error, string> postalValidation = PostalCode.Validate("");
-postalValidation.ShouldHaveOnlyDomainError<PostalCode, string>(new DomainErrorType.Empty());
+postalValidation.ShouldHaveOnlyDomainError<PostalCode, string>(new DomainErrorKind.Empty());
 
 // 3. 여러 에러 검증 (Apply 패턴 사용 시)
 var combined = (validation1, validation2).Apply((a, b) => a + b).As();
 combined.ShouldHaveDomainErrors<PostalCode, string>(
-    new DomainErrorType.Empty(),
-    new DomainErrorType.WrongLength(5));
+    new DomainErrorKind.Empty(),
+    new DomainErrorKind.WrongLength(5));
 
 // 4. 현재 값까지 검증
 validation.ShouldHaveDomainError<Denominator, int, int>(

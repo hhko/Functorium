@@ -11,9 +11,9 @@ namespace ArchitectureTest.ValueObjects.Comparable.CompositePrimitiveValueObject
 /// </summary>
 public sealed class DateRange : ComparableValueObject
 {
-    public sealed record InvalidStartDate : DomainErrorType.Custom;
-    public sealed record InvalidEndDate : DomainErrorType.Custom;
-    public sealed record StartAfterEnd : DomainErrorType.Custom;
+    public sealed record InvalidStartDate : DomainErrorKind.Custom;
+    public sealed record InvalidEndDate : DomainErrorKind.Custom;
+    public sealed record StartAfterEnd : DomainErrorKind.Custom;
 
     public DateTime StartDate { get; }
     public DateTime EndDate { get; }

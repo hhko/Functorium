@@ -10,7 +10,7 @@ namespace ErrorCodeFluent.ValueObjects.Comparable.CompositeValueObjects;
 /// </summary>
 public sealed class PriceRange : ComparableValueObject
 {
-    public sealed record MinExceedsMax : DomainErrorType.Custom;
+    public sealed record MinExceedsMax : DomainErrorKind.Custom;
     public Price MinPrice { get; }
     public Price MaxPrice { get; }
 

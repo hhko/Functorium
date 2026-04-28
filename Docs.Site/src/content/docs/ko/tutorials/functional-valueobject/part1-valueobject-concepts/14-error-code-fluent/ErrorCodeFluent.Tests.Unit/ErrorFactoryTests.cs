@@ -14,8 +14,8 @@ using ErrorCodeFluent.ValueObjects.ComparableNot.CompositePrimitiveValueObjects;
 [Trait("Concept-14-Error-Code-Fluent", "DomainErrorTests")]
 public class DomainErrorTests
 {
-    private sealed record Unsupported : DomainErrorType.Custom;
-    private sealed record Zero : DomainErrorType.Custom;
+    private sealed record Unsupported : DomainErrorKind.Custom;
+    private sealed record Zero : DomainErrorKind.Custom;
     #region Fin<T> 결과 검증 - ShouldBeDomainError
 
     /// <summary>
@@ -30,7 +30,7 @@ public class DomainErrorTests
     ///
     /// After (타입 안전):
     /// <code>
-    /// result.ShouldBeDomainError&lt;Street, Street&gt;(new DomainErrorType.Empty());
+    /// result.ShouldBeDomainError&lt;Street, Street&gt;(new DomainErrorKind.Empty());
     /// </code>
     /// </remarks>
     [Fact]
@@ -43,7 +43,7 @@ public class DomainErrorTests
         var result = Street.Create(value);
 
         // Assert - 타입 안전 Assertion (Fin<Street>)
-        result.ShouldBeDomainError<Street, Street>(new DomainErrorType.Empty());
+        result.ShouldBeDomainError<Street, Street>(new DomainErrorKind.Empty());
     }
 
     /// <summary>
@@ -59,7 +59,7 @@ public class DomainErrorTests
         var result = City.Create(value);
 
         // Assert - 타입 안전 Assertion (Fin<City>)
-        result.ShouldBeDomainError<City, City>(new DomainErrorType.Empty());
+        result.ShouldBeDomainError<City, City>(new DomainErrorKind.Empty());
     }
 
     /// <summary>
@@ -72,7 +72,7 @@ public class DomainErrorTests
         var result = PostalCode.Create("");
 
         // Assert (Fin<PostalCode>)
-        result.ShouldBeDomainError<PostalCode, PostalCode>(new DomainErrorType.Empty());
+        result.ShouldBeDomainError<PostalCode, PostalCode>(new DomainErrorKind.Empty());
     }
 
     /// <summary>
@@ -88,7 +88,7 @@ public class DomainErrorTests
         var result = PostalCode.Create(value);
 
         // Assert (Fin<PostalCode>)
-        result.ShouldBeDomainError<PostalCode, PostalCode>(new DomainErrorType.WrongLength(5));
+        result.ShouldBeDomainError<PostalCode, PostalCode>(new DomainErrorKind.WrongLength(5));
     }
 
     /// <summary>
@@ -101,7 +101,7 @@ public class DomainErrorTests
         var result = Currency.Create("");
 
         // Assert (Fin<Currency>)
-        result.ShouldBeDomainError<Currency, Currency>(new DomainErrorType.Empty());
+        result.ShouldBeDomainError<Currency, Currency>(new DomainErrorKind.Empty());
     }
 
     /// <summary>
@@ -116,7 +116,7 @@ public class DomainErrorTests
         var result = Currency.Create(value);
 
         // Assert (Fin<Currency>)
-        result.ShouldBeDomainError<Currency, Currency>(new DomainErrorType.WrongLength(3));
+        result.ShouldBeDomainError<Currency, Currency>(new DomainErrorKind.WrongLength(3));
     }
 
     /// <summary>
@@ -146,7 +146,7 @@ public class DomainErrorTests
         var result = Coordinate.Create(x, y);
 
         // Assert (Fin<Coordinate>)
-        result.ShouldBeDomainError<Coordinate, Coordinate>(new DomainErrorType.OutOfRange("0", "1000"));
+        result.ShouldBeDomainError<Coordinate, Coordinate>(new DomainErrorKind.OutOfRange("0", "1000"));
     }
 
     #endregion
@@ -197,7 +197,7 @@ public class DomainErrorTests
         Validation<Error, string> validation = PostalCode.Validate("");
 
         // Assert - 정확히 1개의 에러만 있는지 검증
-        validation.ShouldHaveOnlyDomainError<PostalCode, string>(new DomainErrorType.Empty());
+        validation.ShouldHaveOnlyDomainError<PostalCode, string>(new DomainErrorKind.Empty());
     }
 
     /// <summary>
@@ -208,17 +208,17 @@ public class DomainErrorTests
     {
         // Arrange - 의도적으로 여러 검증 실패 생성
         Validation<Error, string> emptyError = DomainError.For<PostalCode>(
-            new DomainErrorType.Empty(), "", "Postal code cannot be empty");
+            new DomainErrorKind.Empty(), "", "Postal code cannot be empty");
         Validation<Error, string> formatError = DomainError.For<PostalCode>(
-            new DomainErrorType.WrongLength(5), "abc", "Wrong length");
+            new DomainErrorKind.WrongLength(5), "abc", "Wrong length");
 
         // Act - Apply 패턴으로 에러 누적
         var combined = (emptyError, formatError).Apply((a, b) => a + b).As();
 
         // Assert - 여러 에러 모두 포함되어 있는지 검증
         combined.ShouldHaveDomainErrors<PostalCode, string>(
-            new DomainErrorType.Empty(),
-            new DomainErrorType.WrongLength(5));
+            new DomainErrorKind.Empty(),
+            new DomainErrorKind.WrongLength(5));
     }
 
     #endregion

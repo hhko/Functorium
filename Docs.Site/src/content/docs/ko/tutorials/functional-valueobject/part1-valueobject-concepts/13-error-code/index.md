@@ -2,10 +2,6 @@
 title: "에러 체계화"
 ---
 
-:::note[명명 규칙 안내]
-이 튜토리얼은 v1.0.0-alpha.4 이전 명명(예: `DomainErrors.X.Y`, `ErrorCodeFactory`, `DomainErrorType`)을 사용하는 **자체 mini-framework**를 단계별로 설명합니다. Functorium 프로덕션 프레임워크는 더 짧은 이름을 사용하며 전체 매핑은 [에러 시스템 사양](/ko/spec/04-error-system/)을 참조하세요. 여기서 다루는 패턴과 설계 의도는 동일하며 식별자만 다릅니다.
-:::
-
 ## 개요
 
 `Error.New("Invalid denominator value: 0")`라는 에러 메시지만으로 어떤 도메인에서, 어떤 이유로, 어떤 값이 문제를 일으켰는지 파악할 수 있나요? `"DomainErrors.클래스.이유"` 형식의 구조화된 에러 코드와 실패 당시의 값 정보를 함께 관리하면, 디버깅과 모니터링의 효율성이 크게 향상됩니다.
@@ -37,7 +33,7 @@ title: "에러 체계화"
 var error = Error.New("Invalid denominator value: 0");
 
 // 개선된 방식 (구조화된 방식) - 체계적인 에러 관리
-var error = ErrorCodeFactory.Create(
+var error = ErrorFactory.Create(
     errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
     errorCurrentValue: 0,
     errorMessage: $"Denominator cannot be zero. Current value: '0'");
@@ -49,15 +45,15 @@ var error = ErrorCodeFactory.Create(
 
 ```csharp
 // 다양한 타입의 에러 정보를 타입 안전하게 관리
-var stringError = ErrorCodeFactory.Create(
+var stringError = ErrorFactory.Create(
     errorCode: $"{nameof(DomainErrors)}.{nameof(Name)}.{nameof(TooShort)}",
     errorCurrentValue: "i@name",
     errorMessage: $"Name is too short. Current value: 'i@name'");
-var intError = ErrorCodeFactory.Create(
+var intError = ErrorFactory.Create(
     errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(Invalid)}",
     errorCurrentValue: 150,
     errorMessage: $"Age is out of range. Current value: '150'");
-var multiValueError = ErrorCodeFactory.Create(
+var multiValueError = ErrorFactory.Create(
     errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(OutOfRange)}",
     errorCurrentValue1: 1500,
     errorCurrentValue2: 2000,
@@ -76,7 +72,7 @@ public sealed class Denominator : SimpleValueObject<int>
     internal static class DomainErrors
     {
         public static Error Zero(int value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
                 errorCurrentValue: value,
                 errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
@@ -156,7 +152,7 @@ null 바이너리 데이터: ErrorCode: DomainErrors.BinaryData.Empty, ErrorCurr
 ```
 
 ### 핵심 구현 포인트
-1. **ErrorCodeFactory의 제네릭 오버로딩**: `Create<T>`, `Create<T1, T2>` 메서드를 통해 다양한 타입의 에러 정보를 타입 안전하게 관리
+1. **ErrorFactory의 제네릭 오버로딩**: `Create<T>`, `Create<T1, T2>` 메서드를 통해 다양한 타입의 에러 정보를 타입 안전하게 관리
 2. **내부 DomainErrors 클래스 패턴**: 값 객체 내부에 `internal static class DomainErrors`를 정의하여 응집도 높은 에러 관리
 3. **구체적인 에러 이유 명명**: `Empty`, `NotThreeLetters`, `NotFiveDigits`, `MinExceedsMax` 등 검증 조건과 정확히 일치하는 명명 규칙
 4. **LanguageExt 호환성**: 기존 `Error` 타입을 상속받아 생태계와 완전한 호환성 보장
@@ -171,9 +167,9 @@ ErrorCode/                                  # 메인 프로젝트
 ├── Framework/                              # 에러 처리 프레임워크
 │   ├── Abstractions/
 │   │   └── Errors/
-│   │       ├── ErrorCodeFactory.cs         # 에러 생성 팩토리
-│   │       ├── ErrorCodeExpected.cs        # 구조화된 에러 타입들
-│   │       └── ErrorCodeExceptional.cs     # 예외 기반 에러
+│   │       ├── ErrorFactory.cs         # 에러 생성 팩토리
+│   │       ├── ExpectedError.cs        # 구조화된 에러 타입들
+│   │       └── ExceptionalError.cs     # 예외 기반 에러
 │   └── Layers/
 │       └── Domains/
 │           ├── ValueObject.cs              # 기본 값 객체 클래스
@@ -204,30 +200,30 @@ ErrorCode/                                  # 메인 프로젝트
 
 ### 핵심 코드
 
-#### ErrorCodeFactory -- 에러 생성 팩토리
+#### ErrorFactory -- 에러 생성 팩토리
 ```csharp
-public static class ErrorCodeFactory
+public static class ErrorFactory
 {
     // 기본 에러 생성
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error Create(string errorCode, string errorCurrentValue, string errorMessage) =>
-        new ErrorCodeExpected(errorCode, errorCurrentValue, errorMessage);
+        new ExpectedError(errorCode, errorCurrentValue, errorMessage);
 
     // 제네릭 단일 값 에러 생성
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error Create<T>(string errorCode, T errorCurrentValue, string errorMessage) where T : notnull =>
-        new ErrorCodeExpected<T>(errorCode, errorCurrentValue, errorMessage);
+        new ExpectedError<T>(errorCode, errorCurrentValue, errorMessage);
 
     // 제네릭 다중 값 에러 생성
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error Create<T1, T2>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, string errorMessage)
         where T1 : notnull where T2 : notnull =>
-        new ErrorCodeExpected<T1, T2>(errorCode, errorCurrentValue1, errorCurrentValue2, errorMessage);
+        new ExpectedError<T1, T2>(errorCode, errorCurrentValue1, errorCurrentValue2, errorMessage);
 
     // 예외 기반 에러 생성
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error CreateFromException(string errorCode, Exception exception) =>
-        new ErrorCodeExceptional(errorCode, exception);
+        new ExceptionalError(errorCode, exception);
 
     // 에러 코드 포맷팅
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -254,7 +250,7 @@ public sealed class Denominator : SimpleValueObject<int>, IComparable<Denominato
     internal static class DomainErrors
     {
         public static Error Zero(int value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
                 errorCurrentValue: value,
                 errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
@@ -292,19 +288,19 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
     internal static class DomainErrors
     {
         public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Empty)}",
                 errorCurrentValue: value,
                 errorMessage: $"Currency code cannot be empty. Current value: '{value}'");
 
         public static Error NotThreeLetters(string value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
                 errorCurrentValue: value,
                 errorMessage: $"Currency code must be exactly 3 letters. Current value: '{value}'");
 
         public static Error Unsupported(string value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Unsupported)}",
                 errorCurrentValue: value,
                 errorMessage: $"Currency code is not supported. Current value: '{value}'");
@@ -345,7 +341,7 @@ public sealed class PriceRange : ComparableValueObject
     internal static class DomainErrors
     {
         public static Error MinExceedsMax(Price minPrice, Price maxPrice) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(PriceRange)}.{nameof(MinExceedsMax)}",
                 errorCurrentValue: $"MinPrice: {minPrice}, MaxPrice: {maxPrice}",
                 errorMessage: $"Minimum price cannot exceed maximum price. Min: '{minPrice}', Max: '{maxPrice}'");
@@ -357,9 +353,9 @@ public sealed class PriceRange : ComparableValueObject
 
 ### 비교 표
 
-기존 Error.New 방식과 ErrorCodeFactory 방식의 차이를 요약합니다.
+기존 Error.New 방식과 ErrorFactory 방식의 차이를 요약합니다.
 
-| 구분 | 이전 방식 (Error.New) | 현재 방식 (ErrorCodeFactory) |
+| 구분 | 이전 방식 (Error.New) | 현재 방식 (ErrorFactory) |
 |------|----------------------|------------------------------|
 | **에러 코드 구조** | 단순한 문자열 메시지 | `DomainErrors.클래스.이유` 형식 |
 | **값 정보 관리** | 메시지에 하드코딩 | 타입 안전한 별도 필드 |
@@ -403,10 +399,10 @@ public sealed class PriceRange : ComparableValueObject
 **A**: 값 객체와 에러 정의를 같은 파일에 두어 응집도를 높입니다. 값 객체를 수정할 때 관련 에러도 함께 확인할 수 있고, 새 값 객체 생성 시 에러 정의도 자연스럽게 함께 작성합니다.
 
 ### Q3: LanguageExt와의 호환성은 어떻게 보장되나요?
-**A**: `ErrorCodeExpected`, `ErrorCodeExpected<T>` 등이 모두 LanguageExt의 `Error` 클래스를 상속받아 구현됩니다. `Match`, `Map`, `Bind` 등의 함수형 연산자와 완전히 호환되므로, 기존 코드를 수정하지 않고도 새 에러 처리 시스템을 도입할 수 있습니다.
+**A**: `ExpectedError`, `ExpectedError<T>` 등이 모두 LanguageExt의 `Error` 클래스를 상속받아 구현됩니다. `Match`, `Map`, `Bind` 등의 함수형 연산자와 완전히 호환되므로, 기존 코드를 수정하지 않고도 새 에러 처리 시스템을 도입할 수 있습니다.
 
 ---
 
-에러 코드 구조가 갖춰졌지만, 매번 `ErrorCodeFactory.Create`를 직접 호출하면 코드가 장황해집니다. 다음 장에서는 `DomainError` 헬퍼와 `DomainErrorType`을 도입하여 에러 생성을 간결하게 만듭니다.
+에러 코드 구조가 갖춰졌지만, 매번 `ErrorFactory.Create`를 직접 호출하면 코드가 장황해집니다. 다음 장에서는 `DomainError` 헬퍼와 `DomainErrorKind`을 도입하여 에러 생성을 간결하게 만듭니다.
 
 → [14장: 에러 코드 Fluent](../14-Error-Code-Fluent/)

@@ -12,7 +12,7 @@ namespace ArchitectureTest.ValueObjects.Comparable.CompositeValueObjects;
 /// </summary>
 public sealed class PriceRange : ComparableValueObject
 {
-    public sealed record MinExceedsMax : DomainErrorType.Custom;
+    public sealed record MinExceedsMax : DomainErrorKind.Custom;
     /// <summary>
     /// 최소 가격
     /// </summary>

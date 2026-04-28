@@ -11,7 +11,7 @@ namespace ErrorCodeFluent.ValueObjects.Comparable.PrimitiveValueObjects;
 /// </summary>
 public sealed class Denominator : ComparableSimpleValueObject<int>
 {
-    public sealed record Zero : DomainErrorType.Custom;
+    public sealed record Zero : DomainErrorKind.Custom;
 
     private Denominator(int value) : base(value) { }
 

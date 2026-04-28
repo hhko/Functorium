@@ -20,7 +20,7 @@ public static partial class ValidationRules<TValueObject>
     public static TypedValidation<TValueObject, T> Must<T>(
         T value,
         Func<T, bool> predicate,
-        DomainErrorType errorType,
+        DomainErrorKind errorType,
         string message)
         where T : notnull =>
         new(MustInternal(value, predicate, errorType, message));
@@ -29,7 +29,7 @@ public static partial class ValidationRules<TValueObject>
     internal static Validation<Error, T> MustInternal<T>(
         T value,
         Func<T, bool> predicate,
-        DomainErrorType errorType,
+        DomainErrorKind errorType,
         string message)
         where T : notnull =>
         predicate(value)

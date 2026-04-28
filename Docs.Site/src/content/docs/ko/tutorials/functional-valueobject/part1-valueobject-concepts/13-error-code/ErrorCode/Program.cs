@@ -46,31 +46,31 @@ class Program
 
     static string PrintError(Error error)
     {
-        // InternalsVisibleTo를 통해 ErrorCodeExpected 클래스에 직접 접근
+        // InternalsVisibleTo를 통해 ExpectedError 클래스에 직접 접근
         return error switch
         {
-            ErrorCodeExpected errorCodeExpected => 
+            ExpectedError errorCodeExpected => 
                 $"ErrorCode: {errorCodeExpected.ErrorCode}, ErrorCurrentValue: {errorCodeExpected.ErrorCurrentValue}",
             
-            ErrorCodeExpected<string> errorCodeExpectedString => 
+            ExpectedError<string> errorCodeExpectedString => 
                 $"ErrorCode: {errorCodeExpectedString.ErrorCode}, ErrorCurrentValue: {errorCodeExpectedString.ErrorCurrentValue}",
             
-            ErrorCodeExpected<int> errorCodeExpectedInt => 
+            ExpectedError<int> errorCodeExpectedInt => 
                 $"ErrorCode: {errorCodeExpectedInt.ErrorCode}, ErrorCurrentValue: {errorCodeExpectedInt.ErrorCurrentValue}",
             
-            ErrorCodeExpected<decimal> errorCodeExpectedDecimal => 
+            ExpectedError<decimal> errorCodeExpectedDecimal => 
                 $"ErrorCode: {errorCodeExpectedDecimal.ErrorCode}, ErrorCurrentValue: {errorCodeExpectedDecimal.ErrorCurrentValue}",
             
-            ErrorCodeExpected<DateTime> errorCodeExpectedDateTime => 
+            ExpectedError<DateTime> errorCodeExpectedDateTime => 
                 $"ErrorCode: {errorCodeExpectedDateTime.ErrorCode}, ErrorCurrentValue: {errorCodeExpectedDateTime.ErrorCurrentValue}",
             
-            ErrorCodeExpected<byte[]> errorCodeExpectedByteArray => 
+            ExpectedError<byte[]> errorCodeExpectedByteArray => 
                 $"ErrorCode: {errorCodeExpectedByteArray.ErrorCode}, ErrorCurrentValue: {errorCodeExpectedByteArray.ErrorCurrentValue?.Length.ToString() ?? "null"}",
             
-            ErrorCodeExpected<Price, Price> errorCodeExpectedPriceRange => 
+            ExpectedError<Price, Price> errorCodeExpectedPriceRange => 
                 $"ErrorCode: {errorCodeExpectedPriceRange.ErrorCode}, ErrorCurrentValue: MinPrice: {errorCodeExpectedPriceRange.ErrorCurrentValue1}, MaxPrice: {errorCodeExpectedPriceRange.ErrorCurrentValue2}",
             
-            ErrorCodeExpected<DateTime, DateTime> errorCodeExpectedDateRange => 
+            ExpectedError<DateTime, DateTime> errorCodeExpectedDateRange => 
                 $"ErrorCode: {errorCodeExpectedDateRange.ErrorCode}, ErrorCurrentValue: StartDate: {errorCodeExpectedDateRange.ErrorCurrentValue1}, EndDate: {errorCodeExpectedDateRange.ErrorCurrentValue2}",
             
             _ => $"Message: {error.Message}"

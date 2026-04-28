@@ -1,17 +1,17 @@
 /// <summary>
-/// ErrorCodeFactory 클래스의 에러 생성 기능 테스트
+/// ErrorFactory 클래스의 에러 생성 기능 테스트
 /// 
 /// 테스트 목적:
 /// 1. 다양한 타입의 에러 생성 메서드 검증
 /// 2. 에러 코드 포맷팅 기능 검증
 /// 3. 예외 기반 에러 생성 검증
 /// </summary>
-[Trait("Concept-13-Error-Code", "ErrorCodeFactoryTests")]
-public class ErrorCodeFactoryTests
+[Trait("Concept-13-Error-Code", "ErrorFactoryTests")]
+public class ErrorFactoryTests
 {
     // 테스트 시나리오: 문자열 에러 코드와 문자열 값을 사용하여 기본 에러를 생성해야 한다
     [Fact]
-    public void Create_ShouldReturnErrorCodeExpected_WhenUsingStringParameters()
+    public void Create_ShouldReturnExpectedError_WhenUsingStringParameters()
     {
         // Arrange
         string errorCode = "DomainErrors.Name.TooShort";
@@ -23,11 +23,11 @@ public class ErrorCodeFactoryTests
         string errorMessage = "Name is too short. Current value: 'a'";
 
         // Act
-        var actual = ErrorCodeFactory.Create(errorCode, errorCurrentValue, errorMessage);
+        var actual = ErrorFactory.Create(errorCode, errorCurrentValue, errorMessage);
 
         // Assert
-        actual.ShouldBeOfType<ErrorCodeExpected>();
-        var errorCodeExpected = actual as ErrorCodeExpected;
+        actual.ShouldBeOfType<ExpectedError>();
+        var errorCodeExpected = actual as ExpectedError;
         errorCodeExpected!.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue.ShouldBe(expectedCurrentValue);
         errorCodeExpected.Message.ShouldBe(errorMessage);
@@ -35,7 +35,7 @@ public class ErrorCodeFactoryTests
 
     // 테스트 시나리오: 문자열 에러 코드와 정수 값을 사용하여 제네릭 에러를 생성해야 한다
     [Fact]
-    public void Create_ShouldReturnErrorCodeExpectedInt_WhenUsingStringAndIntParameters()
+    public void Create_ShouldReturnExpectedErrorInt_WhenUsingStringAndIntParameters()
     {
         // Arrange
         string errorCode = "DomainErrors.Age.OutOfRange";
@@ -46,11 +46,11 @@ public class ErrorCodeFactoryTests
         string errorMessage = "Age is out of range. Current value: '150'";
 
         // Act
-        var actual = ErrorCodeFactory.Create(errorCode, errorCurrentValue, errorMessage);
+        var actual = ErrorFactory.Create(errorCode, errorCurrentValue, errorMessage);
 
         // Assert
-        actual.ShouldBeOfType<ErrorCodeExpected<int>>();
-        var errorCodeExpected = actual as ErrorCodeExpected<int>;
+        actual.ShouldBeOfType<ExpectedError<int>>();
+        var errorCodeExpected = actual as ExpectedError<int>;
         errorCodeExpected!.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue.ShouldBe(expectedCurrentValue);
         errorCodeExpected.Message.ShouldBe(errorMessage);
@@ -61,18 +61,18 @@ public class ErrorCodeFactoryTests
     [InlineData("DomainErrors.Email.MissingAt", "not-an-email", "Email is missing '@' symbol. Current value: 'not-an-email'")]
     [InlineData("DomainErrors.Phone.NotNumeric", "invalid-phone", "Phone number is not numeric. Current value: 'invalid-phone'")]
     [InlineData("DomainErrors.Address.Empty", "empty-address", "Address is empty. Current value: 'empty-address'")]
-    public void Create_ShouldReturnErrorCodeExpectedWithGenericType_WhenUsingGenericMethod(string errorCode, string errorCurrentValue, string errorMessage)
+    public void Create_ShouldReturnExpectedErrorWithGenericType_WhenUsingGenericMethod(string errorCode, string errorCurrentValue, string errorMessage)
     {
         // Arrange
         string expectedErrorCode = errorCode;
         string expectedCurrentValue = errorCurrentValue;
 
         // Act
-        var actual = ErrorCodeFactory.Create<string>(errorCode, errorCurrentValue, errorMessage);
+        var actual = ErrorFactory.Create<string>(errorCode, errorCurrentValue, errorMessage);
 
         // Assert
-        actual.ShouldBeOfType<ErrorCodeExpected<string>>();
-        var errorCodeExpected = actual as ErrorCodeExpected<string>;
+        actual.ShouldBeOfType<ExpectedError<string>>();
+        var errorCodeExpected = actual as ExpectedError<string>;
         errorCodeExpected!.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue.ShouldBe(expectedCurrentValue);
         errorCodeExpected.Message.ShouldBe(errorMessage);
@@ -80,7 +80,7 @@ public class ErrorCodeFactoryTests
 
     // 테스트 시나리오: 두 개의 제네릭 타입을 사용하여 다중 값 에러를 생성해야 한다
     [Fact]
-    public void Create_ShouldReturnErrorCodeExpectedWithTwoGenericTypes_WhenUsingTwoValueMethod()
+    public void Create_ShouldReturnExpectedErrorWithTwoGenericTypes_WhenUsingTwoValueMethod()
     {
         // Arrange
         string errorCode = "DomainErrors.Coordinate.XOutOfRange";
@@ -93,11 +93,11 @@ public class ErrorCodeFactoryTests
         int expectedCurrentValue2 = 2000;
 
         // Act
-        var actual = ErrorCodeFactory.Create(errorCode, errorCurrentValue1, errorCurrentValue2, errorMessage);
+        var actual = ErrorFactory.Create(errorCode, errorCurrentValue1, errorCurrentValue2, errorMessage);
 
         // Assert
-        actual.ShouldBeOfType<ErrorCodeExpected<int, int>>();
-        var errorCodeExpected = actual as ErrorCodeExpected<int, int>;
+        actual.ShouldBeOfType<ExpectedError<int, int>>();
+        var errorCodeExpected = actual as ExpectedError<int, int>;
         errorCodeExpected!.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue1.ShouldBe(expectedCurrentValue1);
         errorCodeExpected.ErrorCurrentValue2.ShouldBe(expectedCurrentValue2);
@@ -106,7 +106,7 @@ public class ErrorCodeFactoryTests
 
     // 테스트 시나리오: 세 개의 제네릭 타입을 사용하여 다중 값 에러를 생성해야 한다
     [Fact]
-    public void Create_ShouldReturnErrorCodeExpectedWithThreeGenericTypes_WhenUsingThreeValueMethod()
+    public void Create_ShouldReturnExpectedErrorWithThreeGenericTypes_WhenUsingThreeValueMethod()
     {
         // Arrange
         string errorCode = "DomainErrors.Address.Empty";
@@ -121,11 +121,11 @@ public class ErrorCodeFactoryTests
         string expectedCurrentValue3 = "12345";
 
         // Act
-        var actual = ErrorCodeFactory.Create(errorCode, errorCurrentValue1, errorCurrentValue2, errorCurrentValue3, errorMessage);
+        var actual = ErrorFactory.Create(errorCode, errorCurrentValue1, errorCurrentValue2, errorCurrentValue3, errorMessage);
 
         // Assert
-        actual.ShouldBeOfType<ErrorCodeExpected<string, string, string>>();
-        var errorCodeExpected = actual as ErrorCodeExpected<string, string, string>;
+        actual.ShouldBeOfType<ExpectedError<string, string, string>>();
+        var errorCodeExpected = actual as ExpectedError<string, string, string>;
         errorCodeExpected!.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue1.ShouldBe(expectedCurrentValue1);
         errorCodeExpected.ErrorCurrentValue2.ShouldBe(expectedCurrentValue2);
@@ -135,7 +135,7 @@ public class ErrorCodeFactoryTests
 
     // 테스트 시나리오: 예외를 사용하여 예외 기반 에러를 생성해야 한다
     [Fact]
-    public void CreateFromException_ShouldReturnErrorCodeExceptional_WhenUsingException()
+    public void CreateFromException_ShouldReturnExceptionalError_WhenUsingException()
     {
         // Arrange
         string errorCode = "DomainErrors.System.Exception";
@@ -145,11 +145,11 @@ public class ErrorCodeFactoryTests
         string expectedMessage = "Test exception message";
 
         // Act
-        var actual = ErrorCodeFactory.CreateFromException(errorCode, exception);
+        var actual = ErrorFactory.CreateFromException(errorCode, exception);
 
         // Assert
-        actual.ShouldBeOfType<ErrorCodeExceptional>();
-        var errorCodeExceptional = actual as ErrorCodeExceptional;
+        actual.ShouldBeOfType<ExceptionalError>();
+        var errorCodeExceptional = actual as ExceptionalError;
         errorCodeExceptional!.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExceptional.Message.ShouldBe(expectedMessage);
     }
@@ -163,7 +163,7 @@ public class ErrorCodeFactoryTests
     {
         // Arrange
         // Act
-        var actual = ErrorCodeFactory.Format(parts);
+        var actual = ErrorFactory.Format(parts);
 
         // Assert
         actual.ShouldBe(expected);

@@ -49,7 +49,7 @@ public sealed class City : SimpleValueObject<string>
     /// <returns>검증 결과</returns>
     public static Validation<Error, string> Validate(string value) =>
         string.IsNullOrWhiteSpace(value)
-            ? DomainError.For<City>(new DomainErrorType.Empty(), value ?? "",
+            ? DomainError.For<City>(new DomainErrorKind.Empty(), value ?? "",
                 $"City name cannot be empty. Current value: '{value}'")
             : value;
 }

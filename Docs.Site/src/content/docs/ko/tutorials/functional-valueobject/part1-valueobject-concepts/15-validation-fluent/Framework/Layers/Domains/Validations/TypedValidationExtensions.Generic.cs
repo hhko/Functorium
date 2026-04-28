@@ -19,7 +19,7 @@ public static partial class TypedValidationExtensions
     public static TypedValidation<TValueObject, T> ThenMust<TValueObject, T>(
         this TypedValidation<TValueObject, T> validation,
         Func<T, bool> predicate,
-        DomainErrorType errorType,
+        DomainErrorKind errorType,
         string message)
         where T : notnull =>
         new(validation.Value.Bind(v => ValidationRules<TValueObject>.MustInternal(v, predicate, errorType, message)));
@@ -38,7 +38,7 @@ public static partial class TypedValidationExtensions
     public static TypedValidation<TValueObject, T> ThenMust<TValueObject, T>(
         this TypedValidation<TValueObject, T> validation,
         Func<T, bool> predicate,
-        DomainErrorType errorType,
+        DomainErrorKind errorType,
         Func<T, string> messageFactory)
         where T : notnull =>
         new(validation.Value.Bind(v => ValidationRules<TValueObject>.MustInternal(v, predicate, errorType, messageFactory(v))));

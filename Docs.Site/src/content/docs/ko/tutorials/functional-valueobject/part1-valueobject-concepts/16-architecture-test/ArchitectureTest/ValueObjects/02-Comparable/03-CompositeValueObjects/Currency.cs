@@ -14,7 +14,7 @@ public sealed class Currency
     : SmartEnum<Currency, string>
     , IValueObject
 {
-    public sealed record Unsupported : DomainErrorType.Custom;
+    public sealed record Unsupported : DomainErrorKind.Custom;
     /// <summary>
     /// 한국 원화
     /// </summary>
@@ -125,7 +125,7 @@ public sealed class Currency
     /// <returns>검증 결과</returns>
     private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =>
         string.IsNullOrWhiteSpace(currencyCode)
-            ? DomainError.For<Currency>(new DomainErrorType.Empty(), currencyCode ?? "",
+            ? DomainError.For<Currency>(new DomainErrorKind.Empty(), currencyCode ?? "",
                 $"Currency code cannot be empty. Current value: '{currencyCode}'")
             : currencyCode;
 
@@ -136,7 +136,7 @@ public sealed class Currency
     /// <returns>검증 결과</returns>
     private static Validation<Error, string> ValidateFormat(string currencyCode) =>
         currencyCode.Length != 3 || !currencyCode.All(char.IsLetter)
-            ? DomainError.For<Currency>(new DomainErrorType.WrongLength(3), currencyCode,
+            ? DomainError.For<Currency>(new DomainErrorKind.WrongLength(3), currencyCode,
                 $"Currency code must be exactly 3 letters. Current value: '{currencyCode}'")
             : currencyCode.ToUpperInvariant();
 

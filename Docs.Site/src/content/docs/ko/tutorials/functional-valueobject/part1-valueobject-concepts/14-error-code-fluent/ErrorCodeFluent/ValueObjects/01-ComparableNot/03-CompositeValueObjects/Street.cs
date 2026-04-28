@@ -20,7 +20,7 @@ public sealed class Street : SimpleValueObject<string>
 
     public static Validation<Error, string> Validate(string value) =>
         string.IsNullOrWhiteSpace(value)
-            ? DomainError.For<Street>(new DomainErrorType.Empty(), value ?? "",
+            ? DomainError.For<Street>(new DomainErrorKind.Empty(), value ?? "",
                 $"Street name cannot be empty. Current value: '{value}'")
             : value;
 }

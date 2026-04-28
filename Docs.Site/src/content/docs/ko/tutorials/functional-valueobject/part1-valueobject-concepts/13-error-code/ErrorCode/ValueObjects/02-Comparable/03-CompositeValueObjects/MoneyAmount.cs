@@ -68,7 +68,7 @@ public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
         /// <param name="value">범위를 벗어난 금액</param>
         /// <returns>에러</returns>
         public static Error OutOfRange(decimal value) =>
-            ErrorCodeFactory.Create(
+            ErrorFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(MoneyAmount)}.{nameof(OutOfRange)}",
                 errorCurrentValue: value,
                 errorMessage: $"Money amount must be between 0 and 999999.99. Current value: '{value}'");
