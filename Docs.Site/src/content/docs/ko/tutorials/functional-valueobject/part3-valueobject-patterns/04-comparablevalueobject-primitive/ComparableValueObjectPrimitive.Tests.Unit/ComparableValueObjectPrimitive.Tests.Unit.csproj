@@ -3,6 +3,8 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- Windows MAX_PATH(260) 회피: 어셈블리 이름 단축 (.exe 파일명만 영향) -->
+    <AssemblyName>CmpVO.Primitive.Tests.Unit</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
