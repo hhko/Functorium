@@ -33,6 +33,11 @@ public static class AdapterInfrastructureRegistration
         services.AddValidatorsFromAssembly(AiGovernance.Application.AssemblyReference.Assembly);
 
         // =================================================================
+        // 메모리 캐시 등록 (UseCaching 파이프라인 의존성)
+        // =================================================================
+        services.AddMemoryCache();
+
+        // =================================================================
         // OpenTelemetry 및 파이프라인 설정
         // =================================================================
         services

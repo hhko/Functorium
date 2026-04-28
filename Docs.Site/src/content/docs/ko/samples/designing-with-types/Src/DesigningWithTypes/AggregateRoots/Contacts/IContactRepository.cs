@@ -5,5 +5,4 @@ namespace DesigningWithTypes.AggregateRoots.Contacts;
 /// </summary>
 public interface IContactRepository : IRepository<Contact, ContactId>
 {
-    FinT<IO, bool> Exists(Specification<Contact> spec);
 }
