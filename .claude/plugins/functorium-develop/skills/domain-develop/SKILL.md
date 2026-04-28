@@ -119,7 +119,7 @@ IRepository Specification 메서드:
 - 이벤트 이름은 과거형 (`CreatedEvent`, `UpdatedEvent`)
 - EntityId는 Ulid 기반 (`[GenerateEntityId]`)
 - DomainError 코드는 `DomainErrors.{Type}.{ErrorName}` 형식으로 자동 생성
-- Custom 에러는 `sealed record : DomainErrorType.Custom`으로 정의
+- Custom 에러는 `sealed record : DomainErrorKind.Custom`으로 정의
 - `CreateFromValidated`는 ORM/Repository 복원용 (검증 없음)
 
 ## References

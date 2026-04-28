@@ -281,8 +281,8 @@ public class ProductQueryInMemory
 public class ExternalPricingApiService : IExternalPricingService
 {
     // 커스텀 에러 타입 정의
-    public sealed record OperationCancelled : AdapterErrorType.Custom;
-    public sealed record UnexpectedException : AdapterErrorType.Custom;
+    public sealed record OperationCancelled : AdapterErrorKind.Custom;
+    public sealed record UnexpectedException : AdapterErrorKind.Custom;
 
     private readonly HttpClient _httpClient;
 

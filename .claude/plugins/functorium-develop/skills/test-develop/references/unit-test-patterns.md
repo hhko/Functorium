@@ -94,22 +94,22 @@ public void Create_ShouldTrimValue()
 
 ```csharp
 [Fact]
-public void For_WithDomainErrorType_CreatesErrorWithCorrectErrorCode_WhenEmpty()
+public void For_WithDomainErrorKind_CreatesErrorWithCorrectErrorCode_WhenEmpty()
 {
     // Arrange
     var currentValue = "";
     var message = "Value cannot be empty";
 
     // Act
-    var actual = DomainError.For<TestValueObject>(new DomainErrorType.Empty(), currentValue, message);
+    var actual = DomainError.For<TestValueObject>(new DomainErrorKind.Empty(), currentValue, message);
 
     // Assert
-    actual.ShouldBeOfType<ErrorCodeExpected>();
+    actual.ShouldBeOfType<ExpectedError>();
     actual.Message.ShouldBe(message);
     actual.IsExpected.ShouldBeTrue();
 
-    var errorCode = (ErrorCodeExpected)actual;
-    errorCode.ErrorCode.ShouldBe("DomainErrors.TestValueObject.Empty");
+    var errorCode = (ExpectedError)actual;
+    errorCode.ErrorCode.ShouldBe("Domain.TestValueObject.Empty");
 }
 ```
 

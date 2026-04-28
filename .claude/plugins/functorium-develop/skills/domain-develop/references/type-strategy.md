@@ -119,7 +119,7 @@ public class Product
 public sealed class Product : AggregateRoot<ProductId>, IAuditable
 {
     // 에러 타입 정의
-    public sealed record AlreadyDeleted : DomainErrorType.Custom;
+    public sealed record AlreadyDeleted : DomainErrorKind.Custom;
 
     // 이벤트 정의
     public sealed record CreatedEvent(ProductId ProductId, ProductName Name, Money Price) : DomainEvent;
@@ -151,7 +151,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
 변환 효과:
 - **컴파일 타임 안전성**: 잘못된 값 생성 불가
 - **불변식 중앙화**: 검증 로직이 VO 내부에 단 한 곳
-- **에러 추적**: `DomainErrors.ProductName.Empty` 같은 구조화된 에러 코드
+- **에러 추적**: `Domain.ProductName.Empty` 같은 구조화된 에러 코드
 - **이벤트 자동 발행**: 비즈니스 행위와 이벤트가 동기화
 
 ---
@@ -241,7 +241,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
 
 - [ ] `[GenerateEntityId]` 속성 적용
 - [ ] `sealed class` 선언
-- [ ] 중첩 `sealed record : DomainErrorType.Custom` 에러 타입 정의
+- [ ] 중첩 `sealed record : DomainErrorKind.Custom` 에러 타입 정의
 - [ ] 중첩 `sealed record : DomainEvent` 이벤트 정의
 - [ ] VO 속성: `{ get; private set; }` 패턴
 - [ ] `private 생성자` 정의
@@ -287,7 +287,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
 
 - [ ] `IDomainService` 인터페이스 구현
 - [ ] `sealed class` 선언
-- [ ] 에러 타입: 중첩 `sealed record : DomainErrorType.Custom`
+- [ ] 에러 타입: 중첩 `sealed record : DomainErrorKind.Custom`
 - [ ] `Fin<Unit>` 또는 `Fin<T>` 반환
 - [ ] Stateless: 가변 인스턴스 상태 없음
 - [ ] 외부 I/O 없음 (기본) 또는 Repository 인터페이스 의존 (Evans Ch.9)

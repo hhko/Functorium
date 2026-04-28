@@ -440,7 +440,7 @@ public sealed class Usecase(IProductRepository productRepository)
 ## 9. ApplicationError 사용법
 
 ```csharp
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 // 표준 에러 타입
 ApplicationError.For<CreateProductCommand>(new AlreadyExists(), productId, "message");
@@ -448,7 +448,7 @@ ApplicationError.For<CreateProductCommand>(new NotFound(), productId, "message")
 ApplicationError.For<CreateProductCommand>(new ValidationFailed("Name"), value, "message");
 
 // 커스텀 에러 (Usecase 내부 정의)
-public sealed record CannotProcess : ApplicationErrorType.Custom;
+public sealed record CannotProcess : ApplicationErrorKind.Custom;
 ApplicationError.For<MyCommand>(new CannotProcess(), value, "message");
 ```
 
@@ -457,9 +457,9 @@ ApplicationError.For<MyCommand>(new CannotProcess(), value, "message");
 `ApplicationErrors.{UsecaseName}.{ErrorName}`
 
 예시:
-- `ApplicationErrors.CreateProductCommand.AlreadyExists`
-- `ApplicationErrors.UpdateOrderCommand.NotFound`
-- `ApplicationErrors.DeleteOrderCommand.CannotProcess`
+- `Application.CreateProductCommand.AlreadyExists`
+- `Application.UpdateOrderCommand.NotFound`
+- `Application.DeleteOrderCommand.CannotProcess`
 
 ---
 
