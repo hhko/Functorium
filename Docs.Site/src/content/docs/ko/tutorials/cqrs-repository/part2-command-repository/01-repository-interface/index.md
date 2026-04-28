@@ -15,7 +15,7 @@ title: "리포지토리 인터페이스"
 
 이 장을 완료하면 다음을 할 수 있습니다:
 
-1. `IRepository<TAggregate, TId>` 인터페이스의 8개 CRUD 메서드를 설명할 수 있습니다.
+1. `IRepository<TAggregate, TId>` 인터페이스의 13개 메서드(CRUD 8개 + Specification 5개)를 설명할 수 있습니다.
 2. `FinT<IO, T>` 반환 타입이 왜 `Task<T>`보다 합성에 유리한지 설명할 수 있습니다.
 3. 제네릭 제약(`AggregateRoot<TId>`, `IEntityId<TId>`)이 잘못된 사용을 어떻게 방지하는지 설명할 수 있습니다.
 4. 도메인 특화 Repository 인터페이스를 직접 정의할 수 있습니다.

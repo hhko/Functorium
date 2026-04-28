@@ -110,14 +110,15 @@ public interface ITagRepository : IRepository<Tag, TagId>;
 // When additional methods are needed
 public interface IProductRepository : IRepository<Product, ProductId>
 {
-    FinT<IO, bool> Exists(Specification<Product> spec);
     FinT<IO, Product> GetByIdIncludingDeleted(ProductId id);
 }
 ```
 
-The 8 default methods provided by `IRepository<TAgg, TId>`:
-- `Create`, `GetById`, `Update`, `Delete`
-- `CreateRange`, `GetByIds`, `UpdateRange`, `DeleteRange`
+The 13 default methods provided by `IRepository<TAgg, TId>`:
+- **Write (Single)**: `Create`, `Update`, `Delete`
+- **Write (Batch)**: `CreateRange`, `UpdateRange`, `DeleteRange`
+- **Read**: `GetById`, `GetByIds`
+- **Specification**: `Exists`, `Count`, `FindAllSatisfying`, `FindFirstSatisfying`, `DeleteBy`
 
 ### 2.3 EfCoreRepositoryBase Implementation Pattern
 
@@ -246,7 +247,7 @@ public class TagRepositoryInMemory
 Core rules:
 - `ConcurrentDictionary` must be declared as **`static`** (data sharing across DI Scopes)
 - Declared as `internal static` to allow access from Query Adapters in the same assembly
-- Since the base class implements all 8 CRUD operations, only override additional methods
+- Since the base class implements all 13 `IRepository` methods (8 CRUD + 5 Specification), only override additional methods
 
 #### Implementation with Additional Methods (InventoryRepository)
 

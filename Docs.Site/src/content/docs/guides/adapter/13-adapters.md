@@ -307,7 +307,7 @@ public class EfCoreProductRepository
 }
 ```
 
-> **Key point**: Since `EfCoreRepositoryBase` provides default implementations of 8 CRUD methods (`Create`, `GetById`, `Update`, `Delete`, `CreateRange`, `GetByIds`, `UpdateRange`, `DeleteRange`), subclasses only need to implement `ToDomain()`/`ToModel()` conversion and domain-specific methods. The `IHasStringId` interface ensures all Model `Id` properties are `string` type, and `ReadQuery()` automatically applies Include to structurally prevent N+1 problems.
+> **Key point**: Since `EfCoreRepositoryBase` provides default implementations of all 13 `IRepository` methods (8 CRUD: `Create`, `GetById`, `Update`, `Delete`, `CreateRange`, `GetByIds`, `UpdateRange`, `DeleteRange` + 5 Specification: `Exists`, `Count`, `FindAllSatisfying`, `FindFirstSatisfying`, `DeleteBy`), subclasses only need to implement `ToDomain()`/`ToModel()` conversion and domain-specific methods. The `IHasStringId` interface ensures all Model `Id` properties are `string` type, and `ReadQuery()` automatically applies Include to structurally prevent N+1 problems.
 
 #### Error Handling Integration
 
@@ -454,7 +454,7 @@ Repository Adapter implements CRUD operations against data stores.
 
 #### InMemory Repository
 
-`InMemoryRepositoryBase<TAggregate, TId>` is a framework base class that provides default implementations of all 8 `IRepository` CRUD operations based on `ConcurrentDictionary`.
+`InMemoryRepositoryBase<TAggregate, TId>` is a framework base class that provides default implementations of all 13 `IRepository` methods (8 CRUD + 5 Specification) based on `ConcurrentDictionary`.
 Subclasses only need to provide the `Store` property and override only those methods that require special logic such as Soft Delete.
 
 The key point to note in the following code is the structure where the base class provides default CRUD implementations, and only `GetById` and `Delete` that require Soft Delete are overridden.
@@ -684,7 +684,7 @@ public class EfCoreProductRepository
     protected override Product ToDomain(ProductModel model) => model.ToDomain();
     protected override ProductModel ToModel(Product aggregate) => aggregate.ToModel();
 
-    // 8 CRUD methods are provided by EfCoreRepositoryBase default implementation
+    // 13 IRepository methods (8 CRUD + 5 Specification) are provided by EfCoreRepositoryBase default implementation
 
     // --- Domain-specific methods ---
     public virtual FinT<IO, bool> Exists(Specification<Product> spec)

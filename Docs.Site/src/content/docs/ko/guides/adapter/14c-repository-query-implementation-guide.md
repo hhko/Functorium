@@ -110,14 +110,15 @@ public interface ITagRepository : IRepository<Tag, TagId>;
 // 추가 메서드가 필요한 경우
 public interface IProductRepository : IRepository<Product, ProductId>
 {
-    FinT<IO, bool> Exists(Specification<Product> spec);
     FinT<IO, Product> GetByIdIncludingDeleted(ProductId id);
 }
 ```
 
-`IRepository<TAgg, TId>`가 제공하는 기본 8개 메서드:
-- `Create`, `GetById`, `Update`, `Delete`
-- `CreateRange`, `GetByIds`, `UpdateRange`, `DeleteRange`
+`IRepository<TAgg, TId>`가 제공하는 기본 13개 메서드:
+- **Write (Single)**: `Create`, `Update`, `Delete`
+- **Write (Batch)**: `CreateRange`, `UpdateRange`, `DeleteRange`
+- **Read**: `GetById`, `GetByIds`
+- **Specification**: `Exists`, `Count`, `FindAllSatisfying`, `FindFirstSatisfying`, `DeleteBy`
 
 ### 2.3 EfCoreRepositoryBase 구현 패턴
 
@@ -246,7 +247,7 @@ public class TagRepositoryInMemory
 핵심 규칙:
 - `ConcurrentDictionary`는 반드시 **`static`으로** 선언합니다 (DI Scope 간 데이터 공유)
 - `internal static`으로 선언하여 같은 어셈블리의 Query Adapter에서 접근 가능하게 합니다
-- 베이스 클래스가 8개 CRUD를 모두 구현하므로, 추가 메서드만 오버라이드합니다
+- 베이스 클래스가 `IRepository`의 13개 메서드(CRUD 8개 + Specification 5개)를 모두 구현하므로, 추가 메서드만 오버라이드합니다
 
 #### 추가 메서드가 있는 구현 (InventoryRepository)
 

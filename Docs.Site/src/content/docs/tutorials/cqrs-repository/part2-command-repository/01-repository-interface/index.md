@@ -15,7 +15,7 @@ and all methods return `FinT<IO, T>` to handle side effects and error handling i
 
 After completing this chapter, you will be able to:
 
-1. Explain the 8 CRUD methods of the `IRepository<TAggregate, TId>` interface.
+1. Explain the 13 methods of the `IRepository<TAggregate, TId>` interface (8 CRUD + 5 Specification).
 2. Explain why the `FinT<IO, T>` return type is more advantageous for composition than `Task<T>`.
 3. Explain how generic constraints (`AggregateRoot<TId>`, `IEntityId<TId>`) prevent incorrect usage.
 4. Define domain-specific Repository interfaces yourself.
