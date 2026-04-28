@@ -105,7 +105,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
     public static Validation<Error, int> Validate(int value)
     {
         if (value == 0)
-            return Domain.Zero(value);
+            return DomainErrors.Zero(value);
         return value;
     }
 

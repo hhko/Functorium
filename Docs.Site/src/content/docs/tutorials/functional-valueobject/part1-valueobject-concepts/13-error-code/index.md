@@ -241,7 +241,7 @@ public sealed class Denominator : SimpleValueObject<int>, IComparable<Denominato
     public static Validation<Error, int> Validate(int value)
     {
         if (value == 0)
-            return Domain.Zero(value);
+            return DomainErrors.Zero(value);
 
         return value;
     }
@@ -276,12 +276,12 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 
     private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =>
         string.IsNullOrWhiteSpace(currencyCode)
-            ? Domain.Empty(currencyCode)
+            ? DomainErrors.Empty(currencyCode)
             : currencyCode;
 
     private static Validation<Error, string> ValidateFormat(string currencyCode) =>
         currencyCode.Length != 3 || !currencyCode.All(char.IsLetter)
-            ? Domain.NotThreeLetters(currencyCode)
+            ? DomainErrors.NotThreeLetters(currencyCode)
             : currencyCode.ToUpperInvariant();
 
     // Internal DomainErrors class - SmartEnum-specific error definitions
@@ -334,7 +334,7 @@ public sealed class PriceRange : ComparableValueObject
 
     private static Validation<Error, (Price MinPrice, Price MaxPrice)> ValidatePriceRange(Price minPrice, Price maxPrice) =>
         (decimal)minPrice.Amount > (decimal)maxPrice.Amount
-            ? Domain.MinExceedsMax(minPrice, maxPrice)
+            ? DomainErrors.MinExceedsMax(minPrice, maxPrice)
             : (MinPrice: minPrice, MaxPrice: maxPrice);
 
     // Internal DomainErrors class - price range validation errors
