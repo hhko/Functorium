@@ -374,7 +374,7 @@ public abstract record Custom : DomainErrorKind;
 public sealed record InsufficientStock : DomainErrorKind.Custom;
 
 DomainError.For<Inventory>(new InsufficientStock(), currentStock, "Insufficient stock");
-// Error code: DomainErrors.Inventory.InsufficientStock
+// Error code: Domain.Inventory.InsufficientStock
 ```
 
 ---
@@ -653,19 +653,19 @@ using static Functorium.Domains.Errors.DomainErrorKind;
 
 // Basic usage
 DomainError.For<Email>(new Empty(), "", "Email cannot be empty");
-// Error code: DomainErrors.Email.Empty
+// Error code: Domain.Email.Empty
 
 // Error type with properties
 DomainError.For<Password>(new TooShort(MinLength: 8), value, "Password is too short");
-// Error code: DomainErrors.Password.TooShort
+// Error code: Domain.Password.TooShort
 
 // State transition error
 DomainError.For<Order>(new InvalidTransition(FromState: "Paid", ToState: "Active"), orderId, "Invalid state transition");
-// Error code: DomainErrors.Order.InvalidTransition
+// Error code: Domain.Order.InvalidTransition
 
 // Custom error
 DomainError.For<Currency>(new Unsupported(), value, "Unsupported currency");
-// Error code: DomainErrors.Currency.Unsupported
+// Error code: Domain.Currency.Unsupported
 ```
 
 ### ApplicationError
@@ -693,10 +693,10 @@ public static class ApplicationError
 using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 ApplicationError.For<CreateProductCommand>(new AlreadyExists(), productId, "Already exists");
-// Error code: ApplicationErrors.CreateProductCommand.AlreadyExists
+// Error code: Application.CreateProductCommand.AlreadyExists
 
 ApplicationError.For<UpdateOrderCommand>(new ValidationFailed("Quantity"), value, "Quantity must be positive");
-// Error code: ApplicationErrors.UpdateOrderCommand.ValidationFailed
+// Error code: Application.UpdateOrderCommand.ValidationFailed
 ```
 
 
@@ -737,19 +737,19 @@ using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 // Expected error
 AdapterError.For<ProductRepository>(new NotFound(), id, "Product not found");
-// Error code: AdapterErrors.ProductRepository.NotFound
+// Error code: Adapter.ProductRepository.NotFound
 
 // Pipeline error
 AdapterError.For<UsecaseValidationPipeline>(new PipelineValidation("PropertyName"), value, "Validation failed");
-// Error code: AdapterErrors.UsecaseValidationPipeline.PipelineValidation
+// Error code: Adapter.UsecaseValidationPipeline.PipelineValidation
 
 // Exception wrapping
 AdapterError.FromException<UsecaseExceptionPipeline>(new PipelineException(), exception);
-// Error code: AdapterErrors.UsecaseExceptionPipeline.PipelineException (Exceptional)
+// Error code: Adapter.UsecaseExceptionPipeline.PipelineException (Exceptional)
 
 // Runtime Type usage
 AdapterError.For(GetType(), new ConnectionFailed("DB"), connectionString, "Connection failed");
-// Error code: AdapterErrors.{ActualTypeName}.ConnectionFailed
+// Error code: Adapter.{ActualTypeName}.ConnectionFailed
 ```
 
 ---

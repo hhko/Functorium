@@ -30,7 +30,7 @@ Errors are classified into 3 types and consistently propagated across all OpenTe
 ### Consequences
 
 - **Positive**: Only Exceptional errors trigger alerts, so overnight alerts for the operations team are limited to actual system failures. Dashboards separate business error trends (e.g., "insufficient stock errors up 40% this week") and system failures into separate panels, enabling distinct response strategies for each. Partial failures in bulk operations are summarized into a single Aggregate error, preventing alert floods.
-- **Negative**: When adding new DomainErrorTypes, the Expected/Exceptional classification logic must also be updated. For boundary cases like "business errors requiring immediate response" (e.g., payment gateway rejection), team consensus on classification criteria is needed.
+- **Negative**: When adding new DomainErrorKinds, the Expected/Exceptional classification logic must also be updated. For boundary cases like "business errors requiring immediate response" (e.g., payment gateway rejection), team consensus on classification criteria is needed.
 
 ### Confirmation
 

@@ -374,7 +374,7 @@ public abstract record Custom : DomainErrorKind;
 public sealed record InsufficientStock : DomainErrorKind.Custom;
 
 DomainError.For<Inventory>(new InsufficientStock(), currentStock, "재고가 부족합니다");
-// 에러 코드: DomainErrors.Inventory.InsufficientStock
+// 에러 코드: Domain.Inventory.InsufficientStock
 ```
 
 ---
@@ -653,19 +653,19 @@ using static Functorium.Domains.Errors.DomainErrorKind;
 
 // 기본 사용
 DomainError.For<Email>(new Empty(), "", "이메일은 비어있을 수 없습니다");
-// 에러 코드: DomainErrors.Email.Empty
+// 에러 코드: Domain.Email.Empty
 
 // 속성이 있는 에러 타입
 DomainError.For<Password>(new TooShort(MinLength: 8), value, "비밀번호가 너무 짧습니다");
-// 에러 코드: DomainErrors.Password.TooShort
+// 에러 코드: Domain.Password.TooShort
 
 // 상태 전이 에러
 DomainError.For<Order>(new InvalidTransition(FromState: "Paid", ToState: "Active"), orderId, "유효하지 않은 상태 전이");
-// 에러 코드: DomainErrors.Order.InvalidTransition
+// 에러 코드: Domain.Order.InvalidTransition
 
 // 커스텀 에러
 DomainError.For<Currency>(new Unsupported(), value, "지원되지 않는 통화입니다");
-// 에러 코드: DomainErrors.Currency.Unsupported
+// 에러 코드: Domain.Currency.Unsupported
 ```
 
 ### ApplicationError
@@ -700,10 +700,10 @@ public static class ApplicationError
 using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 ApplicationError.For<CreateProductCommand>(new AlreadyExists(), productId, "이미 존재합니다");
-// 에러 코드: ApplicationErrors.CreateProductCommand.AlreadyExists
+// 에러 코드: Application.CreateProductCommand.AlreadyExists
 
 ApplicationError.For<UpdateOrderCommand>(new ValidationFailed("Quantity"), value, "수량은 양수여야 합니다");
-// 에러 코드: ApplicationErrors.UpdateOrderCommand.ValidationFailed
+// 에러 코드: Application.UpdateOrderCommand.ValidationFailed
 ```
 
 ### AdapterError
@@ -743,19 +743,19 @@ using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 // Expected 에러
 AdapterError.For<ProductRepository>(new NotFound(), id, "제품을 찾을 수 없습니다");
-// 에러 코드: AdapterErrors.ProductRepository.NotFound
+// 에러 코드: Adapter.ProductRepository.NotFound
 
 // Pipeline 에러
 AdapterError.For<UsecaseValidationPipeline>(new PipelineValidation("PropertyName"), value, "검증에 실패했습니다");
-// 에러 코드: AdapterErrors.UsecaseValidationPipeline.PipelineValidation
+// 에러 코드: Adapter.UsecaseValidationPipeline.PipelineValidation
 
 // Exception 래핑
 AdapterError.FromException<UsecaseExceptionPipeline>(new PipelineException(), exception);
-// 에러 코드: AdapterErrors.UsecaseExceptionPipeline.PipelineException (Exceptional)
+// 에러 코드: Adapter.UsecaseExceptionPipeline.PipelineException (Exceptional)
 
 // 런타임 Type 사용
 AdapterError.For(GetType(), new ConnectionFailed("DB"), connectionString, "연결에 실패했습니다");
-// 에러 코드: AdapterErrors.{실제타입이름}.ConnectionFailed
+// 에러 코드: Adapter.{실제타입이름}.ConnectionFailed
 ```
 
 ---
