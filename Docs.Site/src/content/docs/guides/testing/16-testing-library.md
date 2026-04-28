@@ -741,8 +741,8 @@ public void ValueObject_ShouldSatisfy_ImmutabilityRules()
                 .RequireStatic()
                 .RequireReturnType(typeof(Validation<,>)));
 
-            // DomainErrors nested class validation (only if exists)
-            @class.RequireNestedClassIfExists("DomainErrors", domainErrors =>
+            // Domain nested class validation (only if exists)
+            @class.RequireNestedClassIfExists("Domain", domainErrors =>
             {
                 domainErrors
                     .RequireInternal()

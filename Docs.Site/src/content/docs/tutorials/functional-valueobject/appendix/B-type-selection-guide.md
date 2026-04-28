@@ -337,7 +337,7 @@ Verify the following when implementing a value object:
 - [ ] Is the type declared as sealed?
 - [ ] Does it use a factory method (Create) instead of a public constructor?
 - [ ] Is the validation logic in the Create method?
-- [ ] Does it have a DomainErrors inner class?
+- [ ] Does it have a Domain inner class?
 - [ ] Is immutability guaranteed?
 - [ ] Does it have implicit conversion operators where needed?
 - [ ] Is ToString() appropriately overridden?

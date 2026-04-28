@@ -16,7 +16,7 @@ Upon completing this chapter, you will be able to:
 
 ## Why Is This Needed?
 
-C#'s generic constraints and interfaces alone cannot enforce that all value objects have the same method signatures. For example, while a Create method can be defined in the IValueObject interface, enforcing that it must be public static is difficult. Developers may accidentally make a Create method private, omit sealed, or write the DomainErrors class structure differently, and catching such issues through code review is cumbersome and easily missed.
+C#'s generic constraints and interfaces alone cannot enforce that all value objects have the same method signatures. For example, while a Create method can be defined in the IValueObject interface, enforcing that it must be public static is difficult. Developers may accidentally make a Create method private, omit sealed, or write the Domain class structure differently, and catching such issues through code review is cumbersome and easily missed.
 
 By introducing architecture tests, design rules that cannot be enforced at compile time can be automatically verified in the CI pipeline.
 
@@ -60,12 +60,12 @@ Guarantees that all classes implementing the IValueObject interface have specifi
 
 ### Domain Error Rule Verification
 
-For value objects that have a DomainErrors nested class, verifies that the class has the correct structure. Since DomainErrors is not required for all value objects, it is verified optionally with `RequireNestedClassIfExists`.
+For value objects that have a Domain nested class, verifies that the class has the correct structure. Since Domain is not required for all value objects, it is verified optionally with `RequireNestedClassIfExists`.
 
 ```csharp
-// DomainErrors nested class rule verification
+// Domain nested class rule verification
 @class
-    .RequireNestedClassIfExists("DomainErrors", domainErrors =>
+    .RequireNestedClassIfExists("Domain", domainErrors =>
     {
         domainErrors
             .RequireInternal()                          // internal class
@@ -152,9 +152,9 @@ public void ValueObject_ShouldSatisfy_Rules()
                     .RequireReturnType(typeof(Validation<,>)))
                 .RequireImplements(typeof(IEquatable<>));
 
-            // DomainErrors nested class rules
+            // Domain nested class rules
             @class
-                .RequireNestedClassIfExists(IValueObject.DomainErrorsNestedClassName, domainErrors =>
+                .RequireNestedClassIfExists(IValueObject.ArchTestContract.NestedErrorsClassName, domainErrors =>
                 {
                     domainErrors
                         .RequireInternal()
@@ -216,15 +216,15 @@ public void ValueObject_ShouldSatisfy_Rules()
 }
 ```
 
-### Q2: Why is the DomainErrors nested class verified optionally (IfExists)?
+### Q2: Why is the Domain nested class verified optionally (IfExists)?
 
-Not every value object needs to have DomainErrors. Simple value objects may not need complex validation logic and thus do not require DomainErrors. `RequireNestedClassIfExists` enforces the correct structure only on value objects that have DomainErrors, and skips verification for those that do not.
+Not every value object needs to have Domain. Simple value objects may not need complex validation logic and thus do not require Domain. `RequireNestedClassIfExists` enforces the correct structure only on value objects that have Domain, and skips verification for those that do not.
 
 ```csharp
 // Value object requiring complex validation
 public sealed class Price : ComparableSimpleValueObject<decimal>
 {
-    internal static class DomainErrors  // DomainErrors exists
+    internal static class Domain  // Domain exists
     {
         public static Error Negative(decimal value) => ...;
     }
@@ -233,13 +233,13 @@ public sealed class Price : ComparableSimpleValueObject<decimal>
 // Simple value object
 public sealed class Currency : SmartEnum<Currency, string>
 {
-    // No DomainErrors - verification skipped
+    // No Domain - verification skipped
 }
 
 // Architecture test: Optional verification
-@class.RequireNestedClassIfExists("DomainErrors", domainErrors =>
+@class.RequireNestedClassIfExists("Domain", domainErrors =>
 {
-    // Apply these rules if DomainErrors exists
+    // Apply these rules if Domain exists
     domainErrors.RequireInternal().RequireSealed();
 });
 ```

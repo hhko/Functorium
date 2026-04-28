@@ -124,7 +124,7 @@ The `TypedValidationExtensions` class provides linear chaining methods for `Type
 
 ### Automatic Error Code Generation
 
-`Validate<T>` automatically generates error codes in the format `DomainErrors.{ValueObjectName}.{ErrorTypeName}`.
+`Validate<T>` automatically generates error codes in the format `Domain.{ValueObjectName}.{ErrorTypeName}`.
 
 ```csharp
 // Validation code -> generated error code

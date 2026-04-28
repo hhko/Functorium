@@ -65,7 +65,7 @@ public interface IValueObject
         public const string CreateMethodName = "Create";
         public const string CreateFromValidatedMethodName = "CreateFromValidated";
         public const string ValidateMethodName = "Validate";
-        public const string NestedErrorsClassName = "DomainErrors";
+        public const string NestedErrorsClassName = "Domain";
     }
 }
 ```
@@ -79,7 +79,7 @@ Naming contract that architecture test suites (ArchUnitNET) enforce on every Val
 | `CreateMethodName` | `"Create"` | Factory method name convention |
 | `CreateFromValidatedMethodName` | `"CreateFromValidated"` | Factory method name convention for pre-validated values |
 | `ValidateMethodName` | `"Validate"` | Validation-only method name convention |
-| `NestedErrorsClassName` | `"DomainErrors"` | Nested error class name convention (scheduled to change to `"Domain"` in 1.0.0-alpha.4) |
+| `NestedErrorsClassName` | `"Domain"` | Nested error class name convention |
 
 ---
 

@@ -190,7 +190,7 @@ public void ValueObject_ShouldSatisfy_Rules()
                     .RequireReturnType(typeof(Validation<,>)))
                 .RequireImplements(typeof(IEquatable<>));
 
-            // DomainErrors nested class rule verification
+            // Domain nested class rule verification
             @class
                 .RequireNestedClassIfExists(IValueObject.ArchTestContract.NestedErrorsClassName, domainErrors =>
                 {

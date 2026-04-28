@@ -337,7 +337,7 @@ public sealed class OrderStatus : SmartEnum<OrderStatus, string>, IValueObject
 - [ ] 타입이 sealed로 선언되었는가?
 - [ ] public 생성자 대신 팩토리 메서드(Create)를 사용하는가?
 - [ ] 검증 로직이 Create 메서드에 있는가?
-- [ ] DomainErrors 내부 클래스가 있는가?
+- [ ] Domain 내부 클래스가 있는가?
 - [ ] 불변성이 보장되는가?
 - [ ] 필요한 경우 암시적 변환 연산자가 있는가?
 - [ ] ToString()이 적절히 오버라이드되었는가?

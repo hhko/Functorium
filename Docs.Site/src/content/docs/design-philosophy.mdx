@@ -31,7 +31,7 @@ public abstract class AbstractValueObject : IValueObject, IEquatable<AbstractVal
 Validation rules are defined in a single Value Object location, and `ValidationRules<T>` chaining automatically generates error codes for each condition. The following is a Value Object representing an email address. The `Fin<Email>` returned by `Create` contains an `Email` instance for valid input or an error code for invalid input. No exceptions are thrown, and the possibility of validation logic being scattered is structurally eliminated.
 
 ```csharp
-// On validation failure, condition-specific DomainErrors are auto-generated:
+// On validation failure, condition-specific domain errors are auto-generated:
 //   "Domain.Email.Null", "Domain.Email.Empty",
 //   "Domain.Email.TooLong", "Domain.Email.InvalidFormat"
 public sealed partial class Email : SimpleValueObject<string>

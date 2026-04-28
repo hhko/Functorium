@@ -741,8 +741,8 @@ public void ValueObject_ShouldSatisfy_ImmutabilityRules()
                 .RequireStatic()
                 .RequireReturnType(typeof(Validation<,>)));
 
-            // DomainErrors 중첩 클래스 검증 (존재하는 경우만)
-            @class.RequireNestedClassIfExists("DomainErrors", domainErrors =>
+            // Domain 중첩 클래스 검증 (존재하는 경우만)
+            @class.RequireNestedClassIfExists("Domain", domainErrors =>
             {
                 domainErrors
                     .RequireInternal()

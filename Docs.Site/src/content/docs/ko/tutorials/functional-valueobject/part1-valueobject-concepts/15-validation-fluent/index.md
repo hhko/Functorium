@@ -124,7 +124,7 @@ public static Validation<Error, string> Validate(string value) =>
 
 ### 자동 에러 코드 생성
 
-`Validate<T>`는 `DomainErrors.{ValueObjectName}.{ErrorTypeName}` 형식의 에러 코드를 자동으로 생성합니다.
+`Validate<T>`는 `Domain.{ValueObjectName}.{ErrorTypeName}` 형식의 에러 코드를 자동으로 생성합니다.
 
 ```csharp
 // 검증 코드 → 생성되는 에러 코드
