@@ -104,8 +104,8 @@ activity.SetStatus(ActivityStatusCode.Ok);     // 열거형
 **현재 상태**:
 ```
 Usecase 에러 태그:
-  - error.type: "ErrorCodeExpected"
-  - error.code: "ApplicationErrors.UsecaseValidationPipeline.Validator"
+  - error.type: "ExpectedError"
+  - error.code: "Application.UsecaseValidationPipeline.Validator"
   - error.message: "Name: 상품명은 필수입니다"
   - error.count: 3 (ManyErrors인 경우)
 
@@ -295,11 +295,11 @@ Activity? activity = _activitySource.StartActivity(..., tags, ...);  // 한 번�
 ```csharp
 switch (error)
 {
-    case ErrorCodeExpected errorCodeExpected:
-        SetErrorCodeExpectedTags(activity, errorCodeExpected);
+    case ExpectedError errorCodeExpected:
+        SetExpectedErrorTags(activity, errorCodeExpected);
         break;
-    case ErrorCodeExceptional errorCodeExceptional:
-        SetErrorCodeExceptionalTags(activity, errorCodeExceptional);
+    case ExceptionalError errorCodeExceptional:
+        SetExceptionalErrorTags(activity, errorCodeExceptional);
         break;
     case ManyErrors manyErrors:
         SetManyErrorsTags(activity, manyErrors);

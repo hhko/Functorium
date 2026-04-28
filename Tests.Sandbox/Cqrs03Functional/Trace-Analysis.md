@@ -111,19 +111,19 @@ Usecase Trace는 `UsecaseTracePipeline<TRequest, TResponse>`에서 자동으로 
 
 에러 타입에 따라 추가 태그가 설정됩니다:
 
-##### ErrorCodeExpected
+##### ExpectedError
 
 | 태그 키 | 태그 값 | 설명 |
 |---------|---------|------|
-| `error.type` | `ErrorCodeExpected` | 에러 타입 |
-| `error.code` | ErrorCode 문자열 | 에러 코드 (예: "ApplicationErrors.UsecaseValidationPipeline.Validator") |
+| `error.type` | `ExpectedError` | 에러 타입 |
+| `error.code` | ErrorCode 문자열 | 에러 코드 (예: "Application.UsecaseValidationPipeline.Validator") |
 | `error.message` | string | 에러 메시지 |
 
-##### ErrorCodeExceptional
+##### ExceptionalError
 
 | 태그 키 | 태그 값 | 설명 |
 |---------|---------|------|
-| `error.type` | `ErrorCodeExceptional` | 에러 타입 |
+| `error.type` | `ExceptionalError` | 에러 타입 |
 | `error.code` | ErrorCode 문자열 | 에러 코드 |
 | `error.message` | string | 에러 메시지 |
 

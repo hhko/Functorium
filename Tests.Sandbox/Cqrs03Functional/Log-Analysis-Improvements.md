@@ -144,9 +144,9 @@ public static class TelemetryLogKeys
 ```json
 // Usecase Error
 {
-  "ErrorType": "ErrorCodeExpected`1",
+  "ErrorType": "ExpectedError`1",
   "ErrorCodeId": -1000,
-  "ErrorCode": "ApplicationErrors.UsecaseValidationPipeline.Validator",
+  "ErrorCode": "Application.UsecaseValidationPipeline.Validator",
   "Message": "Name: 상품명은 필수입니다",
   "ErrorCurrentValue": {...}
 }

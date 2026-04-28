@@ -434,7 +434,7 @@ public sealed class Usecase : ICommandUsecase<Request, Response>
         // LINQ 쿼리 표현식: Repository가 Product(Domain) 반환
         FinT<IO, Response> usecase =
             from exists in _productRepository.ExistsByName(request.Name)
-            from _ in guard(!exists, ApplicationErrors.ProductNameAlreadyExists(request.Name))
+            from _ in guard(!exists, Application.ProductNameAlreadyExists(request.Name))
             from product in _productRepository.Create(
                 Product.Create(request.Name, request.Description, price, request.StockQuantity))
             select new Response(
@@ -485,7 +485,7 @@ Application Layer에서 비즈니스 로직 에러를 표현할 때 사용합니
 ```csharp
 // CreateProductCommand.cs
 using Functorium.Applications.Errors;
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 // LINQ 쿼리 표현식 내에서 guard와 함께 사용
 FinT<IO, Response> usecase =
@@ -500,10 +500,10 @@ FinT<IO, Response> usecase =
 
 **생성되는 에러 코드 형식:**
 ```
-ApplicationErrors.Usecase.AlreadyExists
+Application.Usecase.AlreadyExists
 ```
 
-**제공되는 에러 타입 (`ApplicationErrorType`):**
+**제공되는 에러 타입 (`ApplicationErrorKind`):**
 
 | 타입 | 설명 |
 |------|------|
@@ -523,7 +523,7 @@ Adapter Layer에서 인프라 관련 에러를 표현할 때 사용합니다.
 ```csharp
 // InMemoryProductRepository.cs
 using Functorium.Adapters.Errors;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 public virtual FinT<IO, Product> GetById(ProductId id)
 {
@@ -544,10 +544,10 @@ public virtual FinT<IO, Product> GetById(ProductId id)
 
 **생성되는 에러 코드 형식:**
 ```
-AdapterErrors.InMemoryProductRepository.NotFound
+Adapter.InMemoryProductRepository.NotFound
 ```
 
-**제공되는 에러 타입 (`AdapterErrorType`):**
+**제공되는 에러 타입 (`AdapterErrorKind`):**
 
 | 타입 | 설명 |
 |------|------|

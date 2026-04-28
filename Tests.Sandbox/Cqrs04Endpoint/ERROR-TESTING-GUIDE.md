@@ -28,7 +28,7 @@
 | `SingleExceptional` | 단일 Exceptional 에러 (시스템 에러) | `response.status=failure`, `error.type=exceptional`, `error.code=TestErrors.TestErrorCommand.SystemFailure` |
 | `ManyExpected` | 복합 Expected 에러 (여러 비즈니스 에러) | `response.status=failure`, `error.type=aggregate`, `error.code=TestErrors.TestErrorCommand.BusinessRuleViolation` (첫 번째) |
 | `ManyMixed` | 복합 Mixed 에러 (Expected + Exceptional) | `response.status=failure`, `error.type=aggregate`, `error.code=TestErrors.TestErrorCommand.SystemFailure` (Exceptional 우선) |
-| `GenericExpected` | 제네릭 Expected 에러 (`ErrorCodeExpected<T>`) | `response.status=failure`, `error.type=expected`, `error.code=TestErrors.TestErrorCommand.GenericError` |
+| `GenericExpected` | 제네릭 Expected 에러 (`ExpectedError<T>`) | `response.status=failure`, `error.type=expected`, `error.code=TestErrors.TestErrorCommand.GenericError` |
 
 ### 2. TestErrorEndpoint.cs
 
@@ -149,7 +149,7 @@ Value: 1
 **코드 참조**: [UsecaseMetricsPipeline.cs:166-169](../../Src/Functorium/Applications/Pipelines/UsecaseMetricsPipeline.cs#L166-L169)
 
 ```csharp
-// 3순위: IHasErrorCode - Expected 에러 (모든 ErrorCodeExpected<...> 변형 포함)
+// 3순위: IHasErrorCode - Expected 에러 (모든 ExpectedError<...> 변형 포함)
 IHasErrorCode hasErrorCode => (
     ErrorType: ObservabilityNaming.ErrorTypes.Expected,
     ErrorCode: hasErrorCode.ErrorCode  // ✅ 인터페이스 사용
@@ -166,9 +166,9 @@ IHasErrorCode hasErrorCode => (
 **코드 참조**: [UsecaseMetricsPipeline.cs:161-164](../../Src/Functorium/Applications/Pipelines/UsecaseMetricsPipeline.cs#L161-L164)
 
 ```csharp
-// 2순위: ErrorCodeExceptional - Exceptional을 먼저 매칭
+// 2순위: ExceptionalError - Exceptional을 먼저 매칭
 // (IHasErrorCode보다 먼저 와야 함!)
-ErrorCodeExceptional exceptional => (
+ExceptionalError exceptional => (
     ErrorType: ObservabilityNaming.ErrorTypes.Exceptional,
     ErrorCode: exceptional.ErrorCode
 ),
@@ -216,7 +216,7 @@ private static string GetPrimaryErrorCode(ManyErrors many)
 - `error.type=expected`
 - `error.code=TestErrors.TestErrorCommand.GenericError`
 
-**중요**: `ErrorCodeExpected<T>` 제네릭 타입도 `IHasErrorCode` 인터페이스를 통해 올바르게 처리됩니다.
+**중요**: `ExpectedError<T>` 제네릭 타입도 `IHasErrorCode` 인터페이스를 통해 올바르게 처리됩니다.
 
 ## 패턴 매칭 순서의 중요성
 
@@ -226,13 +226,13 @@ private static string GetPrimaryErrorCode(ManyErrors many)
 /// <remarks>
 /// 패턴 매칭 순서가 중요합니다:
 /// 1. ManyErrors - 특수 처리 필요
-/// 2. ErrorCodeExceptional - Exceptional 명시적 처리
-/// 3. IHasErrorCode - Expected 에러 (ErrorCodeExceptional도 이 인터페이스를 구현하므로 순서 중요!)
+/// 2. ExceptionalError - Exceptional 명시적 처리
+/// 3. IHasErrorCode - Expected 에러 (ExceptionalError도 이 인터페이스를 구현하므로 순서 중요!)
 /// 4. Fallback - 알 수 없는 에러 타입
 /// </remarks>
 ```
 
-⚠️ **주의**: `ErrorCodeExceptional`도 `IHasErrorCode`를 구현하므로, `IHasErrorCode` 패턴이 먼저 오면 Exceptional 에러가 Expected로 잘못 분류됩니다!
+⚠️ **주의**: `ExceptionalError`도 `IHasErrorCode`를 구현하므로, `IHasErrorCode` 패턴이 먼저 오면 Exceptional 에러가 Expected로 잘못 분류됩니다!
 
 ## 트러블슈팅
 
@@ -256,7 +256,7 @@ private static string GetPrimaryErrorCode(ManyErrors many)
 ### 잘못된 error.type
 
 - 패턴 매칭 순서를 확인하세요
-- `ErrorCodeExceptional`이 `IHasErrorCode`보다 먼저 매칭되어야 합니다
+- `ExceptionalError`이 `IHasErrorCode`보다 먼저 매칭되어야 합니다
 
 ## 관련 문서
 

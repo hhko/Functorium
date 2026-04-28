@@ -113,7 +113,7 @@
 
 ---
 
-### 3. Response 로그 - 실패 (Warning: ErrorCodeExpected)
+### 3. Response 로그 - 실패 (Warning: ExpectedError)
 
 #### 메시지 템플릿
 ```
@@ -122,7 +122,7 @@
 
 #### 실제 로그 예시
 ```
-[00:22:36 WRN] Application Usecase.Command CreateProductCommand.Handle responded Failure in 27.7202 ms with {"ErrorType": "ManyErrors", "ErrorCodeId": -2000000006, "Count": 3, "Errors": [{"ErrorType": "ErrorCodeExpected`1", "ErrorCodeId": -1000, "ErrorCode": "ApplicationErrors.UsecaseValidationPipeline.Validator", "Message": "Name: 상품명은 필수입니다", "ErrorCurrentValue": {"PropertyName": "Name", "PropertyValue": "", "PropertyPath": "Name"}}, ...]}
+[00:22:36 WRN] Application Usecase.Command CreateProductCommand.Handle responded Failure in 27.7202 ms with {"ErrorType": "ManyErrors", "ErrorCodeId": -2000000006, "Count": 3, "Errors": [{"ErrorType": "ExpectedError`1", "ErrorCodeId": -1000, "ErrorCode": "Application.UsecaseValidationPipeline.Validator", "Message": "Name: 상품명은 필수입니다", "ErrorCurrentValue": {"PropertyName": "Name", "PropertyValue": "", "PropertyPath": "Name"}}, ...]}
 ```
 
 #### 로그 필드 (JSON)
@@ -148,9 +148,9 @@
   "Count": 3,
   "Errors": [
     {
-      "ErrorType": "ErrorCodeExpected`1",
+      "ErrorType": "ExpectedError`1",
       "ErrorCodeId": -1000,
-      "ErrorCode": "ApplicationErrors.UsecaseValidationPipeline.Validator",
+      "ErrorCode": "Application.UsecaseValidationPipeline.Validator",
       "Message": "Name: 상품명은 필수입니다",
       "ErrorCurrentValue": {
         "PropertyName": "Name",
@@ -180,7 +180,7 @@
 
 ---
 
-### 4. Response 로그 - 실패 (Error: ErrorCodeExceptional)
+### 4. Response 로그 - 실패 (Error: ExceptionalError)
 
 #### 메시지 템플릿
 ```
@@ -189,7 +189,7 @@
 
 #### 실제 로그 예시
 ```
-[00:22:36 ERR] Application Usecase.Command UpdateProductCommand.Handle responded Failure in 16.5624 ms with {"ErrorType": "ErrorCodeExceptional", "ErrorCode": "ApplicationErrors.UsecaseExceptionPipeline.Exception", "ErrorCodeId": -2146233079, "Message": "시뮬레이션된 예외: 데모 목적으로 발생한 예외입니다", "ExceptionDetails": {"TargetSite": "Void MoveNext()", "Message": "...", "Data": [], "InnerException": null, "HelpLink": null, "Source": "Demo", "HResult": -2146233079, "StackTrace": "..."}}
+[00:22:36 ERR] Application Usecase.Command UpdateProductCommand.Handle responded Failure in 16.5624 ms with {"ErrorType": "ExceptionalError", "ErrorCode": "Application.UsecaseExceptionPipeline.Exception", "ErrorCodeId": -2146233079, "Message": "시뮬레이션된 예외: 데모 목적으로 발생한 예외입니다", "ExceptionDetails": {"TargetSite": "Void MoveNext()", "Message": "...", "Data": [], "InnerException": null, "HelpLink": null, "Source": "Demo", "HResult": -2146233079, "StackTrace": "..."}}
 ```
 
 #### 로그 필드 (JSON)
@@ -203,15 +203,15 @@
 | `RequestHandlerMethod` | string | Handler 메서드 이름 | "Handle" |
 | `Status` | string | 응답 상태 (고정값: "Failure") | "Failure" |
 | `Elapsed` | double | 경과 시간 (밀리초) | 16.5624 |
-| `Error` | object | 에러 객체 전체 (예외 정보 포함) | `{"ErrorType": "ErrorCodeExceptional", "ErrorCode": "...", "ErrorCodeId": -2146233079, "Message": "...", "ExceptionDetails": {...}}` |
+| `Error` | object | 에러 객체 전체 (예외 정보 포함) | `{"ErrorType": "ExceptionalError", "ErrorCode": "...", "ErrorCodeId": -2146233079, "Message": "...", "ExceptionDetails": {...}}` |
 
 #### Error 객체 구조
 
-**ErrorCodeExceptional**:
+**ExceptionalError**:
 ```json
 {
-  "ErrorType": "ErrorCodeExceptional",
-  "ErrorCode": "ApplicationErrors.UsecaseExceptionPipeline.Exception",
+  "ErrorType": "ExceptionalError",
+  "ErrorCode": "Application.UsecaseExceptionPipeline.Exception",
   "ErrorCodeId": -2146233079,
   "Message": "시뮬레이션된 예외: 데모 목적으로 발생한 예외입니다",
   "ExceptionDetails": {
