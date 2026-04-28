@@ -2,6 +2,10 @@
 title: "Validate Fluent API"
 ---
 
+:::note[Naming convention note]
+This tutorial walks through a **self-contained mini-framework** that uses the pre-1.0.0-alpha.4 names (e.g., `DomainErrors.X.Y`, `ErrorCodeFactory`, `DomainErrorType`). The Functorium production framework now uses shorter names — see the [Error System Spec](/spec/04-error-system/) for the full rename map. The patterns and design rationale shown here are unchanged; only the identifiers differ.
+:::
+
 ## Overview
 
 Error creation became concise with `DomainError.For<T>()`, but when applying multiple validation rules, didn't you find it inconvenient that ternary operators nest and types must be repeatedly specified? In this chapter, we introduce the `Validate<T>` Fluent API to write validation code as linear chaining and cover a pattern that reduces code volume by approximately 70%.

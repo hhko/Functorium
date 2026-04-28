@@ -1482,8 +1482,10 @@ A: Only for Repositories that use `Exists(Specification)` or `BuildQuery`. Repos
 **Q: Why must InMemoryRepository's ConcurrentDictionary be static?**
 A: DI registers as Scoped, so a new instance is created per request. The data must be static to be shared across requests. Additionally, InMemory Query Adapters directly access the static Store.
 
-**Q: Why are all 8 CRUD operations symmetric?**
-A: For Create/Update, the caller already has domain objects, so whether single or bulk, the same path of `ToModel` -> `DbSet.Add/Update` is taken. Delete receives IDs and directly executes SQL DELETE via `ExecuteDeleteAsync` for both. Read uses `ReadQuery()` for both, differing only in singular/plural conditions. See section 2.7 for the detailed comparison table.
+**Q: Why are CRUD operations symmetric (single ↔ batch) while Specification operations are not?**
+A: For the 8 CRUD methods, single and batch share an identical execution path — Create/Update both route through `ToModel` -> `DbSet.Add/Update` (caller already holds domain objects), Delete uses `ExecuteDeleteAsync` whether one or many IDs are passed, and Read uses the same `ReadQuery()` differing only in singular/plural condition. See section 2.7 for the detailed comparison table.
+
+The 5 Specification methods (`Exists`, `Count`, `FindAllSatisfying`, `FindFirstSatisfying`, `DeleteBy`) are intentionally **asymmetric** because they answer fundamentally different questions: existence/cardinality (`Exists`/`Count` return `bool`/`int`), retrieval shape (`FindAll` returns `Seq<T>`, `FindFirst` returns `Option<T>`), and bulk deletion (`DeleteBy` returns `int`). They do not pair off as single↔batch — each represents a distinct use case driven by Evans' `selectSatisfying` pattern.
 
 **Q: What happens if a single ID is passed to bulk DeleteRange?**
 A: It works normally. `DeleteRange(new[] { id })` performs the deletion with a single DB round-trip, identical to single-item `Delete(id)`. Both use `ExecuteDeleteAsync`, so there is no performance difference.

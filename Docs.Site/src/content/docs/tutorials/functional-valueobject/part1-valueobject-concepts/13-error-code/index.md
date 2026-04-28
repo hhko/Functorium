@@ -2,6 +2,10 @@
 title: "Structured Error Codes"
 ---
 
+:::note[Naming convention note]
+This tutorial walks through a **self-contained mini-framework** that uses the pre-1.0.0-alpha.4 names (e.g., `DomainErrors.X.Y`, `ErrorCodeFactory`, `DomainErrorType`). The Functorium production framework now uses shorter names — see the [Error System Spec](/spec/04-error-system/) for the full rename map. The patterns and design rationale shown here are unchanged; only the identifiers differ.
+:::
+
 ## Overview
 
 Can you determine from the error message `Error.New("Invalid denominator value: 0")` alone which domain, what reason, and which value caused the problem? By managing structured error codes in the format `"DomainErrors.ClassName.Reason"` together with the value at the time of failure, debugging and monitoring efficiency are greatly improved.

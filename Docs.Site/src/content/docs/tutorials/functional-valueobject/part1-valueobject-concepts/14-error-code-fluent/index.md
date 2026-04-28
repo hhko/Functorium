@@ -2,6 +2,10 @@
 title: "DomainError Helper"
 ---
 
+:::note[Naming convention note]
+This tutorial walks through a **self-contained mini-framework** that uses the pre-1.0.0-alpha.4 names (e.g., `DomainErrors.X.Y`, `ErrorCodeFactory`, `DomainErrorType`). The Functorium production framework now uses shorter names — see the [Error System Spec](/spec/04-error-system/) for the full rename map. The patterns and design rationale shown here are unchanged; only the identifiers differ.
+:::
+
 ## Overview
 
 Wasn't it cumbersome to repeatedly define `DomainErrors` nested classes for each value object and manually assemble error codes with `ErrorCodeFactory.Create()`? In this chapter, we cover a pattern that replaces error creation with a single line `DomainError.For<T>()` to reduce code volume by approximately 60%, and guarantees type-safe error codes through `DomainErrorType` records.

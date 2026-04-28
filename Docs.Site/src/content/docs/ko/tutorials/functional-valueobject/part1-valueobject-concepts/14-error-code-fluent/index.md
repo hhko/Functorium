@@ -2,6 +2,10 @@
 title: "DomainError 헬퍼"
 ---
 
+:::note[명명 규칙 안내]
+이 튜토리얼은 v1.0.0-alpha.4 이전 명명(예: `DomainErrors.X.Y`, `ErrorCodeFactory`, `DomainErrorType`)을 사용하는 **자체 mini-framework**를 단계별로 설명합니다. Functorium 프로덕션 프레임워크는 더 짧은 이름을 사용하며 전체 매핑은 [에러 시스템 사양](/ko/spec/04-error-system/)을 참조하세요. 여기서 다루는 패턴과 설계 의도는 동일하며 식별자만 다릅니다.
+:::
+
 ## 개요
 
 값 객체마다 `DomainErrors` 중첩 클래스를 반복 정의하고, `ErrorCodeFactory.Create()`로 에러 코드를 수동 조합하는 작업이 번거롭지 않았나요? 이 장에서는 `DomainError.For<T>()` 한 줄로 에러 생성을 대체하여 코드량을 약 60% 줄이고, `DomainErrorType` 레코드로 타입 안전한 에러 코드를 보장하는 패턴을 다룹니다.

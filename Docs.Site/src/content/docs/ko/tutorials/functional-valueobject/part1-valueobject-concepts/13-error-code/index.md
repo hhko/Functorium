@@ -2,6 +2,10 @@
 title: "에러 체계화"
 ---
 
+:::note[명명 규칙 안내]
+이 튜토리얼은 v1.0.0-alpha.4 이전 명명(예: `DomainErrors.X.Y`, `ErrorCodeFactory`, `DomainErrorType`)을 사용하는 **자체 mini-framework**를 단계별로 설명합니다. Functorium 프로덕션 프레임워크는 더 짧은 이름을 사용하며 전체 매핑은 [에러 시스템 사양](/ko/spec/04-error-system/)을 참조하세요. 여기서 다루는 패턴과 설계 의도는 동일하며 식별자만 다릅니다.
+:::
+
 ## 개요
 
 `Error.New("Invalid denominator value: 0")`라는 에러 메시지만으로 어떤 도메인에서, 어떤 이유로, 어떤 값이 문제를 일으켰는지 파악할 수 있나요? `"DomainErrors.클래스.이유"` 형식의 구조화된 에러 코드와 실패 당시의 값 정보를 함께 관리하면, 디버깅과 모니터링의 효율성이 크게 향상됩니다.

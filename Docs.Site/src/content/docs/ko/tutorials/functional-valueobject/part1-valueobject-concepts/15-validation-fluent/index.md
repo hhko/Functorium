@@ -2,6 +2,10 @@
 title: "Validate Fluent API"
 ---
 
+:::note[명명 규칙 안내]
+이 튜토리얼은 v1.0.0-alpha.4 이전 명명(예: `DomainErrors.X.Y`, `ErrorCodeFactory`, `DomainErrorType`)을 사용하는 **자체 mini-framework**를 단계별로 설명합니다. Functorium 프로덕션 프레임워크는 더 짧은 이름을 사용하며 전체 매핑은 [에러 시스템 사양](/ko/spec/04-error-system/)을 참조하세요. 여기서 다루는 패턴과 설계 의도는 동일하며 식별자만 다릅니다.
+:::
+
 ## 개요
 
 `DomainError.For<T>()`로 에러 생성은 간결해졌지만, 여러 검증 규칙을 적용할 때 삼항 연산자가 중첩되고 타입을 반복 지정해야 하는 불편함이 남아 있지 않았나요? 이 장에서는 `Validate<T>` Fluent API를 도입하여 검증 코드를 선형적인 체이닝으로 작성하고, 코드량을 약 70% 줄이는 패턴을 다룹니다.
