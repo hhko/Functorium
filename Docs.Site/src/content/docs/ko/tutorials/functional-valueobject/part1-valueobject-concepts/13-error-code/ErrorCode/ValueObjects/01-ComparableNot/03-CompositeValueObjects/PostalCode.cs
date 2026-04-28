@@ -59,7 +59,7 @@ public sealed class PostalCode : SimpleValueObject<string>
     /// <returns>검증 결과</returns>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         string.IsNullOrWhiteSpace(value)
-            ? DomainErrors.Empty(value)
+            ? Domain.Empty(value)
             : value;
 
     /// <summary>
@@ -69,10 +69,10 @@ public sealed class PostalCode : SimpleValueObject<string>
     /// <returns>검증 결과</returns>
     private static Validation<Error, string> ValidateFormat(string value) =>
         value.Length != 5 || !value.All(char.IsDigit)
-            ? DomainErrors.NotFiveDigits(value)
+            ? Domain.NotFiveDigits(value)
             : value;
 
-    internal static class DomainErrors
+    internal static class Domain
     {
         /// <summary>
         /// 빈 우편번호에 대한 에러
@@ -81,7 +81,7 @@ public sealed class PostalCode : SimpleValueObject<string>
         /// <returns>구조화된 에러 정보</returns>
         public static Error Empty(string value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(PostalCode)}.{nameof(Empty)}",
+                errorCode: $"{nameof(Domain)}.{nameof(PostalCode)}.{nameof(Empty)}",
                 errorCurrentValue: value,
                 errorMessage: $"Postal code cannot be empty. Current value: '{value}'");
 
@@ -92,7 +92,7 @@ public sealed class PostalCode : SimpleValueObject<string>
         /// <returns>구조화된 에러 정보</returns>
         public static Error NotFiveDigits(string value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(PostalCode)}.{nameof(NotFiveDigits)}",
+                errorCode: $"{nameof(Domain)}.{nameof(PostalCode)}.{nameof(NotFiveDigits)}",
                 errorCurrentValue: value,
                 errorMessage: $"Postal code must be exactly 5 digits. Current value: '{value}'");
     }

@@ -14,10 +14,10 @@ public class ErrorFactoryTests
     public void Create_ShouldReturnExpectedError_WhenUsingStringParameters()
     {
         // Arrange
-        string errorCode = "DomainErrors.Name.TooShort";
+        string errorCode = "Domain.Name.TooShort";
         string errorCurrentValue = "a";
 
-        string expectedErrorCode = "DomainErrors.Name.TooShort";
+        string expectedErrorCode = "Domain.Name.TooShort";
         string expectedCurrentValue = "a";
 
         string errorMessage = "Name is too short. Current value: 'a'";
@@ -38,10 +38,10 @@ public class ErrorFactoryTests
     public void Create_ShouldReturnExpectedErrorInt_WhenUsingStringAndIntParameters()
     {
         // Arrange
-        string errorCode = "DomainErrors.Age.OutOfRange";
+        string errorCode = "Domain.Age.OutOfRange";
         int errorCurrentValue = 150;
 
-        string expectedErrorCode = "DomainErrors.Age.OutOfRange";
+        string expectedErrorCode = "Domain.Age.OutOfRange";
         int expectedCurrentValue = 150;
         string errorMessage = "Age is out of range. Current value: '150'";
 
@@ -58,9 +58,9 @@ public class ErrorFactoryTests
 
     // 테스트 시나리오: 제네릭 타입을 사용하여 타입 안전한 에러를 생성해야 한다
     [Theory]
-    [InlineData("DomainErrors.Email.MissingAt", "not-an-email", "Email is missing '@' symbol. Current value: 'not-an-email'")]
-    [InlineData("DomainErrors.Phone.NotNumeric", "invalid-phone", "Phone number is not numeric. Current value: 'invalid-phone'")]
-    [InlineData("DomainErrors.Address.Empty", "empty-address", "Address is empty. Current value: 'empty-address'")]
+    [InlineData("Domain.Email.MissingAt", "not-an-email", "Email is missing '@' symbol. Current value: 'not-an-email'")]
+    [InlineData("Domain.Phone.NotNumeric", "invalid-phone", "Phone number is not numeric. Current value: 'invalid-phone'")]
+    [InlineData("Domain.Address.Empty", "empty-address", "Address is empty. Current value: 'empty-address'")]
     public void Create_ShouldReturnExpectedErrorWithGenericType_WhenUsingGenericMethod(string errorCode, string errorCurrentValue, string errorMessage)
     {
         // Arrange
@@ -83,12 +83,12 @@ public class ErrorFactoryTests
     public void Create_ShouldReturnExpectedErrorWithTwoGenericTypes_WhenUsingTwoValueMethod()
     {
         // Arrange
-        string errorCode = "DomainErrors.Coordinate.XOutOfRange";
+        string errorCode = "Domain.Coordinate.XOutOfRange";
         int errorCurrentValue1 = 1500;
         int errorCurrentValue2 = 2000;
         string errorMessage = "Coordinate X is out of range. Current values: '1500', '2000'";
 
-        string expectedErrorCode = "DomainErrors.Coordinate.XOutOfRange";
+        string expectedErrorCode = "Domain.Coordinate.XOutOfRange";
         int expectedCurrentValue1 = 1500;
         int expectedCurrentValue2 = 2000;
 
@@ -109,13 +109,13 @@ public class ErrorFactoryTests
     public void Create_ShouldReturnExpectedErrorWithThreeGenericTypes_WhenUsingThreeValueMethod()
     {
         // Arrange
-        string errorCode = "DomainErrors.Address.Empty";
+        string errorCode = "Domain.Address.Empty";
         string errorCurrentValue1 = "Empty Street";
         string errorCurrentValue2 = "Invalid City";
         string errorCurrentValue3 = "12345";
         string errorMessage = "Address is empty. Street: 'Empty Street', City: 'Invalid City', PostalCode: '12345'";
 
-        string expectedErrorCode = "DomainErrors.Address.Empty";
+        string expectedErrorCode = "Domain.Address.Empty";
         string expectedCurrentValue1 = "Empty Street";
         string expectedCurrentValue2 = "Invalid City";
         string expectedCurrentValue3 = "12345";
@@ -138,10 +138,10 @@ public class ErrorFactoryTests
     public void CreateFromException_ShouldReturnExceptionalError_WhenUsingException()
     {
         // Arrange
-        string errorCode = "DomainErrors.System.Exception";
+        string errorCode = "Domain.System.Exception";
         var exception = new InvalidOperationException("Test exception message");
 
-        string expectedErrorCode = "DomainErrors.System.Exception";
+        string expectedErrorCode = "Domain.System.Exception";
         string expectedMessage = "Test exception message";
 
         // Act
@@ -156,9 +156,9 @@ public class ErrorFactoryTests
 
     // 테스트 시나리오: 여러 문자열을 점으로 연결하여 에러 코드를 포맷해야 한다
     [Theory]
-    [InlineData(new string[] { "DomainErrors", "User", "AgeOutOfRange" }, "DomainErrors.User.AgeOutOfRange")]
-    [InlineData(new string[] { "DomainErrors", "Payment", "Declined" }, "DomainErrors.Payment.Declined")]
-    [InlineData(new string[] { "DomainErrors", "Order", "NotFound" }, "DomainErrors.Order.NotFound")]
+    [InlineData(new string[] { "Domain", "User", "AgeOutOfRange" }, "Domain.User.AgeOutOfRange")]
+    [InlineData(new string[] { "Domain", "Payment", "Declined" }, "Domain.Payment.Declined")]
+    [InlineData(new string[] { "Domain", "Order", "NotFound" }, "Domain.Order.NotFound")]
     public void Format_ShouldReturnFormattedErrorCode_WhenUsingStringArray(string[] parts, string expected)
     {
         // Arrange

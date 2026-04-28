@@ -82,7 +82,7 @@ public sealed class PriceRange : ComparableValueObject
     /// <returns>검증 결과</returns>
     private static Validation<Error, (Price MinPrice, Price MaxPrice)> ValidatePriceRange(Price minPrice, Price maxPrice) =>
         (decimal)minPrice.Amount > (decimal)maxPrice.Amount
-            ? DomainErrors.MinExceedsMax(minPrice, maxPrice)
+            ? Domain.MinExceedsMax(minPrice, maxPrice)
             : (MinPrice: minPrice, MaxPrice: maxPrice);
 
     /// <summary>
@@ -104,10 +104,10 @@ public sealed class PriceRange : ComparableValueObject
         $"{MinPrice} ~ {MaxPrice}";
 
     /// <summary>
-    /// DomainErrors 중첩 클래스
+    /// Domain 중첩 클래스
     /// ValueObject 규칙에 따른 구조화된 에러 처리
     /// </summary>
-    internal static class DomainErrors
+    internal static class Domain
     {
         /// <summary>
         /// 최솟값이 최댓값을 초과하는 에러
@@ -117,7 +117,7 @@ public sealed class PriceRange : ComparableValueObject
         /// <returns>에러</returns>
         public static Error MinExceedsMax(Price minPrice, Price maxPrice) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(PriceRange)}.{nameof(MinExceedsMax)}",
+                errorCode: $"{nameof(Domain)}.{nameof(PriceRange)}.{nameof(MinExceedsMax)}",
                 errorCurrentValue: $"MinPrice: {minPrice}, MaxPrice: {maxPrice}",
                 errorMessage: $"Minimum price cannot exceed maximum price. Min: '{minPrice}', Max: '{maxPrice}'");
     }

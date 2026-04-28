@@ -19,7 +19,7 @@ public class DenominatorTests
     {
         // Arrange
         int value = 0;
-        string expectedErrorCode = $"{nameof(Denominator.DomainErrors)}.{nameof(Denominator)}.{nameof(Denominator.DomainErrors.Zero)}";
+        string expectedErrorCode = $"{nameof(Denominator.Domain)}.{nameof(Denominator)}.{nameof(Denominator.Domain.Zero)}";
 
         // Act
         var actual = Denominator.Create(value);

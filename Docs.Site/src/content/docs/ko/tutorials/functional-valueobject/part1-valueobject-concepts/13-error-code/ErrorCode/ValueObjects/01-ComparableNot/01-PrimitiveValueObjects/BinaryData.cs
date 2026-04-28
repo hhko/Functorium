@@ -50,10 +50,10 @@ public sealed class BinaryData : SimpleValueObject<byte[]>
     /// <returns>검증 결과</returns>
     public static Validation<Error, byte[]> Validate(byte[]? value) =>
         value == null || value.Length == 0
-            ? DomainErrors.Empty(value)
+            ? Domain.Empty(value)
             : value;
 
-    internal static class DomainErrors
+    internal static class Domain
     {
         /// <summary>
         /// 빈 바이너리 데이터에 대한 에러
@@ -62,7 +62,7 @@ public sealed class BinaryData : SimpleValueObject<byte[]>
         /// <returns>구조화된 에러 정보</returns>
         public static Error Empty(byte[]? value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(BinaryData)}.{nameof(Empty)}",
+                errorCode: $"{nameof(Domain)}.{nameof(BinaryData)}.{nameof(Empty)}",
                 errorCurrentValue: value?.Length.ToString() ?? "null",
                 errorMessage: $"Binary data cannot be empty or null. Current value: '{value?.Length.ToString() ?? "null"}'");
     }

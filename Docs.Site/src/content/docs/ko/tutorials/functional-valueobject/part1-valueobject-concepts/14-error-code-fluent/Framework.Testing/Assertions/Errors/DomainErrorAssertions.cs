@@ -37,7 +37,7 @@ public static class DomainErrorAssertions
     {
         fin.IsFail.ShouldBeTrue("Fin should have failed");
 
-        var expectedErrorCode = $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{expectedErrorType.ErrorName}";
+        var expectedErrorCode = $"{ErrorType.DomainPrefix}.{typeof(TDomain).Name}.{expectedErrorType.ErrorName}";
 
         fin.IfFail(error =>
         {
@@ -69,7 +69,7 @@ public static class DomainErrorAssertions
     {
         fin.IsFail.ShouldBeTrue("Fin should have failed");
 
-        var expectedErrorCode = $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{expectedErrorType.ErrorName}";
+        var expectedErrorCode = $"{ErrorType.DomainPrefix}.{typeof(TDomain).Name}.{expectedErrorType.ErrorName}";
 
         fin.IfFail(error =>
         {
@@ -97,7 +97,7 @@ public static class DomainErrorAssertions
     {
         validation.IsFail.ShouldBeTrue("Validation should have failed");
 
-        var expectedErrorCode = $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{expectedErrorType.ErrorName}";
+        var expectedErrorCode = $"{ErrorType.DomainPrefix}.{typeof(TDomain).Name}.{expectedErrorType.ErrorName}";
         var errors = GetErrors(validation);
 
         var hasMatchingError = errors.Any(e =>
@@ -124,7 +124,7 @@ public static class DomainErrorAssertions
     {
         validation.IsFail.ShouldBeTrue("Validation should have failed");
 
-        var expectedErrorCode = $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{expectedErrorType.ErrorName}";
+        var expectedErrorCode = $"{ErrorType.DomainPrefix}.{typeof(TDomain).Name}.{expectedErrorType.ErrorName}";
         var errors = GetErrors(validation);
 
         var hasMatchingError = errors.Any(e =>
@@ -147,7 +147,7 @@ public static class DomainErrorAssertions
     {
         validation.IsFail.ShouldBeTrue("Validation should have failed");
 
-        var expectedErrorCode = $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{expectedErrorType.ErrorName}";
+        var expectedErrorCode = $"{ErrorType.DomainPrefix}.{typeof(TDomain).Name}.{expectedErrorType.ErrorName}";
         var errors = GetErrors(validation);
 
         errors.Count.ShouldBe(1, $"Expected exactly 1 error but found {errors.Count}");
@@ -177,7 +177,7 @@ public static class DomainErrorAssertions
         validation.IsFail.ShouldBeTrue("Validation should have failed");
 
         var expectedErrorCodes = expectedErrorTypes
-            .Select(et => $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{et.ErrorName}")
+            .Select(et => $"{ErrorType.DomainPrefix}.{typeof(TDomain).Name}.{et.ErrorName}")
             .ToList();
 
         var errors = GetErrors(validation);

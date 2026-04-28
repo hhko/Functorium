@@ -50,10 +50,10 @@ public sealed class Street : SimpleValueObject<string>
     /// <returns>검증 결과</returns>
     public static Validation<Error, string> Validate(string value) =>
         string.IsNullOrWhiteSpace(value)
-            ? DomainErrors.Empty(value)
+            ? Domain.Empty(value)
             : value;
 
-    internal static class DomainErrors
+    internal static class Domain
     {
         /// <summary>
         /// 빈 거리명에 대한 에러
@@ -62,7 +62,7 @@ public sealed class Street : SimpleValueObject<string>
         /// <returns>구조화된 에러 정보</returns>
         public static Error Empty(string value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Street)}.{nameof(Empty)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Street)}.{nameof(Empty)}",
                 errorCurrentValue: value,
                 errorMessage: $"Street name cannot be empty. Current value: '{value}'");
     }

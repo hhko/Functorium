@@ -7,7 +7,7 @@ namespace Framework.Layers.Domains;
 
 /// <summary>
 /// 값 객체의 도메인 오류 생성을 위한 헬퍼 클래스
-/// 에러 코드를 자동으로 "DomainErrors.{ValueObjectName}.{ErrorName}" 형식으로 생성
+/// 에러 코드를 자동으로 "Domain.{ValueObjectName}.{ErrorName}" 형식으로 생성
 /// </summary>
 /// <remarks>
 /// 사용 예시:
@@ -37,7 +37,7 @@ public static class DomainError
         string currentValue,
         string message) =>
         ErrorFactory.Create(
-            errorCode: $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
+            errorCode: $"{ErrorType.DomainPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
             errorCurrentValue: currentValue,
             errorMessage: message);
 
@@ -57,7 +57,7 @@ public static class DomainError
         string message)
         where TValue : notnull =>
         ErrorFactory.Create(
-            errorCode: $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
+            errorCode: $"{ErrorType.DomainPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
             errorCurrentValue: currentValue,
             errorMessage: message);
 
@@ -81,7 +81,7 @@ public static class DomainError
         where T1 : notnull
         where T2 : notnull =>
         ErrorFactory.Create(
-            errorCode: $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
+            errorCode: $"{ErrorType.DomainPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
             value1,
             value2,
             errorMessage: message);
@@ -110,7 +110,7 @@ public static class DomainError
         where T2 : notnull
         where T3 : notnull =>
         ErrorFactory.Create(
-            errorCode: $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
+            errorCode: $"{ErrorType.DomainPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
             value1,
             value2,
             value3,

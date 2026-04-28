@@ -50,10 +50,10 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
     /// <returns>검증 결과</returns>
     public static Validation<Error, int> Validate(int value) =>
         value == 0
-            ? DomainErrors.Zero(value)
+            ? Domain.Zero(value)
             : value;
 
-    internal static class DomainErrors
+    internal static class Domain
     {
         /// <summary>
         /// 0 값에 대한 에러
@@ -62,7 +62,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
         /// <returns>구조화된 에러 정보</returns>
         public static Error Zero(int value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Denominator)}.{nameof(Zero)}",
                 errorCurrentValue: value.ToString(),
                 errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
     }

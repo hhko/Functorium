@@ -47,7 +47,7 @@ public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
     public static Validation<Error, decimal> Validate(decimal value) =>
         value >= 0 && value <= 999999.99m
             ? value
-            : DomainErrors.OutOfRange(value);
+            : Domain.OutOfRange(value);
 
     /// <summary>
     /// 금액의 문자열 표현
@@ -57,10 +57,10 @@ public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
         $"{Value:N2}";
 
     /// <summary>
-    /// DomainErrors 중첩 클래스
+    /// Domain 중첩 클래스
     /// ValueObject 규칙에 따른 구조화된 에러 처리
     /// </summary>
-    internal static class DomainErrors
+    internal static class Domain
     {
         /// <summary>
         /// 범위를 벗어난 금액 에러
@@ -69,7 +69,7 @@ public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
         /// <returns>에러</returns>
         public static Error OutOfRange(decimal value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(MoneyAmount)}.{nameof(OutOfRange)}",
+                errorCode: $"{nameof(Domain)}.{nameof(MoneyAmount)}.{nameof(OutOfRange)}",
                 errorCurrentValue: value,
                 errorMessage: $"Money amount must be between 0 and 999999.99. Current value: '{value}'");
     }

@@ -17,7 +17,7 @@ public abstract record ErrorType
     /// <summary>
     /// 도메인 레이어 에러 코드 접두사
     /// </summary>
-    public const string DomainErrorsPrefix = "DomainErrors";
+    public const string DomainPrefix = "Domain";
 
     /// <summary>
     /// 애플리케이션 레이어 에러 코드 접두사

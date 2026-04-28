@@ -67,7 +67,7 @@ public sealed class Coordinate : ValueObject
     /// <returns>검증 결과</returns>
     private static Validation<Error, int> ValidateX(int x) =>
         x < 0 || x > 1000
-            ? DomainErrors.XOutOfRange(x)
+            ? Domain.XOutOfRange(x)
             : x;
 
     /// <summary>
@@ -77,10 +77,10 @@ public sealed class Coordinate : ValueObject
     /// <returns>검증 결과</returns>
     private static Validation<Error, int> ValidateY(int y) =>
         y < 0 || y > 1000
-            ? DomainErrors.YOutOfRange(y)
+            ? Domain.YOutOfRange(y)
             : y;
 
-    internal static class DomainErrors
+    internal static class Domain
     {
         /// <summary>
         /// 범위를 벗어난 X 좌표에 대한 에러
@@ -89,7 +89,7 @@ public sealed class Coordinate : ValueObject
         /// <returns>구조화된 에러 정보</returns>
         public static Error XOutOfRange(int value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(XOutOfRange)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Coordinate)}.{nameof(XOutOfRange)}",
                 errorCurrentValue: value,
                 errorMessage: $"X coordinate must be between 0 and 1000. Current value: '{value}'");
 
@@ -100,7 +100,7 @@ public sealed class Coordinate : ValueObject
         /// <returns>구조화된 에러 정보</returns>
         public static Error YOutOfRange(int value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(YOutOfRange)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Coordinate)}.{nameof(YOutOfRange)}",
                 errorCurrentValue: value,
                 errorMessage: $"Y coordinate must be between 0 and 1000. Current value: '{value}'");
     }

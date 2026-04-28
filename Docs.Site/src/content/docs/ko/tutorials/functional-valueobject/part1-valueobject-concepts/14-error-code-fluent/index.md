@@ -4,7 +4,7 @@ title: "DomainError 헬퍼"
 
 ## 개요
 
-값 객체마다 `DomainErrors` 중첩 클래스를 반복 정의하고, `ErrorFactory.Create()`로 에러 코드를 수동 조합하는 작업이 번거롭지 않았나요? 이 장에서는 `DomainError.For<T>()` 한 줄로 에러 생성을 대체하여 코드량을 약 60% 줄이고, `DomainErrorKind` 레코드로 타입 안전한 에러 코드를 보장하는 패턴을 다룹니다.
+값 객체마다 `Domain` 중첩 클래스를 반복 정의하고, `ErrorFactory.Create()`로 에러 코드를 수동 조합하는 작업이 번거롭지 않았나요? 이 장에서는 `DomainError.For<T>()` 한 줄로 에러 생성을 대체하여 코드량을 약 60% 줄이고, `DomainErrorKind` 레코드로 타입 안전한 에러 코드를 보장하는 패턴을 다룹니다.
 
 ## 학습 목표
 
@@ -12,12 +12,12 @@ title: "DomainError 헬퍼"
 
 1. `DomainError.For<T>()` 메서드를 사용하여 간결하게 에러를 생성할 수 있습니다
 2. `DomainErrorKind` 레코드로 오타와 불일치를 컴파일 타임에 방지할 수 있습니다
-3. `DomainErrors` 중첩 클래스 없이 인라인으로 에러를 정의할 수 있습니다
+3. `Domain` 중첩 클래스 없이 인라인으로 에러를 정의할 수 있습니다
 4. 타입별 오버로딩(`For<T>()`, `For<T, TValue>()`, `For<T, T1, T2>()`)을 상황에 맞게 선택할 수 있습니다
 
 ## 왜 필요한가?
 
-이전 `13-Error-Code` 프로젝트에서 구조화된 에러 코드 시스템을 도입했지만, 각 값 객체마다 `DomainErrors` 중첩 클래스를 정의해야 하는 보일러플레이트가 남아 있었습니다. 모든 값 객체에서 동일한 패턴의 `internal static class DomainErrors`를 반복 정의해야 했고, `$"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}"` 형태로 에러 코드를 수동 조합해야 했습니다. 게다가 `"Empty"`, `"IsEmpty"`, `"EmptyValue"`처럼 동일한 개념에 대해 개발자마다 다른 이름을 사용할 수 있어 일관성이 깨지기 쉬웠습니다.
+이전 `13-Error-Code` 프로젝트에서 구조화된 에러 코드 시스템을 도입했지만, 각 값 객체마다 `Domain` 중첩 클래스를 정의해야 하는 보일러플레이트가 남아 있었습니다. 모든 값 객체에서 동일한 패턴의 `internal static class Domain`를 반복 정의해야 했고, `$"{nameof(Domain)}.{nameof(Denominator)}.{nameof(Zero)}"` 형태로 에러 코드를 수동 조합해야 했습니다. 게다가 `"Empty"`, `"IsEmpty"`, `"EmptyValue"`처럼 동일한 개념에 대해 개발자마다 다른 이름을 사용할 수 있어 일관성이 깨지기 쉬웠습니다.
 
 **DomainError 헬퍼와 DomainErrorKind 레코드는** 타입 안전한 에러 유형과 자동 에러 코드 생성으로 이 문제들을 해결합니다.
 
@@ -54,7 +54,7 @@ new Unsupported()    // 도메인 특화 에러
 
 ### DomainError 헬퍼
 
-DomainError 헬퍼는 `typeof(T).Name`과 `DomainErrorKind`을 조합하여 `DomainErrors.{ValueObjectName}.{ErrorType}` 형식의 에러 코드를 자동으로 생성합니다.
+DomainError 헬퍼는 `typeof(T).Name`과 `DomainErrorKind`을 조합하여 `Domain.{ValueObjectName}.{ErrorType}` 형식의 에러 코드를 자동으로 생성합니다.
 
 ```csharp
 // DomainError 헬퍼 사용법
@@ -77,7 +77,7 @@ DomainError.For<Coordinate, int>(new DomainErrorKind.OutOfRange("0", "1000"), x,
 
 ### 인라인 에러 정의
 
-DomainError 헬퍼를 사용하면 검증 실패 시점에서 바로 에러를 생성할 수 있어, 별도의 `DomainErrors` 중첩 클래스가 불필요합니다. 검증과 에러 정의가 한 곳에 위치하므로 코드 응집도가 높아집니다.
+DomainError 헬퍼를 사용하면 검증 실패 시점에서 바로 에러를 생성할 수 있어, 별도의 `Domain` 중첩 클래스가 불필요합니다. 검증과 에러 정의가 한 곳에 위치하므로 코드 응집도가 높아집니다.
 
 ```csharp
 // 인라인 에러 정의 예시 (커스텀 에러: sealed record Zero : DomainErrorKind.Custom;)
@@ -105,16 +105,16 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
     public static Validation<Error, int> Validate(int value)
     {
         if (value == 0)
-            return DomainErrors.Zero(value);
+            return Domain.Zero(value);
         return value;
     }
 
-    // DomainErrors 중첩 클래스 - 모든 값 객체에서 반복됨
-    internal static class DomainErrors
+    // Domain 중첩 클래스 - 모든 값 객체에서 반복됨
+    internal static class Domain
     {
         public static Error Zero(int value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Denominator)}.{nameof(Zero)}",
                 errorCurrentValue: value,
                 errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
     }
@@ -320,7 +320,7 @@ public static class DomainError
         DomainErrorKind errorType, string currentValue, string message)
         where TValueObject : class =>
         ErrorFactory.Create(
-            errorCode: $"DomainErrors.{typeof(TValueObject).Name}.{GetErrorName(errorType)}",
+            errorCode: $"Domain.{typeof(TValueObject).Name}.{GetErrorName(errorType)}",
             errorCurrentValue: currentValue,
             errorMessage: message);
 
@@ -332,7 +332,7 @@ public static class DomainError
         where TValueObject : class
         where TValue : notnull =>
         ErrorFactory.Create(
-            errorCode: $"DomainErrors.{typeof(TValueObject).Name}.{GetErrorName(errorType)}",
+            errorCode: $"Domain.{typeof(TValueObject).Name}.{GetErrorName(errorType)}",
             errorCurrentValue: currentValue,
             errorMessage: message);
 
@@ -492,7 +492,7 @@ public sealed class Coordinate : ValueObject
 이전 방식과 DomainError 헬퍼 방식의 차이를 비교합니다.
 
 ### 비교 표
-| 구분 | 이전 방식 (DomainErrors 중첩 클래스) | 현재 방식 (DomainError + DomainErrorKind) |
+| 구분 | 이전 방식 (Domain 중첩 클래스) | 현재 방식 (DomainError + DomainErrorKind) |
 |------|--------------------------------------|-------------------------------------------|
 | **에러 정의 위치** | 별도 중첩 클래스 | 검증 로직 내 인라인 |
 | **에러 코드 생성** | 수동 조합 (nameof 사용) | 자동 생성 (타입 정보 + DomainErrorKind) |
@@ -506,15 +506,15 @@ public sealed class Coordinate : ValueObject
 
 | 검증 조건 | DomainErrorKind | 생성되는 에러 코드 |
 |-----------|-----------------|-------------------|
-| 빈 값 | `new DomainErrorKind.Empty()` | `DomainErrors.{Type}.Empty` |
-| null 값 | `new DomainErrorKind.Null()` | `DomainErrors.{Type}.Null` |
-| 최소 길이 미달 | `new DomainErrorKind.TooShort(8)` | `DomainErrors.{Type}.TooShort` |
-| 정확한 길이 불일치 | `new DomainErrorKind.WrongLength(5)` | `DomainErrors.{Type}.WrongLength` |
-| 형식 오류 | `new DomainErrorKind.InvalidFormat()` | `DomainErrors.{Type}.InvalidFormat` |
-| 음수 값 | `new DomainErrorKind.Negative()` | `DomainErrors.{Type}.Negative` |
-| 범위 초과 | `new DomainErrorKind.OutOfRange("0", "100")` | `DomainErrors.{Type}.OutOfRange` |
-| 찾을 수 없음 | `new DomainErrorKind.NotFound()` | `DomainErrors.{Type}.NotFound` |
-| 도메인 특화 | `new Zero()` (`sealed record Zero : DomainErrorKind.Custom;`) | `DomainErrors.{Type}.Zero` |
+| 빈 값 | `new DomainErrorKind.Empty()` | `Domain.{Type}.Empty` |
+| null 값 | `new DomainErrorKind.Null()` | `Domain.{Type}.Null` |
+| 최소 길이 미달 | `new DomainErrorKind.TooShort(8)` | `Domain.{Type}.TooShort` |
+| 정확한 길이 불일치 | `new DomainErrorKind.WrongLength(5)` | `Domain.{Type}.WrongLength` |
+| 형식 오류 | `new DomainErrorKind.InvalidFormat()` | `Domain.{Type}.InvalidFormat` |
+| 음수 값 | `new DomainErrorKind.Negative()` | `Domain.{Type}.Negative` |
+| 범위 초과 | `new DomainErrorKind.OutOfRange("0", "100")` | `Domain.{Type}.OutOfRange` |
+| 찾을 수 없음 | `new DomainErrorKind.NotFound()` | `Domain.{Type}.NotFound` |
+| 도메인 특화 | `new Zero()` (`sealed record Zero : DomainErrorKind.Custom;`) | `Domain.{Type}.Zero` |
 
 ### 장단점 표
 | 장점 | 단점 |

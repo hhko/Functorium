@@ -125,7 +125,7 @@ public sealed class Currency
     /// <returns>검증 결과</returns>
     private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =>
         string.IsNullOrWhiteSpace(currencyCode)
-            ? DomainErrors.Empty(currencyCode)
+            ? Domain.Empty(currencyCode)
             : currencyCode;
 
     /// <summary>
@@ -135,7 +135,7 @@ public sealed class Currency
     /// <returns>검증 결과</returns>
     private static Validation<Error, string> ValidateFormat(string currencyCode) =>
         currencyCode.Length != 3 || !currencyCode.All(char.IsLetter)
-            ? DomainErrors.NotThreeLetters(currencyCode)
+            ? Domain.NotThreeLetters(currencyCode)
             : currencyCode.ToUpperInvariant();
 
     /// <summary>
@@ -152,7 +152,7 @@ public sealed class Currency
         }
         catch (SmartEnumNotFoundException)
         {
-            return DomainErrors.Unsupported(currencyCode);
+            return Domain.Unsupported(currencyCode);
         }
     }
 
@@ -193,10 +193,10 @@ public sealed class Currency
         $"{Symbol}{amount:N0}";
 
     /// <summary>
-    /// DomainErrors 중첩 클래스
+    /// Domain 중첩 클래스
     /// ValueObject 규칙에 따른 구조화된 에러 처리
     /// </summary>
-    internal static class DomainErrors
+    internal static class Domain
     {
         /// <summary>
         /// 빈 통화 코드 에러
@@ -205,7 +205,7 @@ public sealed class Currency
         /// <returns>에러</returns>
         public static Error Empty(string value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Empty)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Currency)}.{nameof(Empty)}",
                 errorCurrentValue: value,
                 errorMessage: $"Currency code cannot be empty. Current value: '{value}'");
 
@@ -216,7 +216,7 @@ public sealed class Currency
         /// <returns>에러</returns>
         public static Error NotThreeLetters(string value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
                 errorCurrentValue: value,
                 errorMessage: $"Currency code must be exactly 3 letters. Current value: '{value}'");
 
@@ -227,7 +227,7 @@ public sealed class Currency
         /// <returns>에러</returns>
         public static Error Unsupported(string value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Unsupported)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Currency)}.{nameof(Unsupported)}",
                 errorCurrentValue: value,
                 errorMessage: $"Currency code is not supported. Current value: '{value}'");
     }

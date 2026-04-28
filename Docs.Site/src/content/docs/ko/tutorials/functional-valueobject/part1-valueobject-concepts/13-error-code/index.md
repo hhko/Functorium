@@ -4,13 +4,13 @@ title: "에러 체계화"
 
 ## 개요
 
-`Error.New("Invalid denominator value: 0")`라는 에러 메시지만으로 어떤 도메인에서, 어떤 이유로, 어떤 값이 문제를 일으켰는지 파악할 수 있나요? `"DomainErrors.클래스.이유"` 형식의 구조화된 에러 코드와 실패 당시의 값 정보를 함께 관리하면, 디버깅과 모니터링의 효율성이 크게 향상됩니다.
+`Error.New("Invalid denominator value: 0")`라는 에러 메시지만으로 어떤 도메인에서, 어떤 이유로, 어떤 값이 문제를 일으켰는지 파악할 수 있나요? `"Domain.클래스.이유"` 형식의 구조화된 에러 코드와 실패 당시의 값 정보를 함께 관리하면, 디버깅과 모니터링의 효율성이 크게 향상됩니다.
 
 ## 학습 목표
 
 이 장을 마치면 다음을 할 수 있습니다.
 
-1. `DomainErrors.클래스.이유` 형식의 **구조화된 에러 코드 시스템을** 설계할 수 있습니다
+1. `Domain.클래스.이유` 형식의 **구조화된 에러 코드 시스템을** 설계할 수 있습니다
 2. 실패 당시의 값과 에러 코드를 함께 관리하는 **타입 안전한 에러 처리 시스템을** 구축할 수 있습니다
 3. 기존 LanguageExt의 `Error` 타입과 완전히 호환되는 **에러 처리 프레임워크를** 설계할 수 있습니다
 
@@ -24,7 +24,7 @@ title: "에러 체계화"
 
 ### 구조화된 에러 코드 시스템
 
-에러를 `"DomainErrors.클래스.이유"` 형식의 계층적 코드로 분류합니다. 도메인 영역, 구체적인 클래스, 실패 이유가 코드에 명시되어 에러의 출처와 성격을 즉시 식별할 수 있습니다.
+에러를 `"Domain.클래스.이유"` 형식의 계층적 코드로 분류합니다. 도메인 영역, 구체적인 클래스, 실패 이유가 코드에 명시되어 에러의 출처와 성격을 즉시 식별할 수 있습니다.
 
 기존 방식과 구조화된 방식의 에러 생성을 비교합니다.
 
@@ -34,7 +34,7 @@ var error = Error.New("Invalid denominator value: 0");
 
 // 개선된 방식 (구조화된 방식) - 체계적인 에러 관리
 var error = ErrorFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
+    errorCode: $"{nameof(Domain)}.{nameof(Denominator)}.{nameof(Zero)}",
     errorCurrentValue: 0,
     errorMessage: $"Denominator cannot be zero. Current value: '0'");
 ```
@@ -46,21 +46,21 @@ var error = ErrorFactory.Create(
 ```csharp
 // 다양한 타입의 에러 정보를 타입 안전하게 관리
 var stringError = ErrorFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Name)}.{nameof(TooShort)}",
+    errorCode: $"{nameof(Domain)}.{nameof(Name)}.{nameof(TooShort)}",
     errorCurrentValue: "i@name",
     errorMessage: $"Name is too short. Current value: 'i@name'");
 var intError = ErrorFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(Invalid)}",
+    errorCode: $"{nameof(Domain)}.{nameof(Age)}.{nameof(Invalid)}",
     errorCurrentValue: 150,
     errorMessage: $"Age is out of range. Current value: '150'");
 var multiValueError = ErrorFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(OutOfRange)}",
+    errorCode: $"{nameof(Domain)}.{nameof(Coordinate)}.{nameof(OutOfRange)}",
     errorCurrentValue1: 1500,
     errorCurrentValue2: 2000,
     errorMessage: $"Coordinate is out of range. Current values: '1500', '2000'");
 ```
 
-### 내부 DomainErrors 클래스 패턴
+### 내부 Domain 클래스 패턴
 
 값 객체와 관련된 에러 정의를 같은 파일 내에 위치시켜 높은 응집도를 달성합니다. 새 값 객체를 생성할 때 에러 정의도 함께 작성하므로 개발 생산성이 향상됩니다.
 
@@ -69,11 +69,11 @@ public sealed class Denominator : SimpleValueObject<int>
 {
     // ... 기존 코드 ...
 
-    internal static class DomainErrors
+    internal static class Domain
     {
         public static Error Zero(int value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Denominator)}.{nameof(Zero)}",
                 errorCurrentValue: value,
                 errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
     }
@@ -153,7 +153,7 @@ null 바이너리 데이터: ErrorCode: Domain.BinaryData.Empty, ErrorCurrentVal
 
 ### 핵심 구현 포인트
 1. **ErrorFactory의 제네릭 오버로딩**: `Create<T>`, `Create<T1, T2>` 메서드를 통해 다양한 타입의 에러 정보를 타입 안전하게 관리
-2. **내부 DomainErrors 클래스 패턴**: 값 객체 내부에 `internal static class DomainErrors`를 정의하여 응집도 높은 에러 관리
+2. **내부 Domain 클래스 패턴**: 값 객체 내부에 `internal static class Domain`를 정의하여 응집도 높은 에러 관리
 3. **구체적인 에러 이유 명명**: `Empty`, `NotThreeLetters`, `NotFiveDigits`, `MinExceedsMax` 등 검증 조건과 정확히 일치하는 명명 규칙
 4. **LanguageExt 호환성**: 기존 `Error` 타입을 상속받아 생태계와 완전한 호환성 보장
 
@@ -232,7 +232,7 @@ public static class ErrorFactory
 }
 ```
 
-#### Denominator -- 내부 DomainErrors 패턴 적용
+#### Denominator -- 내부 Domain 패턴 적용
 ```csharp
 public sealed class Denominator : SimpleValueObject<int>, IComparable<Denominator>
 {
@@ -241,17 +241,17 @@ public sealed class Denominator : SimpleValueObject<int>, IComparable<Denominato
     public static Validation<Error, int> Validate(int value)
     {
         if (value == 0)
-            return DomainErrors.Zero(value);
+            return Domain.Zero(value);
 
         return value;
     }
 
-    // 내부 DomainErrors 클래스 - 응집도 높은 에러 정의
-    internal static class DomainErrors
+    // 내부 Domain 클래스 - 응집도 높은 에러 정의
+    internal static class Domain
     {
         public static Error Zero(int value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Denominator)}.{nameof(Zero)}",
                 errorCurrentValue: value,
                 errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
     }
@@ -260,7 +260,7 @@ public sealed class Denominator : SimpleValueObject<int>, IComparable<Denominato
 
 #### Currency -- SmartEnum 기반 에러 정의
 
-SmartEnum에서도 동일한 내부 DomainErrors 패턴을 적용합니다.
+SmartEnum에서도 동일한 내부 Domain 패턴을 적용합니다.
 
 ```csharp
 public sealed class Currency : SmartEnum<Currency, string>, IValueObject
@@ -276,32 +276,32 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 
     private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =>
         string.IsNullOrWhiteSpace(currencyCode)
-            ? DomainErrors.Empty(currencyCode)
+            ? Domain.Empty(currencyCode)
             : currencyCode;
 
     private static Validation<Error, string> ValidateFormat(string currencyCode) =>
         currencyCode.Length != 3 || !currencyCode.All(char.IsLetter)
-            ? DomainErrors.NotThreeLetters(currencyCode)
+            ? Domain.NotThreeLetters(currencyCode)
             : currencyCode.ToUpperInvariant();
 
-    // 내부 DomainErrors 클래스 - SmartEnum 특화 에러 정의
-    internal static class DomainErrors
+    // 내부 Domain 클래스 - SmartEnum 특화 에러 정의
+    internal static class Domain
     {
         public static Error Empty(string value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Empty)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Currency)}.{nameof(Empty)}",
                 errorCurrentValue: value,
                 errorMessage: $"Currency code cannot be empty. Current value: '{value}'");
 
         public static Error NotThreeLetters(string value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
                 errorCurrentValue: value,
                 errorMessage: $"Currency code must be exactly 3 letters. Current value: '{value}'");
 
         public static Error Unsupported(string value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Unsupported)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Currency)}.{nameof(Unsupported)}",
                 errorCurrentValue: value,
                 errorMessage: $"Currency code is not supported. Current value: '{value}'");
     }
@@ -334,15 +334,15 @@ public sealed class PriceRange : ComparableValueObject
 
     private static Validation<Error, (Price MinPrice, Price MaxPrice)> ValidatePriceRange(Price minPrice, Price maxPrice) =>
         (decimal)minPrice.Amount > (decimal)maxPrice.Amount
-            ? DomainErrors.MinExceedsMax(minPrice, maxPrice)
+            ? Domain.MinExceedsMax(minPrice, maxPrice)
             : (MinPrice: minPrice, MaxPrice: maxPrice);
 
-    // 내부 DomainErrors 클래스 - 가격 범위 검증 에러
-    internal static class DomainErrors
+    // 내부 Domain 클래스 - 가격 범위 검증 에러
+    internal static class Domain
     {
         public static Error MinExceedsMax(Price minPrice, Price maxPrice) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(PriceRange)}.{nameof(MinExceedsMax)}",
+                errorCode: $"{nameof(Domain)}.{nameof(PriceRange)}.{nameof(MinExceedsMax)}",
                 errorCurrentValue: $"MinPrice: {minPrice}, MaxPrice: {maxPrice}",
                 errorMessage: $"Minimum price cannot exceed maximum price. Min: '{minPrice}', Max: '{maxPrice}'");
     }
@@ -357,7 +357,7 @@ public sealed class PriceRange : ComparableValueObject
 
 | 구분 | 이전 방식 (Error.New) | 현재 방식 (ErrorFactory) |
 |------|----------------------|------------------------------|
-| **에러 코드 구조** | 단순한 문자열 메시지 | `DomainErrors.클래스.이유` 형식 |
+| **에러 코드 구조** | 단순한 문자열 메시지 | `Domain.클래스.이유` 형식 |
 | **값 정보 관리** | 메시지에 하드코딩 | 타입 안전한 별도 필드 |
 | **디버깅 지원** | 메시지 파싱 필요 | 구조화된 정보 즉시 제공 |
 | **모니터링 지원** | 일관성 부족 | 표준화된 형식으로 집계 가능 |
@@ -395,7 +395,7 @@ public sealed class PriceRange : ComparableValueObject
 ### Q1: 기존 Error.New 방식 대비 어떤 장점이 있나요?
 **A**: 구조화된 에러 코드(`Domain.Denominator.Zero`)를 통해 에러의 출처와 이유를 즉시 파악할 수 있고, 타입 안전한 값 필드로 모니터링 시스템에서 도메인별 집계가 가능합니다. 기존 방식은 메시지 문자열을 파싱해야 했습니다.
 
-### Q2: 내부 DomainErrors 클래스를 사용하는 이유는?
+### Q2: 내부 Domain 클래스를 사용하는 이유는?
 **A**: 값 객체와 에러 정의를 같은 파일에 두어 응집도를 높입니다. 값 객체를 수정할 때 관련 에러도 함께 확인할 수 있고, 새 값 객체 생성 시 에러 정의도 자연스럽게 함께 작성합니다.
 
 ### Q3: LanguageExt와의 호환성은 어떻게 보장되나요?

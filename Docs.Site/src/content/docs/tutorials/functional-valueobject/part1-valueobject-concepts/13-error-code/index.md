@@ -34,7 +34,7 @@ var error = Error.New("Invalid denominator value: 0");
 
 // Improved approach (structured) - systematic error management
 var error = ErrorFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
+    errorCode: $"{nameof(Domain)}.{nameof(Denominator)}.{nameof(Zero)}",
     errorCurrentValue: 0,
     errorMessage: $"Denominator cannot be zero. Current value: '0'");
 ```
@@ -46,21 +46,21 @@ Through generic overloads such as `Create<T>` and `Create<T1, T2>`, type informa
 ```csharp
 // Managing various types of error information in a type-safe manner
 var stringError = ErrorFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Name)}.{nameof(TooShort)}",
+    errorCode: $"{nameof(Domain)}.{nameof(Name)}.{nameof(TooShort)}",
     errorCurrentValue: "i@name",
     errorMessage: $"Name is too short. Current value: 'i@name'");
 var intError = ErrorFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(Invalid)}",
+    errorCode: $"{nameof(Domain)}.{nameof(Age)}.{nameof(Invalid)}",
     errorCurrentValue: 150,
     errorMessage: $"Age is out of range. Current value: '150'");
 var multiValueError = ErrorFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(OutOfRange)}",
+    errorCode: $"{nameof(Domain)}.{nameof(Coordinate)}.{nameof(OutOfRange)}",
     errorCurrentValue1: 1500,
     errorCurrentValue2: 2000,
     errorMessage: $"Coordinate is out of range. Current values: '1500', '2000'");
 ```
 
-### Internal DomainErrors Class Pattern
+### Internal Domain Class Pattern
 
 Error definitions related to a value object are placed in the same file to achieve high cohesion. When creating a new value object, error definitions are written together, improving development productivity.
 
@@ -69,11 +69,11 @@ public sealed class Denominator : SimpleValueObject<int>
 {
     // ... existing code ...
 
-    internal static class DomainErrors
+    internal static class Domain
     {
         public static Error Zero(int value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Denominator)}.{nameof(Zero)}",
                 errorCurrentValue: value,
                 errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
     }
@@ -153,7 +153,7 @@ Out-of-range Y coordinate: ErrorCode: Domain.Coordinate.YOutOfRange, ErrorCurren
 
 ### Key Implementation Points
 1. **ErrorFactory generic overloads**: Type-safe management of various types of error information through `Create<T>` and `Create<T1, T2>` methods
-2. **Internal DomainErrors class pattern**: Defining `internal static class DomainErrors` inside the value object for highly cohesive error management
+2. **Internal Domain class pattern**: Defining `internal static class Domain` inside the value object for highly cohesive error management
 3. **Specific error reason naming**: Naming conventions that exactly match validation conditions, such as `Empty`, `NotThreeLetters`, `NotFiveDigits`, `MinExceedsMax`
 4. **LanguageExt compatibility**: Inheriting from the existing `Error` type to ensure full compatibility with the ecosystem
 
@@ -232,7 +232,7 @@ public static class ErrorFactory
 }
 ```
 
-#### Denominator -- Internal DomainErrors Pattern Applied
+#### Denominator -- Internal Domain Pattern Applied
 ```csharp
 public sealed class Denominator : SimpleValueObject<int>, IComparable<Denominator>
 {
@@ -241,17 +241,17 @@ public sealed class Denominator : SimpleValueObject<int>, IComparable<Denominato
     public static Validation<Error, int> Validate(int value)
     {
         if (value == 0)
-            return DomainErrors.Zero(value);
+            return Domain.Zero(value);
 
         return value;
     }
 
-    // Internal DomainErrors class - highly cohesive error definitions
-    internal static class DomainErrors
+    // Internal Domain class - highly cohesive error definitions
+    internal static class Domain
     {
         public static Error Zero(int value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Denominator)}.{nameof(Zero)}",
                 errorCurrentValue: value,
                 errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
     }
@@ -260,7 +260,7 @@ public sealed class Denominator : SimpleValueObject<int>, IComparable<Denominato
 
 #### Currency -- SmartEnum-Based Error Definitions
 
-The same internal DomainErrors pattern is applied in SmartEnum as well.
+The same internal Domain pattern is applied in SmartEnum as well.
 
 ```csharp
 public sealed class Currency : SmartEnum<Currency, string>, IValueObject
@@ -276,32 +276,32 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 
     private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =>
         string.IsNullOrWhiteSpace(currencyCode)
-            ? DomainErrors.Empty(currencyCode)
+            ? Domain.Empty(currencyCode)
             : currencyCode;
 
     private static Validation<Error, string> ValidateFormat(string currencyCode) =>
         currencyCode.Length != 3 || !currencyCode.All(char.IsLetter)
-            ? DomainErrors.NotThreeLetters(currencyCode)
+            ? Domain.NotThreeLetters(currencyCode)
             : currencyCode.ToUpperInvariant();
 
-    // Internal DomainErrors class - SmartEnum-specific error definitions
-    internal static class DomainErrors
+    // Internal Domain class - SmartEnum-specific error definitions
+    internal static class Domain
     {
         public static Error Empty(string value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Empty)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Currency)}.{nameof(Empty)}",
                 errorCurrentValue: value,
                 errorMessage: $"Currency code cannot be empty. Current value: '{value}'");
 
         public static Error NotThreeLetters(string value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
                 errorCurrentValue: value,
                 errorMessage: $"Currency code must be exactly 3 letters. Current value: '{value}'");
 
         public static Error Unsupported(string value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Unsupported)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Currency)}.{nameof(Unsupported)}",
                 errorCurrentValue: value,
                 errorMessage: $"Currency code is not supported. Current value: '{value}'");
     }
@@ -334,15 +334,15 @@ public sealed class PriceRange : ComparableValueObject
 
     private static Validation<Error, (Price MinPrice, Price MaxPrice)> ValidatePriceRange(Price minPrice, Price maxPrice) =>
         (decimal)minPrice.Amount > (decimal)maxPrice.Amount
-            ? DomainErrors.MinExceedsMax(minPrice, maxPrice)
+            ? Domain.MinExceedsMax(minPrice, maxPrice)
             : (MinPrice: minPrice, MaxPrice: maxPrice);
 
-    // Internal DomainErrors class - price range validation errors
-    internal static class DomainErrors
+    // Internal Domain class - price range validation errors
+    internal static class Domain
     {
         public static Error MinExceedsMax(Price minPrice, Price maxPrice) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(PriceRange)}.{nameof(MinExceedsMax)}",
+                errorCode: $"{nameof(Domain)}.{nameof(PriceRange)}.{nameof(MinExceedsMax)}",
                 errorCurrentValue: $"MinPrice: {minPrice}, MaxPrice: {maxPrice}",
                 errorMessage: $"Minimum price cannot exceed maximum price. Min: '{minPrice}', Max: '{maxPrice}'");
     }
@@ -395,7 +395,7 @@ Error method names must exactly match the validation condition. Just by looking 
 ### Q1: What are the advantages over the existing Error.New approach?
 **A**: Through structured error codes (`Domain.Denominator.Zero`), the source and reason of an error can be immediately identified, and with type-safe value fields, domain-specific aggregation is possible in monitoring systems. The previous approach required parsing message strings.
 
-### Q2: Why use an internal DomainErrors class?
+### Q2: Why use an internal Domain class?
 **A**: Placing the value object and error definitions in the same file increases cohesion. When modifying a value object, related errors can be checked together, and when creating a new value object, error definitions are naturally written alongside it.
 
 ### Q3: How is compatibility with LanguageExt guaranteed?

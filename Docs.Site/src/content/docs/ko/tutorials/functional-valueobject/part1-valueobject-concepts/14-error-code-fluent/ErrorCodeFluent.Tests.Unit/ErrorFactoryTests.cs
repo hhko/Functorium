@@ -25,7 +25,7 @@ public class DomainErrorTests
     /// Before (문자열 기반):
     /// <code>
     /// result.IsFail.ShouldBeTrue();
-    /// result.IfFail(error => error.Message.ShouldContain("DomainErrors.Street.Empty"));
+    /// result.IfFail(error => error.Message.ShouldContain("Domain.Street.Empty"));
     /// </code>
     ///
     /// After (타입 안전):

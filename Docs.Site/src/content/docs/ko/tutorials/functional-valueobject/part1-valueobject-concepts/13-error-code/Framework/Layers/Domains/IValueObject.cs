@@ -6,5 +6,5 @@ public interface IValueObject
     const string CreateFromValidatedMethodName = "CreateFromValidated";
     const string ValidateMethodName = "Validate";
 
-    const string DomainErrorsNestedClassName = "DomainErrors";
+    const string NestedErrorsClassName = "Domain";
 }

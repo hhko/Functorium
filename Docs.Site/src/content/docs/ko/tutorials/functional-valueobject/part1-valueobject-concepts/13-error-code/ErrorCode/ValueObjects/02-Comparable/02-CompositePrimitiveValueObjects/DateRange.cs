@@ -69,7 +69,7 @@ public sealed class DateRange : ComparableValueObject
     /// <returns>검증 결과</returns>
     private static Validation<Error, DateTime> ValidateStartDate(DateTime startDate) =>
         startDate < DateTime.MinValue || startDate > DateTime.MaxValue
-            ? DomainErrors.InvalidStartDate(startDate)
+            ? Domain.InvalidStartDate(startDate)
             : startDate;
 
     /// <summary>
@@ -79,7 +79,7 @@ public sealed class DateRange : ComparableValueObject
     /// <returns>검증 결과</returns>
     private static Validation<Error, DateTime> ValidateEndDate(DateTime endDate) =>
         endDate < DateTime.MinValue || endDate > DateTime.MaxValue
-            ? DomainErrors.InvalidEndDate(endDate)
+            ? Domain.InvalidEndDate(endDate)
             : endDate;
 
     /// <summary>
@@ -90,10 +90,10 @@ public sealed class DateRange : ComparableValueObject
     /// <returns>검증 결과</returns>
     private static Validation<Error, (DateTime StartDate, DateTime EndDate)> ValidateDateRange(DateTime startDate, DateTime endDate) =>
         startDate >= endDate
-            ? DomainErrors.StartAfterEnd(startDate, endDate)
+            ? Domain.StartAfterEnd(startDate, endDate)
             : (StartDate: startDate, EndDate: endDate);
 
-    internal static class DomainErrors
+    internal static class Domain
     {
         /// <summary>
         /// 유효하지 않은 시작일에 대한 에러
@@ -102,7 +102,7 @@ public sealed class DateRange : ComparableValueObject
         /// <returns>구조화된 에러 정보</returns>
         public static Error InvalidStartDate(DateTime value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(InvalidStartDate)}",
+                errorCode: $"{nameof(Domain)}.{nameof(DateRange)}.{nameof(InvalidStartDate)}",
                 errorCurrentValue: value,
                 errorMessage: $"Start date is invalid. Current value: '{value}'");
 
@@ -113,7 +113,7 @@ public sealed class DateRange : ComparableValueObject
         /// <returns>구조화된 에러 정보</returns>
         public static Error InvalidEndDate(DateTime value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(InvalidEndDate)}",
+                errorCode: $"{nameof(Domain)}.{nameof(DateRange)}.{nameof(InvalidEndDate)}",
                 errorCurrentValue: value,
                 errorMessage: $"End date is invalid. Current value: '{value}'");
 
@@ -125,7 +125,7 @@ public sealed class DateRange : ComparableValueObject
         /// <returns>구조화된 에러 정보</returns>
         public static Error StartAfterEnd(DateTime startDate, DateTime endDate) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(StartAfterEnd)}",
+                errorCode: $"{nameof(Domain)}.{nameof(DateRange)}.{nameof(StartAfterEnd)}",
                 errorCurrentValue: $"StartDate: {startDate}, EndDate: {endDate}",
                 errorMessage: $"Start date cannot be after or equal to end date. Start: '{startDate}', End: '{endDate}'");
     }

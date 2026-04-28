@@ -4,7 +4,7 @@ title: "DomainError Helper"
 
 ## Overview
 
-Wasn't it cumbersome to repeatedly define `DomainErrors` nested classes for each value object and manually assemble error codes with `ErrorFactory.Create()`? In this chapter, we cover a pattern that replaces error creation with a single line `DomainError.For<T>()` to reduce code volume by approximately 60%, and guarantees type-safe error codes through `DomainErrorKind` records.
+Wasn't it cumbersome to repeatedly define `Domain` nested classes for each value object and manually assemble error codes with `ErrorFactory.Create()`? In this chapter, we cover a pattern that replaces error creation with a single line `DomainError.For<T>()` to reduce code volume by approximately 60%, and guarantees type-safe error codes through `DomainErrorKind` records.
 
 ## Learning Objectives
 
@@ -12,12 +12,12 @@ Upon completing this chapter, you will be able to:
 
 1. Create errors concisely using the `DomainError.For<T>()` method
 2. Prevent typos and inconsistencies at compile time using `DomainErrorKind` records
-3. Define errors inline without `DomainErrors` nested classes
+3. Define errors inline without `Domain` nested classes
 4. Choose the appropriate type-specific overload (`For<T>()`, `For<T, TValue>()`, `For<T, T1, T2>()`) for the situation
 
 ## Why Is This Needed?
 
-In the previous `13-Error-Code` project, we introduced a structured error code system, but boilerplate remained in defining `DomainErrors` nested classes for each value object. The same pattern of `internal static class DomainErrors` had to be repeatedly defined in every value object, and error codes had to be manually assembled in the format `$"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}"`. Moreover, developers could use different names for the same concept such as `"Empty"`, `"IsEmpty"`, `"EmptyValue"`, making it easy to break consistency.
+In the previous `13-Error-Code` project, we introduced a structured error code system, but boilerplate remained in defining `Domain` nested classes for each value object. The same pattern of `internal static class Domain` had to be repeatedly defined in every value object, and error codes had to be manually assembled in the format `$"{nameof(Domain)}.{nameof(Denominator)}.{nameof(Zero)}"`. Moreover, developers could use different names for the same concept such as `"Empty"`, `"IsEmpty"`, `"EmptyValue"`, making it easy to break consistency.
 
 **The DomainError helper and DomainErrorKind records** resolve these problems with type-safe error types and automatic error code generation.
 
@@ -54,7 +54,7 @@ new Unsupported()    // Domain-specific error
 
 ### DomainError Helper
 
-The DomainError helper combines `typeof(T).Name` and `DomainErrorKind` to automatically generate error codes in the format `DomainErrors.{ValueObjectName}.{ErrorType}`.
+The DomainError helper combines `typeof(T).Name` and `DomainErrorKind` to automatically generate error codes in the format `Domain.{ValueObjectName}.{ErrorType}`.
 
 ```csharp
 // DomainError helper usage
@@ -77,7 +77,7 @@ DomainError.For<Coordinate, int>(new DomainErrorKind.OutOfRange("0", "1000"), x,
 
 ### Inline Error Definitions
 
-Using the DomainError helper, errors can be created directly at the point of validation failure, making a separate `DomainErrors` nested class unnecessary. Since validation and error definition are located together, code cohesion is improved.
+Using the DomainError helper, errors can be created directly at the point of validation failure, making a separate `Domain` nested class unnecessary. Since validation and error definition are located together, code cohesion is improved.
 
 ```csharp
 // Inline error definition example (custom error: sealed record Zero : DomainErrorKind.Custom;)
@@ -105,16 +105,16 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
     public static Validation<Error, int> Validate(int value)
     {
         if (value == 0)
-            return DomainErrors.Zero(value);
+            return Domain.Zero(value);
         return value;
     }
 
-    // DomainErrors nested class - repeated in every value object
-    internal static class DomainErrors
+    // Domain nested class - repeated in every value object
+    internal static class Domain
     {
         public static Error Zero(int value) =>
             ErrorFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
+                errorCode: $"{nameof(Domain)}.{nameof(Denominator)}.{nameof(Zero)}",
                 errorCurrentValue: value,
                 errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
     }
@@ -320,7 +320,7 @@ public static class DomainError
         DomainErrorKind errorType, string currentValue, string message)
         where TValueObject : class =>
         ErrorFactory.Create(
-            errorCode: $"DomainErrors.{typeof(TValueObject).Name}.{GetErrorName(errorType)}",
+            errorCode: $"Domain.{typeof(TValueObject).Name}.{GetErrorName(errorType)}",
             errorCurrentValue: currentValue,
             errorMessage: message);
 
@@ -332,7 +332,7 @@ public static class DomainError
         where TValueObject : class
         where TValue : notnull =>
         ErrorFactory.Create(
-            errorCode: $"DomainErrors.{typeof(TValueObject).Name}.{GetErrorName(errorType)}",
+            errorCode: $"Domain.{typeof(TValueObject).Name}.{GetErrorName(errorType)}",
             errorCurrentValue: currentValue,
             errorMessage: message);
 
@@ -492,7 +492,7 @@ public sealed class Coordinate : ValueObject
 Comparing the differences between the previous approach and the DomainError helper approach.
 
 ### Comparison Table
-| Aspect | Previous Approach (DomainErrors Nested Class) | Current Approach (DomainError + DomainErrorKind) |
+| Aspect | Previous Approach (Domain Nested Class) | Current Approach (DomainError + DomainErrorKind) |
 |------|--------------------------------------|-------------------------------------------|
 | **Error definition location** | Separate nested class | Inline within validation logic |
 | **Error code generation** | Manual assembly (using nameof) | Automatic generation (type info + DomainErrorKind) |
@@ -506,15 +506,15 @@ Choose the appropriate DomainErrorKind based on the validation condition.
 
 | Validation Condition | DomainErrorKind | Generated Error Code |
 |-----------|-----------------|-------------------|
-| Empty value | `new DomainErrorKind.Empty()` | `DomainErrors.{Type}.Empty` |
-| Null value | `new DomainErrorKind.Null()` | `DomainErrors.{Type}.Null` |
-| Below minimum length | `new DomainErrorKind.TooShort(8)` | `DomainErrors.{Type}.TooShort` |
-| Exact length mismatch | `new DomainErrorKind.WrongLength(5)` | `DomainErrors.{Type}.WrongLength` |
-| Format error | `new DomainErrorKind.InvalidFormat()` | `DomainErrors.{Type}.InvalidFormat` |
-| Negative value | `new DomainErrorKind.Negative()` | `DomainErrors.{Type}.Negative` |
-| Out of range | `new DomainErrorKind.OutOfRange("0", "100")` | `DomainErrors.{Type}.OutOfRange` |
-| Not found | `new DomainErrorKind.NotFound()` | `DomainErrors.{Type}.NotFound` |
-| Domain-specific | `new Zero()` (`sealed record Zero : DomainErrorKind.Custom;`) | `DomainErrors.{Type}.Zero` |
+| Empty value | `new DomainErrorKind.Empty()` | `Domain.{Type}.Empty` |
+| Null value | `new DomainErrorKind.Null()` | `Domain.{Type}.Null` |
+| Below minimum length | `new DomainErrorKind.TooShort(8)` | `Domain.{Type}.TooShort` |
+| Exact length mismatch | `new DomainErrorKind.WrongLength(5)` | `Domain.{Type}.WrongLength` |
+| Format error | `new DomainErrorKind.InvalidFormat()` | `Domain.{Type}.InvalidFormat` |
+| Negative value | `new DomainErrorKind.Negative()` | `Domain.{Type}.Negative` |
+| Out of range | `new DomainErrorKind.OutOfRange("0", "100")` | `Domain.{Type}.OutOfRange` |
+| Not found | `new DomainErrorKind.NotFound()` | `Domain.{Type}.NotFound` |
+| Domain-specific | `new Zero()` (`sealed record Zero : DomainErrorKind.Custom;`) | `Domain.{Type}.Zero` |
 
 ### Pros and Cons
 | Pros | Cons |
