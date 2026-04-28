@@ -4,13 +4,13 @@ title: "Structured Error Codes"
 
 ## Overview
 
-Can you determine from the error message `Error.New("Invalid denominator value: 0")` alone which domain, what reason, and which value caused the problem? By managing structured error codes in the format `"DomainErrors.ClassName.Reason"` together with the value at the time of failure, debugging and monitoring efficiency are greatly improved.
+Can you determine from the error message `Error.New("Invalid denominator value: 0")` alone which domain, what reason, and which value caused the problem? By managing structured error codes in the format `"Domain.ClassName.Reason"` together with the value at the time of failure, debugging and monitoring efficiency are greatly improved.
 
 ## Learning Objectives
 
 Upon completing this chapter, you will be able to:
 
-1. Design a **structured error code system** in the format `DomainErrors.ClassName.Reason`
+1. Design a **structured error code system** in the format `Domain.ClassName.Reason`
 2. Build a **type-safe error handling system** that manages the failed value alongside the error code
 3. Design an **error handling framework** that is fully compatible with LanguageExt's `Error` type
 
@@ -24,7 +24,7 @@ In the previous step `11-ValueObject-Framework`, we systematized value object cr
 
 ### Structured Error Code System
 
-Errors are classified using hierarchical codes in the format `"DomainErrors.ClassName.Reason"`. The domain area, specific class, and failure reason are explicitly stated in the code, enabling immediate identification of the source and nature of the error.
+Errors are classified using hierarchical codes in the format `"Domain.ClassName.Reason"`. The domain area, specific class, and failure reason are explicitly stated in the code, enabling immediate identification of the source and nature of the error.
 
 Comparing error creation between the existing approach and the structured approach.
 
@@ -94,27 +94,27 @@ In the next chapter, we apply a Fluent API to this error code system to implemen
   === CompositeValueObjects Error Tests ===
 
   --- Currency Error Tests ---
-Empty currency code: ErrorCode: DomainErrors.Currency.Empty, ErrorCurrentValue:
-Non-3-character format: ErrorCode: DomainErrors.Currency.NotThreeLetters, ErrorCurrentValue: AB
-Unsupported currency: ErrorCode: DomainErrors.Currency.Unsupported, ErrorCurrentValue: XYZ
+Empty currency code: ErrorCode: Domain.Currency.Empty, ErrorCurrentValue:
+Non-3-character format: ErrorCode: Domain.Currency.NotThreeLetters, ErrorCurrentValue: AB
+Unsupported currency: ErrorCode: Domain.Currency.Unsupported, ErrorCurrentValue: XYZ
 
   --- Price Error Tests ---
-Negative price: ErrorCode: DomainErrors.MoneyAmount.OutOfRange, ErrorCurrentValue: -100
+Negative price: ErrorCode: Domain.MoneyAmount.OutOfRange, ErrorCurrentValue: -100
 
   --- PriceRange Error Tests ---
-Price range where min exceeds max: ErrorCode: DomainErrors.PriceRange.MinExceedsMax, ErrorCurrentValue: MinPrice: KRW (Korean Won) ₩ 1,000.00, MaxPrice: KRW (Korean Won) ₩ 500.00
+Price range where min exceeds max: ErrorCode: Domain.PriceRange.MinExceedsMax, ErrorCurrentValue: MinPrice: KRW (Korean Won) ₩ 1,000.00, MaxPrice: KRW (Korean Won) ₩ 500.00
 
 --- PrimitiveValueObjects Subfolder ---
   === PrimitiveValueObjects Error Tests ===
 
   --- Denominator Error Tests ---
-Zero value: ErrorCode: DomainErrors.Denominator.Zero, ErrorCurrentValue: 0
+Zero value: ErrorCode: Domain.Denominator.Zero, ErrorCurrentValue: 0
 
 --- CompositePrimitiveValueObjects Subfolder ---
   === CompositePrimitiveValueObjects Error Tests ===
 
   --- DateRange Error Tests ---
-Date range where start is after end: ErrorCode: DomainErrors.DateRange.StartAfterEnd, ErrorCurrentValue: StartDate: 2024-12-31 12:00:00 AM, EndDate: 2024-01-01 12:00:00 AM
+Date range where start is after end: ErrorCode: Domain.DateRange.StartAfterEnd, ErrorCurrentValue: StartDate: 2024-12-31 12:00:00 AM, EndDate: 2024-01-01 12:00:00 AM
 
 === ComparableNot Folder Tests ===
 
@@ -122,33 +122,33 @@ Date range where start is after end: ErrorCode: DomainErrors.DateRange.StartAfte
   === CompositeValueObjects Error Tests ===
 
   --- Address Error Tests ---
-Empty street name: ErrorCode: DomainErrors.Street.Empty, ErrorCurrentValue:
-Empty city name: ErrorCode: DomainErrors.City.Empty, ErrorCurrentValue:
-Invalid postal code: ErrorCode: DomainErrors.PostalCode.NotFiveDigits, ErrorCurrentValue: 1234
+Empty street name: ErrorCode: Domain.Street.Empty, ErrorCurrentValue:
+Empty city name: ErrorCode: Domain.City.Empty, ErrorCurrentValue:
+Invalid postal code: ErrorCode: Domain.PostalCode.NotFiveDigits, ErrorCurrentValue: 1234
 
   --- Street Error Tests ---
-Empty street name: ErrorCode: DomainErrors.Street.Empty, ErrorCurrentValue:
+Empty street name: ErrorCode: Domain.Street.Empty, ErrorCurrentValue:
 
   --- City Error Tests ---
-Empty city name: ErrorCode: DomainErrors.City.Empty, ErrorCurrentValue:
+Empty city name: ErrorCode: Domain.City.Empty, ErrorCurrentValue:
 
   --- PostalCode Error Tests ---
-Empty postal code: ErrorCode: DomainErrors.PostalCode.Empty, ErrorCurrentValue:
-Non-5-digit format: ErrorCode: DomainErrors.PostalCode.NotFiveDigits, ErrorCurrentValue: 1234
+Empty postal code: ErrorCode: Domain.PostalCode.Empty, ErrorCurrentValue:
+Non-5-digit format: ErrorCode: Domain.PostalCode.NotFiveDigits, ErrorCurrentValue: 1234
 
 --- PrimitiveValueObjects Subfolder ---
   === PrimitiveValueObjects Error Tests ===
 
   --- BinaryData Error Tests ---
-Null binary data: ErrorCode: DomainErrors.BinaryData.Empty, ErrorCurrentValue: null
-Empty binary data: ErrorCode: DomainErrors.BinaryData.Empty, ErrorCurrentValue: 0
+Null binary data: ErrorCode: Domain.BinaryData.Empty, ErrorCurrentValue: null
+Empty binary data: ErrorCode: Domain.BinaryData.Empty, ErrorCurrentValue: 0
 
 --- CompositePrimitiveValueObjects Subfolder ---
   === CompositePrimitiveValueObjects Error Tests ===
 
   --- Coordinate Error Tests ---
-Out-of-range X coordinate: ErrorCode: DomainErrors.Coordinate.XOutOfRange, ErrorCurrentValue: -1
-Out-of-range Y coordinate: ErrorCode: DomainErrors.Coordinate.YOutOfRange, ErrorCurrentValue: 1001
+Out-of-range X coordinate: ErrorCode: Domain.Coordinate.XOutOfRange, ErrorCurrentValue: -1
+Out-of-range Y coordinate: ErrorCode: Domain.Coordinate.YOutOfRange, ErrorCurrentValue: 1001
 ```
 
 ### Key Implementation Points
@@ -241,7 +241,7 @@ public sealed class Denominator : SimpleValueObject<int>, IComparable<Denominato
     public static Validation<Error, int> Validate(int value)
     {
         if (value == 0)
-            return DomainErrors.Zero(value);
+            return Domain.Zero(value);
 
         return value;
     }
@@ -276,12 +276,12 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 
     private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =>
         string.IsNullOrWhiteSpace(currencyCode)
-            ? DomainErrors.Empty(currencyCode)
+            ? Domain.Empty(currencyCode)
             : currencyCode;
 
     private static Validation<Error, string> ValidateFormat(string currencyCode) =>
         currencyCode.Length != 3 || !currencyCode.All(char.IsLetter)
-            ? DomainErrors.NotThreeLetters(currencyCode)
+            ? Domain.NotThreeLetters(currencyCode)
             : currencyCode.ToUpperInvariant();
 
     // Internal DomainErrors class - SmartEnum-specific error definitions
@@ -334,7 +334,7 @@ public sealed class PriceRange : ComparableValueObject
 
     private static Validation<Error, (Price MinPrice, Price MaxPrice)> ValidatePriceRange(Price minPrice, Price maxPrice) =>
         (decimal)minPrice.Amount > (decimal)maxPrice.Amount
-            ? DomainErrors.MinExceedsMax(minPrice, maxPrice)
+            ? Domain.MinExceedsMax(minPrice, maxPrice)
             : (MinPrice: minPrice, MaxPrice: maxPrice);
 
     // Internal DomainErrors class - price range validation errors
@@ -357,7 +357,7 @@ The following table summarizes the differences between the existing Error.New ap
 
 | Aspect | Previous Approach (Error.New) | Current Approach (ErrorFactory) |
 |------|----------------------|------------------------------|
-| **Error code structure** | Simple string messages | `DomainErrors.ClassName.Reason` format |
+| **Error code structure** | Simple string messages | `Domain.ClassName.Reason` format |
 | **Value information management** | Hardcoded in message | Type-safe separate fields |
 | **Debugging support** | Requires message parsing | Structured information immediately available |
 | **Monitoring support** | Lacks consistency | Aggregatable in standardized format |
@@ -393,7 +393,7 @@ Error method names must exactly match the validation condition. Just by looking 
 ## FAQ
 
 ### Q1: What are the advantages over the existing Error.New approach?
-**A**: Through structured error codes (`DomainErrors.Denominator.Zero`), the source and reason of an error can be immediately identified, and with type-safe value fields, domain-specific aggregation is possible in monitoring systems. The previous approach required parsing message strings.
+**A**: Through structured error codes (`Domain.Denominator.Zero`), the source and reason of an error can be immediately identified, and with type-safe value fields, domain-specific aggregation is possible in monitoring systems. The previous approach required parsing message strings.
 
 ### Q2: Why use an internal DomainErrors class?
 **A**: Placing the value object and error definitions in the same file increases cohesion. When modifying a value object, related errors can be checked together, and when creating a new value object, error definitions are naturally written alongside it.

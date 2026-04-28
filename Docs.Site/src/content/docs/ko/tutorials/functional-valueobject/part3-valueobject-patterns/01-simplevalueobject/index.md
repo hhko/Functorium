@@ -109,8 +109,8 @@ ProductId productId = ProductId.Create(456);
    동일한 값의 해시코드가 같은가? True
 
 ❌ 실패 케이스:
-   BinaryData(null): DomainErrors.BinaryData.Empty
-   BinaryData(empty): DomainErrors.BinaryData.Empty
+   BinaryData(null): Domain.BinaryData.Empty
+   BinaryData(empty): Domain.BinaryData.Empty
 
 ✅ 데모가 성공적으로 완료되었습니다!
 ```

@@ -109,8 +109,8 @@ Hash Code:
    Same value hash codes equal? True
 
 Failure Cases:
-   BinaryData(null): DomainErrors.BinaryData.Empty
-   BinaryData(empty): DomainErrors.BinaryData.Empty
+   BinaryData(null): Domain.BinaryData.Empty
+   BinaryData(empty): Domain.BinaryData.Empty
 
 Demo completed successfully!
 ```

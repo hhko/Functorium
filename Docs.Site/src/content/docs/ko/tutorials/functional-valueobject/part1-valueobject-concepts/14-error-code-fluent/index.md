@@ -62,17 +62,17 @@ DomainError 헬퍼는 `typeof(T).Name`과 `DomainErrorKind`을 조합하여 `Dom
 // 1. 문자열 값 검증 시
 DomainError.For<Currency>(new DomainErrorKind.Empty(), currencyCode ?? "",
     $"Currency code cannot be empty. Current value: '{currencyCode}'")
-// 생성되는 에러 코드: "DomainErrors.Currency.Empty"
+// 생성되는 에러 코드: "Domain.Currency.Empty"
 
 // 2. 제네릭 값 검증 시 (커스텀 에러: sealed record Zero : DomainErrorKind.Custom;)
 DomainError.For<Denominator, int>(new Zero(), value,
     $"Denominator cannot be zero. Current value: '{value}'")
-// 생성되는 에러 코드: "DomainErrors.Denominator.Zero"
+// 생성되는 에러 코드: "Domain.Denominator.Zero"
 
 // 3. 범위 검증 시
 DomainError.For<Coordinate, int>(new DomainErrorKind.OutOfRange("0", "1000"), x,
     $"X coordinate must be between 0 and 1000. Current value: '{x}'")
-// 생성되는 에러 코드: "DomainErrors.Coordinate.OutOfRange"
+// 생성되는 에러 코드: "Domain.Coordinate.OutOfRange"
 ```
 
 ### 인라인 에러 정의
@@ -105,7 +105,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
     public static Validation<Error, int> Validate(int value)
     {
         if (value == 0)
-            return DomainErrors.Zero(value);
+            return Domain.Zero(value);
         return value;
     }
 
@@ -158,27 +158,27 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
   === CompositeValueObjects 에러 테스트 ===
 
   --- Currency 에러 테스트 ---
-빈 통화 코드: [DomainErrors.Currency.Empty] Currency code cannot be empty. Current value: ''
-3자리가 아닌 형식: [DomainErrors.Currency.WrongLength] Currency code must be exactly 3 letters. Current value: 'AB'
-지원하지 않는 통화: [DomainErrors.Currency.Unsupported] Currency code is not supported. Current value: 'XYZ'
+빈 통화 코드: [Domain.Currency.Empty] Currency code cannot be empty. Current value: ''
+3자리가 아닌 형식: [Domain.Currency.WrongLength] Currency code must be exactly 3 letters. Current value: 'AB'
+지원하지 않는 통화: [Domain.Currency.Unsupported] Currency code is not supported. Current value: 'XYZ'
 
   --- Price 에러 테스트 ---
-음수 가격: [DomainErrors.MoneyAmount.OutOfRange] Money amount must be between 0 and 999999.99. Current value: '-100'
+음수 가격: [Domain.MoneyAmount.OutOfRange] Money amount must be between 0 and 999999.99. Current value: '-100'
 
   --- PriceRange 에러 테스트 ---
-최솟값이 최댓값을 초과하는 가격 범위: [DomainErrors.PriceRange.MinExceedsMax] Minimum price cannot exceed maximum price.
+최솟값이 최댓값을 초과하는 가격 범위: [Domain.PriceRange.MinExceedsMax] Minimum price cannot exceed maximum price.
 
 --- PrimitiveValueObjects 하위 폴더 ---
   === PrimitiveValueObjects 에러 테스트 ===
 
   --- Denominator 에러 테스트 ---
-0 값: [DomainErrors.Denominator.Zero] Denominator cannot be zero. Current value: '0'
+0 값: [Domain.Denominator.Zero] Denominator cannot be zero. Current value: '0'
 
 --- CompositePrimitiveValueObjects 하위 폴더 ---
   === CompositePrimitiveValueObjects 에러 테스트 ===
 
   --- DateRange 에러 테스트 ---
-시작일이 종료일 이후인 날짜 범위: [DomainErrors.DateRange.StartAfterEnd] Start date cannot be after end date.
+시작일이 종료일 이후인 날짜 범위: [Domain.DateRange.StartAfterEnd] Start date cannot be after end date.
 
 === ComparableNot 폴더 테스트 ===
 
@@ -186,33 +186,33 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
   === CompositeValueObjects 에러 테스트 ===
 
   --- Address 에러 테스트 ---
-빈 거리명: [DomainErrors.Street.Empty] Street name cannot be empty.
-빈 도시명: [DomainErrors.City.Empty] City name cannot be empty.
-잘못된 우편번호: [DomainErrors.PostalCode.WrongLength] Postal code must be exactly 5 digits.
+빈 거리명: [Domain.Street.Empty] Street name cannot be empty.
+빈 도시명: [Domain.City.Empty] City name cannot be empty.
+잘못된 우편번호: [Domain.PostalCode.WrongLength] Postal code must be exactly 5 digits.
 
   --- Street 에러 테스트 ---
-빈 거리명: [DomainErrors.Street.Empty] Street name cannot be empty.
+빈 거리명: [Domain.Street.Empty] Street name cannot be empty.
 
   --- City 에러 테스트 ---
-빈 도시명: [DomainErrors.City.Empty] City name cannot be empty.
+빈 도시명: [Domain.City.Empty] City name cannot be empty.
 
   --- PostalCode 에러 테스트 ---
-빈 우편번호: [DomainErrors.PostalCode.Empty] Postal code cannot be empty.
-5자리 숫자가 아닌 형식: [DomainErrors.PostalCode.WrongLength] Postal code must be exactly 5 digits.
+빈 우편번호: [Domain.PostalCode.Empty] Postal code cannot be empty.
+5자리 숫자가 아닌 형식: [Domain.PostalCode.WrongLength] Postal code must be exactly 5 digits.
 
 --- PrimitiveValueObjects 하위 폴더 ---
   === PrimitiveValueObjects 에러 테스트 ===
 
   --- BinaryData 에러 테스트 ---
-null 바이너리 데이터: [DomainErrors.BinaryData.Empty] Binary data cannot be empty.
-빈 바이너리 데이터: [DomainErrors.BinaryData.Empty] Binary data cannot be empty.
+null 바이너리 데이터: [Domain.BinaryData.Empty] Binary data cannot be empty.
+빈 바이너리 데이터: [Domain.BinaryData.Empty] Binary data cannot be empty.
 
 --- CompositePrimitiveValueObjects 하위 폴더 ---
   === CompositePrimitiveValueObjects 에러 테스트 ===
 
   --- Coordinate 에러 테스트 ---
-범위를 벗어난 X 좌표: [DomainErrors.Coordinate.OutOfRange] X coordinate must be between 0 and 1000.
-범위를 벗어난 Y 좌표: [DomainErrors.Coordinate.OutOfRange] Y coordinate must be between 0 and 1000.
+범위를 벗어난 X 좌표: [Domain.Coordinate.OutOfRange] X coordinate must be between 0 and 1000.
+범위를 벗어난 Y 좌표: [Domain.Coordinate.OutOfRange] Y coordinate must be between 0 and 1000.
 ```
 
 ### 핵심 구현 포인트
@@ -574,7 +574,7 @@ DomainError.For<DateRange>(new StartAfterEnd(), start, "...");
 ```csharp
 // Before (문자열 기반) - 오타 가능, 리팩토링 위험
 result.IsFail.ShouldBeTrue();
-result.IfFail(error => error.Message.ShouldContain("DomainErrors.Denominator.Zero"));
+result.IfFail(error => error.Message.ShouldContain("Domain.Denominator.Zero"));
 
 // After (타입 안전) - 컴파일 타임 검증, 리팩토링 안전
 result.ShouldBeDomainError<Denominator, int>(new Zero());

@@ -62,17 +62,17 @@ The DomainError helper combines `typeof(T).Name` and `DomainErrorKind` to automa
 // 1. String value validation
 DomainError.For<Currency>(new DomainErrorKind.Empty(), currencyCode ?? "",
     $"Currency code cannot be empty. Current value: '{currencyCode}'")
-// Generated error code: "DomainErrors.Currency.Empty"
+// Generated error code: "Domain.Currency.Empty"
 
 // 2. Generic value validation (custom error: sealed record Zero : DomainErrorKind.Custom;)
 DomainError.For<Denominator, int>(new Zero(), value,
     $"Denominator cannot be zero. Current value: '{value}'")
-// Generated error code: "DomainErrors.Denominator.Zero"
+// Generated error code: "Domain.Denominator.Zero"
 
 // 3. Range validation
 DomainError.For<Coordinate, int>(new DomainErrorKind.OutOfRange("0", "1000"), x,
     $"X coordinate must be between 0 and 1000. Current value: '{x}'")
-// Generated error code: "DomainErrors.Coordinate.OutOfRange"
+// Generated error code: "Domain.Coordinate.OutOfRange"
 ```
 
 ### Inline Error Definitions
@@ -105,7 +105,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
     public static Validation<Error, int> Validate(int value)
     {
         if (value == 0)
-            return DomainErrors.Zero(value);
+            return Domain.Zero(value);
         return value;
     }
 
@@ -158,27 +158,27 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
   === CompositeValueObjects Error Tests ===
 
   --- Currency Error Tests ---
-Empty currency code: [DomainErrors.Currency.Empty] Currency code cannot be empty. Current value: ''
-Non-3-character format: [DomainErrors.Currency.WrongLength] Currency code must be exactly 3 letters. Current value: 'AB'
-Unsupported currency: [DomainErrors.Currency.Unsupported] Currency code is not supported. Current value: 'XYZ'
+Empty currency code: [Domain.Currency.Empty] Currency code cannot be empty. Current value: ''
+Non-3-character format: [Domain.Currency.WrongLength] Currency code must be exactly 3 letters. Current value: 'AB'
+Unsupported currency: [Domain.Currency.Unsupported] Currency code is not supported. Current value: 'XYZ'
 
   --- Price Error Tests ---
-Negative price: [DomainErrors.MoneyAmount.OutOfRange] Money amount must be between 0 and 999999.99. Current value: '-100'
+Negative price: [Domain.MoneyAmount.OutOfRange] Money amount must be between 0 and 999999.99. Current value: '-100'
 
   --- PriceRange Error Tests ---
-Price range where min exceeds max: [DomainErrors.PriceRange.MinExceedsMax] Minimum price cannot exceed maximum price.
+Price range where min exceeds max: [Domain.PriceRange.MinExceedsMax] Minimum price cannot exceed maximum price.
 
 --- PrimitiveValueObjects Subfolder ---
   === PrimitiveValueObjects Error Tests ===
 
   --- Denominator Error Tests ---
-Zero value: [DomainErrors.Denominator.Zero] Denominator cannot be zero. Current value: '0'
+Zero value: [Domain.Denominator.Zero] Denominator cannot be zero. Current value: '0'
 
 --- CompositePrimitiveValueObjects Subfolder ---
   === CompositePrimitiveValueObjects Error Tests ===
 
   --- DateRange Error Tests ---
-Date range where start is after end: [DomainErrors.DateRange.StartAfterEnd] Start date cannot be after end date.
+Date range where start is after end: [Domain.DateRange.StartAfterEnd] Start date cannot be after end date.
 
 === ComparableNot Folder Tests ===
 
@@ -186,33 +186,33 @@ Date range where start is after end: [DomainErrors.DateRange.StartAfterEnd] Star
   === CompositeValueObjects Error Tests ===
 
   --- Address Error Tests ---
-Empty street name: [DomainErrors.Street.Empty] Street name cannot be empty.
-Empty city name: [DomainErrors.City.Empty] City name cannot be empty.
-Invalid postal code: [DomainErrors.PostalCode.WrongLength] Postal code must be exactly 5 digits.
+Empty street name: [Domain.Street.Empty] Street name cannot be empty.
+Empty city name: [Domain.City.Empty] City name cannot be empty.
+Invalid postal code: [Domain.PostalCode.WrongLength] Postal code must be exactly 5 digits.
 
   --- Street Error Tests ---
-Empty street name: [DomainErrors.Street.Empty] Street name cannot be empty.
+Empty street name: [Domain.Street.Empty] Street name cannot be empty.
 
   --- City Error Tests ---
-Empty city name: [DomainErrors.City.Empty] City name cannot be empty.
+Empty city name: [Domain.City.Empty] City name cannot be empty.
 
   --- PostalCode Error Tests ---
-Empty postal code: [DomainErrors.PostalCode.Empty] Postal code cannot be empty.
-Non-5-digit format: [DomainErrors.PostalCode.WrongLength] Postal code must be exactly 5 digits.
+Empty postal code: [Domain.PostalCode.Empty] Postal code cannot be empty.
+Non-5-digit format: [Domain.PostalCode.WrongLength] Postal code must be exactly 5 digits.
 
 --- PrimitiveValueObjects Subfolder ---
   === PrimitiveValueObjects Error Tests ===
 
   --- BinaryData Error Tests ---
-Null binary data: [DomainErrors.BinaryData.Empty] Binary data cannot be empty.
-Empty binary data: [DomainErrors.BinaryData.Empty] Binary data cannot be empty.
+Null binary data: [Domain.BinaryData.Empty] Binary data cannot be empty.
+Empty binary data: [Domain.BinaryData.Empty] Binary data cannot be empty.
 
 --- CompositePrimitiveValueObjects Subfolder ---
   === CompositePrimitiveValueObjects Error Tests ===
 
   --- Coordinate Error Tests ---
-Out-of-range X coordinate: [DomainErrors.Coordinate.OutOfRange] X coordinate must be between 0 and 1000.
-Out-of-range Y coordinate: [DomainErrors.Coordinate.OutOfRange] Y coordinate must be between 0 and 1000.
+Out-of-range X coordinate: [Domain.Coordinate.OutOfRange] X coordinate must be between 0 and 1000.
+Out-of-range Y coordinate: [Domain.Coordinate.OutOfRange] Y coordinate must be between 0 and 1000.
 ```
 
 ### Key Implementation Points
@@ -574,7 +574,7 @@ Use the type-safe extension methods from `Functorium.Testing.Assertions`. Verify
 ```csharp
 // Before (string-based) - typo-prone, refactoring risk
 result.IsFail.ShouldBeTrue();
-result.IfFail(error => error.Message.ShouldContain("DomainErrors.Denominator.Zero"));
+result.IfFail(error => error.Message.ShouldContain("Domain.Denominator.Zero"));
 
 // After (type-safe) - compile-time verification, refactoring safe
 result.ShouldBeDomainError<Denominator, int>(new Zero());

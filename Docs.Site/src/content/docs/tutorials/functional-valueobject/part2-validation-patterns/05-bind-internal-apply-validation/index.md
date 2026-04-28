@@ -61,23 +61,23 @@ When the precondition passes, each component is independent and validated simult
 private static Validation<Error, string> ValidatePhoneNumberFormat(string phoneNumber) =>
     !string.IsNullOrWhiteSpace(phoneNumber) && phoneNumber.Length >= 10
         ? phoneNumber
-        : DomainErrors.PhoneNumberTooShort(phoneNumber);
+        : Domain.PhoneNumberTooShort(phoneNumber);
 
 // Component parallel validation - executed in parallel inside Apply
 private static Validation<Error, string> ValidateCountryCode(string phoneNumber) =>
     phoneNumber.StartsWith("+82") || phoneNumber.StartsWith("+1")
         ? phoneNumber.Substring(0, 3)
-        : DomainErrors.CountryCodeUnsupported(phoneNumber);
+        : Domain.CountryCodeUnsupported(phoneNumber);
 
 private static Validation<Error, string> ValidateAreaCode(string phoneNumber) =>
     phoneNumber.Length >= 6 && phoneNumber.Substring(3, 3).All(char.IsDigit)
         ? phoneNumber.Substring(3, 3)
-        : DomainErrors.AreaCodeInvalid(phoneNumber);
+        : Domain.AreaCodeInvalid(phoneNumber);
 
 private static Validation<Error, string> ValidateLocalNumber(string phoneNumber) =>
     phoneNumber.Length >= 10 && phoneNumber.Substring(6).All(char.IsDigit)
         ? phoneNumber.Substring(6)
-        : DomainErrors.LocalNumberInvalid(phoneNumber);
+        : Domain.LocalNumberInvalid(phoneNumber);
 ```
 
 ## Practical Guidelines
@@ -98,18 +98,18 @@ Success: Phone number is valid.
 --- Phone Number Format Error ---
 Phone number: '123'
 Failure:
-   -> Error code: DomainErrors.PhoneNumber.PhoneNumberTooShort
+   -> Error code: Domain.PhoneNumber.PhoneNumberTooShort
    -> Current value: '123'
 
 --- Multiple Errors (Failure at Apply Stage) ---
 Phone number: '+86abc123def'
 Failure:
    -> Total 3 validation failures:
-     1. Error code: DomainErrors.PhoneNumber.CountryCodeUnsupported
+     1. Error code: Domain.PhoneNumber.CountryCodeUnsupported
         Current value: '+86abc123def'
-     2. Error code: DomainErrors.PhoneNumber.AreaCodeInvalid
+     2. Error code: Domain.PhoneNumber.AreaCodeInvalid
         Current value: '+86abc123def'
-     3. Error code: DomainErrors.PhoneNumber.LocalNumberInvalid
+     3. Error code: Domain.PhoneNumber.LocalNumberInvalid
         Current value: '+86abc123def'
 ```
 
@@ -154,23 +154,23 @@ public sealed class PhoneNumber : ValueObject
     private static Validation<Error, string> ValidatePhoneNumberFormat(string phoneNumber) =>
         !string.IsNullOrWhiteSpace(phoneNumber) && phoneNumber.Length >= 10
             ? phoneNumber
-            : DomainErrors.PhoneNumberTooShort(phoneNumber);
+            : Domain.PhoneNumberTooShort(phoneNumber);
 
     // Component parallel validation - executed in parallel inside Apply
     private static Validation<Error, string> ValidateCountryCode(string phoneNumber) =>
         phoneNumber.StartsWith("+82") || phoneNumber.StartsWith("+1")
             ? phoneNumber.Substring(0, 3)
-            : DomainErrors.CountryCodeUnsupported(phoneNumber);
+            : Domain.CountryCodeUnsupported(phoneNumber);
 
     private static Validation<Error, string> ValidateAreaCode(string phoneNumber) =>
         phoneNumber.Length >= 6 && phoneNumber.Substring(3, 3).All(char.IsDigit)
             ? phoneNumber.Substring(3, 3)
-            : DomainErrors.AreaCodeInvalid(phoneNumber);
+            : Domain.AreaCodeInvalid(phoneNumber);
 
     private static Validation<Error, string> ValidateLocalNumber(string phoneNumber) =>
         phoneNumber.Length >= 10 && phoneNumber.Substring(6).All(char.IsDigit)
             ? phoneNumber.Substring(6)
-            : DomainErrors.LocalNumberInvalid(phoneNumber);
+            : Domain.LocalNumberInvalid(phoneNumber);
 }
 ```
 

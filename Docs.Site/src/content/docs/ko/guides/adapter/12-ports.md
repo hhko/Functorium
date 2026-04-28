@@ -868,7 +868,7 @@ public virtual FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeI
 
 // Usecase에서 사용 (UpdateProductCommand)
 from exists in _productRepository.ExistsByName(name, productId)
-from _ in guard(!exists, ApplicationErrors.ProductNameAlreadyExists(request.Name))
+from _ in guard(!exists, Application.ProductNameAlreadyExists(request.Name))
 ```
 
 ---

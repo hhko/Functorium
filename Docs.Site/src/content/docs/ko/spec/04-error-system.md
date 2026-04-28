@@ -88,19 +88,7 @@ Functorium의 에러 시스템은 **레이어별 sealed record 계층**(`DomainE
       --> ErrorLogFieldNames.{Kind, NumericCode, Message, Inner, ...}
 ```
 
-> **참고**: 1.0.0-alpha.4에서 적용된 전면 재설계가 본문·다이어그램·표에 모두 반영되어 있습니다. 전체 리네임 매핑은 아래 표와 같으며, 이전 1.0.0-alpha 버전에서 마이그레이션할 때 코드베이스에서 검색·치환하면 됩니다.
-
-| 이전 이름 | 1.0.0-alpha.4+ | 비고 |
-|-----------|----------------|------|
-| `DomainErrorType` / `ApplicationErrorType` / `AdapterErrorType` | `DomainErrorKind` / `ApplicationErrorKind` / `AdapterErrorKind` | sealed record 카테고리 계층 |
-| `ErrorCodeExpected` | `ExpectedError` | 내부 에러 타입 |
-| `ErrorCodeExceptional` | `ExceptionalError` | 내부 에러 타입 |
-| `ErrorCodeFactory` | `ErrorFactory` | 내부 헬퍼 (public surface 제거) |
-| `ErrorCodeFieldNames` | `ErrorLogFieldNames` | Serilog destructurer 필드 상수 |
-| `DomainErrors.{Type}.{Kind}` (에러 코드 출력) | `Domain.{Type}.{Kind}` | prefix 단축 — `Application` / `Adapter` 동일 |
-| `DomainErrors.For<T>(...)` (헬퍼 API) | `DomainError.For<T>(...)` | 헬퍼 클래스는 단수형으로 통일 |
-
-배경은 [1.0.0-alpha.4 릴리스 노트](https://github.com/hhko/Functorium/releases/tag/v1.0.0-alpha.4)를 참조하세요.
+> **참고**: 이 사양서는 현재 1.0.0-alpha.4+ 설계 기준입니다. 이전 1.0.0-alpha 버전에서의 마이그레이션 매핑은 [1.0.0-alpha.4 릴리스 노트](https://github.com/hhko/Functorium/releases/tag/v1.0.0-alpha.4)를 참조하세요.
 
 ---
 

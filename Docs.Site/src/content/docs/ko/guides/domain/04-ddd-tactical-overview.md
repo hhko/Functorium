@@ -742,7 +742,7 @@ email.IfSucc(e => Console.WriteLine(e));  // user@example.com
 
 // 실패
 var invalid = Email.Create("invalid-email");
-invalid.IfFail(e => Console.WriteLine(e.Code));  // DomainErrors.Email.InvalidFormat
+invalid.IfFail(e => Console.WriteLine(e.Code));  // Domain.Email.InvalidFormat
 ```
 
 ### 테스트 예시

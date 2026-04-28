@@ -69,7 +69,7 @@ private static Validation<Error, decimal> ValidateFinalAmount(string orderAmount
     decimal.TryParse(discountInput, out var discount) &&
     discount >= 0 && discount <= orderAmount
         ? orderAmount - discount
-        : DomainErrors.DiscountAmountExceedsOrder(orderAmountInput, discountInput);
+        : Domain.DiscountAmountExceedsOrder(orderAmountInput, discountInput);
 ```
 
 ## 실전 지침
@@ -87,13 +87,13 @@ Apply(독립) + Bind(의존) 혼용 패턴을 보여주는 예제입니다.
 입력: '', 'invalid', '100000', '10000'
 실패:
    → Apply 단계에서 2개 에러 수집
-     1. DomainErrors.OrderInfo.CustomerNameTooShort: ''
-     2. DomainErrors.OrderInfo.CustomerEmailMissingAt: 'invalid'
+     1. Domain.OrderInfo.CustomerNameTooShort: ''
+     2. Domain.OrderInfo.CustomerEmailMissingAt: 'invalid'
 
 --- Bind 실패 - 할인금액 초과 ---
 입력: '홍길동', 'hong@example.com', '100000', '150000'
 실패:
-   → Bind 단계에서 단일 에러: DomainErrors.OrderInfo.DiscountAmountExceedsOrder: '100000:150000'
+   → Bind 단계에서 단일 에러: Domain.OrderInfo.DiscountAmountExceedsOrder: '100000:150000'
 ```
 
 ### 핵심 구현 포인트
@@ -145,7 +145,7 @@ public sealed class OrderInfo : ValueObject
         decimal.TryParse(discountInput, out var discount) &&
         discount >= 0 && discount <= orderAmount
             ? orderAmount - discount
-            : DomainErrors.DiscountAmountExceedsOrder(orderAmountInput, discountInput);
+            : Domain.DiscountAmountExceedsOrder(orderAmountInput, discountInput);
 }
 ```
 

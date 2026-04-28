@@ -71,7 +71,7 @@ public sealed class ProductValidation : IValidationContext;
 
 // Usage: same API as TypedValidation
 ValidationRules<ProductValidation>.Positive(amount);
-// Error: DomainErrors.ProductValidation.NotPositive
+// Error: Domain.ProductValidation.NotPositive
 ```
 
 ---

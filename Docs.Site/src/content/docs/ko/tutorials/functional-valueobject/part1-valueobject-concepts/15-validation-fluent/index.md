@@ -128,10 +128,10 @@ public static Validation<Error, string> Validate(string value) =>
 
 ```csharp
 // 검증 코드 → 생성되는 에러 코드
-Validate<Currency>.NotEmpty(value)        → "DomainErrors.Currency.Empty"
-Validate<Currency>.ExactLength(value, 3)  → "DomainErrors.Currency.WrongLength"
-Validate<MoneyAmount>.NonNegative(value)  → "DomainErrors.MoneyAmount.Negative"
-Validate<Coordinate>.Between(x, 0, 1000)  → "DomainErrors.Coordinate.OutOfRange"
+Validate<Currency>.NotEmpty(value)        → "Domain.Currency.Empty"
+Validate<Currency>.ExactLength(value, 3)  → "Domain.Currency.WrongLength"
+Validate<MoneyAmount>.NonNegative(value)  → "Domain.MoneyAmount.Negative"
+Validate<Coordinate>.Between(x, 0, 1000)  → "Domain.Coordinate.OutOfRange"
 ```
 
 ## Before/After 비교
@@ -200,27 +200,27 @@ public sealed class PostalCode : SimpleValueObject<string>
   === CompositeValueObjects 에러 테스트 ===
 
   --- Currency 에러 테스트 ---
-빈 통화 코드: [DomainErrors.Currency.Empty] Currency cannot be empty. Current value: ''
-3자리가 아닌 형식: [DomainErrors.Currency.WrongLength] Currency must be exactly 3 characters. Current length: 2
-지원하지 않는 통화: [DomainErrors.Currency.Unsupported] Currency 'XYZ' is not supported
+빈 통화 코드: [Domain.Currency.Empty] Currency cannot be empty. Current value: ''
+3자리가 아닌 형식: [Domain.Currency.WrongLength] Currency must be exactly 3 characters. Current length: 2
+지원하지 않는 통화: [Domain.Currency.Unsupported] Currency 'XYZ' is not supported
 
   --- Price 에러 테스트 ---
-음수 가격: [DomainErrors.MoneyAmount.Negative] MoneyAmount cannot be negative. Current value: '-100'
+음수 가격: [Domain.MoneyAmount.Negative] MoneyAmount cannot be negative. Current value: '-100'
 
   --- PriceRange 에러 테스트 ---
-최솟값이 최댓값을 초과하는 가격 범위: [DomainErrors.PriceRange.MinExceedsMax] Minimum price cannot exceed maximum price.
+최솟값이 최댓값을 초과하는 가격 범위: [Domain.PriceRange.MinExceedsMax] Minimum price cannot exceed maximum price.
 
 --- PrimitiveValueObjects 하위 폴더 ---
   === PrimitiveValueObjects 에러 테스트 ===
 
   --- Denominator 에러 테스트 ---
-0 값: [DomainErrors.Denominator.Zero] Denominator cannot be zero. Current value: '0'
+0 값: [Domain.Denominator.Zero] Denominator cannot be zero. Current value: '0'
 
 --- CompositePrimitiveValueObjects 하위 폴더 ---
   === CompositePrimitiveValueObjects 에러 테스트 ===
 
   --- DateRange 에러 테스트 ---
-시작일이 종료일 이후인 날짜 범위: [DomainErrors.DateRange.StartAfterEnd] Start date cannot be after end date.
+시작일이 종료일 이후인 날짜 범위: [Domain.DateRange.StartAfterEnd] Start date cannot be after end date.
 
 === ComparableNot 폴더 테스트 ===
 
@@ -228,33 +228,33 @@ public sealed class PostalCode : SimpleValueObject<string>
   === CompositeValueObjects 에러 테스트 ===
 
   --- Address 에러 테스트 ---
-빈 거리명: [DomainErrors.Street.Empty] Street cannot be empty. Current value: ''
-빈 도시명: [DomainErrors.City.Empty] City cannot be empty. Current value: ''
-잘못된 우편번호: [DomainErrors.PostalCode.WrongLength] PostalCode must be exactly 5 characters. Current length: 4
+빈 거리명: [Domain.Street.Empty] Street cannot be empty. Current value: ''
+빈 도시명: [Domain.City.Empty] City cannot be empty. Current value: ''
+잘못된 우편번호: [Domain.PostalCode.WrongLength] PostalCode must be exactly 5 characters. Current length: 4
 
   --- Street 에러 테스트 ---
-빈 거리명: [DomainErrors.Street.Empty] Street cannot be empty. Current value: ''
+빈 거리명: [Domain.Street.Empty] Street cannot be empty. Current value: ''
 
   --- City 에러 테스트 ---
-빈 도시명: [DomainErrors.City.Empty] City cannot be empty. Current value: ''
+빈 도시명: [Domain.City.Empty] City cannot be empty. Current value: ''
 
   --- PostalCode 에러 테스트 ---
-빈 우편번호: [DomainErrors.PostalCode.Empty] PostalCode cannot be empty. Current value: ''
-5자리 숫자가 아닌 형식: [DomainErrors.PostalCode.WrongLength] PostalCode must be exactly 5 characters. Current length: 4
+빈 우편번호: [Domain.PostalCode.Empty] PostalCode cannot be empty. Current value: ''
+5자리 숫자가 아닌 형식: [Domain.PostalCode.WrongLength] PostalCode must be exactly 5 characters. Current length: 4
 
 --- PrimitiveValueObjects 하위 폴더 ---
   === PrimitiveValueObjects 에러 테스트 ===
 
   --- BinaryData 에러 테스트 ---
-null 바이너리 데이터: [DomainErrors.BinaryData.Empty] BinaryData cannot be empty. Current value: 'null'
-빈 바이너리 데이터: [DomainErrors.BinaryData.Empty] BinaryData cannot be empty. Current value: 'null'
+null 바이너리 데이터: [Domain.BinaryData.Empty] BinaryData cannot be empty. Current value: 'null'
+빈 바이너리 데이터: [Domain.BinaryData.Empty] BinaryData cannot be empty. Current value: 'null'
 
 --- CompositePrimitiveValueObjects 하위 폴더 ---
   === CompositePrimitiveValueObjects 에러 테스트 ===
 
   --- Coordinate 에러 테스트 ---
-범위를 벗어난 X 좌표: [DomainErrors.Coordinate.OutOfRange] Coordinate must be between 0 and 1000. Current value: '-1'
-범위를 벗어난 Y 좌표: [DomainErrors.Coordinate.OutOfRange] Coordinate must be between 0 and 1000. Current value: '1001'
+범위를 벗어난 X 좌표: [Domain.Coordinate.OutOfRange] Coordinate must be between 0 and 1000. Current value: '-1'
+범위를 벗어난 Y 좌표: [Domain.Coordinate.OutOfRange] Coordinate must be between 0 and 1000. Current value: '1001'
 ```
 
 ### 핵심 구현 포인트

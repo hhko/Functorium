@@ -814,7 +814,7 @@ using Functorium.Domains.ValueObjects.Validations.Contextual;
 
 // Named Context validation start
 ValidationRules.For("ProductName").NotEmpty(name);
-// Error: DomainErrors.ProductName.Empty
+// Error: Domain.ProductName.Empty
 
 // Chaining
 ValidationRules.For("OrderValidation")
@@ -889,12 +889,12 @@ public sealed class OrderValidation : IValidationContext;
 // 2. Use in ValidationRules<T> instead of a Value Object
 public Validation<Error, decimal> ValidatePrice(decimal price) =>
     ValidationRules<ProductValidation>.Positive(price);
-// Error Code: DomainErrors.ProductValidation.NotPositive
+// Error Code: Domain.ProductValidation.NotPositive
 
 public Validation<Error, string> ValidateOrderId(string orderId) =>
     ValidationRules<OrderValidation>.NotEmpty(orderId)
         .ThenMinLength(10);
-// Error Code: DomainErrors.OrderValidation.Empty or TooShort
+// Error Code: Domain.OrderValidation.Empty or TooShort
 ```
 
 **Advantages:**

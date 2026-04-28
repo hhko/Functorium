@@ -846,7 +846,7 @@ application usecase.command CreateProductCommand.Handle [Error]
             └─ error.code = "InvalidOperationException"
 ```
 
-> **Note:** The Handler's `error.code` records the exception type name (`InvalidOperationException`), while the Publisher's `error.code` records the wrapped error code (`ApplicationErrors.DomainEventPublisher.PublishFailed`).
+> **Note:** The Handler's `error.code` records the exception type name (`InvalidOperationException`), while the Publisher's `error.code` records the wrapped error code (`Application.DomainEventPublisher.PublishFailed`).
 
 **Adapter exception (`POST /api/products` with `[adapter-error]`):**
 

@@ -95,9 +95,9 @@ Email: 'invalid-email'
 Password: 'SecurePass123'
  Failure:
    -> Total 2 validation failures:
-     1. Error code: DomainErrors.MemberRegistration.UsernameTooShort
+     1. Error code: Domain.MemberRegistration.UsernameTooShort
         Current value: 'ab'
-     2. Error code: DomainErrors.MemberRegistration.EmailMissingAt
+     2. Error code: Domain.MemberRegistration.EmailMissingAt
         Current value: 'invalid-email'
 ```
 
@@ -156,12 +156,12 @@ public sealed class MemberRegistration : ValueObject
     private static Validation<Error, string> ValidateUsernameFormat(string username) =>
         !string.IsNullOrWhiteSpace(username) && username.Length >= 3
             ? username
-            : DomainErrors.UsernameTooShort(username);
+            : Domain.UsernameTooShort(username);
 
     private static Validation<Error, string> ValidateUsernameAvailability(string username) =>
         !username.StartsWith("admin")
             ? username
-            : DomainErrors.UsernameNotAvailable(username);
+            : Domain.UsernameNotAvailable(username);
 }
 ```
 

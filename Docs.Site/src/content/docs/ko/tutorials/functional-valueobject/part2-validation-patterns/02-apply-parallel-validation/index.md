@@ -150,13 +150,13 @@ if (error is ManyErrors manyErrors)
 나이: 'abc'
 실패:
    → 총 4개의 검증 실패:
-     1. 에러 코드: DomainErrors.UserRegistration.EmailMissingAt
+     1. 에러 코드: Domain.UserRegistration.EmailMissingAt
         현재 값: ''
-     2. 에러 코드: DomainErrors.UserRegistration.PasswordTooShort
+     2. 에러 코드: Domain.UserRegistration.PasswordTooShort
         현재 값: 'short'
-     3. 에러 코드: DomainErrors.UserRegistration.NameTooShort
+     3. 에러 코드: Domain.UserRegistration.NameTooShort
         현재 값: 'A'
-     4. 에러 코드: DomainErrors.UserRegistration.AgeNotNumeric
+     4. 에러 코드: Domain.UserRegistration.AgeNotNumeric
         현재 값: 'abc'
 ```
 
@@ -201,12 +201,12 @@ public sealed class UserRegistration : ValueObject
     private static Validation<Error, string> ValidateEmailFormat(string email) =>
         !string.IsNullOrWhiteSpace(email) && email.Contains("@") && email.Contains(".")
             ? email
-            : DomainErrors.EmailMissingAt(email);
+            : Domain.EmailMissingAt(email);
 
     private static Validation<Error, string> ValidatePasswordStrength(string password) =>
         password.Length >= 8
             ? password
-            : DomainErrors.PasswordTooShort(password);
+            : Domain.PasswordTooShort(password);
 }
 ```
 

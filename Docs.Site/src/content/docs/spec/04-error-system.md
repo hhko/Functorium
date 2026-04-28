@@ -88,19 +88,7 @@ The diagram below shows the flow from the user code entry point (layer factory) 
       --> ErrorLogFieldNames.{Kind, NumericCode, Message, Inner, ...}
 ```
 
-> **Note**: The comprehensive redesign landed in 1.0.0-alpha.4 is reflected throughout the body, diagram, and tables. The full rename map is summarized below — search-and-replace these in your codebase to migrate from earlier 1.0.0-alpha versions.
-
-| Earlier name | 1.0.0-alpha.4+ | Notes |
-|--------------|----------------|-------|
-| `DomainErrorType` / `ApplicationErrorType` / `AdapterErrorType` | `DomainErrorKind` / `ApplicationErrorKind` / `AdapterErrorKind` | Sealed-record kind hierarchy |
-| `ErrorCodeExpected` | `ExpectedError` | Internal error type (was `internal sealed record`) |
-| `ErrorCodeExceptional` | `ExceptionalError` | Internal error type |
-| `ErrorCodeFactory` | `ErrorFactory` | Internal helper (no longer public surface) |
-| `ErrorCodeFieldNames` | `ErrorLogFieldNames` | Serilog destructurer field constants |
-| `DomainErrors.{Type}.{Kind}` (error code output) | `Domain.{Type}.{Kind}` | Prefix shortened — same for `Application` / `Adapter` |
-| `DomainErrors.For<T>(...)` (helper API) | `DomainError.For<T>(...)` | Helper class is now singular |
-
-See the [1.0.0-alpha.4 release notes](https://github.com/hhko/Functorium/releases/tag/v1.0.0-alpha.4) for the rationale.
+> **Note**: This specification reflects the current 1.0.0-alpha.4+ design. For the migration map from earlier 1.0.0-alpha versions, see the [1.0.0-alpha.4 release notes](https://github.com/hhko/Functorium/releases/tag/v1.0.0-alpha.4).
 
 ---
 

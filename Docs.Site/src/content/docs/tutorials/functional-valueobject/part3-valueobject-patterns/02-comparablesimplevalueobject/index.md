@@ -119,8 +119,8 @@ Hash Code:
    Same value hash codes equal? True
 
 Failure Cases:
-   UserId(0): DomainErrors.UserId.NotPositive
-   UserId(-1): DomainErrors.UserId.NotPositive
+   UserId(0): Domain.UserId.NotPositive
+   UserId(-1): Domain.UserId.NotPositive
 
 Sorting Demo:
    Sorted UserId list:

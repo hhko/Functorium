@@ -66,7 +66,7 @@ public sealed partial class Email : SimpleValueObject<string>
 }
 ```
 
-`Create` 메서드는 `Fin<Email>`을 반환합니다. 유효한 입력이면 `Email` 인스턴스가, 유효하지 않으면 구조화된 에러 코드(`DomainErrors.Email.Empty` 등)가 반환됩니다. 예외는 발생하지 않습니다.
+`Create` 메서드는 `Fin<Email>`을 반환합니다. 유효한 입력이면 `Email` 인스턴스가, 유효하지 않으면 구조화된 에러 코드(`Domain.Email.Empty` 등)가 반환됩니다. 예외는 발생하지 않습니다.
 
 값 객체의 상세한 구현 패턴은 [값 객체 가이드](/Functorium/guides/domain/05a-value-objects/)를 참고하세요.
 

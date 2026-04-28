@@ -1000,7 +1000,7 @@ info: adapter event PublishTrackedEvents.PublishTrackedEvents responded success 
 info: adapter event PublishTrackedEvents.PublishTrackedEvents requesting with 1 events
 info: application usecase.event OnProductCreated.Handle ProductCreatedEvent 01J1234567890ABCDEFGHJKMNP requesting with {@request.message}
 fail: application usecase.event OnProductCreated.Handle ProductCreatedEvent 01J1234567890ABCDEFGHJKMNP responded failure in 0.0008 s with exceptional:InvalidOperationException
-fail: adapter event PublishTrackedEvents.PublishTrackedEvents responded failure in 0.0309 s with 1 events with exceptional:ApplicationErrors.DomainEventPublisher.PublishFailed {@error}
+fail: adapter event PublishTrackedEvents.PublishTrackedEvents responded failure in 0.0309 s with 1 events with exceptional:Application.DomainEventPublisher.PublishFailed {@error}
 ```
 
 > **Note:** The `error.code` for exceptions from the Handler is the exception type name (`InvalidOperationException`), while the Publisher records a wrapped error code (`Application.DomainEventPublisher.PublishFailed`).
@@ -1011,7 +1011,7 @@ Adapter exceptions occur in the Repository, so they do not reach event publishin
 
 ```
 fail: adapter repository InMemoryProductRepository.Create responded failure in 0.0005 s with exceptional:Exceptional {@error}
-fail: application usecase.command CreateProductCommand.Handle responded failure in 0.0031 s with exceptional:AdapterErrors.UsecaseExceptionPipeline`2.PipelineException {@error}
+fail: application usecase.command CreateProductCommand.Handle responded failure in 0.0031 s with exceptional:Adapter.UsecaseExceptionPipeline`2.PipelineException {@error}
 ```
 
 ### IDomainEventCtxEnricher\<TEvent\> -- Event Handler Log Enrichment

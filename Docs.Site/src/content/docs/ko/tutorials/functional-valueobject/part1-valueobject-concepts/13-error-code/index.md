@@ -94,27 +94,27 @@ public sealed class Denominator : SimpleValueObject<int>
   === CompositeValueObjects 에러 테스트 ===
 
   --- Currency 에러 테스트 ---
-빈 통화 코드: ErrorCode: DomainErrors.Currency.Empty, ErrorCurrentValue:
-3자리가 아닌 형식: ErrorCode: DomainErrors.Currency.NotThreeLetters, ErrorCurrentValue: AB
-지원하지 않는 통화: ErrorCode: DomainErrors.Currency.Unsupported, ErrorCurrentValue: XYZ
+빈 통화 코드: ErrorCode: Domain.Currency.Empty, ErrorCurrentValue:
+3자리가 아닌 형식: ErrorCode: Domain.Currency.NotThreeLetters, ErrorCurrentValue: AB
+지원하지 않는 통화: ErrorCode: Domain.Currency.Unsupported, ErrorCurrentValue: XYZ
 
   --- Price 에러 테스트 ---
-음수 가격: ErrorCode: DomainErrors.MoneyAmount.OutOfRange, ErrorCurrentValue: -100
+음수 가격: ErrorCode: Domain.MoneyAmount.OutOfRange, ErrorCurrentValue: -100
 
   --- PriceRange 에러 테스트 ---
-최솟값이 최댓값을 초과하는 가격 범위: ErrorCode: DomainErrors.PriceRange.MinExceedsMax, ErrorCurrentValue: MinPrice: KRW (한국 원화) ₩ 1,000.00, MaxPrice: KRW (한국 원화) ₩ 500.00
+최솟값이 최댓값을 초과하는 가격 범위: ErrorCode: Domain.PriceRange.MinExceedsMax, ErrorCurrentValue: MinPrice: KRW (한국 원화) ₩ 1,000.00, MaxPrice: KRW (한국 원화) ₩ 500.00
 
 --- PrimitiveValueObjects 하위 폴더 ---
   === PrimitiveValueObjects 에러 테스트 ===
 
   --- Denominator 에러 테스트 ---
-0 값: ErrorCode: DomainErrors.Denominator.Zero, ErrorCurrentValue: 0
+0 값: ErrorCode: Domain.Denominator.Zero, ErrorCurrentValue: 0
 
 --- CompositePrimitiveValueObjects 하위 폴더 ---
   === CompositePrimitiveValueObjects 에러 테스트 ===
 
   --- DateRange 에러 테스트 ---
-시작일이 종료일 이후인 날짜 범위: ErrorCode: DomainErrors.DateRange.StartAfterEnd, ErrorCurrentValue: StartDate: 2024-12-31 오전 12:00:00, EndDate: 2024-01-01 오전 12:00:00
+시작일이 종료일 이후인 날짜 범위: ErrorCode: Domain.DateRange.StartAfterEnd, ErrorCurrentValue: StartDate: 2024-12-31 오전 12:00:00, EndDate: 2024-01-01 오전 12:00:00
 
 === ComparableNot 폴더 테스트 ===
 
@@ -122,33 +122,33 @@ public sealed class Denominator : SimpleValueObject<int>
   === CompositeValueObjects 에러 테스트 ===
 
   --- Address 에러 테스트 ---
-빈 거리명: ErrorCode: DomainErrors.Street.Empty, ErrorCurrentValue:
-빈 도시명: ErrorCode: DomainErrors.City.Empty, ErrorCurrentValue:
-잘못된 우편번호: ErrorCode: DomainErrors.PostalCode.NotFiveDigits, ErrorCurrentValue: 1234
+빈 거리명: ErrorCode: Domain.Street.Empty, ErrorCurrentValue:
+빈 도시명: ErrorCode: Domain.City.Empty, ErrorCurrentValue:
+잘못된 우편번호: ErrorCode: Domain.PostalCode.NotFiveDigits, ErrorCurrentValue: 1234
 
   --- Street 에러 테스트 ---
-빈 거리명: ErrorCode: DomainErrors.Street.Empty, ErrorCurrentValue:
+빈 거리명: ErrorCode: Domain.Street.Empty, ErrorCurrentValue:
 
   --- City 에러 테스트 ---
-빈 도시명: ErrorCode: DomainErrors.City.Empty, ErrorCurrentValue:
+빈 도시명: ErrorCode: Domain.City.Empty, ErrorCurrentValue:
 
   --- PostalCode 에러 테스트 ---
-빈 우편번호: ErrorCode: DomainErrors.PostalCode.Empty, ErrorCurrentValue:
-5자리 숫자가 아닌 형식: ErrorCode: DomainErrors.PostalCode.NotFiveDigits, ErrorCurrentValue: 1234
+빈 우편번호: ErrorCode: Domain.PostalCode.Empty, ErrorCurrentValue:
+5자리 숫자가 아닌 형식: ErrorCode: Domain.PostalCode.NotFiveDigits, ErrorCurrentValue: 1234
 
 --- PrimitiveValueObjects 하위 폴더 ---
   === PrimitiveValueObjects 에러 테스트 ===
 
   --- BinaryData 에러 테스트 ---
-null 바이너리 데이터: ErrorCode: DomainErrors.BinaryData.Empty, ErrorCurrentValue: null
-빈 바이너리 데이터: ErrorCode: DomainErrors.BinaryData.Empty, ErrorCurrentValue: 0
+null 바이너리 데이터: ErrorCode: Domain.BinaryData.Empty, ErrorCurrentValue: null
+빈 바이너리 데이터: ErrorCode: Domain.BinaryData.Empty, ErrorCurrentValue: 0
 
 --- CompositePrimitiveValueObjects 하위 폴더 ---
   === CompositePrimitiveValueObjects 에러 테스트 ===
 
   --- Coordinate 에러 테스트 ---
-범위를 벗어난 X 좌표: ErrorCode: DomainErrors.Coordinate.XOutOfRange, ErrorCurrentValue: -1
-범위를 벗어난 Y 좌표: ErrorCode: DomainErrors.Coordinate.YOutOfRange, ErrorCurrentValue: 1001
+범위를 벗어난 X 좌표: ErrorCode: Domain.Coordinate.XOutOfRange, ErrorCurrentValue: -1
+범위를 벗어난 Y 좌표: ErrorCode: Domain.Coordinate.YOutOfRange, ErrorCurrentValue: 1001
 ```
 
 ### 핵심 구현 포인트
@@ -241,7 +241,7 @@ public sealed class Denominator : SimpleValueObject<int>, IComparable<Denominato
     public static Validation<Error, int> Validate(int value)
     {
         if (value == 0)
-            return DomainErrors.Zero(value);
+            return Domain.Zero(value);
 
         return value;
     }
@@ -276,12 +276,12 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 
     private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =>
         string.IsNullOrWhiteSpace(currencyCode)
-            ? DomainErrors.Empty(currencyCode)
+            ? Domain.Empty(currencyCode)
             : currencyCode;
 
     private static Validation<Error, string> ValidateFormat(string currencyCode) =>
         currencyCode.Length != 3 || !currencyCode.All(char.IsLetter)
-            ? DomainErrors.NotThreeLetters(currencyCode)
+            ? Domain.NotThreeLetters(currencyCode)
             : currencyCode.ToUpperInvariant();
 
     // 내부 DomainErrors 클래스 - SmartEnum 특화 에러 정의
@@ -334,7 +334,7 @@ public sealed class PriceRange : ComparableValueObject
 
     private static Validation<Error, (Price MinPrice, Price MaxPrice)> ValidatePriceRange(Price minPrice, Price maxPrice) =>
         (decimal)minPrice.Amount > (decimal)maxPrice.Amount
-            ? DomainErrors.MinExceedsMax(minPrice, maxPrice)
+            ? Domain.MinExceedsMax(minPrice, maxPrice)
             : (MinPrice: minPrice, MaxPrice: maxPrice);
 
     // 내부 DomainErrors 클래스 - 가격 범위 검증 에러
@@ -393,7 +393,7 @@ public sealed class PriceRange : ComparableValueObject
 ## FAQ
 
 ### Q1: 기존 Error.New 방식 대비 어떤 장점이 있나요?
-**A**: 구조화된 에러 코드(`DomainErrors.Denominator.Zero`)를 통해 에러의 출처와 이유를 즉시 파악할 수 있고, 타입 안전한 값 필드로 모니터링 시스템에서 도메인별 집계가 가능합니다. 기존 방식은 메시지 문자열을 파싱해야 했습니다.
+**A**: 구조화된 에러 코드(`Domain.Denominator.Zero`)를 통해 에러의 출처와 이유를 즉시 파악할 수 있고, 타입 안전한 값 필드로 모니터링 시스템에서 도메인별 집계가 가능합니다. 기존 방식은 메시지 문자열을 파싱해야 했습니다.
 
 ### Q2: 내부 DomainErrors 클래스를 사용하는 이유는?
 **A**: 값 객체와 에러 정의를 같은 파일에 두어 응집도를 높입니다. 값 객체를 수정할 때 관련 에러도 함께 확인할 수 있고, 새 값 객체 생성 시 에러 정의도 자연스럽게 함께 작성합니다.

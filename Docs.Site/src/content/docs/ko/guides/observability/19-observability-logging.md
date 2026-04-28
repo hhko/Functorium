@@ -1000,7 +1000,7 @@ info: adapter event PublishTrackedEvents.PublishTrackedEvents responded success 
 info: adapter event PublishTrackedEvents.PublishTrackedEvents requesting with 1 events
 info: application usecase.event OnProductCreated.Handle ProductCreatedEvent 01J1234567890ABCDEFGHJKMNP requesting with {@request.message}
 fail: application usecase.event OnProductCreated.Handle ProductCreatedEvent 01J1234567890ABCDEFGHJKMNP responded failure in 0.0008 s with exceptional:InvalidOperationException
-fail: adapter event PublishTrackedEvents.PublishTrackedEvents responded failure in 0.0309 s with 1 events with exceptional:ApplicationErrors.DomainEventPublisher.PublishFailed {@error}
+fail: adapter event PublishTrackedEvents.PublishTrackedEvents responded failure in 0.0309 s with 1 events with exceptional:Application.DomainEventPublisher.PublishFailed {@error}
 ```
 
 > **Note:** Handler에서 발생한 예외의 `error.code`는 예외 타입명(`InvalidOperationException`)이고, Publisher에서는 이를 래핑한 에러 코드(`Application.DomainEventPublisher.PublishFailed`)가 기록됩니다.
@@ -1011,7 +1011,7 @@ fail: adapter event PublishTrackedEvents.PublishTrackedEvents responded failure 
 
 ```
 fail: adapter repository InMemoryProductRepository.Create responded failure in 0.0005 s with exceptional:Exceptional {@error}
-fail: application usecase.command CreateProductCommand.Handle responded failure in 0.0031 s with exceptional:AdapterErrors.UsecaseExceptionPipeline`2.PipelineException {@error}
+fail: application usecase.command CreateProductCommand.Handle responded failure in 0.0031 s with exceptional:Adapter.UsecaseExceptionPipeline`2.PipelineException {@error}
 ```
 
 ### IDomainEventCtxEnricher\<TEvent\> — 이벤트 핸들러 로그 Enrichment

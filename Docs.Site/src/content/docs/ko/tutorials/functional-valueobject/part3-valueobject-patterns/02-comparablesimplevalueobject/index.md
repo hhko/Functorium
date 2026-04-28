@@ -119,8 +119,8 @@ bool isValid = minId <= currentId && currentId <= maxId;
    동일한 값의 해시코드가 같은가? True
 
 ❌ 실패 케이스:
-   UserId(0): DomainErrors.UserId.NotPositive
-   UserId(-1): DomainErrors.UserId.NotPositive
+   UserId(0): Domain.UserId.NotPositive
+   UserId(-1): Domain.UserId.NotPositive
 
 📈 정렬 데모:
    정렬된 UserId 목록:

@@ -326,7 +326,7 @@ public static Fin<TimeSlot> CreateCrossMidnight(TimeOnly start, TimeOnly end)
 {
     // 자정을 넘는 경우 end < start
     if (start == end)
-        return DomainErrors.ZeroDuration(start, end);
+        return Domain.ZeroDuration(start, end);
     return new TimeSlot(start, end, crossesMidnight: end < start);
 }
 

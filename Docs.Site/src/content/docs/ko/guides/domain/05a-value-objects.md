@@ -814,7 +814,7 @@ using Functorium.Domains.ValueObjects.Validations.Contextual;
 
 // Named Context 검증 시작
 ValidationRules.For("ProductName").NotEmpty(name);
-// Error: DomainErrors.ProductName.Empty
+// Error: Domain.ProductName.Empty
 
 // 체이닝
 ValidationRules.For("OrderValidation")
@@ -889,12 +889,12 @@ public sealed class OrderValidation : IValidationContext;
 // 2. ValidationRules<T>에서 Value Object 대신 사용
 public Validation<Error, decimal> ValidatePrice(decimal price) =>
     ValidationRules<ProductValidation>.Positive(price);
-// Error Code: DomainErrors.ProductValidation.NotPositive
+// Error Code: Domain.ProductValidation.NotPositive
 
 public Validation<Error, string> ValidateOrderId(string orderId) =>
     ValidationRules<OrderValidation>.NotEmpty(orderId)
         .ThenMinLength(10);
-// Error Code: DomainErrors.OrderValidation.Empty 또는 TooShort
+// Error Code: Domain.OrderValidation.Empty 또는 TooShort
 ```
 
 **장점:**

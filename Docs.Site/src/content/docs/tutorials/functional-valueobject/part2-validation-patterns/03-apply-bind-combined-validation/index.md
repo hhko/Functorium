@@ -69,7 +69,7 @@ private static Validation<Error, decimal> ValidateFinalAmount(string orderAmount
     decimal.TryParse(discountInput, out var discount) &&
     discount >= 0 && discount <= orderAmount
         ? orderAmount - discount
-        : DomainErrors.DiscountAmountExceedsOrder(orderAmountInput, discountInput);
+        : Domain.DiscountAmountExceedsOrder(orderAmountInput, discountInput);
 ```
 
 ## Practical Guidelines
@@ -87,13 +87,13 @@ Success: John Doe - $100,000 -> $90,000
 Input: '', 'invalid', '100000', '10000'
 Failure:
    -> 2 errors collected in Apply stage
-     1. DomainErrors.OrderInfo.CustomerNameTooShort: ''
-     2. DomainErrors.OrderInfo.CustomerEmailMissingAt: 'invalid'
+     1. Domain.OrderInfo.CustomerNameTooShort: ''
+     2. Domain.OrderInfo.CustomerEmailMissingAt: 'invalid'
 
 --- Bind Failure - Discount Exceeds Order ---
 Input: 'John Doe', 'john@example.com', '100000', '150000'
 Failure:
-   -> Single error in Bind stage: DomainErrors.OrderInfo.DiscountAmountExceedsOrder: '100000:150000'
+   -> Single error in Bind stage: Domain.OrderInfo.DiscountAmountExceedsOrder: '100000:150000'
 ```
 
 ### Key Implementation Points
@@ -145,7 +145,7 @@ public sealed class OrderInfo : ValueObject
         decimal.TryParse(discountInput, out var discount) &&
         discount >= 0 && discount <= orderAmount
             ? orderAmount - discount
-            : DomainErrors.DiscountAmountExceedsOrder(orderAmountInput, discountInput);
+            : Domain.DiscountAmountExceedsOrder(orderAmountInput, discountInput);
 }
 ```
 

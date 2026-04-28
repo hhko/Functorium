@@ -95,9 +95,9 @@ private static Validation<Error, string> ValidatePassword(string password) =>
 비밀번호: 'SecurePass123'
  ❌ 실패:
    → 총 2개의 검증 실패:
-     1. 에러 코드: DomainErrors.MemberRegistration.UsernameTooShort
+     1. 에러 코드: Domain.MemberRegistration.UsernameTooShort
         현재 값: 'ab'
-     2. 에러 코드: DomainErrors.MemberRegistration.EmailMissingAt
+     2. 에러 코드: Domain.MemberRegistration.EmailMissingAt
         현재 값: 'invalid-email'
 ```
 
@@ -156,12 +156,12 @@ public sealed class MemberRegistration : ValueObject
     private static Validation<Error, string> ValidateUsernameFormat(string username) =>
         !string.IsNullOrWhiteSpace(username) && username.Length >= 3
             ? username
-            : DomainErrors.UsernameTooShort(username);
+            : Domain.UsernameTooShort(username);
 
     private static Validation<Error, string> ValidateUsernameAvailability(string username) =>
         !username.StartsWith("admin")
             ? username
-            : DomainErrors.UsernameNotAvailable(username);
+            : Domain.UsernameNotAvailable(username);
 }
 ```
 

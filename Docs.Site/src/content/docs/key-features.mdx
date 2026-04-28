@@ -35,7 +35,7 @@ This allows the pure parts of domain logic and the parts that depend on infrastr
 The `IO` monad provides advanced capabilities including Timeout, Retry (exponential backoff), Fork (parallel execution), and Bracket (resource lifecycle management). Fault tolerance for external service calls can be configured in a type-safe manner, enabling stable infrastructure integration without manual try-catch.
 
 Error handling is also structured.
-Error codes in the form of `DomainErrors.Email.Empty` are automatically generated following 8 naming conventions (R1-R8),
+Error codes in the form of `Domain.Email.Empty` are automatically generated following 8 naming conventions (R1-R8),
 and `DomainError`, `ApplicationError`, and `AdapterError` are clearly separated by layer.
 The Specification Pattern supports `&`/`|`/`!` operator composition and Expression Tree-based SQL translation,
 with a PropertyMap bridge handling the mapping between domain properties and persistence columns.

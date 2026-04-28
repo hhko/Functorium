@@ -150,13 +150,13 @@ Name: 'A'
 Age: 'abc'
 Failure:
    -> Total 4 validation failures:
-     1. Error code: DomainErrors.UserRegistration.EmailMissingAt
+     1. Error code: Domain.UserRegistration.EmailMissingAt
         Current value: ''
-     2. Error code: DomainErrors.UserRegistration.PasswordTooShort
+     2. Error code: Domain.UserRegistration.PasswordTooShort
         Current value: 'short'
-     3. Error code: DomainErrors.UserRegistration.NameTooShort
+     3. Error code: Domain.UserRegistration.NameTooShort
         Current value: 'A'
-     4. Error code: DomainErrors.UserRegistration.AgeNotNumeric
+     4. Error code: Domain.UserRegistration.AgeNotNumeric
         Current value: 'abc'
 ```
 
@@ -201,12 +201,12 @@ public sealed class UserRegistration : ValueObject
     private static Validation<Error, string> ValidateEmailFormat(string email) =>
         !string.IsNullOrWhiteSpace(email) && email.Contains("@") && email.Contains(".")
             ? email
-            : DomainErrors.EmailMissingAt(email);
+            : Domain.EmailMissingAt(email);
 
     private static Validation<Error, string> ValidatePasswordStrength(string password) =>
         password.Length >= 8
             ? password
-            : DomainErrors.PasswordTooShort(password);
+            : Domain.PasswordTooShort(password);
 }
 ```
 

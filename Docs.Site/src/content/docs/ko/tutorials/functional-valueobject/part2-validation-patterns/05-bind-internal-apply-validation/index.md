@@ -61,23 +61,23 @@ public static Validation<Error, (string CountryCode, string AreaCode, string Loc
 private static Validation<Error, string> ValidatePhoneNumberFormat(string phoneNumber) =>
     !string.IsNullOrWhiteSpace(phoneNumber) && phoneNumber.Length >= 10
         ? phoneNumber
-        : DomainErrors.PhoneNumberTooShort(phoneNumber);
+        : Domain.PhoneNumberTooShort(phoneNumber);
 
 // 구성 요소 병렬 검증 - Apply 내부에서 병렬 실행
 private static Validation<Error, string> ValidateCountryCode(string phoneNumber) =>
     phoneNumber.StartsWith("+82") || phoneNumber.StartsWith("+1")
         ? phoneNumber.Substring(0, 3)
-        : DomainErrors.CountryCodeUnsupported(phoneNumber);
+        : Domain.CountryCodeUnsupported(phoneNumber);
 
 private static Validation<Error, string> ValidateAreaCode(string phoneNumber) =>
     phoneNumber.Length >= 6 && phoneNumber.Substring(3, 3).All(char.IsDigit)
         ? phoneNumber.Substring(3, 3)
-        : DomainErrors.AreaCodeInvalid(phoneNumber);
+        : Domain.AreaCodeInvalid(phoneNumber);
 
 private static Validation<Error, string> ValidateLocalNumber(string phoneNumber) =>
     phoneNumber.Length >= 10 && phoneNumber.Substring(6).All(char.IsDigit)
         ? phoneNumber.Substring(6)
-        : DomainErrors.LocalNumberInvalid(phoneNumber);
+        : Domain.LocalNumberInvalid(phoneNumber);
 ```
 
 ## 실전 지침
@@ -98,18 +98,18 @@ private static Validation<Error, string> ValidateLocalNumber(string phoneNumber)
 --- 전화번호 형식 오류 ---
 전화번호: '123'
 실패:
-   → 에러 코드: DomainErrors.PhoneNumber.PhoneNumberTooShort
+   → 에러 코드: Domain.PhoneNumber.PhoneNumberTooShort
    → 현재 값: '123'
 
 --- 복수개 오류 (Apply 단계에서 실패) ---
 전화번호: '+86abc123def'
 실패:
    → 총 3개의 검증 실패:
-     1. 에러 코드: DomainErrors.PhoneNumber.CountryCodeUnsupported
+     1. 에러 코드: Domain.PhoneNumber.CountryCodeUnsupported
         현재 값: '+86abc123def'
-     2. 에러 코드: DomainErrors.PhoneNumber.AreaCodeInvalid
+     2. 에러 코드: Domain.PhoneNumber.AreaCodeInvalid
         현재 값: '+86abc123def'
-     3. 에러 코드: DomainErrors.PhoneNumber.LocalNumberInvalid
+     3. 에러 코드: Domain.PhoneNumber.LocalNumberInvalid
         현재 값: '+86abc123def'
 ```
 
@@ -154,23 +154,23 @@ public sealed class PhoneNumber : ValueObject
     private static Validation<Error, string> ValidatePhoneNumberFormat(string phoneNumber) =>
         !string.IsNullOrWhiteSpace(phoneNumber) && phoneNumber.Length >= 10
             ? phoneNumber
-            : DomainErrors.PhoneNumberTooShort(phoneNumber);
+            : Domain.PhoneNumberTooShort(phoneNumber);
 
     // 구성 요소 병렬 검증 - Apply 내부에서 병렬 실행
     private static Validation<Error, string> ValidateCountryCode(string phoneNumber) =>
         phoneNumber.StartsWith("+82") || phoneNumber.StartsWith("+1")
             ? phoneNumber.Substring(0, 3)
-            : DomainErrors.CountryCodeUnsupported(phoneNumber);
+            : Domain.CountryCodeUnsupported(phoneNumber);
 
     private static Validation<Error, string> ValidateAreaCode(string phoneNumber) =>
         phoneNumber.Length >= 6 && phoneNumber.Substring(3, 3).All(char.IsDigit)
             ? phoneNumber.Substring(3, 3)
-            : DomainErrors.AreaCodeInvalid(phoneNumber);
+            : Domain.AreaCodeInvalid(phoneNumber);
 
     private static Validation<Error, string> ValidateLocalNumber(string phoneNumber) =>
         phoneNumber.Length >= 10 && phoneNumber.Substring(6).All(char.IsDigit)
             ? phoneNumber.Substring(6)
-            : DomainErrors.LocalNumberInvalid(phoneNumber);
+            : Domain.LocalNumberInvalid(phoneNumber);
 }
 ```
 

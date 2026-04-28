@@ -66,7 +66,7 @@ public sealed partial class Email : SimpleValueObject<string>
 }
 ```
 
-The `Create` method returns `Fin<Email>`. For valid input, an `Email` instance is returned; for invalid input, a structured error code (such as `DomainErrors.Email.Empty`) is returned. No exceptions are thrown.
+The `Create` method returns `Fin<Email>`. For valid input, an `Email` instance is returned; for invalid input, a structured error code (such as `Domain.Email.Empty`) is returned. No exceptions are thrown.
 
 For detailed Value Object implementation patterns, see the [Value Objects Guide](/Functorium/guides/domain/05a-value-objects/).
 

@@ -68,15 +68,15 @@ A simple value object representing an email address.
 public static Fin<Email> Create(string? value)
 {
     if (string.IsNullOrWhiteSpace(value))
-        return DomainErrors.Empty;
+        return Domain.Empty;
 
     var normalized = value.Trim().ToLowerInvariant();
 
     if (normalized.Length > 254)
-        return DomainErrors.TooLong;
+        return Domain.TooLong;
 
     if (!Pattern.IsMatch(normalized))
-        return DomainErrors.InvalidFormat;
+        return Domain.InvalidFormat;
 
     return new Email(normalized);
 }
@@ -105,7 +105,7 @@ public static Fin<Password> Create(string? plainText)
         .Count(x => x);
 
     if (score < 3)
-        return DomainErrors.WeakPassword;
+        return Domain.WeakPassword;
 
     return new Password(HashPassword(plainText));
 }
@@ -125,7 +125,7 @@ A phone number value object supporting international formats.
 public static Fin<PhoneNumber> Create(string? value, string defaultCountryCode = "82")
 {
     if (string.IsNullOrWhiteSpace(value))
-        return DomainErrors.Empty;
+        return Domain.Empty;
 
     var digits = new string(value.Where(char.IsDigit).ToArray());
 
@@ -134,7 +134,7 @@ public static Fin<PhoneNumber> Create(string? value, string defaultCountryCode =
         digits = digits[1..];
 
     if (digits.Length < 9 || digits.Length > 11)
-        return DomainErrors.InvalidFormat;
+        return Domain.InvalidFormat;
 
     return new PhoneNumber(defaultCountryCode, digits);
 }
@@ -161,7 +161,7 @@ public static Fin<Username> Create(string? value)
 {
     // ...
     if (ReservedNames.Contains(normalized))
-        return DomainErrors.Reserved(normalized);
+        return Domain.Reserved(normalized);
 
     return new Username(normalized);
 }

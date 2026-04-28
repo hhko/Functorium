@@ -128,10 +128,10 @@ The `TypedValidationExtensions` class provides linear chaining methods for `Type
 
 ```csharp
 // Validation code -> generated error code
-Validate<Currency>.NotEmpty(value)        -> "DomainErrors.Currency.Empty"
-Validate<Currency>.ExactLength(value, 3)  -> "DomainErrors.Currency.WrongLength"
-Validate<MoneyAmount>.NonNegative(value)  -> "DomainErrors.MoneyAmount.Negative"
-Validate<Coordinate>.Between(x, 0, 1000)  -> "DomainErrors.Coordinate.OutOfRange"
+Validate<Currency>.NotEmpty(value)        -> "Domain.Currency.Empty"
+Validate<Currency>.ExactLength(value, 3)  -> "Domain.Currency.WrongLength"
+Validate<MoneyAmount>.NonNegative(value)  -> "Domain.MoneyAmount.Negative"
+Validate<Coordinate>.Between(x, 0, 1000)  -> "Domain.Coordinate.OutOfRange"
 ```
 
 ## Before/After Comparison
@@ -200,27 +200,27 @@ public sealed class PostalCode : SimpleValueObject<string>
   === CompositeValueObjects Error Tests ===
 
   --- Currency Error Tests ---
-Empty currency code: [DomainErrors.Currency.Empty] Currency cannot be empty. Current value: ''
-Non-3-character format: [DomainErrors.Currency.WrongLength] Currency must be exactly 3 characters. Current length: 2
-Unsupported currency: [DomainErrors.Currency.Unsupported] Currency 'XYZ' is not supported
+Empty currency code: [Domain.Currency.Empty] Currency cannot be empty. Current value: ''
+Non-3-character format: [Domain.Currency.WrongLength] Currency must be exactly 3 characters. Current length: 2
+Unsupported currency: [Domain.Currency.Unsupported] Currency 'XYZ' is not supported
 
   --- Price Error Tests ---
-Negative price: [DomainErrors.MoneyAmount.Negative] MoneyAmount cannot be negative. Current value: '-100'
+Negative price: [Domain.MoneyAmount.Negative] MoneyAmount cannot be negative. Current value: '-100'
 
   --- PriceRange Error Tests ---
-Price range where min exceeds max: [DomainErrors.PriceRange.MinExceedsMax] Minimum price cannot exceed maximum price.
+Price range where min exceeds max: [Domain.PriceRange.MinExceedsMax] Minimum price cannot exceed maximum price.
 
 --- PrimitiveValueObjects Subfolder ---
   === PrimitiveValueObjects Error Tests ===
 
   --- Denominator Error Tests ---
-Zero value: [DomainErrors.Denominator.Zero] Denominator cannot be zero. Current value: '0'
+Zero value: [Domain.Denominator.Zero] Denominator cannot be zero. Current value: '0'
 
 --- CompositePrimitiveValueObjects Subfolder ---
   === CompositePrimitiveValueObjects Error Tests ===
 
   --- DateRange Error Tests ---
-Date range where start is after end: [DomainErrors.DateRange.StartAfterEnd] Start date cannot be after end date.
+Date range where start is after end: [Domain.DateRange.StartAfterEnd] Start date cannot be after end date.
 
 === ComparableNot Folder Tests ===
 
@@ -228,33 +228,33 @@ Date range where start is after end: [DomainErrors.DateRange.StartAfterEnd] Star
   === CompositeValueObjects Error Tests ===
 
   --- Address Error Tests ---
-Empty street name: [DomainErrors.Street.Empty] Street cannot be empty. Current value: ''
-Empty city name: [DomainErrors.City.Empty] City cannot be empty. Current value: ''
-Invalid postal code: [DomainErrors.PostalCode.WrongLength] PostalCode must be exactly 5 characters. Current length: 4
+Empty street name: [Domain.Street.Empty] Street cannot be empty. Current value: ''
+Empty city name: [Domain.City.Empty] City cannot be empty. Current value: ''
+Invalid postal code: [Domain.PostalCode.WrongLength] PostalCode must be exactly 5 characters. Current length: 4
 
   --- Street Error Tests ---
-Empty street name: [DomainErrors.Street.Empty] Street cannot be empty. Current value: ''
+Empty street name: [Domain.Street.Empty] Street cannot be empty. Current value: ''
 
   --- City Error Tests ---
-Empty city name: [DomainErrors.City.Empty] City cannot be empty. Current value: ''
+Empty city name: [Domain.City.Empty] City cannot be empty. Current value: ''
 
   --- PostalCode Error Tests ---
-Empty postal code: [DomainErrors.PostalCode.Empty] PostalCode cannot be empty. Current value: ''
-Non-5-digit format: [DomainErrors.PostalCode.WrongLength] PostalCode must be exactly 5 characters. Current length: 4
+Empty postal code: [Domain.PostalCode.Empty] PostalCode cannot be empty. Current value: ''
+Non-5-digit format: [Domain.PostalCode.WrongLength] PostalCode must be exactly 5 characters. Current length: 4
 
 --- PrimitiveValueObjects Subfolder ---
   === PrimitiveValueObjects Error Tests ===
 
   --- BinaryData Error Tests ---
-Null binary data: [DomainErrors.BinaryData.Empty] BinaryData cannot be empty. Current value: 'null'
-Empty binary data: [DomainErrors.BinaryData.Empty] BinaryData cannot be empty. Current value: 'null'
+Null binary data: [Domain.BinaryData.Empty] BinaryData cannot be empty. Current value: 'null'
+Empty binary data: [Domain.BinaryData.Empty] BinaryData cannot be empty. Current value: 'null'
 
 --- CompositePrimitiveValueObjects Subfolder ---
   === CompositePrimitiveValueObjects Error Tests ===
 
   --- Coordinate Error Tests ---
-Out-of-range X coordinate: [DomainErrors.Coordinate.OutOfRange] Coordinate must be between 0 and 1000. Current value: '-1'
-Out-of-range Y coordinate: [DomainErrors.Coordinate.OutOfRange] Coordinate must be between 0 and 1000. Current value: '1001'
+Out-of-range X coordinate: [Domain.Coordinate.OutOfRange] Coordinate must be between 0 and 1000. Current value: '-1'
+Out-of-range Y coordinate: [Domain.Coordinate.OutOfRange] Coordinate must be between 0 and 1000. Current value: '1001'
 ```
 
 ### Key Implementation Points

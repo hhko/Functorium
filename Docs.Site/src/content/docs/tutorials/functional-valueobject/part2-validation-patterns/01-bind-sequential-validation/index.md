@@ -66,7 +66,7 @@ private static Validation<Error, string> ValidateCountryAndPostalCodeMatch(strin
         ("KR", var code) when code.Length == 5 && code.All(char.IsDigit) => country,
         ("US", var code) when code.Length == 5 && code.All(char.IsDigit) => country,
         ("JP", var code) when code.Length == 7 && code.All(char.IsDigit) => country,
-        _ => DomainErrors.CountryPostalCodeMismatch(country, postalCode)
+        _ => Domain.CountryPostalCodeMismatch(country, postalCode)
     };
 ```
 
@@ -94,7 +94,7 @@ City: 'Seoul'
 Postal Code: '12345'
 Country: 'KR'
 Failure:
-   -> Error code: DomainErrors.Address.StreetTooShort
+   -> Error code: Domain.Address.StreetTooShort
    -> Current value: ''
 ```
 
@@ -142,7 +142,7 @@ public sealed class Address : ValueObject
             ("KR", var code) when code.Length == 5 && code.All(char.IsDigit) => country,
             ("US", var code) when code.Length == 5 && code.All(char.IsDigit) => country,
             ("JP", var code) when code.Length == 7 && code.All(char.IsDigit) => country,
-            _ => DomainErrors.CountryPostalCodeMismatch(country, postalCode)
+            _ => Domain.CountryPostalCodeMismatch(country, postalCode)
         };
 }
 ```

@@ -622,7 +622,7 @@ Used inside a Value Object class, the type is determined at compile time.
 // Inside the Price class
 public static Validation<Error, decimal> Validate(decimal value) =>
     ValidationRules<Price>.Positive(value);
-// Error code: DomainErrors.Price.NotPositive
+// Error code: Domain.Price.NotPositive
 ```
 
 **ValidationRules.For() gets context from a "string."**
@@ -632,7 +632,7 @@ Used when there is no Value Object (DTO validation, API input validation).
 ```csharp
 // In DTO validation
 var result = ValidationRules.For("ProductPrice").Positive(request.Price);
-// Error code: DomainErrors.ProductPrice.NotPositive
+// Error code: Domain.ProductPrice.NotPositive
 ```
 
 **When to use which?**

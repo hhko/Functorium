@@ -66,7 +66,7 @@ private static Validation<Error, string> ValidateCountryAndPostalCodeMatch(strin
         ("KR", var code) when code.Length == 5 && code.All(char.IsDigit) => country,
         ("US", var code) when code.Length == 5 && code.All(char.IsDigit) => country,
         ("JP", var code) when code.Length == 7 && code.All(char.IsDigit) => country,
-        _ => DomainErrors.CountryPostalCodeMismatch(country, postalCode)
+        _ => Domain.CountryPostalCodeMismatch(country, postalCode)
     };
 ```
 
@@ -94,7 +94,7 @@ private static Validation<Error, string> ValidateCountryAndPostalCodeMatch(strin
 우편번호: '12345'
 국가: 'KR'
 실패:
-   → 에러 코드: DomainErrors.Address.StreetTooShort
+   → 에러 코드: Domain.Address.StreetTooShort
    → 현재 값: ''
 ```
 
@@ -142,7 +142,7 @@ public sealed class Address : ValueObject
             ("KR", var code) when code.Length == 5 && code.All(char.IsDigit) => country,
             ("US", var code) when code.Length == 5 && code.All(char.IsDigit) => country,
             ("JP", var code) when code.Length == 7 && code.All(char.IsDigit) => country,
-            _ => DomainErrors.CountryPostalCodeMismatch(country, postalCode)
+            _ => Domain.CountryPostalCodeMismatch(country, postalCode)
         };
 }
 ```

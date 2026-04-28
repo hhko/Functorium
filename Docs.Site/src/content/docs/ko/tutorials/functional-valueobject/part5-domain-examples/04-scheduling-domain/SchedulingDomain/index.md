@@ -81,7 +81,7 @@ public sealed class DateRange : IEquatable<DateRange>
     public static Fin<DateRange> Create(DateOnly start, DateOnly end)
     {
         if (end < start)
-            return DomainErrors.EndBeforeStart;
+            return Domain.EndBeforeStart;
         return new DateRange(start, end);
     }
 
@@ -131,9 +131,9 @@ public sealed class Duration : IComparable<Duration>
     public static Fin<Duration> FromMinutes(int minutes)
     {
         if (minutes < 0)
-            return DomainErrors.NegativeDuration;
+            return Domain.NegativeDuration;
         if (minutes > 525600) // 1년
-            return DomainErrors.ExceedsMaximum;
+            return Domain.ExceedsMaximum;
         return new Duration(minutes);
     }
 
@@ -161,7 +161,7 @@ public sealed class RecurrenceRule : IEquatable<RecurrenceRule>
     public static Fin<RecurrenceRule> Weekly(params DayOfWeek[] days)
     {
         if (days.Length == 0)
-            return DomainErrors.NoDaysSpecified;
+            return Domain.NoDaysSpecified;
         return new RecurrenceRule(RecurrenceType.Weekly, days, null, 1);
     }
 
@@ -179,7 +179,7 @@ public sealed class RecurrenceRule : IEquatable<RecurrenceRule>
 public static Fin<DateRange> Create(DateOnly start, DateOnly end)
 {
     if (end < start)
-        return DomainErrors.EndBeforeStart;
+        return Domain.EndBeforeStart;
     return new DateRange(start, end);
 }
 ```

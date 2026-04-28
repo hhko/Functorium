@@ -846,7 +846,7 @@ application usecase.command CreateProductCommand.Handle [Error]
             └─ error.code = "InvalidOperationException"
 ```
 
-> **Note:** Handler의 `error.code`는 예외 타입명(`InvalidOperationException`), Publisher의 `error.code`는 래핑된 에러 코드(`ApplicationErrors.DomainEventPublisher.PublishFailed`)가 기록됩니다.
+> **Note:** Handler의 `error.code`는 예외 타입명(`InvalidOperationException`), Publisher의 `error.code`는 래핑된 에러 코드(`Application.DomainEventPublisher.PublishFailed`)가 기록됩니다.
 
 **어댑터 예외 (`POST /api/products` with `[adapter-error]`):**
 
