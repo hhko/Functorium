@@ -8,7 +8,7 @@ namespace Functorium.Testing.Assertions.Errors;
 
 /// <summary>
 /// 범용 에러 코드 검증을 위한 확장 메서드
-/// DomainErrorType에 의존하지 않고 순수 ErrorCode 문자열 기반으로 동작합니다.
+/// DomainErrorKind에 의존하지 않고 순수 ErrorCode 문자열 기반으로 동작합니다.
 /// </summary>
 /// <remarks>
 /// 사용 예시:
