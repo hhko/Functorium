@@ -15,11 +15,11 @@ Functorium의 에러 시스템은 **레이어별 sealed record 계층**(`DomainE
 | `ErrorKind` | `Functorium.Abstractions.Errors` | 모든 레이어 에러 타입의 추상 기반 record |
 | `IHasErrorCode` | `Functorium.Abstractions.Errors` | 에러 코드 접근 인터페이스 |
 | `ErrorFactory` | `Functorium.Abstractions.Errors` | Expected/Exceptional 에러 생성 팩토리 |
-| `DomainErrorKind` | `Functorium.Domains.Errors` | 도메인 에러 타입 sealed record 계층 (10개 카테고리) |
+| `DomainErrorKind` | `Functorium.Domains.Errors` | 도메인 에러 타입 sealed record 계층 (9개 카테고리) |
 | `DomainError` | `Functorium.Domains.Errors` | 도메인 에러 생성 팩토리 |
-| `ApplicationErrorKind` | `Functorium.Applications.Errors` | 애플리케이션 에러 타입 sealed record 계층 (14개 타입) |
+| `ApplicationErrorKind` | `Functorium.Applications.Errors` | 애플리케이션 에러 타입 sealed record 계층 (7개 카테고리) |
 | `ApplicationError` | `Functorium.Applications.Errors` | 애플리케이션 에러 생성 팩토리 |
-| `AdapterErrorKind` | `Functorium.Adapters.Errors` | 어댑터 에러 타입 sealed record 계층 (20개 타입) |
+| `AdapterErrorKind` | `Functorium.Adapters.Errors` | 어댑터 에러 타입 sealed record 계층 (9개 카테고리) |
 | `AdapterError` | `Functorium.Adapters.Errors` | 어댑터 에러 생성 팩토리 |
 
 #### 내부 타입 (internal)
@@ -241,7 +241,7 @@ namespace Functorium.Domains.Errors;
 public abstract partial record DomainErrorKind : ErrorKind;
 ```
 
-**`DomainErrorKind`은** 도메인 레이어 에러의 sealed record 계층 기반입니다. 10개 카테고리로 분류됩니다.
+**`DomainErrorKind`은** 도메인 레이어 에러의 sealed record 계층 기반입니다. 9개 카테고리로 분류됩니다.
 
 ### 존재(Existence)
 

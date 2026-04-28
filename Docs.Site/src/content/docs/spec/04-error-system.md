@@ -15,11 +15,11 @@ Functorium's error system consists of **per-layer sealed record hierarchies** (`
 | `ErrorKind` | `Functorium.Abstractions.Errors` | Abstract base record for all layer error types |
 | `IHasErrorCode` | `Functorium.Abstractions.Errors` | Error code access interface |
 | `ErrorFactory` | `Functorium.Abstractions.Errors` | Expected/Exceptional error creation factory |
-| `DomainErrorKind` | `Functorium.Domains.Errors` | Domain error type sealed record hierarchy (10 categories) |
+| `DomainErrorKind` | `Functorium.Domains.Errors` | Domain error type sealed record hierarchy (9 categories) |
 | `DomainError` | `Functorium.Domains.Errors` | Domain error creation factory |
-| `ApplicationErrorKind` | `Functorium.Applications.Errors` | Application error type sealed record hierarchy (14 types) |
+| `ApplicationErrorKind` | `Functorium.Applications.Errors` | Application error type sealed record hierarchy (7 categories) |
 | `ApplicationError` | `Functorium.Applications.Errors` | Application error creation factory |
-| `AdapterErrorKind` | `Functorium.Adapters.Errors` | Adapter error type sealed record hierarchy (20 types) |
+| `AdapterErrorKind` | `Functorium.Adapters.Errors` | Adapter error type sealed record hierarchy (9 categories) |
 | `AdapterError` | `Functorium.Adapters.Errors` | Adapter error creation factory |
 
 #### Internal Types
@@ -241,7 +241,7 @@ namespace Functorium.Domains.Errors;
 public abstract partial record DomainErrorKind : ErrorKind;
 ```
 
-**`DomainErrorKind`** is the sealed record hierarchy base for domain layer errors. Classified into 10 categories.
+**`DomainErrorKind`** is the sealed record hierarchy base for domain layer errors. Classified into 9 categories.
 
 ### Existence
 
