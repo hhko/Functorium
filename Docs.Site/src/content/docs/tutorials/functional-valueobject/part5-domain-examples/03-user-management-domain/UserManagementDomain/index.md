@@ -68,15 +68,15 @@ A simple value object representing an email address.
 public static Fin<Email> Create(string? value)
 {
     if (string.IsNullOrWhiteSpace(value))
-        return Domain.Empty;
+        return DomainError.For<Email>(new DomainErrorKind.Empty(), value ?? "", "Email is empty");
 
     var normalized = value.Trim().ToLowerInvariant();
 
     if (normalized.Length > 254)
-        return Domain.TooLong;
+        return DomainError.For<Email, int>(new DomainErrorKind.TooLong(), normalized.Length, "Email exceeds maximum length");
 
     if (!Pattern.IsMatch(normalized))
-        return Domain.InvalidFormat;
+        return DomainError.For<Email>(new DomainErrorKind.InvalidFormat(), value, "Email format is invalid");
 
     return new Email(normalized);
 }
@@ -105,7 +105,7 @@ public static Fin<Password> Create(string? plainText)
         .Count(x => x);
 
     if (score < 3)
-        return Domain.WeakPassword;
+        return DomainError.For<Password, int>(new InsufficientComplexity(), score, "Password is too weak");
 
     return new Password(HashPassword(plainText));
 }
@@ -125,7 +125,7 @@ A phone number value object supporting international formats.
 public static Fin<PhoneNumber> Create(string? value, string defaultCountryCode = "82")
 {
     if (string.IsNullOrWhiteSpace(value))
-        return Domain.Empty;
+        return DomainError.For<PhoneNumber>(new DomainErrorKind.Empty(), value ?? "", "Phone number is empty");
 
     var digits = new string(value.Where(char.IsDigit).ToArray());
 
@@ -134,7 +134,7 @@ public static Fin<PhoneNumber> Create(string? value, string defaultCountryCode =
         digits = digits[1..];
 
     if (digits.Length < 9 || digits.Length > 11)
-        return Domain.InvalidFormat;
+        return DomainError.For<PhoneNumber>(new DomainErrorKind.WrongLength(), value, "Phone number length is invalid");
 
     return new PhoneNumber(defaultCountryCode, digits);
 }
@@ -161,7 +161,7 @@ public static Fin<Username> Create(string? value)
 {
     // ...
     if (ReservedNames.Contains(normalized))
-        return Domain.Reserved(normalized);
+        return DomainError.For<Username>(new ReservedName(), normalized, "Username is reserved");
 
     return new Username(normalized);
 }

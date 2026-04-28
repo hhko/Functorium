@@ -201,12 +201,12 @@ public sealed class UserRegistration : ValueObject
     private static Validation<Error, string> ValidateEmailFormat(string email) =>
         !string.IsNullOrWhiteSpace(email) && email.Contains("@") && email.Contains(".")
             ? email
-            : Domain.EmailMissingAt(email);
+            : DomainError.For<UserRegistration>(new EmailMissingAt(), email, "Email is missing @ sign");
 
     private static Validation<Error, string> ValidatePasswordStrength(string password) =>
         password.Length >= 8
             ? password
-            : Domain.PasswordTooShort(password);
+            : DomainError.For<UserRegistration>(new PasswordTooShort(), password, "Password is too short");
 }
 ```
 

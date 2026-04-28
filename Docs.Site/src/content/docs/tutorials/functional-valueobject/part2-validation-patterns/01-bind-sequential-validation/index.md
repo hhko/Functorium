@@ -66,7 +66,7 @@ private static Validation<Error, string> ValidateCountryAndPostalCodeMatch(strin
         ("KR", var code) when code.Length == 5 && code.All(char.IsDigit) => country,
         ("US", var code) when code.Length == 5 && code.All(char.IsDigit) => country,
         ("JP", var code) when code.Length == 7 && code.All(char.IsDigit) => country,
-        _ => Domain.CountryPostalCodeMismatch(country, postalCode)
+        _ => DomainError.For<Address>(new CountryPostalCodeMismatch(), $"{country}/{postalCode}", "Country and postal code mismatch")
     };
 ```
 
@@ -142,7 +142,7 @@ public sealed class Address : ValueObject
             ("KR", var code) when code.Length == 5 && code.All(char.IsDigit) => country,
             ("US", var code) when code.Length == 5 && code.All(char.IsDigit) => country,
             ("JP", var code) when code.Length == 7 && code.All(char.IsDigit) => country,
-            _ => Domain.CountryPostalCodeMismatch(country, postalCode)
+            _ => DomainError.For<Address>(new CountryPostalCodeMismatch(), $"{country}/{postalCode}", "Country and postal code mismatch")
         };
 }
 ```

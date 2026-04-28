@@ -81,7 +81,7 @@ public sealed class DateRange : IEquatable<DateRange>
     public static Fin<DateRange> Create(DateOnly start, DateOnly end)
     {
         if (end < start)
-            return Domain.EndBeforeStart;
+            return DomainError.For<DateRange>(new EndBeforeStart(), $"{start}~{end}", "End is before start");
         return new DateRange(start, end);
     }
 
@@ -131,9 +131,9 @@ public sealed class Duration : IComparable<Duration>
     public static Fin<Duration> FromMinutes(int minutes)
     {
         if (minutes < 0)
-            return Domain.NegativeDuration;
+            return DomainError.For<Duration, int>(new DomainErrorKind.Negative(), minutes, "Duration is negative");
         if (minutes > 525600) // 1 year
-            return Domain.ExceedsMaximum;
+            return DomainError.For<Duration, int>(new DomainErrorKind.AboveMaximum(), minutes, "Duration exceeds maximum");
         return new Duration(minutes);
     }
 
@@ -161,7 +161,7 @@ public sealed class RecurrenceRule : IEquatable<RecurrenceRule>
     public static Fin<RecurrenceRule> Weekly(params DayOfWeek[] days)
     {
         if (days.Length == 0)
-            return Domain.NoDaysSpecified;
+            return DomainError.For<RecurrenceRule, int>(new DomainErrorKind.Empty(), 0, "No days specified");
         return new RecurrenceRule(RecurrenceType.Weekly, days, null, 1);
     }
 
@@ -179,7 +179,7 @@ Guarantees logical order of start and end.
 public static Fin<DateRange> Create(DateOnly start, DateOnly end)
 {
     if (end < start)
-        return Domain.EndBeforeStart;
+        return DomainError.For<DateRange>(new EndBeforeStart(), $"{start}~{end}", "End is before start");
     return new DateRange(start, end);
 }
 ```

@@ -61,23 +61,23 @@ public static Validation<Error, (string CountryCode, string AreaCode, string Loc
 private static Validation<Error, string> ValidatePhoneNumberFormat(string phoneNumber) =>
     !string.IsNullOrWhiteSpace(phoneNumber) && phoneNumber.Length >= 10
         ? phoneNumber
-        : Domain.PhoneNumberTooShort(phoneNumber);
+        : DomainError.For<PhoneNumber>(new DomainErrorKind.TooShort(), phoneNumber, "Phone number is too short");
 
 // 구성 요소 병렬 검증 - Apply 내부에서 병렬 실행
 private static Validation<Error, string> ValidateCountryCode(string phoneNumber) =>
     phoneNumber.StartsWith("+82") || phoneNumber.StartsWith("+1")
         ? phoneNumber.Substring(0, 3)
-        : Domain.CountryCodeUnsupported(phoneNumber);
+        : DomainError.For<PhoneNumber>(new CountryCodeUnsupported(), phoneNumber, "Country code is not supported");
 
 private static Validation<Error, string> ValidateAreaCode(string phoneNumber) =>
     phoneNumber.Length >= 6 && phoneNumber.Substring(3, 3).All(char.IsDigit)
         ? phoneNumber.Substring(3, 3)
-        : Domain.AreaCodeInvalid(phoneNumber);
+        : DomainError.For<PhoneNumber>(new DomainErrorKind.InvalidFormat(), phoneNumber, "Area code is invalid");
 
 private static Validation<Error, string> ValidateLocalNumber(string phoneNumber) =>
     phoneNumber.Length >= 10 && phoneNumber.Substring(6).All(char.IsDigit)
         ? phoneNumber.Substring(6)
-        : Domain.LocalNumberInvalid(phoneNumber);
+        : DomainError.For<PhoneNumber>(new DomainErrorKind.InvalidFormat(), phoneNumber, "Local number is invalid");
 ```
 
 ## 실전 지침
@@ -154,23 +154,23 @@ public sealed class PhoneNumber : ValueObject
     private static Validation<Error, string> ValidatePhoneNumberFormat(string phoneNumber) =>
         !string.IsNullOrWhiteSpace(phoneNumber) && phoneNumber.Length >= 10
             ? phoneNumber
-            : Domain.PhoneNumberTooShort(phoneNumber);
+            : DomainError.For<PhoneNumber>(new DomainErrorKind.TooShort(), phoneNumber, "Phone number is too short");
 
     // 구성 요소 병렬 검증 - Apply 내부에서 병렬 실행
     private static Validation<Error, string> ValidateCountryCode(string phoneNumber) =>
         phoneNumber.StartsWith("+82") || phoneNumber.StartsWith("+1")
             ? phoneNumber.Substring(0, 3)
-            : Domain.CountryCodeUnsupported(phoneNumber);
+            : DomainError.For<PhoneNumber>(new CountryCodeUnsupported(), phoneNumber, "Country code is not supported");
 
     private static Validation<Error, string> ValidateAreaCode(string phoneNumber) =>
         phoneNumber.Length >= 6 && phoneNumber.Substring(3, 3).All(char.IsDigit)
             ? phoneNumber.Substring(3, 3)
-            : Domain.AreaCodeInvalid(phoneNumber);
+            : DomainError.For<PhoneNumber>(new DomainErrorKind.InvalidFormat(), phoneNumber, "Area code is invalid");
 
     private static Validation<Error, string> ValidateLocalNumber(string phoneNumber) =>
         phoneNumber.Length >= 10 && phoneNumber.Substring(6).All(char.IsDigit)
             ? phoneNumber.Substring(6)
-            : Domain.LocalNumberInvalid(phoneNumber);
+            : DomainError.For<PhoneNumber>(new DomainErrorKind.InvalidFormat(), phoneNumber, "Local number is invalid");
 }
 ```
 

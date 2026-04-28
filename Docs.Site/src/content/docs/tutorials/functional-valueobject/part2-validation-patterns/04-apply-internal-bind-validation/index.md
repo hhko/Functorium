@@ -156,12 +156,12 @@ public sealed class MemberRegistration : ValueObject
     private static Validation<Error, string> ValidateUsernameFormat(string username) =>
         !string.IsNullOrWhiteSpace(username) && username.Length >= 3
             ? username
-            : Domain.UsernameTooShort(username);
+            : DomainError.For<MemberRegistration>(new UsernameTooShort(), username, "Username is too short");
 
     private static Validation<Error, string> ValidateUsernameAvailability(string username) =>
         !username.StartsWith("admin")
             ? username
-            : Domain.UsernameNotAvailable(username);
+            : DomainError.For<MemberRegistration>(new UsernameNotAvailable(), username, "Username is not available");
 }
 ```
 

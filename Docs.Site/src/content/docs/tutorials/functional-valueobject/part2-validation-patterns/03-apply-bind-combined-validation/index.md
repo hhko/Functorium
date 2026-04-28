@@ -69,7 +69,7 @@ private static Validation<Error, decimal> ValidateFinalAmount(string orderAmount
     decimal.TryParse(discountInput, out var discount) &&
     discount >= 0 && discount <= orderAmount
         ? orderAmount - discount
-        : Domain.DiscountAmountExceedsOrder(orderAmountInput, discountInput);
+        : DomainError.For<OrderInfo>(new DiscountAmountExceedsOrder(), $"{orderAmountInput}:{discountInput}", "Discount amount exceeds order amount");
 ```
 
 ## Practical Guidelines
@@ -145,7 +145,7 @@ public sealed class OrderInfo : ValueObject
         decimal.TryParse(discountInput, out var discount) &&
         discount >= 0 && discount <= orderAmount
             ? orderAmount - discount
-            : Domain.DiscountAmountExceedsOrder(orderAmountInput, discountInput);
+            : DomainError.For<OrderInfo>(new DiscountAmountExceedsOrder(), $"{orderAmountInput}:{discountInput}", "Discount amount exceeds order amount");
 }
 ```
 

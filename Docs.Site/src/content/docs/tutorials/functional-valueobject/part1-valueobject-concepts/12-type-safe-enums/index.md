@@ -266,17 +266,17 @@ public sealed class Currency : SmartEnum<Currency, string>
     public static Validation<Error, string> Validate(string currencyCode) =>
         !string.IsNullOrWhiteSpace(currencyCode)
             ? ValidateThreeLetters(currencyCode)
-            : DomainErrors.Empty(currencyCode);
+            : DomainError.For<Currency>(new DomainErrorKind.Empty(), currencyCode, "Currency code is empty");
 
     private static Validation<Error, string> ValidateThreeLetters(string currencyCode) =>
         currencyCode.Length == 3 && currencyCode.All(char.IsLetter)
             ? ValidateSupported(currencyCode)
-            : DomainErrors.NotThreeLetters(currencyCode);
+            : DomainError.For<Currency>(new DomainErrorKind.WrongLength(), currencyCode, "Currency code must be exactly 3 letters");
 
     private static Validation<Error, string> ValidateSupported(string currencyCode) =>
         GetAllSupportedCurrencies().Any(c => c.GetCode() == currencyCode)
             ? currencyCode
-            : DomainErrors.Unsupported(currencyCode);
+            : DomainError.For<Currency>(new Unsupported(), currencyCode, "Currency is not supported");
 }
 ```
 
@@ -349,7 +349,7 @@ public sealed class PriceRange : ComparableValueObject
         Price minPrice, Price maxPrice) =>
         (decimal)minPrice.Amount <= (decimal)maxPrice.Amount
             ? (minPrice, maxPrice)
-            : DomainErrors.MinExceedsMax(minPrice, maxPrice);
+            : DomainError.For<PriceRange>(new MinExceedsMax(), $"{minPrice}/{maxPrice}", "Minimum price exceeds maximum");
 
     protected override IEnumerable<IComparable> GetComparableEqualityComponents()
     {

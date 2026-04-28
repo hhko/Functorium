@@ -293,9 +293,9 @@ public sealed class Email : IEquatable<Email>
     public static Fin<Email> Create(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return Domain.Empty(value ?? "null");
+            return DomainError.For<Email>(new DomainErrorKind.Empty(), value ?? "null", "Email is empty");
         if (!value.Contains('@'))
-            return Domain.InvalidFormat(value);
+            return DomainError.For<Email>(new DomainErrorKind.InvalidFormat(), value, "Email format is invalid");
         return new Email(value.ToLowerInvariant());
     }
 
