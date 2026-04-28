@@ -92,10 +92,17 @@ public abstract partial class UsecasePipelineBase<TRequest>
         return ObservabilityNaming.CategoryTypes.Unknown;
     }
 
-    protected static string GetRequestHandlerPath()
-    {
-        return typeof(TRequest).FullName!;
-    }
+    // ----------------------------------------
+    // Generic 인자(TRequest)별 static 캐시.
+    // .NET 런타임은 generic 인자별로 별도 static 영역을 할당하므로
+    // ConcurrentDictionary 같은 동적 lookup 자료구조 없이도 자연스럽게
+    // 타입별 boundedness가 보장되고 lookup 비용이 0입니다.
+    // ----------------------------------------
+    private static readonly string _cachedHandlerPath  = typeof(TRequest).FullName ?? string.Empty;
+    private static readonly string _cachedHandler      = ComputeRequestHandler();
+    private static readonly string _cachedHandlerLower = _cachedHandler.ToLowerInvariant();
+
+    protected static string GetRequestHandlerPath() => _cachedHandlerPath;
 
     // - "+"가 존재할 경우
     //   - 가장 첫 번째 "+" 기준으로 처리
@@ -115,7 +122,15 @@ public abstract partial class UsecasePipelineBase<TRequest>
     // `domain.name`            | `name`       | `"+"` 없음 → 마지막 `"."` 이후
     // `no.plus.or.dot`         | `dot`        | `"+"` 없음 → 마지막 `"."` 이후
     // `no_dot_or_plus`         | (빈 문자열)   | `"."`, `"+"` 모두 없음
-    protected static string GetRequestHandler()
+    protected static string GetRequestHandler() => _cachedHandler;
+
+    /// <summary>
+    /// GetRequestHandler()의 소문자 버전.
+    /// 메트릭 네이밍 등 소문자가 필요한 경우 사용합니다.
+    /// </summary>
+    protected static string GetRequestHandlerLower() => _cachedHandlerLower;
+
+    private static string ComputeRequestHandler()
     {
         string input = typeof(TRequest).FullName!;
 
@@ -144,15 +159,6 @@ public abstract partial class UsecasePipelineBase<TRequest>
         }
 
         return string.Empty;
-    }
-
-    /// <summary>
-    /// GetRequestHandler()의 소문자 버전.
-    /// 메트릭 네이밍 등 소문자가 필요한 경우 사용합니다.
-    /// </summary>
-    protected static string GetRequestHandlerLower()
-    {
-        return GetRequestHandler().ToLower();
     }
 
     /// <summary>
