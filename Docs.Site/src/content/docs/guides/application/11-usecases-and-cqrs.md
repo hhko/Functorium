@@ -981,6 +981,8 @@ FinT<IO, Response> usecase =
 Enable the Transaction pipeline with explicit opt-in:
 
 ```csharp
+services.AddMemoryCache();   // Required when UseCaching() is enabled
+
 services
     .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
     .ConfigurePipelines(pipelines => pipelines
@@ -991,6 +993,8 @@ services
         .UseTransaction())    // Explicitly enable Transaction
     .Build();
 ```
+
+> The Caching pipeline requires `IMemoryCache` to be registered in DI (`services.AddMemoryCache()`). Without it, `UsecaseCachingPipeline` cannot be activated and a runtime `InvalidOperationException` is thrown.
 
 > The Transaction pipeline requires all three of `IUnitOfWork`, `IDomainEventPublisher`, and `IDomainEventCollector` to be registered in DI (validated by `HasTransactionDependencies`).
 

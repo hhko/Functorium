@@ -981,6 +981,8 @@ FinT<IO, Response> usecase =
 명시적 opt-in으로 Transaction 파이프라인을 활성화합니다:
 
 ```csharp
+services.AddMemoryCache();   // UseCaching() 활성화 시 필수 의존성
+
 services
     .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
     .ConfigurePipelines(pipelines => pipelines
@@ -991,6 +993,8 @@ services
         .UseTransaction())    // Transaction 명시적 활성화
     .Build();
 ```
+
+> Caching 파이프라인은 `IMemoryCache`가 DI에 등록되어 있어야 합니다 (`services.AddMemoryCache()`). 등록이 누락되면 `UsecaseCachingPipeline`이 활성화되지 못하고 런타임에 `InvalidOperationException`이 발생합니다.
 
 > Transaction 파이프라인은 `IUnitOfWork`, `IDomainEventPublisher`, `IDomainEventCollector` 세 가지 모두 DI에 등록되어 있어야 합니다 (`HasTransactionDependencies`로 검증).
 
