@@ -181,7 +181,7 @@
 
 ## 에러 — 범주 + Custom 패턴
 
-**표준 에러 타입** (`DomainErrorType` 범주):
+**표준 에러 타입** (`DomainErrorKind` 범주):
 
 | 범주 | 대표 타입 |
 |------|----------|
@@ -196,7 +196,7 @@
 ```csharp
 public sealed class Inventory : AggregateRoot<InventoryId>
 {
-    public sealed record InsufficientStock : DomainErrorType.Custom;
+    public sealed record InsufficientStock : DomainErrorKind.Custom;
 
     public Fin<Unit> DeductStock(Quantity quantity)
     {
