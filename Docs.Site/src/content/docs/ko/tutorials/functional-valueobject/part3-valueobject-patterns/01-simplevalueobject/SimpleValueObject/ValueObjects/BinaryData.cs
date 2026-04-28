@@ -23,7 +23,7 @@ public sealed class BinaryData : SimpleValueObject<byte[]>
     public static Validation<Error, byte[]> Validate(byte[] value) =>
         value != null && value.Length > 0
             ? value
-            : DomainError.For<BinaryData, byte[]>(new DomainErrorType.Empty(), value!,
+            : DomainError.For<BinaryData, byte[]>(new DomainErrorKind.Empty(), value!,
                 $"Binary data cannot be empty or null. Current value: '{(value == null ? "null" : $"{value.Length} bytes")}'");
 
     public override string ToString() =>

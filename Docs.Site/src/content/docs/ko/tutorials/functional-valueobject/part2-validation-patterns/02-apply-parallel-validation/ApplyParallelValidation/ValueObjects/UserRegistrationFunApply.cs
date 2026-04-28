@@ -85,22 +85,22 @@ public sealed class UserRegistrationFunApply : ValueObject
     private static Validation<Error, string> ValidateEmailFormat(string email) =>
         !string.IsNullOrWhiteSpace(email) && email.Contains("@") && email.Contains(".")
             ? email
-            : DomainError.For<UserRegistrationFunApply>(new DomainErrorType.InvalidFormat(), email, $"Email is missing '@' symbol or '.' character. Current value: '{email}'");
+            : DomainError.For<UserRegistrationFunApply>(new DomainErrorKind.InvalidFormat(), email, $"Email is missing '@' symbol or '.' character. Current value: '{email}'");
 
     private static Validation<Error, string> ValidatePasswordStrength(string password) =>
         password.Length >= 8
             ? password
-            : DomainError.For<UserRegistrationFunApply>(new DomainErrorType.TooShort(8), password, $"Password is too short. Minimum length is 8 characters. Current value: '{password}'");
+            : DomainError.For<UserRegistrationFunApply>(new DomainErrorKind.TooShort(8), password, $"Password is too short. Minimum length is 8 characters. Current value: '{password}'");
 
     private static Validation<Error, string> ValidateNameFormat(string name) =>
         !string.IsNullOrWhiteSpace(name) && name.Length >= 2
             ? name
-            : DomainError.For<UserRegistrationFunApply>(new DomainErrorType.TooShort(2), name, $"Name is too short. Minimum length is 2 characters. Current value: '{name}'");
+            : DomainError.For<UserRegistrationFunApply>(new DomainErrorKind.TooShort(2), name, $"Name is too short. Minimum length is 2 characters. Current value: '{name}'");
 
     private static Validation<Error, int> ValidateAgeFormat(string ageInput) =>
         int.TryParse(ageInput, out var age)
             ? age
-            : DomainError.For<UserRegistrationFunApply>(new DomainErrorType.InvalidFormat(), ageInput, $"Age must be a numeric value. Current value: '{ageInput}'");
+            : DomainError.For<UserRegistrationFunApply>(new DomainErrorKind.InvalidFormat(), ageInput, $"Age must be a numeric value. Current value: '{ageInput}'");
 
     protected override IEnumerable<object> GetEqualityComponents()
     {

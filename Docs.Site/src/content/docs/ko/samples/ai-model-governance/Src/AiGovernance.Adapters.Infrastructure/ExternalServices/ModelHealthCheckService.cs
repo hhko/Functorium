@@ -3,7 +3,7 @@ using Functorium.Adapters.SourceGenerators;
 using Functorium.Abstractions.Observabilities;
 using AiGovernance.Application.Usecases.Deployments.Ports;
 using AiGovernance.Domain.AggregateRoots.Deployments;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 namespace AiGovernance.Adapters.Infrastructure.ExternalServices;
 
@@ -17,8 +17,8 @@ public class ModelHealthCheckService : IModelHealthCheckService
 {
     #region Error Types
 
-    public sealed record HealthCheckFailed : AdapterErrorType.Custom;
-    public sealed record HealthCheckTimedOut : AdapterErrorType.Custom;
+    public sealed record HealthCheckFailed : AdapterErrorKind.Custom;
+    public sealed record HealthCheckTimedOut : AdapterErrorKind.Custom;
 
     #endregion
 

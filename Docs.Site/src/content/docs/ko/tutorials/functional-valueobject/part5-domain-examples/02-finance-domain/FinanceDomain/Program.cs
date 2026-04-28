@@ -174,9 +174,9 @@ public sealed class InterestRate : ComparableSimpleValueObject<decimal>
 /// </summary>
 public sealed class ExchangeRate : ValueObject
 {
-    public sealed record InvalidBaseCurrency : DomainErrorType.Custom;
-    public sealed record InvalidQuoteCurrency : DomainErrorType.Custom;
-    public sealed record SameCurrency : DomainErrorType.Custom;
+    public sealed record InvalidBaseCurrency : DomainErrorKind.Custom;
+    public sealed record InvalidQuoteCurrency : DomainErrorKind.Custom;
+    public sealed record SameCurrency : DomainErrorKind.Custom;
 
     public string BaseCurrency { get; }
     public string QuoteCurrency { get; }
@@ -203,7 +203,7 @@ public sealed class ExchangeRate : ValueObject
             .Bind(v => ValidateDifferentCurrencies(v.BaseCurrency, v.QuoteCurrency)
                 .Map(_ => (v.BaseCurrency, v.QuoteCurrency, v.Rate)));
 
-    private static Validation<Error, string> ValidateCurrency(string value, DomainErrorType errorType, string fieldName) =>
+    private static Validation<Error, string> ValidateCurrency(string value, DomainErrorKind errorType, string fieldName) =>
         !string.IsNullOrWhiteSpace(value) && value.Length == 3
             ? value
             : DomainError.For<ExchangeRate>(

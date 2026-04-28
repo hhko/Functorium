@@ -12,8 +12,8 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
 {
     #region Error Types
 
-    public sealed record NoEmailToVerify : DomainErrorType.Custom;
-    public sealed record AlreadyDeleted : DomainErrorType.Custom;
+    public sealed record NoEmailToVerify : DomainErrorKind.Custom;
+    public sealed record AlreadyDeleted : DomainErrorKind.Custom;
 
     #endregion
 

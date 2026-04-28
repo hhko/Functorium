@@ -45,9 +45,9 @@ class Program
             {
                 Console.WriteLine($"실패:");
 
-                // ErrorCodeExpected 타입인지 확인하고 ErrorCode, ErrorCurrentValue 출력 (리플렉션 사용)
+                // ExpectedError 타입인지 확인하고 ErrorCode, ErrorCurrentValue 출력 (리플렉션 사용)
                 var errorType = error.GetType();
-                if (errorType.Name.StartsWith("ErrorCodeExpected"))
+                if (errorType.Name.StartsWith("ExpectedError"))
                 {
                     var errorCodeProperty = errorType.GetProperty("ErrorCode");
                     var errorCurrentValueProperty = errorType.GetProperty("ErrorCurrentValue");

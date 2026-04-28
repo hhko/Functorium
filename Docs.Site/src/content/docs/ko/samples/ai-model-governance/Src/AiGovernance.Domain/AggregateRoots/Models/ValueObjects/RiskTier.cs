@@ -1,5 +1,5 @@
 using Functorium.Domains.Errors;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 using static LanguageExt.Prelude;
 
 namespace AiGovernance.Domain.AggregateRoots.Models.ValueObjects;
@@ -12,7 +12,7 @@ public sealed class RiskTier : SimpleValueObject<string>
 {
     #region Error Types
 
-    public sealed record InvalidValue : DomainErrorType.Custom;
+    public sealed record InvalidValue : DomainErrorKind.Custom;
 
     #endregion
 

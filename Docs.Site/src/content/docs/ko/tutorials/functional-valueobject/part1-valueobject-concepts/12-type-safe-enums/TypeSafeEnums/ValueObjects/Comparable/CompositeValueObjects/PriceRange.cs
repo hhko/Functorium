@@ -2,7 +2,7 @@ using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
 using DomainError = Functorium.Domains.Errors.DomainError;
-using DomainErrorType = Functorium.Domains.Errors.DomainErrorType;
+using DomainErrorKind = Functorium.Domains.Errors.DomainErrorKind;
 
 namespace TypeSafeEnums.ValueObjects.Comparable.CompositeValueObjects;
 
@@ -14,7 +14,7 @@ namespace TypeSafeEnums.ValueObjects.Comparable.CompositeValueObjects;
 /// </summary>
 public sealed class PriceRange : ComparableValueObject
 {
-    public sealed record MinGreaterThanMax : DomainErrorType.Custom;
+    public sealed record MinGreaterThanMax : DomainErrorKind.Custom;
     /// <summary>
     /// 최소 가격
     /// </summary>

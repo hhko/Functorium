@@ -4,7 +4,7 @@ using ECommerce.Domain.AggregateRoots.Orders.ValueObjects;
 using ECommerce.Domain.AggregateRoots.Products;
 using Functorium.Applications.Errors;
 using Functorium.Applications.Linq;
-using static Functorium.Applications.Errors.ApplicationErrorType;
+using static Functorium.Applications.Errors.ApplicationErrorKind;
 
 namespace ECommerce.Application.Usecases.Orders.Commands;
 

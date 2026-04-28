@@ -1,6 +1,6 @@
 using Functorium.Domains.Errors;
 using ECommerce.Domain.AggregateRoots.Tags;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 namespace ECommerce.Domain.AggregateRoots.Products;
 
@@ -13,7 +13,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable, ISoftDeletab
 {
     #region Error Types
 
-    public sealed record AlreadyDeleted : DomainErrorType.Custom;
+    public sealed record AlreadyDeleted : DomainErrorKind.Custom;
 
     #endregion
 

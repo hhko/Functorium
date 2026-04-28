@@ -12,10 +12,10 @@ namespace ApplyInternalBindValidation.ValueObjects;
 /// </summary>
 public sealed class MemberRegistration : ValueObject
 {
-    public sealed record UsernameNotAvailable : DomainErrorType.Custom;
-    public sealed record EmailDomainUnsupported : DomainErrorType.Custom;
-    public sealed record PasswordTooWeak : DomainErrorType.Custom;
-    public sealed record PasswordInHistory : DomainErrorType.Custom;
+    public sealed record UsernameNotAvailable : DomainErrorKind.Custom;
+    public sealed record EmailDomainUnsupported : DomainErrorKind.Custom;
+    public sealed record PasswordTooWeak : DomainErrorKind.Custom;
+    public sealed record PasswordInHistory : DomainErrorKind.Custom;
     public string Username { get; }
     public string Email { get; }
     public string Password { get; }
@@ -59,7 +59,7 @@ public sealed class MemberRegistration : ValueObject
     private static Validation<Error, string> ValidateUsernameFormat(string username) =>
         !string.IsNullOrWhiteSpace(username) && username.Length >= 3
             ? username
-            : DomainError.For<MemberRegistration>(new DomainErrorType.TooShort(), username,
+            : DomainError.For<MemberRegistration>(new DomainErrorKind.TooShort(), username,
                 $"Username is too short. Minimum length is 3 characters. Current value: '{username}'");
 
     private static Validation<Error, string> ValidateUsernameAvailability(string username) =>
@@ -71,7 +71,7 @@ public sealed class MemberRegistration : ValueObject
     private static Validation<Error, string> ValidateEmailFormat(string email) =>
         !string.IsNullOrWhiteSpace(email) && email.Contains("@")
             ? email
-            : DomainError.For<MemberRegistration>(new DomainErrorType.InvalidFormat(), email,
+            : DomainError.For<MemberRegistration>(new DomainErrorKind.InvalidFormat(), email,
                 $"Email is missing '@' symbol. Current value: '{email}'");
 
     private static Validation<Error, string> ValidateEmailDomain(string email) =>

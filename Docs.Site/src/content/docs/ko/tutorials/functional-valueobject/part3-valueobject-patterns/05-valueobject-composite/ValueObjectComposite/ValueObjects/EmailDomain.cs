@@ -22,7 +22,7 @@ public sealed class EmailDomain : SimpleValueObject<string>
     public static Validation<Error, string> Validate(string value) =>
         !string.IsNullOrWhiteSpace(value) && value.Length >= 3 && value.Contains('.')
             ? value.ToLowerInvariant()
-            : DomainError.For<EmailDomain>(new DomainErrorType.InvalidFormat(), value,
+            : DomainError.For<EmailDomain>(new DomainErrorKind.InvalidFormat(), value,
                 $"Email domain is empty or invalid. Must be at least 3 characters and contain '.'. Current value: '{value}'");
 
     public override string ToString() => Value;

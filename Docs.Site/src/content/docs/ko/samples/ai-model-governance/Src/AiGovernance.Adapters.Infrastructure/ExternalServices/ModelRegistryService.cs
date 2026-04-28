@@ -2,7 +2,7 @@ using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Abstractions.Observabilities;
 using AiGovernance.Domain.AggregateRoots.Models;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 namespace AiGovernance.Adapters.Infrastructure.ExternalServices;
 
@@ -55,9 +55,9 @@ public class ModelRegistryService : IModelRegistryService
 {
     #region Error Types
 
-    public sealed record RegistryLookupFailed : AdapterErrorType.Custom;
-    public sealed record SessionAcquisitionFailed : AdapterErrorType.Custom;
-    public sealed record ModelNotFoundInRegistry : AdapterErrorType.Custom;
+    public sealed record RegistryLookupFailed : AdapterErrorKind.Custom;
+    public sealed record SessionAcquisitionFailed : AdapterErrorKind.Custom;
+    public sealed record ModelNotFoundInRegistry : AdapterErrorKind.Custom;
 
     #endregion
 

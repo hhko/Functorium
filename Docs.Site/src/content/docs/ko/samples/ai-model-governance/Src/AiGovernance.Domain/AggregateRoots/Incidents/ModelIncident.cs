@@ -2,7 +2,7 @@ using Functorium.Domains.Errors;
 using AiGovernance.Domain.AggregateRoots.Deployments;
 using AiGovernance.Domain.AggregateRoots.Incidents.ValueObjects;
 using AiGovernance.Domain.AggregateRoots.Models;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 using static LanguageExt.Prelude;
 
 namespace AiGovernance.Domain.AggregateRoots.Incidents;
@@ -16,7 +16,7 @@ public sealed class ModelIncident : AggregateRoot<ModelIncidentId>, IAuditable
 {
     #region Error Types
 
-    public sealed record InvalidStatusTransition : DomainErrorType.Custom;
+    public sealed record InvalidStatusTransition : DomainErrorKind.Custom;
 
     #endregion
 

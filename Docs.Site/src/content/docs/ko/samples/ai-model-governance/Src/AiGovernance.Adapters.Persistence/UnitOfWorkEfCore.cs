@@ -3,7 +3,7 @@ using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 namespace AiGovernance.Adapters.Persistence;
 
@@ -15,8 +15,8 @@ public class UnitOfWorkEfCore : IUnitOfWork
 {
     #region Error Types
 
-    public sealed record ConcurrencyConflict : AdapterErrorType.Custom;
-    public sealed record DatabaseUpdateFailed : AdapterErrorType.Custom;
+    public sealed record ConcurrencyConflict : AdapterErrorKind.Custom;
+    public sealed record DatabaseUpdateFailed : AdapterErrorKind.Custom;
 
     #endregion
 

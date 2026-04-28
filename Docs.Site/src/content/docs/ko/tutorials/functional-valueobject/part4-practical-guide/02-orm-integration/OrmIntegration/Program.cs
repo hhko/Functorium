@@ -160,13 +160,13 @@ public sealed class Email : SimpleValueObject<string>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<Email>(new DomainErrorType.Empty(), value ?? "null",
+            : DomainError.For<Email>(new DomainErrorKind.Empty(), value ?? "null",
                 $"Email address cannot be empty. Current value: '{value}'");
 
     private static Validation<Error, string> ValidateFormat(string value) =>
         !string.IsNullOrWhiteSpace(value) && value.Contains('@')
             ? value
-            : DomainError.For<Email>(new DomainErrorType.InvalidFormat(), value ?? "null",
+            : DomainError.For<Email>(new DomainErrorKind.InvalidFormat(), value ?? "null",
                 $"Invalid email format. Current value: '{value}'");
 
     public static implicit operator string(Email email) => email.Value;
@@ -198,7 +198,7 @@ public sealed class ProductCode : SimpleValueObject<string>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<ProductCode>(new DomainErrorType.Empty(), value ?? "null",
+            : DomainError.For<ProductCode>(new DomainErrorKind.Empty(), value ?? "null",
                 $"Product code cannot be empty. Current value: '{value}'");
 
     private static Validation<Error, string> ValidateFormat(string value)
@@ -206,7 +206,7 @@ public sealed class ProductCode : SimpleValueObject<string>
         var normalized = value.ToUpperInvariant().Trim();
         return System.Text.RegularExpressions.Regex.IsMatch(normalized, @"^[A-Z]{2}-\d{6}$")
             ? normalized
-            : DomainError.For<ProductCode>(new DomainErrorType.InvalidFormat(), value,
+            : DomainError.For<ProductCode>(new DomainErrorKind.InvalidFormat(), value,
                 $"Invalid product code format. Expected: 'XX-NNNNNN'. Current value: '{value}'");
     }
 
@@ -220,9 +220,9 @@ public sealed class ProductCode : SimpleValueObject<string>
 /// </summary>
 public sealed class Address : ValueObject
 {
-    public sealed record CityEmpty : DomainErrorType.Custom;
-    public sealed record StreetEmpty : DomainErrorType.Custom;
-    public sealed record PostalCodeEmpty : DomainErrorType.Custom;
+    public sealed record CityEmpty : DomainErrorKind.Custom;
+    public sealed record StreetEmpty : DomainErrorKind.Custom;
+    public sealed record PostalCodeEmpty : DomainErrorKind.Custom;
 
     public string City { get; private set; }
     public string Street { get; private set; }
@@ -287,8 +287,8 @@ public sealed class Address : ValueObject
 /// </summary>
 public sealed class Money : ValueObject
 {
-    public sealed record EmptyCurrency : DomainErrorType.Custom;
-    public sealed record InvalidCurrencyLength : DomainErrorType.Custom;
+    public sealed record EmptyCurrency : DomainErrorKind.Custom;
+    public sealed record InvalidCurrencyLength : DomainErrorKind.Custom;
 
     public decimal Amount { get; private set; }
     public string Currency { get; private set; }
@@ -320,7 +320,7 @@ public sealed class Money : ValueObject
     private static Validation<Error, decimal> ValidateAmountNotNegative(decimal amount) =>
         amount >= 0
             ? amount
-            : DomainError.For<Money, decimal>(new DomainErrorType.Negative(), amount,
+            : DomainError.For<Money, decimal>(new DomainErrorKind.Negative(), amount,
                 $"Amount cannot be negative. Current value: '{amount}'");
 
     private static Validation<Error, string> ValidateCurrencyNotEmpty(string currency) =>
@@ -384,19 +384,19 @@ public sealed class OrderLineItem : ValueObject
     private static Validation<Error, string> ValidateNameNotEmpty(string name) =>
         !string.IsNullOrWhiteSpace(name)
             ? name
-            : DomainError.For<OrderLineItem>(new DomainErrorType.Empty(), name ?? "null",
+            : DomainError.For<OrderLineItem>(new DomainErrorKind.Empty(), name ?? "null",
                 $"Product name cannot be empty. Current value: '{name}'");
 
     private static Validation<Error, int> ValidateQuantityPositive(int qty) =>
         qty > 0
             ? qty
-            : DomainError.For<OrderLineItem, int>(new DomainErrorType.NotPositive(), qty,
+            : DomainError.For<OrderLineItem, int>(new DomainErrorKind.NotPositive(), qty,
                 $"Quantity must be positive. Current value: '{qty}'");
 
     private static Validation<Error, decimal> ValidatePriceNotNegative(decimal price) =>
         price >= 0
             ? price
-            : DomainError.For<OrderLineItem, decimal>(new DomainErrorType.Negative(), price,
+            : DomainError.For<OrderLineItem, decimal>(new DomainErrorKind.Negative(), price,
                 $"Price cannot be negative. Current value: '{price}'");
 
     protected override IEnumerable<object> GetEqualityComponents()

@@ -183,7 +183,7 @@ public sealed class Email : SimpleValueObject<string>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<Email>(new DomainErrorType.Empty(), value,
+            : DomainError.For<Email>(new DomainErrorKind.Empty(), value,
                 $"Email address cannot be empty. Current value: '{value}'");
 
     // 5.2 길이 검증
@@ -192,7 +192,7 @@ public sealed class Email : SimpleValueObject<string>
         var normalized = value.ToLowerInvariant();
         return normalized.Length <= 254
             ? normalized
-            : DomainError.For<Email, int>(new DomainErrorType.TooLong(), normalized.Length,
+            : DomainError.For<Email, int>(new DomainErrorKind.TooLong(), normalized.Length,
                 $"Email address cannot exceed 254 characters. Current length: '{normalized.Length}'");
     }
 
@@ -200,7 +200,7 @@ public sealed class Email : SimpleValueObject<string>
     private static Validation<Error, string> ValidateFormat(string value) =>
         Pattern.IsMatch(value)
             ? value
-            : DomainError.For<Email>(new DomainErrorType.InvalidFormat(), value,
+            : DomainError.For<Email>(new DomainErrorKind.InvalidFormat(), value,
                 $"Email must match 'local@domain' pattern. Current value: '{value}'");
 
     public static implicit operator string(Email email) => email.Value;
@@ -211,7 +211,7 @@ public sealed class Email : SimpleValueObject<string>
 /// </summary>
 public sealed class Password : IEquatable<Password>
 {
-    public sealed record InsufficientComplexity : DomainErrorType.Custom;
+    public sealed record InsufficientComplexity : DomainErrorKind.Custom;
 
     public const int MinLength = 8;
     public const int MaxLength = 128;
@@ -242,21 +242,21 @@ public sealed class Password : IEquatable<Password>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<Password>(new DomainErrorType.Empty(), value,
+            : DomainError.For<Password>(new DomainErrorKind.Empty(), value,
                 $"Password cannot be empty. Current value: '{value}'");
 
     // 5.2 최소 길이 검증
     private static Validation<Error, string> ValidateMinLength(string value) =>
         value.Length >= MinLength
             ? value
-            : DomainError.For<Password, int>(new DomainErrorType.TooShort(), value.Length,
+            : DomainError.For<Password, int>(new DomainErrorKind.TooShort(), value.Length,
                 $"Password must be at least {MinLength} characters. Current length: '{value.Length}'");
 
     // 5.3 최대 길이 검증
     private static Validation<Error, string> ValidateMaxLength(string value) =>
         value.Length <= MaxLength
             ? value
-            : DomainError.For<Password, int>(new DomainErrorType.TooLong(), value.Length,
+            : DomainError.For<Password, int>(new DomainErrorKind.TooLong(), value.Length,
                 $"Password cannot exceed {MaxLength} characters. Current length: '{value.Length}'");
 
     // 5.4 강도 검증
@@ -329,7 +329,7 @@ public sealed class PhoneNumber : ValueObject
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<PhoneNumber>(new DomainErrorType.Empty(), value,
+            : DomainError.For<PhoneNumber>(new DomainErrorKind.Empty(), value,
                 $"Phone number cannot be empty. Current value: '{value}'");
 
     // 5.2 숫자 추출 및 형식 검증
@@ -342,7 +342,7 @@ public sealed class PhoneNumber : ValueObject
 
         return digits.Length >= 9 && digits.Length <= 11
             ? digits
-            : DomainError.For<PhoneNumber>(new DomainErrorType.WrongLength(), value,
+            : DomainError.For<PhoneNumber>(new DomainErrorKind.WrongLength(), value,
                 $"Phone number must have 9-11 digits. Current value: '{value}'");
     }
 
@@ -379,7 +379,7 @@ public sealed class PhoneNumber : ValueObject
 /// </summary>
 public sealed class Username : SimpleValueObject<string>
 {
-    public sealed record Reserved : DomainErrorType.Custom;
+    public sealed record Reserved : DomainErrorKind.Custom;
 
     public const int MinLength = 3;
     public const int MaxLength = 30;
@@ -418,28 +418,28 @@ public sealed class Username : SimpleValueObject<string>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value.Trim().ToLowerInvariant()
-            : DomainError.For<Username>(new DomainErrorType.Empty(), value,
+            : DomainError.For<Username>(new DomainErrorKind.Empty(), value,
                 $"Username cannot be empty. Current value: '{value}'");
 
     // 5.2 최소 길이 검증
     private static Validation<Error, string> ValidateMinLength(string value) =>
         value.Length >= MinLength
             ? value
-            : DomainError.For<Username, int>(new DomainErrorType.TooShort(), value.Length,
+            : DomainError.For<Username, int>(new DomainErrorKind.TooShort(), value.Length,
                 $"Username must be at least {MinLength} characters. Current length: '{value.Length}'");
 
     // 5.3 최대 길이 검증
     private static Validation<Error, string> ValidateMaxLength(string value) =>
         value.Length <= MaxLength
             ? value
-            : DomainError.For<Username, int>(new DomainErrorType.TooLong(), value.Length,
+            : DomainError.For<Username, int>(new DomainErrorKind.TooLong(), value.Length,
                 $"Username cannot exceed {MaxLength} characters. Current length: '{value.Length}'");
 
     // 5.4 형식 검증
     private static Validation<Error, string> ValidateFormat(string value) =>
         Pattern.IsMatch(value)
             ? value
-            : DomainError.For<Username>(new DomainErrorType.InvalidFormat(), value,
+            : DomainError.For<Username>(new DomainErrorKind.InvalidFormat(), value,
                 $"Username must start with a letter and contain only letters, numbers, underscores, and hyphens. Current value: '{value}'");
 
     // 5.5 예약어 검증

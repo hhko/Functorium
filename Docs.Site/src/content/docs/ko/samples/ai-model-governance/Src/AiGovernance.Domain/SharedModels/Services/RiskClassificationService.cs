@@ -1,6 +1,6 @@
 using Functorium.Domains.Errors;
 using AiGovernance.Domain.AggregateRoots.Models.ValueObjects;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 namespace AiGovernance.Domain.SharedModels.Services;
 

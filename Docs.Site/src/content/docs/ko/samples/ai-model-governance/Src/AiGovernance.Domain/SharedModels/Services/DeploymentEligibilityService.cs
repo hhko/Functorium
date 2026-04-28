@@ -6,7 +6,7 @@ using AiGovernance.Domain.AggregateRoots.Incidents;
 using AiGovernance.Domain.AggregateRoots.Incidents.Specifications;
 using AiGovernance.Domain.AggregateRoots.Incidents.ValueObjects;
 using AiGovernance.Domain.AggregateRoots.Models;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 using static LanguageExt.Prelude;
 
 namespace AiGovernance.Domain.SharedModels.Services;
@@ -19,9 +19,9 @@ public sealed class DeploymentEligibilityService : IDomainService
 {
     #region Error Types
 
-    public sealed record ProhibitedModel : DomainErrorType.Custom;
-    public sealed record ComplianceAssessmentRequired : DomainErrorType.Custom;
-    public sealed record OpenIncidentsExist : DomainErrorType.Custom;
+    public sealed record ProhibitedModel : DomainErrorKind.Custom;
+    public sealed record ComplianceAssessmentRequired : DomainErrorKind.Custom;
+    public sealed record OpenIncidentsExist : DomainErrorKind.Custom;
 
     #endregion
 

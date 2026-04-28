@@ -217,13 +217,13 @@ public sealed class Email : SimpleValueObject<string>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<Email>(new DomainErrorType.Empty(), value ?? "null",
+            : DomainError.For<Email>(new DomainErrorKind.Empty(), value ?? "null",
                 $"Email address cannot be empty. Current value: '{value}'");
 
     private static Validation<Error, string> ValidateFormat(string value) =>
         !string.IsNullOrWhiteSpace(value) && value.Contains('@')
             ? value
-            : DomainError.For<Email>(new DomainErrorType.InvalidFormat(), value ?? "null",
+            : DomainError.For<Email>(new DomainErrorKind.InvalidFormat(), value ?? "null",
                 $"Invalid email format. Current value: '{value}'");
 
     public static implicit operator string(Email email) => email.Value;
@@ -254,13 +254,13 @@ public sealed class Age : ComparableSimpleValueObject<int>
     private static Validation<Error, int> ValidateNotNegative(int value) =>
         value >= 0
             ? value
-            : DomainError.For<Age, int>(new DomainErrorType.Negative(), value,
+            : DomainError.For<Age, int>(new DomainErrorKind.Negative(), value,
                 $"Age cannot be negative. Current value: '{value}'");
 
     private static Validation<Error, int> ValidateNotTooOld(int value) =>
         value <= 150
             ? value
-            : DomainError.For<Age, int>(new DomainErrorType.AboveMaximum(), value,
+            : DomainError.For<Age, int>(new DomainErrorKind.AboveMaximum(), value,
                 $"Age cannot exceed 150 years. Current value: '{value}'");
 
     public static implicit operator int(Age age) => age.Value;

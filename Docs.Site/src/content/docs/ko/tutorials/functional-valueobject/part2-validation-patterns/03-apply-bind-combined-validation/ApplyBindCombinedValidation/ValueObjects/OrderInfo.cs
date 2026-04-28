@@ -13,7 +13,7 @@ namespace ApplyBindCombinedValidation.ValueObjects;
 /// </summary>
 public sealed class OrderInfo : ValueObject
 {
-    public sealed record DiscountAmountExceedsOrder : DomainErrorType.Custom;
+    public sealed record DiscountAmountExceedsOrder : DomainErrorKind.Custom;
     public string CustomerName { get; }
     public string CustomerEmail { get; }
     public decimal OrderAmount { get; }
@@ -46,19 +46,19 @@ public sealed class OrderInfo : ValueObject
     private static Validation<Error, string> ValidateCustomerName(string customerName) =>
         !string.IsNullOrWhiteSpace(customerName) && customerName.Length >= 2
             ? customerName
-            : DomainError.For<OrderInfo>(new DomainErrorType.TooShort(), customerName,
+            : DomainError.For<OrderInfo>(new DomainErrorKind.TooShort(), customerName,
                 $"Customer name is too short. Minimum length is 2 characters. Current value: '{customerName}'");
 
     private static Validation<Error, string> ValidateCustomerEmail(string customerEmail) =>
         !string.IsNullOrWhiteSpace(customerEmail) && customerEmail.Contains("@")
             ? customerEmail
-            : DomainError.For<OrderInfo>(new DomainErrorType.InvalidFormat(), customerEmail,
+            : DomainError.For<OrderInfo>(new DomainErrorKind.InvalidFormat(), customerEmail,
                 $"Customer email is missing '@' symbol. Current value: '{customerEmail}'");
 
     private static Validation<Error, decimal> ValidateOrderAmount(string orderAmountInput) =>
         decimal.TryParse(orderAmountInput, out var orderAmount) && orderAmount > 0
             ? orderAmount
-            : DomainError.For<OrderInfo>(new DomainErrorType.NotPositive(), orderAmountInput,
+            : DomainError.For<OrderInfo>(new DomainErrorKind.NotPositive(), orderAmountInput,
                 $"Order amount must be a positive number. Current value: '{orderAmountInput}'");
 
     private static Validation<Error, decimal> ValidateFinalAmount(string orderAmountInput, string discountInput) =>

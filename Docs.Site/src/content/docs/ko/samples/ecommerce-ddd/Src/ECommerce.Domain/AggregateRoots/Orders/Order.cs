@@ -2,7 +2,7 @@ using Functorium.Domains.Errors;
 using ECommerce.Domain.AggregateRoots.Customers;
 using ECommerce.Domain.AggregateRoots.Orders.ValueObjects;
 using ECommerce.Domain.AggregateRoots.Products;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 using static LanguageExt.Prelude;
 
 namespace ECommerce.Domain.AggregateRoots.Orders;
@@ -17,8 +17,8 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditable
 {
     #region Error Types
 
-    public sealed record EmptyOrderLines : DomainErrorType.Custom;
-    public sealed record InvalidOrderStatusTransition : DomainErrorType.Custom;
+    public sealed record EmptyOrderLines : DomainErrorKind.Custom;
+    public sealed record InvalidOrderStatusTransition : DomainErrorKind.Custom;
 
     #endregion
 

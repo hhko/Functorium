@@ -2,7 +2,7 @@ using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Abstractions.Observabilities;
 using AiGovernance.Domain.AggregateRoots.Deployments;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 namespace AiGovernance.Adapters.Infrastructure.ExternalServices;
 
@@ -43,7 +43,7 @@ public class ParallelComplianceCheckService : IParallelComplianceCheckService
 {
     #region Error Types
 
-    public sealed record ComplianceCheckFailed : AdapterErrorType.Custom;
+    public sealed record ComplianceCheckFailed : AdapterErrorKind.Custom;
 
     #endregion
 

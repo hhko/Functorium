@@ -47,7 +47,7 @@ class Program
                     {
                         var individualError = manyErrors.Errors[i];
                         var individualErrorType = individualError.GetType();
-                        if (individualErrorType.Name.StartsWith("ErrorCodeExpected"))
+                        if (individualErrorType.Name.StartsWith("ExpectedError"))
                         {
                             var errorCodeProperty = individualErrorType.GetProperty("ErrorCode");
                             var errorCurrentValueProperty = individualErrorType.GetProperty("ErrorCurrentValue");
@@ -63,7 +63,7 @@ class Program
                 else
                 {
                     var errorType = error.GetType();
-                    if (errorType.Name.StartsWith("ErrorCodeExpected"))
+                    if (errorType.Name.StartsWith("ExpectedError"))
                     {
                         var errorCodeProperty = errorType.GetProperty("ErrorCode");
                         var errorCurrentValueProperty = errorType.GetProperty("ErrorCurrentValue");

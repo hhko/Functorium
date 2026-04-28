@@ -22,7 +22,7 @@ public sealed class City : ComparableSimpleValueObject<string>
     public static Validation<Error, string> Validate(string value) =>
         !string.IsNullOrWhiteSpace(value) && value.Length >= 2 && value.Length <= 30
             ? value.Trim()
-            : DomainError.For<City>(new DomainErrorType.WrongLength(), value,
+            : DomainError.For<City>(new DomainErrorKind.WrongLength(), value,
                 $"City name length is invalid. Must be 2-30 characters. Current value: '{value}'");
 
     public override string ToString() => Value;

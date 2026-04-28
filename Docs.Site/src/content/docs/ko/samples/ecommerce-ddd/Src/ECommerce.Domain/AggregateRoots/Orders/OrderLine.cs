@@ -1,6 +1,6 @@
 using Functorium.Domains.Errors;
 using ECommerce.Domain.AggregateRoots.Products;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 namespace ECommerce.Domain.AggregateRoots.Orders;
 
@@ -14,7 +14,7 @@ public sealed class OrderLine : Entity<OrderLineId>
 {
     #region Error Types
 
-    public sealed record InvalidQuantity : DomainErrorType.Custom;
+    public sealed record InvalidQuantity : DomainErrorKind.Custom;
 
     #endregion
 

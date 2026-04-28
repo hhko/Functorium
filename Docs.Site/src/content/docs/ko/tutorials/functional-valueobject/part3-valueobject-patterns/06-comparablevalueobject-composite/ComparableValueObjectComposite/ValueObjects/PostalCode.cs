@@ -22,7 +22,7 @@ public sealed class PostalCode : ComparableSimpleValueObject<string>
     public static Validation<Error, string> Validate(string value) =>
         !string.IsNullOrWhiteSpace(value) && value.Length == 5 && value.All(char.IsDigit)
             ? value
-            : DomainError.For<PostalCode>(new DomainErrorType.WrongLength(), value,
+            : DomainError.For<PostalCode>(new DomainErrorKind.WrongLength(), value,
                 $"Postal code must be exactly 5 digits. Current value: '{value}'");
 
     public override string ToString() => Value;

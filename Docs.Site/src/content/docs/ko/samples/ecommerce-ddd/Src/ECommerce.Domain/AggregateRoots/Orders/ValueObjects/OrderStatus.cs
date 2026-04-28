@@ -1,5 +1,5 @@
 using Functorium.Domains.Errors;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 using static LanguageExt.Prelude;
 
 namespace ECommerce.Domain.AggregateRoots.Orders.ValueObjects;
@@ -13,7 +13,7 @@ public sealed class OrderStatus : SimpleValueObject<string>
 {
     #region Error Types
 
-    public sealed record InvalidValue : DomainErrorType.Custom;
+    public sealed record InvalidValue : DomainErrorKind.Custom;
 
     #endregion
 

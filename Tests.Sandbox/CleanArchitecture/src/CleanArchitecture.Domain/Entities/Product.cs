@@ -7,7 +7,7 @@ using Functorium.Domains.ValueObjects.Validations;
 using LanguageExt;
 using LanguageExt.Common;
 
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 using static LanguageExt.Prelude;
 
 namespace CleanArchitecture.Domain.Entities;
@@ -17,7 +17,7 @@ public class Product : Entity<ProductId>
 {
     #region Error Types
 
-    public sealed record AlreadyInactive : DomainErrorType.Custom;
+    public sealed record AlreadyInactive : DomainErrorKind.Custom;
 
     #endregion
 

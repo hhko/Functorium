@@ -8,7 +8,7 @@ namespace FunctoriumFramework.Tests.Unit;
 /// 테스트 목적:
 /// 1. 복합 값 객체 생성 검증 (Create 메서드)
 /// 2. 동등성 비교 검증 (Equals, GetHashCode)
-/// 3. 에러 코드 검증 (ErrorCodeFactory 통합)
+/// 3. 에러 코드 검증 (ErrorFactory 통합)
 /// </summary>
 [Trait("Part4-Functorium-Framework", "AddressTests")]
 public class AddressTests

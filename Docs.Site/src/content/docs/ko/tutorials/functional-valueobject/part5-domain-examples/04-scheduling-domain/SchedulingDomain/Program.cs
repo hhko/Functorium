@@ -195,7 +195,7 @@ class Program
 /// </summary>
 public sealed class DateRange : ValueObject
 {
-    public sealed record EndBeforeStart : DomainErrorType.Custom;
+    public sealed record EndBeforeStart : DomainErrorKind.Custom;
 
     // 1.1 속성 선언
     public DateOnly Start { get; }
@@ -263,7 +263,7 @@ public sealed class DateRange : ValueObject
 /// </summary>
 public sealed class TimeSlot : ValueObject
 {
-    public sealed record EndNotAfterStart : DomainErrorType.Custom;
+    public sealed record EndNotAfterStart : DomainErrorKind.Custom;
 
     // 1.1 속성 선언
     public TimeOnly Start { get; }
@@ -355,14 +355,14 @@ public sealed class Duration : ComparableSimpleValueObject<int>
     private static Validation<Error, int> ValidateNotNegative(int minutes) =>
         minutes >= 0
             ? minutes
-            : DomainError.For<Duration, int>(new DomainErrorType.Negative(), minutes,
+            : DomainError.For<Duration, int>(new DomainErrorKind.Negative(), minutes,
                 $"Duration cannot be negative. Current value: '{minutes}'");
 
     // 5.2 최대값 검증 (1년 = 525,600분)
     private static Validation<Error, int> ValidateNotExceedsMaximum(int minutes) =>
         minutes <= 525600
             ? minutes
-            : DomainError.For<Duration, int>(new DomainErrorType.AboveMaximum(), minutes,
+            : DomainError.For<Duration, int>(new DomainErrorKind.AboveMaximum(), minutes,
                 $"Duration cannot exceed 1 year (525,600 minutes). Current value: '{minutes}'");
 
     // 도메인 메서드
@@ -423,19 +423,19 @@ public sealed class RecurrenceRule : ValueObject
     private static Validation<Error, int> ValidateDailyInterval(int interval) =>
         interval >= 1
             ? interval
-            : DomainError.For<RecurrenceRule, int>(new DomainErrorType.BelowMinimum(), interval,
+            : DomainError.For<RecurrenceRule, int>(new DomainErrorKind.BelowMinimum(), interval,
                 $"Recurrence interval must be at least 1. Current value: '{interval}'");
 
     private static Validation<Error, DayOfWeek[]> ValidateWeeklyDays(DayOfWeek[] days) =>
         days.Length > 0
             ? days.Distinct().OrderBy(d => d).ToArray()
-            : DomainError.For<RecurrenceRule, int>(new DomainErrorType.Empty(), 0,
+            : DomainError.For<RecurrenceRule, int>(new DomainErrorKind.Empty(), 0,
                 $"Weekly recurrence rule must specify at least one day of the week. Current count: '0'");
 
     private static Validation<Error, int> ValidateMonthlyDay(int day) =>
         day >= 1 && day <= 31
             ? day
-            : DomainError.For<RecurrenceRule, int>(new DomainErrorType.OutOfRange(), day,
+            : DomainError.For<RecurrenceRule, int>(new DomainErrorKind.OutOfRange(), day,
                 $"Day of month must be between 1 and 31. Current value: '{day}'");
 
     // 도메인 메서드

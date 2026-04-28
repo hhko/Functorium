@@ -3,7 +3,7 @@ using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using AiGovernance.Application.Usecases.Models.Ports;
 using AiGovernance.Domain.AggregateRoots.Models;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 namespace AiGovernance.Adapters.Persistence.Models.Queries;
 

@@ -43,25 +43,25 @@ public sealed class UserRegistration : ValueObject
     private static Validation<Error, string> ValidateEmailFormat(string email) =>
         !string.IsNullOrWhiteSpace(email) && email.Contains("@") && email.Contains(".")
             ? email
-            : DomainError.For<UserRegistration>(new DomainErrorType.InvalidFormat(), email,
+            : DomainError.For<UserRegistration>(new DomainErrorKind.InvalidFormat(), email,
                 $"Email is missing '@' symbol or '.' character. Current value: '{email}'");
 
     private static Validation<Error, string> ValidatePasswordStrength(string password) =>
         password.Length >= 8
             ? password
-            : DomainError.For<UserRegistration>(new DomainErrorType.TooShort(), password,
+            : DomainError.For<UserRegistration>(new DomainErrorKind.TooShort(), password,
                 $"Password is too short. Minimum length is 8 characters. Current value: '{password}'");
 
     private static Validation<Error, string> ValidateNameFormat(string name) =>
         !string.IsNullOrWhiteSpace(name) && name.Length >= 2
             ? name
-            : DomainError.For<UserRegistration>(new DomainErrorType.TooShort(), name,
+            : DomainError.For<UserRegistration>(new DomainErrorKind.TooShort(), name,
                 $"Name is too short. Minimum length is 2 characters. Current value: '{name}'");
 
     private static Validation<Error, int> ValidateAgeFormat(string ageInput) =>
         int.TryParse(ageInput, out var age)
             ? age
-            : DomainError.For<UserRegistration>(new DomainErrorType.InvalidFormat(), ageInput,
+            : DomainError.For<UserRegistration>(new DomainErrorKind.InvalidFormat(), ageInput,
                 $"Age must be a numeric value. Current value: '{ageInput}'");
 
     protected override IEnumerable<object> GetEqualityComponents()

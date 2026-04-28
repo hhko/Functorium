@@ -16,7 +16,7 @@ public sealed class ContactEmailCheckService : IDomainService
 
     #region Error Types
 
-    public sealed record EmailAlreadyInUse : DomainErrorType.Custom;
+    public sealed record EmailAlreadyInUse : DomainErrorKind.Custom;
 
     #endregion
 

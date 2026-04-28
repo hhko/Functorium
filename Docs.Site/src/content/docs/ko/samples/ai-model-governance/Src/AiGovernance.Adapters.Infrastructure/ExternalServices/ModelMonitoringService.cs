@@ -3,7 +3,7 @@ using Functorium.Adapters.SourceGenerators;
 using Functorium.Abstractions.Observabilities;
 using AiGovernance.Application.Usecases.Deployments.Ports;
 using AiGovernance.Domain.AggregateRoots.Deployments;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using static Functorium.Adapters.Errors.AdapterErrorKind;
 
 namespace AiGovernance.Adapters.Infrastructure.ExternalServices;
 
@@ -17,7 +17,7 @@ public class ModelMonitoringService : IModelMonitoringService
 {
     #region Error Types
 
-    public sealed record MonitoringFailed : AdapterErrorType.Custom;
+    public sealed record MonitoringFailed : AdapterErrorKind.Custom;
 
     #endregion
 

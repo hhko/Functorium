@@ -179,15 +179,15 @@ class Program
     }
 
     /// <summary>
-    /// ErrorCodeFactory 기반 에러의 상세 정보를 반환
+    /// ErrorFactory 기반 에러의 상세 정보를 반환
     /// </summary>
     /// <param name="error">에러 객체</param>
     /// <returns>에러 상세 정보 문자열</returns>
     static string GetErrorDetails(Error error)
     {
-        // ErrorCodeExpected 또는 ErrorCodeExpected<T> 타입인지 확인 (리플렉션 사용)
+        // ExpectedError 또는 ExpectedError<T> 타입인지 확인 (리플렉션 사용)
         var errorType = error.GetType();
-        if (errorType.Name.StartsWith("ErrorCodeExpected"))
+        if (errorType.Name.StartsWith("ExpectedError"))
         {
             var errorCodeProperty = errorType.GetProperty("ErrorCode");
             var errorCurrentValueProperty = errorType.GetProperty("ErrorCurrentValue");

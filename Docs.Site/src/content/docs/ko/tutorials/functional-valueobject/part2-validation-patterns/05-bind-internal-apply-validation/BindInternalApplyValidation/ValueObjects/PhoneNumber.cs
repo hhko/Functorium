@@ -12,7 +12,7 @@ namespace BindInternalApplyValidation.ValueObjects;
 /// </summary>
 public sealed class PhoneNumber : ValueObject
 {
-    public sealed record CountryCodeUnsupported : DomainErrorType.Custom;
+    public sealed record CountryCodeUnsupported : DomainErrorKind.Custom;
     public string CountryCode { get; }
     public string AreaCode { get; }
     public string LocalNumber { get; }
@@ -44,7 +44,7 @@ public sealed class PhoneNumber : ValueObject
     private static Validation<Error, string> ValidatePhoneNumberFormat(string phoneNumber) =>
         !string.IsNullOrWhiteSpace(phoneNumber) && phoneNumber.Length >= 10
             ? phoneNumber
-            : DomainError.For<PhoneNumber>(new DomainErrorType.TooShort(), phoneNumber,
+            : DomainError.For<PhoneNumber>(new DomainErrorKind.TooShort(), phoneNumber,
                 $"Phone number is too short. Minimum length is 10 characters. Current value: '{phoneNumber}'");
 
     private static Validation<Error, string> ValidateCountryCode(string phoneNumber) =>
@@ -56,13 +56,13 @@ public sealed class PhoneNumber : ValueObject
     private static Validation<Error, string> ValidateAreaCode(string phoneNumber) =>
         phoneNumber.Length >= 6 && phoneNumber.Substring(3, 3).All(char.IsDigit)
             ? phoneNumber.Substring(3, 3)
-            : DomainError.For<PhoneNumber>(new DomainErrorType.InvalidFormat(), phoneNumber,
+            : DomainError.For<PhoneNumber>(new DomainErrorKind.InvalidFormat(), phoneNumber,
                 $"Area code is invalid. Must be 3 digits. Current value: '{phoneNumber}'");
 
     private static Validation<Error, string> ValidateLocalNumber(string phoneNumber) =>
         phoneNumber.Length >= 10 && phoneNumber.Substring(6).All(char.IsDigit)
             ? phoneNumber.Substring(6)
-            : DomainError.For<PhoneNumber>(new DomainErrorType.InvalidFormat(), phoneNumber,
+            : DomainError.For<PhoneNumber>(new DomainErrorKind.InvalidFormat(), phoneNumber,
                 $"Local number is invalid. Must be digits only. Current value: '{phoneNumber}'");
 
     protected override IEnumerable<object> GetEqualityComponents()

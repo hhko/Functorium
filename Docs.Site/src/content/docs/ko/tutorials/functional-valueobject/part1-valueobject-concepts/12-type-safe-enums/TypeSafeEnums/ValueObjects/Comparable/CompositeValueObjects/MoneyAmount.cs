@@ -2,7 +2,7 @@ using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
 using DomainError = Functorium.Domains.Errors.DomainError;
-using DomainErrorType = Functorium.Domains.Errors.DomainErrorType;
+using DomainErrorKind = Functorium.Domains.Errors.DomainErrorKind;
 
 namespace TypeSafeEnums.ValueObjects.Comparable.CompositeValueObjects;
 
@@ -49,7 +49,7 @@ public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
         value >= 0 && value <= 999999.99m
             ? value
             : DomainError.For<MoneyAmount, decimal>(
-                new DomainErrorType.OutOfRange("0", "999999.99"),
+                new DomainErrorKind.OutOfRange("0", "999999.99"),
                 value,
                 $"금액은 0 이상 999,999.99 이하여야 합니다. Current value: '{value}'");
 

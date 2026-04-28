@@ -3,7 +3,7 @@ using AiGovernance.Domain.AggregateRoots.Assessments.ValueObjects;
 using AiGovernance.Domain.AggregateRoots.Deployments;
 using AiGovernance.Domain.AggregateRoots.Models;
 using AiGovernance.Domain.AggregateRoots.Models.ValueObjects;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 using static LanguageExt.Prelude;
 
 namespace AiGovernance.Domain.AggregateRoots.Assessments;
@@ -17,9 +17,9 @@ public sealed class ComplianceAssessment : AggregateRoot<ComplianceAssessmentId>
 {
     #region Error Types
 
-    public sealed record CriterionNotFound : DomainErrorType.Custom;
-    public sealed record InvalidStatusTransition : DomainErrorType.Custom;
-    public sealed record NotAllCriteriaEvaluated : DomainErrorType.Custom;
+    public sealed record CriterionNotFound : DomainErrorKind.Custom;
+    public sealed record InvalidStatusTransition : DomainErrorKind.Custom;
+    public sealed record NotAllCriteriaEvaluated : DomainErrorKind.Custom;
 
     #endregion
 

@@ -36,7 +36,7 @@ public sealed class Email : ValueObject
     private static Validation<Error, string> ValidateEmailFormat(string email) =>
         !string.IsNullOrWhiteSpace(email) && email.Contains('@')
             ? email
-            : DomainError.For<Email>(new DomainErrorType.InvalidFormat(), email,
+            : DomainError.For<Email>(new DomainErrorKind.InvalidFormat(), email,
                 $"Email format is invalid. Must contain '@' symbol. Current value: '{email}'");
 
     private static Validation<Error, (EmailLocalPart LocalPart, EmailDomain Domain)> ValidateEmailParts(string email) =>
@@ -50,7 +50,7 @@ public sealed class Email : ValueObject
         var parts = email.Split('@');
         return parts.Length == 2
             ? (localPart: parts[0], domain: parts[1])
-            : DomainError.For<Email>(new DomainErrorType.InvalidFormat(), email,
+            : DomainError.For<Email>(new DomainErrorKind.InvalidFormat(), email,
                 $"Email format is invalid. Must contain '@' symbol. Current value: '{email}'");
     }
 

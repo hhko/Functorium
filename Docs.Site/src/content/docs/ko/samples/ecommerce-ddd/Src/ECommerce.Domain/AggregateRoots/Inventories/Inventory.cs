@@ -1,7 +1,7 @@
 using Functorium.Domains.Entities;
 using Functorium.Domains.Errors;
 using ECommerce.Domain.AggregateRoots.Products;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 using static LanguageExt.Prelude;
 
 namespace ECommerce.Domain.AggregateRoots.Inventories;
@@ -17,7 +17,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 {
     #region Error Types
 
-    public sealed record InsufficientStock : DomainErrorType.Custom;
+    public sealed record InsufficientStock : DomainErrorKind.Custom;
 
     #endregion
 

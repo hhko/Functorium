@@ -11,7 +11,7 @@ namespace BindSequentialValidation.ValueObjects;
 /// </summary>
 public sealed class Address : ValueObject
 {
-    public sealed record CountryPostalCodeMismatch : DomainErrorType.Custom;
+    public sealed record CountryPostalCodeMismatch : DomainErrorKind.Custom;
     public string Street { get; }
     public string City { get; }
     public string PostalCode { get; }
@@ -45,19 +45,19 @@ public sealed class Address : ValueObject
     private static Validation<Error, string> ValidateStreetFormat(string street) =>
         !string.IsNullOrWhiteSpace(street) && street.Length >= 5
             ? street
-            : DomainError.For<Address>(new DomainErrorType.TooShort(), street,
+            : DomainError.For<Address>(new DomainErrorKind.TooShort(), street,
                 $"Street is too short. Minimum length is 5 characters. Current value: '{street}'");
 
     private static Validation<Error, string> ValidateCityFormat(string city) =>
         !string.IsNullOrWhiteSpace(city) && city.Length >= 2
             ? city
-            : DomainError.For<Address>(new DomainErrorType.TooShort(), city,
+            : DomainError.For<Address>(new DomainErrorKind.TooShort(), city,
                 $"City is too short. Minimum length is 2 characters. Current value: '{city}'");
 
     private static Validation<Error, string> ValidatePostalCodeFormat(string postalCode) =>
         !string.IsNullOrWhiteSpace(postalCode) && postalCode.Length >= 5
             ? postalCode
-            : DomainError.For<Address>(new DomainErrorType.TooShort(), postalCode,
+            : DomainError.For<Address>(new DomainErrorKind.TooShort(), postalCode,
                 $"Postal code is too short. Minimum length is 5 characters. Current value: '{postalCode}'");
 
     private static Validation<Error, string> ValidateCountryAndPostalCodeMatch(string country, string postalCode) =>

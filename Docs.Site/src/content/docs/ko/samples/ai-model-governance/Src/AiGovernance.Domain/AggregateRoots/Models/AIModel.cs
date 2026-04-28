@@ -1,6 +1,6 @@
 using Functorium.Domains.Errors;
 using AiGovernance.Domain.AggregateRoots.Models.ValueObjects;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 namespace AiGovernance.Domain.AggregateRoots.Models;
 
@@ -13,7 +13,7 @@ public sealed class AIModel : AggregateRoot<AIModelId>, IAuditable, ISoftDeletab
 {
     #region Error Types
 
-    public sealed record AlreadyDeleted : DomainErrorType.Custom;
+    public sealed record AlreadyDeleted : DomainErrorKind.Custom;
 
     #endregion
 

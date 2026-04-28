@@ -2,7 +2,7 @@ using Functorium.Domains.Errors;
 using Functorium.Domains.Services;
 using ECommerce.Domain.AggregateRoots.Customers;
 using ECommerce.Domain.AggregateRoots.Orders;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 using static LanguageExt.Prelude;
 
 namespace ECommerce.Domain.SharedModels.Services;
@@ -15,7 +15,7 @@ public sealed class OrderCreditCheckService : IDomainService
 {
     #region Error Types
 
-    public sealed record CreditLimitExceeded : DomainErrorType.Custom;
+    public sealed record CreditLimitExceeded : DomainErrorKind.Custom;
 
     #endregion
 

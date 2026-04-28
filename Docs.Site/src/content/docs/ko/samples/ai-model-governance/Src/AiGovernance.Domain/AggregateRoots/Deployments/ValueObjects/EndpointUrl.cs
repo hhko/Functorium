@@ -1,5 +1,5 @@
 using Functorium.Domains.Errors;
-using static Functorium.Domains.Errors.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorKind;
 
 namespace AiGovernance.Domain.AggregateRoots.Deployments.ValueObjects;
 
@@ -10,7 +10,7 @@ public sealed class EndpointUrl : SimpleValueObject<string>
 {
     #region Error Types
 
-    public sealed record InvalidUri : DomainErrorType.Custom;
+    public sealed record InvalidUri : DomainErrorKind.Custom;
 
     #endregion
 

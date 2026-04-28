@@ -12,7 +12,7 @@ namespace ComparableValueObjectPrimitive.ValueObjects;
 /// </summary>
 public sealed class DateRange : ComparableValueObject
 {
-    public sealed record StartAfterEnd : DomainErrorType.Custom;
+    public sealed record StartAfterEnd : DomainErrorKind.Custom;
     public DateTime StartDate { get; }
     public DateTime EndDate { get; }
 

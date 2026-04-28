@@ -134,13 +134,13 @@ public sealed class Email : SimpleValueObject<string>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<Email>(new DomainErrorType.Empty(), value ?? "null",
+            : DomainError.For<Email>(new DomainErrorKind.Empty(), value ?? "null",
                 $"Email address cannot be empty. Current value: '{value}'");
 
     private static Validation<Error, string> ValidateFormat(string value) =>
         !string.IsNullOrWhiteSpace(value) && value.Contains('@')
             ? value
-            : DomainError.For<Email>(new DomainErrorType.InvalidFormat(), value ?? "null",
+            : DomainError.For<Email>(new DomainErrorKind.InvalidFormat(), value ?? "null",
                 $"Invalid email format. Current value: '{value}'");
 
     public static implicit operator string(Email email) => email.Value;
@@ -171,13 +171,13 @@ public sealed class Age : ComparableSimpleValueObject<int>
     private static Validation<Error, int> ValidateNotNegative(int value) =>
         value >= 0
             ? value
-            : DomainError.For<Age, int>(new DomainErrorType.Negative(), value,
+            : DomainError.For<Age, int>(new DomainErrorKind.Negative(), value,
                 $"Age cannot be negative. Current value: '{value}'");
 
     private static Validation<Error, int> ValidateNotTooOld(int value) =>
         value <= 150
             ? value
-            : DomainError.For<Age, int>(new DomainErrorType.AboveMaximum(), value,
+            : DomainError.For<Age, int>(new DomainErrorKind.AboveMaximum(), value,
                 $"Age cannot exceed 150 years. Current value: '{value}'");
 
     public static implicit operator int(Age age) => age.Value;
@@ -208,13 +208,13 @@ public sealed class UserName : SimpleValueObject<string>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<UserName>(new DomainErrorType.Empty(), value ?? "null",
+            : DomainError.For<UserName>(new DomainErrorKind.Empty(), value ?? "null",
                 $"User name cannot be empty. Current value: '{value}'");
 
     private static Validation<Error, string> ValidateLength(string value) =>
         value.Length <= 100
             ? value
-            : DomainError.For<UserName, int>(new DomainErrorType.TooLong(), value.Length,
+            : DomainError.For<UserName, int>(new DomainErrorKind.TooLong(), value.Length,
                 $"User name cannot exceed 100 characters. Current length: '{value.Length}'");
 
     public static implicit operator string(UserName userName) => userName.Value;
@@ -355,7 +355,7 @@ public class InMemoryUserRepository : IUserRepository
         {
             return user; // 암시적 변환으로 Fin.Succ(user)
         }
-        return DomainError.For<InMemoryUserRepository, Guid>(new DomainErrorType.NotFound(), id,
+        return DomainError.For<InMemoryUserRepository, Guid>(new DomainErrorKind.NotFound(), id,
             $"User not found. Current value: '{id}'");
     }
 }

@@ -184,8 +184,8 @@ class Program
 /// </summary>
 public sealed class Money : ValueObject, IComparable<Money>
 {
-    public sealed record CurrencyEmpty : DomainErrorType.Custom;
-    public sealed record CurrencyNotThreeCharacters : DomainErrorType.Custom;
+    public sealed record CurrencyEmpty : DomainErrorKind.Custom;
+    public sealed record CurrencyNotThreeCharacters : DomainErrorKind.Custom;
 
     // 1.1 속성 선언
     public decimal Amount { get; }
@@ -213,7 +213,7 @@ public sealed class Money : ValueObject, IComparable<Money>
     private static Validation<Error, decimal> ValidateAmountNotNegative(decimal amount) =>
         amount >= 0
             ? amount
-            : DomainError.For<Money, decimal>(new DomainErrorType.Negative(), amount,
+            : DomainError.For<Money, decimal>(new DomainErrorKind.Negative(), amount,
                 $"Amount cannot be negative. Current value: '{amount}'");
 
     // 5.2 통화 코드 빈 값 검증
@@ -298,7 +298,7 @@ public sealed class ProductCode : SimpleValueObject<string>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<ProductCode>(new DomainErrorType.Empty(), value,
+            : DomainError.For<ProductCode>(new DomainErrorKind.Empty(), value,
                 $"Product code cannot be empty. Current value: '{value}'");
 
     // 5.2 형식 검증
@@ -307,7 +307,7 @@ public sealed class ProductCode : SimpleValueObject<string>
         var normalized = value.ToUpperInvariant().Trim();
         return System.Text.RegularExpressions.Regex.IsMatch(normalized, @"^[A-Z]{2}-\d{6}$")
             ? normalized
-            : DomainError.For<ProductCode>(new DomainErrorType.InvalidFormat(), value,
+            : DomainError.For<ProductCode>(new DomainErrorKind.InvalidFormat(), value,
                 $"Product code must match 'XX-NNNNNN' pattern (e.g., EL-001234). Current value: '{value}'");
     }
 
@@ -347,14 +347,14 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
     private static Validation<Error, int> ValidateNotNegative(int value) =>
         value >= 0
             ? value
-            : DomainError.For<Quantity, int>(new DomainErrorType.Negative(), value,
+            : DomainError.For<Quantity, int>(new DomainErrorKind.Negative(), value,
                 $"Quantity cannot be negative. Current value: '{value}'");
 
     // 5.2 최대값 검증
     private static Validation<Error, int> ValidateNotExceedsLimit(int value) =>
         value <= 10000
             ? value
-            : DomainError.For<Quantity, int>(new DomainErrorType.AboveMaximum(), value,
+            : DomainError.For<Quantity, int>(new DomainErrorKind.AboveMaximum(), value,
                 $"Quantity cannot exceed 10,000. Current value: '{value}'");
 
     // 도메인 메서드
@@ -372,9 +372,9 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
 /// </summary>
 public sealed class OrderStatus : SmartEnum<OrderStatus, string>
 {
-    public sealed record AlreadyCancelled : DomainErrorType.Custom;
-    public sealed record AlreadyDelivered : DomainErrorType.Custom;
-    public sealed record CannotRevertToPending : DomainErrorType.Custom;
+    public sealed record AlreadyCancelled : DomainErrorKind.Custom;
+    public sealed record AlreadyDelivered : DomainErrorKind.Custom;
+    public sealed record CannotRevertToPending : DomainErrorKind.Custom;
 
     public static readonly OrderStatus Pending = new("PENDING", "대기중", canCancel: true);
     public static readonly OrderStatus Confirmed = new("CONFIRMED", "확인됨", canCancel: true);
@@ -412,12 +412,12 @@ public sealed class OrderStatus : SmartEnum<OrderStatus, string>
 /// </summary>
 public sealed class ShippingAddress : ValueObject
 {
-    public sealed record RecipientNameEmpty : DomainErrorType.Custom;
-    public sealed record StreetEmpty : DomainErrorType.Custom;
-    public sealed record CityEmpty : DomainErrorType.Custom;
-    public sealed record PostalCodeEmpty : DomainErrorType.Custom;
-    public sealed record PostalCodeLengthOutOfRange : DomainErrorType.Custom;
-    public sealed record CountryEmpty : DomainErrorType.Custom;
+    public sealed record RecipientNameEmpty : DomainErrorKind.Custom;
+    public sealed record StreetEmpty : DomainErrorKind.Custom;
+    public sealed record CityEmpty : DomainErrorKind.Custom;
+    public sealed record PostalCodeEmpty : DomainErrorKind.Custom;
+    public sealed record PostalCodeLengthOutOfRange : DomainErrorKind.Custom;
+    public sealed record CountryEmpty : DomainErrorKind.Custom;
 
     // 1.1 속성 선언
     public string RecipientName { get; }
