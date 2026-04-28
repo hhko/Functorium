@@ -136,11 +136,11 @@ IRepository는 `IObservablePort`를 상속합니다. `IObservablePort`는 `Reque
 ```csharp
 public interface IProductRepository : IRepository<Product, ProductId>
 {
-    FinT<IO, bool> Exists(Specification<Product> spec);
+    FinT<IO, Product> GetByIdIncludingDeleted(ProductId id);
 }
 ```
 
-`IRepository`의 8개 CRUD 메서드를 그대로 상속받으면서, Product 도메인에만 필요한 `Exists` 메서드를 추가합니다. 새로운 도메인이 추가되어도 CRUD 시그니처를 다시 정의할 필요가 없습니다.
+`IRepository`의 13개 메서드(CRUD 8개 + Specification 5개)를 그대로 상속받으면서, Product 도메인에만 필요한 `GetByIdIncludingDeleted` 메서드(예: Soft Delete된 레코드 조회)를 추가합니다. 새로운 도메인이 추가되어도 표준 시그니처를 다시 정의할 필요가 없습니다.
 
 ---
 

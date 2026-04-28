@@ -136,11 +136,11 @@ Now that we've defined the common interface, how do we add domain-specific metho
 ```csharp
 public interface IProductRepository : IRepository<Product, ProductId>
 {
-    FinT<IO, bool> Exists(Specification<Product> spec);
+    FinT<IO, Product> GetByIdIncludingDeleted(ProductId id);
 }
 ```
 
-It inherits all 8 CRUD methods from `IRepository` while adding an `Exists` method specific to the Product domain. Even when new domains are added, there's no need to redefine CRUD signatures.
+It inherits all 13 methods (8 CRUD + 5 Specification) from `IRepository` while adding `GetByIdIncludingDeleted`, a method specific to the Product domain (e.g., for soft-deleted record retrieval). Even when new domains are added, there's no need to redefine the standard signatures.
 
 ---
 
