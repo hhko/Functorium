@@ -38,7 +38,7 @@ public abstract class ComparableValueObject : ValueObject, IComparable<Comparabl
         Type thisType = GetUnproxiedType(this);
         Type otherType = GetUnproxiedType(other);
         if (thisType != otherType)
-            return string.Compare($"{thisType}", $"{otherType}", StringComparison.Ordinal);
+            return string.Compare(thisType.FullName, otherType.FullName, StringComparison.Ordinal);
 
         return GetComparableEqualityComponents()
             .Zip(other.GetComparableEqualityComponents(),
