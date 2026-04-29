@@ -1,3 +1,6 @@
+using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
+
 namespace Functorium.Domains.ValueObjects.Validations.Contextual;
 
 /// <summary>
@@ -48,5 +51,6 @@ public static class ValidationRules
     ///     .ThenAtMost(1000000m);
     /// </code>
     /// </example>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ValidationContext For(string contextName) => new(contextName);
 }

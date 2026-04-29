@@ -1,3 +1,5 @@
+using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
 using Functorium.Domains.Events;
 using LanguageExt;
 using LanguageExt.Common;
@@ -48,6 +50,7 @@ public sealed record PublishResult(
     /// 성공 결과를 생성합니다.
     /// </summary>
     /// <param name="events">성공적으로 발행된 이벤트</param>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PublishResult Success(Seq<IDomainEvent> events) =>
         new(events, LanguageExt.Seq<(IDomainEvent, Error)>.Empty);
 
@@ -55,6 +58,7 @@ public sealed record PublishResult(
     /// 실패 결과를 생성합니다.
     /// </summary>
     /// <param name="failures">실패한 이벤트와 에러</param>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PublishResult Failure(Seq<(IDomainEvent Event, Error Error)> failures) =>
         new(LanguageExt.Seq<IDomainEvent>.Empty, failures);
 }
