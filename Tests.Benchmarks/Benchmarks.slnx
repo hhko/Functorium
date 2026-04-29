@@ -3,5 +3,6 @@
     <Project Path="TypedValidation.Benchmarks/TypedValidation.Benchmarks.csproj" />
     <Project Path="BulkCrud.Benchmarks/BulkCrud.Benchmarks.csproj" />
     <Project Path="BulkCrud.Benchmarks.Runner/BulkCrud.Benchmarks.Runner.csproj" />
+    <Project Path="AbstractValueObject.Benchmarks/AbstractValueObject.Benchmarks.csproj" />
   </Folder>
 </Solution>
